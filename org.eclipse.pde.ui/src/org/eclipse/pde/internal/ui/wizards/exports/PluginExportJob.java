@@ -24,9 +24,7 @@ import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.pde.core.IModel;
 import org.eclipse.pde.core.plugin.IPluginBase;
 import org.eclipse.pde.core.plugin.IPluginModelBase;
-import org.eclipse.pde.internal.build.builder.FragmentBuildScriptGenerator;
 import org.eclipse.pde.internal.build.builder.ModelBuildScriptGenerator;
-import org.eclipse.pde.internal.build.builder.PluginBuildScriptGenerator;
 import org.eclipse.pde.internal.core.TargetPlatform;
 import org.eclipse.pde.internal.ui.PDEPlugin;
 
@@ -122,10 +120,7 @@ public class PluginExportJob extends BaseExportJob {
 
 	private void makeScript(IPluginModelBase model) throws CoreException {
 		ModelBuildScriptGenerator generator = null;
-		if (model.isFragmentModel())
-			generator = new FragmentBuildScriptGenerator();
-		else
-			generator = new PluginBuildScriptGenerator();
+		generator = new ModelBuildScriptGenerator();
 
 		generator.setWorkingDirectory(model.getInstallLocation());
 
@@ -137,9 +132,9 @@ public class PluginExportJob extends BaseExportJob {
 					.getOutputLocation()
 					.removeFirstSegments(
 					1);
-			generator.setDevEntries(new String[] { path.toOSString()});
+			generator.setDevEntries(path.toOSString());
 		} else {
-			generator.setDevEntries(new String[] { "bin" });
+			generator.setDevEntries("bin" );
 		}
 
 		generator.setPluginPath(TargetPlatform.createPluginPath());

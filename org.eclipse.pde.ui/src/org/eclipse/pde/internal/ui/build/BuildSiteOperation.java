@@ -11,6 +11,7 @@ import org.eclipse.jface.operation.*;
 import org.eclipse.jface.preference.*;
 import org.eclipse.pde.core.*;
 import org.eclipse.pde.core.build.*;
+import org.eclipse.pde.internal.build.BuildScriptGenerator;
 import org.eclipse.pde.internal.build.builder.*;
 import org.eclipse.pde.internal.core.*;
 import org.eclipse.pde.internal.core.build.*;
@@ -82,16 +83,11 @@ public class BuildSiteOperation implements IRunnableWithProgress, IPreferenceCon
 				new SubProgressMonitor(monitor, 1));
 		runScript(scriptFile, new SubProgressMonitor(monitor, 7));
 	}
+	
 	private IFile makeScript(IFeatureModel featureModel,
 			IProgressMonitor monitor) throws InvocationTargetException,
 			CoreException {
-		FeatureBuildScriptGenerator generator = new FeatureBuildScriptGenerator();
-		IProject project = featureModel.getUnderlyingResource().getProject();
-		generator.setFeatureRootLocation(project.getLocation().toOSString());
-		generator.setGenerateIncludedFeatures(true);
-		generator.setAnalyseChildren(true);
-		generator.setWorkingDirectory(project.getLocation().toOSString());
-		generator.setDevEntries(new String[]{"bin"});
+		
 		ArrayList paths = new ArrayList();
 		IFeatureModel[] models = PDECore.getDefault()
 				.getWorkspaceModelManager().getFeatureModels();
@@ -102,18 +98,26 @@ public class BuildSiteOperation implements IRunnableWithProgress, IPreferenceCon
 			} catch (MalformedURLException e1) {
 			}
 		}
-		URL[] plugins = TargetPlatform.createPluginPath();
-		URL[] features = (URL[]) paths.toArray(new URL[paths.size()]);
-		URL[] all = new URL[plugins.length + paths.size()];
+		String[] plugins = TargetPlatform.createPluginPath();
+		String[] features = (String[]) paths.toArray(new String[paths.size()]);
+		String[] all = new String[plugins.length + paths.size()];
 		System.arraycopy(plugins, 0, all, 0, plugins.length);
 		System.arraycopy(features, 0, all, plugins.length, features.length);
-		generator.setPluginPath(all);
 		setConfigInfo(featureModel.getFeature());
-		generator.setFeature(featureModel.getFeature().getId());
-		generator.generate();
+
+		IProject project = featureModel.getUnderlyingResource().getProject();
+		BuildScriptGenerator generator = new BuildScriptGenerator();
+		generator.setWorkingDirectory(project.getLocation().toOSString());
+		generator.setBuildingOSGi(PDECore.getDefault().getModelManager().isOSGiRuntime());
+		generator.setChildren(true);
+		generator.setElements(new String[] {"feature@" + featureModel.getFeature().getId()});
+		generator.setPluginPath(all);
+		generator.generate();	
+
 		monitor.done();
 		return project.getFile("build.xml");
 	}
+	
 	private void runScript(IFile scriptFile, IProgressMonitor monitor)
 			throws CoreException {
 		AntRunner runner = new AntRunner();

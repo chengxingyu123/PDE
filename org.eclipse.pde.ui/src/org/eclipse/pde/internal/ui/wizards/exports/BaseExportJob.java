@@ -9,7 +9,6 @@
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
 package org.eclipse.pde.internal.ui.wizards.exports;
-
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -17,7 +16,6 @@ import java.io.PrintWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Map;
-
 import org.eclipse.ant.core.AntRunner;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
@@ -39,48 +37,31 @@ import org.eclipse.pde.internal.core.build.WorkspaceBuildModel;
 import org.eclipse.pde.internal.ui.IPreferenceConstants;
 import org.eclipse.pde.internal.ui.PDEPlugin;
 import org.eclipse.swt.widgets.Display;
-
-public abstract class BaseExportJob
-	extends Job
-	implements IPreferenceConstants {
-
+public abstract class BaseExportJob extends Job implements IPreferenceConstants {
 	public static final int EXPORT_AS_ZIP = 0;
 	public static final int EXPORT_AS_DIRECTORY = 1;
 	public static final int EXPORT_AS_UPDATE_JARS = 2;
-	
-	private static final ISchedulingRule nonConcurentPDEExportRule =
-		new ISchedulingRule() {
+	private static final ISchedulingRule nonConcurentPDEExportRule = new ISchedulingRule() {
 		public boolean contains(ISchedulingRule rule) {
 			return this == rule;
 		}
-
 		public boolean isConflicting(ISchedulingRule rule) {
 			return this == rule;
 		}
 	};
-	private static final IStatus OK_STATUS =
-		new Status(IStatus.OK, PDEPlugin.getPluginId(), IStatus.OK, "", null);
-
+	private static final IStatus OK_STATUS = new Status(IStatus.OK, PDEPlugin.getPluginId(), IStatus.OK, "", null);
 	protected static PrintWriter writer;
 	protected static File logFile;
-
 	protected int exportType;
 	protected boolean exportSource;
 	protected String destination;
 	protected String zipFileName;
 	protected Object[] items;
-
 	protected String buildTempLocation;
-
 	/**
 	 * @param name
 	 */
-	public BaseExportJob(
-		int exportType,
-		boolean exportSource,
-		String destination,
-		String zipFileName,
-		Object[] items) {
+	public BaseExportJob(int exportType, boolean exportSource, String destination, String zipFileName, Object[] items) {
 		super(PDEPlugin.getResourceString("ExportJob.jobTitle"));
 		this.exportType = exportType;
 		this.exportSource = exportSource;
@@ -88,12 +69,7 @@ public abstract class BaseExportJob
 		this.zipFileName = zipFileName;
 		this.items = items;
 		setSchedulingRules();
-		buildTempLocation =
-			PDEPlugin
-				.getDefault()
-				.getStateLocation()
-				.append("temp")
-				.toOSString();
+		buildTempLocation = PDEPlugin.getDefault().getStateLocation().append("temp").toOSString();
 	}
 	private void setSchedulingRules() {
 		java.util.List rules = new ArrayList();
@@ -108,12 +84,9 @@ public abstract class BaseExportJob
 				rules.add(resource);
 			}
 		}
-		ISchedulingRule[] rulesArray =
-			(ISchedulingRule[]) rules.toArray(
-				new ISchedulingRule[rules.size()]);
+		ISchedulingRule[] rulesArray = (ISchedulingRule[]) rules.toArray(new ISchedulingRule[rules.size()]);
 		this.setRule(new MultiRule(rulesArray));
 	}
-
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -126,7 +99,6 @@ public abstract class BaseExportJob
 				zipFile.delete();
 			}
 		}
-
 		String errorMessage = null;
 		try {
 			createLogWriter();
@@ -144,15 +116,8 @@ public abstract class BaseExportJob
 			if (writer != null)
 				writer.close();
 		}
-
-		if (errorMessage == null
-			&& logFile != null
-			&& logFile.exists()
-			&& logFile.length() > 0) {
-			errorMessage =
-				PDEPlugin.getFormattedMessage(
-					"ExportJob.error.message",
-					destination);
+		if (errorMessage == null && logFile != null && logFile.exists() && logFile.length() > 0) {
+			errorMessage = PDEPlugin.getFormattedMessage("ExportJob.error.message", destination);
 		}
 		if (errorMessage != null) {
 			// TODO Once platform has a mean to notify users
@@ -165,35 +130,21 @@ public abstract class BaseExportJob
 			});
 			return Job.ASYNC_FINISH;
 		}
-
 		return OK_STATUS;
 	}
-
-	protected void doExports(IProgressMonitor monitor)
-		throws InvocationTargetException, CoreException {
-
+	protected void doExports(IProgressMonitor monitor) throws InvocationTargetException, CoreException {
 		createDestination(destination);
-
 		monitor.beginTask("", items.length + 1);
 		for (int i = 0; i < items.length; i++) {
 			IModel model = (IModel) items[i];
 			doExport(model, new SubProgressMonitor(monitor, 1));
 		}
-
-		cleanup(
-			zipFileName,
-			destination,
-			exportType,
-			new SubProgressMonitor(monitor, 1));
+		cleanup(zipFileName, destination, exportType, new SubProgressMonitor(monitor, 1));
 	}
-
-	protected abstract void doExport(IModel model, IProgressMonitor monitor)
-		throws CoreException, InvocationTargetException;
-
+	protected abstract void doExport(IModel model, IProgressMonitor monitor) throws CoreException, InvocationTargetException;
 	private static void createLogWriter() {
 		try {
-			String path =
-				PDEPlugin.getDefault().getStateLocation().toOSString();
+			String path = PDEPlugin.getDefault().getStateLocation().toOSString();
 			logFile = new File(path, "exportLog.txt");
 			if (logFile.exists()) {
 				logFile.delete();
@@ -203,67 +154,43 @@ public abstract class BaseExportJob
 		} catch (IOException e) {
 		}
 	}
-
 	public static PrintWriter getWriter() {
 		if (writer == null)
 			createLogWriter();
 		return writer;
 	}
-
-	private void createDestination(String destination)
-		throws InvocationTargetException {
+	private void createDestination(String destination) throws InvocationTargetException {
 		File file = new File(destination);
 		if (!file.exists() || !file.isDirectory()) {
 			if (!file.mkdirs()) {
-				throw new InvocationTargetException(
-					new Exception(
-						PDEPlugin.getResourceString(
-							"ExportWizard.badDirectory")));
+				throw new InvocationTargetException(new Exception(PDEPlugin.getResourceString("ExportWizard.badDirectory")));
 			}
 		}
 	}
-
-	protected void runScript(
-		String location,
-		String destination,
-		int exportType,
-		boolean exportSource,
-		Map properties,
-		IProgressMonitor monitor)
-		throws InvocationTargetException, CoreException {
+	protected void runScript(String location, String[] target, String destination, int exportType, boolean exportSource, Map properties, IProgressMonitor monitor) throws InvocationTargetException, CoreException {
 		AntRunner runner = new AntRunner();
 		runner.addUserProperties(properties);
 		runner.setAntHome(location);
-		runner.setBuildFileLocation(location + Path.SEPARATOR + "build.xml");
-		runner.addBuildListener(
-			"org.eclipse.pde.internal.ui.ant.ExportBuildListener");
-		runner.setExecutionTargets(
-			getExecutionTargets(exportType, exportSource));
+		runner.setBuildFileLocation(location);
+		runner.addBuildListener("org.eclipse.pde.internal.ui.ant.ExportBuildListener");
+		runner.setExecutionTargets(target);
 		runner.run(monitor);
 	}
-
-	protected String[] getExecutionTargets(
-		int exportType,
-		boolean exportSource) {
-		ArrayList targets = new ArrayList();
-		if (exportType == BaseExportJob.EXPORT_AS_UPDATE_JARS) {
-			targets.add("build.update.jar");
-		} else {
-			targets.add("build.jars");
-			targets.add("gather.bin.parts");
-			if (exportSource) {
-				targets.add("build.sources");
-				targets.add("gather.sources");
-			}
-		}
-		return (String[]) targets.toArray(new String[targets.size()]);
-	}
-
-	protected void cleanup(
-		String filename,
-		String destination,
-		int exportType,
-		IProgressMonitor monitor) {
+//	protected String[] getExecutionTargets(int exportType, boolean exportSource) {
+//		ArrayList targets = new ArrayList();
+//		if (exportType == BaseExportJob.EXPORT_AS_UPDATE_JARS) {
+//			targets.add("build.update.jar");
+//		} else {
+//			targets.add("build.jars");
+//			targets.add("gather.bin.parts");
+//			if (exportSource) {
+//				targets.add("build.sources");
+//				targets.add("gather.sources");
+//			}
+//		}
+//		return (String[]) targets.toArray(new String[targets.size()]);
+//	}
+	protected void cleanup(String filename, String destination, int exportType, IProgressMonitor monitor) {
 		File scriptFile = null;
 		try {
 			scriptFile = createScriptFile();
@@ -277,7 +204,6 @@ public abstract class BaseExportJob
 				generateCopyResultTarget(writer, destination);
 			generateClosingTag(writer);
 			writer.close();
-
 			ArrayList targets = new ArrayList();
 			if (errors)
 				targets.add("zip.logs");
@@ -286,11 +212,9 @@ public abstract class BaseExportJob
 			else if (exportType == EXPORT_AS_DIRECTORY)
 				targets.add("copy.result");
 			targets.add("clean");
-
 			AntRunner runner = new AntRunner();
 			runner.setBuildFileLocation(scriptFile.getAbsolutePath());
-			runner.setExecutionTargets(
-				(String[]) targets.toArray(new String[targets.size()]));
+			runner.setExecutionTargets((String[]) targets.toArray(new String[targets.size()]));
 			runner.run(monitor);
 		} catch (IOException e) {
 		} catch (CoreException e) {
@@ -298,9 +222,7 @@ public abstract class BaseExportJob
 			if (scriptFile != null && scriptFile.exists())
 				scriptFile.delete();
 		}
-
 	}
-
 	private File createScriptFile() throws IOException {
 		String path = PDEPlugin.getDefault().getStateLocation().toOSString();
 		File zip = new File(path, "zip.xml");
@@ -310,73 +232,43 @@ public abstract class BaseExportJob
 		}
 		return zip;
 	}
-
 	private void generateHeader(PrintWriter writer) {
 		writer.println("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
-		writer.println(
-			"<project name=\"temp\" default=\"clean\" basedir=\".\">");
+		writer.println("<project name=\"temp\" default=\"clean\" basedir=\".\">");
 	}
-
 	private void generateCleanTarget(PrintWriter writer) {
 		writer.println("<target name=\"clean\">");
 		writer.println("<delete dir=\"" + buildTempLocation + "\"/>");
 		writer.println("</target>");
 	}
-
-	private void generateCopyResultTarget(
-		PrintWriter writer,
-		String destination) {
+	private void generateCopyResultTarget(PrintWriter writer, String destination) {
 		writer.println("<target name=\"copy.result\">");
 		writer.println("<copy todir=\"" + destination + "\">");
-		writer.println(
-			"<fileset dir=\"" + buildTempLocation + "/destination\"/>");
+		writer.println("<fileset dir=\"" + buildTempLocation + "/destination\"/>");
 		writer.println("</copy>");
 		writer.println("</target>");
 	}
-
-	private void generateZipFolderTarget(
-		PrintWriter writer,
-		String destination,
-		String filename) {
+	private void generateZipFolderTarget(PrintWriter writer, String destination, String filename) {
 		writer.println("<target name=\"zip.folder\">");
-		writer.println(
-			"<zip zipfile=\""
-				+ destination
-				+ "/"
-				+ filename
-				+ "\" basedir=\""
-				+ buildTempLocation
-				+ "/destination\"/>");
+		writer.println("<zip zipfile=\"" + destination + "/" + filename + "\" basedir=\"" + buildTempLocation + "/destination\"/>");
 		writer.println("</target>");
 	}
-
-	private boolean generateZipLogsTarget(
-		PrintWriter writer,
-		String destination) {
+	private boolean generateZipLogsTarget(PrintWriter writer, String destination) {
 		if (logFile != null && logFile.exists() && logFile.length() > 0) {
 			writer.println("<target name=\"zip.logs\">");
 			writer.println("<delete file=\"" + destination + "/logs.zip\"/>");
-			writer.println(
-				"<zip zipfile=\""
-					+ destination
-					+ "/logs.zip\" basedir=\""
-					+ buildTempLocation
-					+ "/temp.folder\"/>");
+			writer.println("<zip zipfile=\"" + destination + "/logs.zip\" basedir=\"" + buildTempLocation + "/temp.folder\"/>");
 			writer.println("</target>");
 			return true;
 		}
 		return false;
 	}
-
 	private void generateClosingTag(PrintWriter writer) {
 		writer.println("</project>");
 	}
-
 	protected boolean isCustomBuild(IModel model) throws CoreException {
 		IBuildModel buildModel = null;
-		IFile buildFile =
-			model.getUnderlyingResource().getProject().getFile(
-				"build.properties");
+		IFile buildFile = model.getUnderlyingResource().getProject().getFile("build.properties");
 		if (buildFile.exists()) {
 			buildModel = new WorkspaceBuildModel(buildFile);
 			buildModel.load();
@@ -396,8 +288,8 @@ public abstract class BaseExportJob
 	}
 	/**
 	 * Returns the standard display to be used. The method first checks, if the
-	 * thread calling this method has an associated disaply. If so, this
-	 * display is returned. Otherwise the method returns the default display.
+	 * thread calling this method has an associated disaply. If so, this display
+	 * is returned. Otherwise the method returns the default display.
 	 */
 	public static Display getStandardDisplay() {
 		Display display;
@@ -406,15 +298,10 @@ public abstract class BaseExportJob
 			display = Display.getDefault();
 		return display;
 	}
-
 	private void asyncNotifyExportException(String errorMessage) {
 		// ask the user to install updates
 		getStandardDisplay().beep();
-		MessageDialog.openError(
-			PDEPlugin.getActiveWorkbenchShell(),
-			PDEPlugin.getResourceString("ExportJob.jobTitle"),
-			errorMessage);
+		MessageDialog.openError(PDEPlugin.getActiveWorkbenchShell(), PDEPlugin.getResourceString("ExportJob.jobTitle"), errorMessage);
 		done(OK_STATUS);
 	}
-
 }

@@ -27,6 +27,8 @@ import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.pde.core.IModel;
 import org.eclipse.pde.core.plugin.IPluginModelBase;
+import org.eclipse.pde.internal.build.AbstractScriptGenerator;
+import org.eclipse.pde.internal.build.BuildScriptGenerator;
 import org.eclipse.pde.internal.build.builder.FeatureBuildScriptGenerator;
 import org.eclipse.pde.internal.core.ModelEntry;
 import org.eclipse.pde.internal.core.PDECore;
@@ -50,66 +52,60 @@ public class FeatureExportJob extends BaseExportJob {
 
 	protected HashMap createProperties(String destination, int exportType) {
 		HashMap map = new HashMap(5);
-		map.put("feature.temp.folder", buildTempLocation + "/destination");
-		if (exportType != BaseExportJob.EXPORT_AS_UPDATE_JARS) {
-			map.put("plugin.destination", destination);
-			map.put("feature.destination", destination);
-		} else {
-			String dest = destination;
-			File file = new File(destination, "plugins");
-			file.mkdirs();
-			if (file.exists()) {
-				dest = file.getAbsolutePath();
-			}
-			map.put("plugin.destination", dest);
-
-			dest = destination;
-			file = new File(destination, "features");
-			file.mkdirs();
-			if (file.exists()) {
-				dest = file.getAbsolutePath();
-			}
-			map.put("feature.destination", dest);
-		}
+		map.put("buildTempFolder", buildTempLocation + "/destination");
+		map.put("include.children", "true");
+//		if (exportType != BaseExportJob.EXPORT_AS_UPDATE_JARS) {
+//			map.put("plugin.destination", destination);
+//			map.put("feature.destination", destination);
+//		} else {
+//			String dest = destination;
+//			File file = new File(destination, "plugins");
+//			file.mkdirs();
+//			if (file.exists()) {
+//				dest = file.getAbsolutePath();
+//			}
+//			map.put("plugin.destination", dest);
+//			dest = destination;
+//			file = new File(destination, "features");
+//			file.mkdirs();
+//			if (file.exists()) {
+//				dest = file.getAbsolutePath();
+//			}
+//			map.put("feature.destination", dest);
+//		}
 		map.put("baseos", TargetPlatform.getOS());
 		map.put("basews", TargetPlatform.getWS());
 		map.put("basearch", TargetPlatform.getOSArch());
 		map.put("basenl", TargetPlatform.getNL());
-		map.put("eclipse.running", "true");
-
+//		map.put("eclipse.running", "true");
 		IPreferenceStore store = PDEPlugin.getDefault().getPreferenceStore();
 		map.put("javacFailOnError", "false");
-		map.put(
-			"javacDebugInfo",
-			store.getBoolean(PROP_JAVAC_DEBUG_INFO) ? "on" : "off");
+		map.put("javacDebugInfo", store.getBoolean(PROP_JAVAC_DEBUG_INFO) ? "on" : "off");
 		map.put("javacVerbose", store.getString(PROP_JAVAC_VERBOSE));
 		map.put("javacSource", store.getString(PROP_JAVAC_SOURCE));
 		map.put("javacTarget", store.getString(PROP_JAVAC_TARGET));
+		
+		//For the assembler....
+		map.put("buildDirectory",  buildTempLocation + "/assemblyLocation");	//TODO this should be set to the folder location
+		map.put("collectingFolder", "eclipse");
+		map.put("archivePrefix", "eclipse");
+		map.put("archiveFullPath", "d:/tmp/myFeature.zip");
 		return map;
 	}
 
-	protected void doExport(IModel model, IProgressMonitor monitor)
-		throws CoreException, InvocationTargetException {
+	protected void doExport(IModel model, IProgressMonitor monitor) throws CoreException, InvocationTargetException {
 		IFeatureModel feature = (IFeatureModel) model;
-		String label =
-			PDEPlugin.getDefault().getLabelProvider().getObjectText(feature);
-
+		String label = PDEPlugin.getDefault().getLabelProvider().getObjectText(feature);
 		monitor.beginTask("", 10);
-		monitor.setTaskName(
-			PDEPlugin.getResourceString("ExportJob.exporting") + " " + label);
+		monitor.setTaskName(PDEPlugin.getResourceString("ExportJob.exporting") + " " + label);
 		try {
 			makeScript(feature);
 			monitor.worked(1);
-			runScript(
-				feature.getInstallLocation(),
-				destination,
-				exportType,
-				exportSource,
-				createProperties(destination, exportType),
-				new SubProgressMonitor(monitor, 9));
+			runScript(feature.getInstallLocation() + Path.SEPARATOR + "build.xml", new String[] {"build.jars"}, destination, exportType, exportSource, createProperties(destination, exportType), new SubProgressMonitor(monitor, 9));
+			runScript(feature.getInstallLocation() + Path.SEPARATOR + "assemble."+ feature.getFeature().getId() + ".xml", new String[] {"main"}, destination, exportType, exportSource, createProperties(destination, exportType), new SubProgressMonitor(monitor, 9));
 		} finally {
-			deleteBuildFiles(feature);
-			monitor.done();
+//			deleteBuildFiles(feature);
+//			monitor.done();
 		}
 	}
 
