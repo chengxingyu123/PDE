@@ -56,7 +56,6 @@ public class FeatureExportWizard extends BaseExportWizard {
 
 	protected HashMap createProperties(String destination, boolean exportZip) {		
 		HashMap map = new HashMap(5);
-		map.put("build.result.folder", buildTempLocation + Path.SEPARATOR + "build_result");
 		map.put("temp.folder", buildTempLocation + Path.SEPARATOR + "eclipse");
 		map.put("feature.temp.folder", buildTempLocation + Path.SEPARATOR + "eclipse");
 		if (exportZip) {
@@ -79,9 +78,6 @@ public class FeatureExportWizard extends BaseExportWizard {
 			}
 			map.put("feature.destination", dest);
 		}
-		map.put("os", TargetPlatform.getOS());
-		map.put("ws", TargetPlatform.getWS());
-		map.put("arch", TargetPlatform.getOSArch());
 		return map;
 	}
 	
@@ -181,8 +177,7 @@ public class FeatureExportWizard extends BaseExportWizard {
 		String ws = feature.getWS() == null ? "*" : feature.getWS();
 		String arch = feature.getArch() == null ? "*" : feature.getArch();
 		
-		//FeatureBuildScriptGenerator.setConfigInfo(os + "," + ws + "," + arch);
-		FeatureBuildScriptGenerator.setConfigInfo("*,*,*");
+		FeatureBuildScriptGenerator.setConfigInfo(os + "," + ws + "," + arch);
 	}
 
 	private URL[] getPaths() throws CoreException {
