@@ -27,6 +27,7 @@ public abstract class BaseExportJob extends Job implements IPreferenceConstants 
 	public static final int EXPORT_AS_ZIP = 0;
 	public static final int EXPORT_AS_DIRECTORY = 1;
 	public static final int EXPORT_AS_UPDATE_JARS = 2;
+	
 	private static final ISchedulingRule nonConcurentPDEExportRule = new ISchedulingRule() {
 		public boolean contains(ISchedulingRule rule) {
 			return this == rule;
@@ -38,24 +39,24 @@ public abstract class BaseExportJob extends Job implements IPreferenceConstants 
 	private static final IStatus OK_STATUS = new Status(IStatus.OK, PDEPlugin.getPluginId(), IStatus.OK, "", null);
 	protected static PrintWriter writer;
 	protected static File logFile;
-	protected int exportType;
-	protected boolean exportSource;
-	protected String destination;
-	protected String zipFileName;
-	protected Object[] items;
-	protected String buildTempLocation;
+	protected int fExportType;
+	protected boolean fExportSource;
+	protected String fDestinationDirectory;
+	protected String fZipFilename;
+	protected Object[] fItems;
+	protected String fBuildTempLocation;
 	/**
 	 * @param name
 	 */
 	public BaseExportJob(int exportType, boolean exportSource, String destination, String zipFileName, Object[] items) {
 		super(PDEPlugin.getResourceString("ExportJob.jobTitle"));
-		this.exportType = exportType;
-		this.exportSource = exportSource;
-		this.destination = destination;
-		this.zipFileName = zipFileName;
-		this.items = items;
+		fExportType = exportType;
+		fExportSource = exportSource;
+		fDestinationDirectory = destination;
+		fZipFilename = zipFileName;
+		fItems = items;
 		setSchedulingRules();
-		buildTempLocation = PDEPlugin.getDefault().getStateLocation().append("temp").toOSString();
+		fBuildTempLocation = PDEPlugin.getDefault().getStateLocation().append("temp").toOSString();
 	}
 	private void setSchedulingRules() {
 		java.util.List rules = new ArrayList();
@@ -63,8 +64,8 @@ public abstract class BaseExportJob extends Job implements IPreferenceConstants 
 		// since files and writer are shared
 		rules.add(nonConcurentPDEExportRule);
 		// Prevent modyfication of resources being exported
-		for (int i = 0; i < items.length; i++) {
-			IModel model = (IModel) items[i];
+		for (int i = 0; i < fItems.length; i++) {
+			IModel model = (IModel) fItems[i];
 			IResource resource = model.getUnderlyingResource();
 			if (resource != null) {
 				rules.add(resource);
@@ -79,8 +80,8 @@ public abstract class BaseExportJob extends Job implements IPreferenceConstants 
 	 * @see org.eclipse.core.internal.jobs.InternalJob#run(org.eclipse.core.runtime.IProgressMonitor)
 	 */
 	protected IStatus run(IProgressMonitor monitor) {
-		if (zipFileName != null) {
-			File zipFile = new File(destination, zipFileName);
+		if (fZipFilename != null) {
+			File zipFile = new File(fDestinationDirectory, fZipFilename);
 			if (zipFile.exists()) {
 				zipFile.delete();
 			}
@@ -103,7 +104,7 @@ public abstract class BaseExportJob extends Job implements IPreferenceConstants 
 				writer.close();
 		}
 		if (errorMessage == null && logFile != null && logFile.exists() && logFile.length() > 0) {
-			errorMessage = PDEPlugin.getFormattedMessage("ExportJob.error.message", destination);
+			errorMessage = PDEPlugin.getFormattedMessage("ExportJob.error.message", fDestinationDirectory);
 		}
 		if (errorMessage != null) {
 			// TODO Once platform has a mean to notify users
@@ -119,15 +120,17 @@ public abstract class BaseExportJob extends Job implements IPreferenceConstants 
 		return OK_STATUS;
 	}
 	protected void doExports(IProgressMonitor monitor) throws InvocationTargetException, CoreException {
-		createDestination(destination);
-		monitor.beginTask("", items.length + 1);
-		for (int i = 0; i < items.length; i++) {
-			IModel model = (IModel) items[i];
+		createDestination(fDestinationDirectory);
+		monitor.beginTask("", fItems.length + 1);
+		for (int i = 0; i < fItems.length; i++) {
+			IModel model = (IModel) fItems[i];
 			doExport(model, new SubProgressMonitor(monitor, 1));
 		}
-		//cleanup(zipFileName, destination, exportType, new SubProgressMonitor(monitor, 1));
+		cleanup(new SubProgressMonitor(monitor, 1));
 	}
+	
 	protected abstract void doExport(IModel model, IProgressMonitor monitor) throws CoreException, InvocationTargetException;
+
 	private static void createLogWriter() {
 		try {
 			String path = PDEPlugin.getDefault().getStateLocation().toOSString();
@@ -140,11 +143,13 @@ public abstract class BaseExportJob extends Job implements IPreferenceConstants 
 		} catch (IOException e) {
 		}
 	}
+	
 	public static PrintWriter getWriter() {
 		if (writer == null)
 			createLogWriter();
 		return writer;
 	}
+	
 	private void createDestination(String destination) throws InvocationTargetException {
 		File file = new File(destination);
 		if (!file.exists() || !file.isDirectory()) {
@@ -153,24 +158,25 @@ public abstract class BaseExportJob extends Job implements IPreferenceConstants 
 			}
 		}
 	}
-	protected void runScript(String location, String[] target, String destination, int exportType, boolean exportSource, Map properties, IProgressMonitor monitor) throws InvocationTargetException, CoreException {
+	protected void runScript(String location, String[] targets, Map properties,
+			IProgressMonitor monitor) throws InvocationTargetException, CoreException {
 		AntRunner runner = new AntRunner();
 		runner.addUserProperties(properties);
 		runner.setAntHome(location);
 		runner.setBuildFileLocation(location);
 		runner.addBuildListener("org.eclipse.pde.internal.ui.ant.ExportBuildListener");
-		runner.setExecutionTargets(target);
+		runner.setExecutionTargets(targets);
 		runner.run(monitor);
 	}
 
-	protected void cleanup(String filename, String destination, int exportType, IProgressMonitor monitor) {
+	protected void cleanup(IProgressMonitor monitor) {
 		File scriptFile = null;
 		try {
 			scriptFile = createScriptFile();
 			writer = new PrintWriter(new FileWriter(scriptFile), true);
 			generateHeader(writer);
 			generateCleanTarget(writer);
-			boolean errors = generateZipLogsTarget(writer, destination);
+			boolean errors = generateZipLogsTarget(writer, fDestinationDirectory);
 			generateClosingTag(writer);
 			writer.close();
 			
@@ -204,14 +210,14 @@ public abstract class BaseExportJob extends Job implements IPreferenceConstants 
 	}
 	private void generateCleanTarget(PrintWriter writer) {
 		writer.println("<target name=\"clean\">");
-		writer.println("<delete dir=\"" + buildTempLocation + "\"/>");
+		writer.println("<delete dir=\"" + fBuildTempLocation + "\"/>");
 		writer.println("</target>");
 	}
 	private boolean generateZipLogsTarget(PrintWriter writer, String destination) {
 		if (logFile != null && logFile.exists() && logFile.length() > 0) {
 			writer.println("<target name=\"zip.logs\">");
 			writer.println("<delete file=\"" + destination + "/logs.zip\"/>");
-			writer.println("<zip zipfile=\"" + destination + "/logs.zip\" basedir=\"" + buildTempLocation + "/temp.folder\"/>");
+			writer.println("<zip zipfile=\"" + destination + "/logs.zip\" basedir=\"" + fBuildTempLocation + "/temp.folder\"/>");
 			writer.println("</target>");
 			return true;
 		}

@@ -18,7 +18,6 @@ import org.eclipse.jface.preference.*;
 import org.eclipse.pde.core.*;
 import org.eclipse.pde.core.plugin.*;
 import org.eclipse.pde.internal.build.*;
-import org.eclipse.pde.internal.build.builder.*;
 import org.eclipse.pde.internal.core.*;
 import org.eclipse.pde.internal.core.ifeature.*;
 import org.eclipse.pde.internal.ui.*;
@@ -26,88 +25,79 @@ import org.eclipse.pde.internal.ui.*;
 public class FeatureExportJob extends BaseExportJob {
 
 	public FeatureExportJob(
-		int exportType,
-		boolean exportSource,
-		String destination,
-		String zipFileName,
-		Object[] items) {
-		super(exportType, exportSource, destination, zipFileName, items);
-	}
+			int exportType,
+			boolean exportSource,
+			String destination,
+			String zipFileName,
+			Object[] items) {
+			super(exportType, exportSource, destination, zipFileName, items);
+		}
 
-	protected HashMap createProperties(String destination, int exportType) {
-		HashMap map = new HashMap(5);
-		map.put("buildTempFolder", buildTempLocation + "/destination");
-		map.put("include.children", "true");
-//		if (exportType != BaseExportJob.EXPORT_AS_UPDATE_JARS) {
-//			map.put("plugin.destination", destination);
-//			map.put("feature.destination", destination);
-//		} else {
-//			String dest = destination;
-//			File file = new File(destination, "plugins");
-//			file.mkdirs();
-//			if (file.exists()) {
-//				dest = file.getAbsolutePath();
-//			}
-//			map.put("plugin.destination", dest);
-//			dest = destination;
-//			file = new File(destination, "features");
-//			file.mkdirs();
-//			if (file.exists()) {
-//				dest = file.getAbsolutePath();
-//			}
-//			map.put("feature.destination", dest);
-//		}
-		map.put("baseos", TargetPlatform.getOS());
-		map.put("basews", TargetPlatform.getWS());
-		map.put("basearch", TargetPlatform.getOSArch());
-		map.put("basenl", TargetPlatform.getNL());
-//		map.put("eclipse.running", "true");
+	protected HashMap createBuildProperties() {
+		HashMap map = new HashMap(15);
+		map.put(IXMLConstants.PROPERTY_BUILD_TEMP, fBuildTempLocation + "/destination");
+		map.put(IXMLConstants.PROPERTY_FEATURE_TEMP_FOLDER, fBuildTempLocation + "/destination");
+		map.put(IXMLConstants.PROPERTY_INCLUDE_CHILDREN, "true");
+		map.put(IXMLConstants.PROPERTY_BASE_OS, TargetPlatform.getOS());
+		map.put(IXMLConstants.PROPERTY_BASE_WS, TargetPlatform.getWS());
+		map.put(IXMLConstants.PROPERTY_BASE_ARCH, TargetPlatform.getOSArch());
+		map.put(IXMLConstants.PROPERTY_BASE_NL, TargetPlatform.getNL());
 		IPreferenceStore store = PDEPlugin.getDefault().getPreferenceStore();
-		map.put("javacFailOnError", "false");
-		map.put("javacDebugInfo", store.getBoolean(PROP_JAVAC_DEBUG_INFO) ? "on" : "off");
-		map.put("javacVerbose", store.getString(PROP_JAVAC_VERBOSE));
-		map.put("javacSource", store.getString(PROP_JAVAC_SOURCE));
-		map.put("javacTarget", store.getString(PROP_JAVAC_TARGET));
+		map.put(IXMLConstants.PROPERTY_JAVAC_FAIL_ON_ERROR, "false");
+		map.put(IXMLConstants.PROPERTY_JAVAC_DEBUG_INFO, store.getBoolean(PROP_JAVAC_DEBUG_INFO) ? "on" : "off");
+		map.put(IXMLConstants.PROPERTY_JAVAC_VERBOSE, store.getString(PROP_JAVAC_VERBOSE));
+		map.put(IXMLConstants.PROPERTY_JAVAC_SOURCE, store.getString(PROP_JAVAC_SOURCE));
+		map.put(IXMLConstants.PROPERTY_JAVAC_TARGET, store.getString(PROP_JAVAC_TARGET));
 		
-		//For the assembler....
-		map.put("buildDirectory",  buildTempLocation + "/assemblyLocation");	//TODO this should be set to the folder location
-		map.put("collectingFolder", "eclipse");
-		map.put("archivePrefix", ".");
-		if (zipFileName != null)
-			map.put("archiveFullPath", destination + File.separator + zipFileName);
-		else
-			map.put("archiveFullPath", destination);
-			
+		// for the assembler...
+		map.put(IXMLConstants.PROPERTY_BUILD_DIRECTORY,  fBuildTempLocation + "/assemblyLocation");	//TODO this should be set to the folder location
+		map.put(IXMLConstants.PROPERTY_BUILD_LABEL, ".");
+		map.put(IXMLConstants.PROPERTY_COLLECTING_FOLDER, ".");
+		map.put(IXMLConstants.PROPERTY_ARCHIVE_PREFIX, ".");
+		if (fExportType == EXPORT_AS_ZIP)
+			map.put(IXMLConstants.PROPERTY_ARCHIVE_FULLPATH, fDestinationDirectory + File.separator + fZipFilename);
+		else 
+			map.put(IXMLConstants.PROPERTY_ASSEMBLY_TMP, fDestinationDirectory);
 		return map;
 	}
-
-	protected void doExport(IModel model, IProgressMonitor monitor) throws CoreException, InvocationTargetException {
+	
+	protected void doExport(IModel model, IProgressMonitor monitor)
+			throws CoreException, InvocationTargetException {
 		IFeatureModel feature = (IFeatureModel) model;
 		String label = PDEPlugin.getDefault().getLabelProvider().getObjectText(feature);
 		monitor.beginTask("", 5);
 		monitor.setTaskName(PDEPlugin.getResourceString("ExportJob.exporting") + " " + label);
 		try {
+			HashMap properties = createBuildProperties();
 			makeScript(feature);
 			monitor.worked(1);
-			runScript(feature.getInstallLocation() + Path.SEPARATOR
-					+ "build.xml", new String[]{"build.jars"}, destination,
-					exportType, exportSource, createProperties(destination,
-							exportType), new SubProgressMonitor(monitor, 2));
-			runScript(feature.getInstallLocation() + Path.SEPARATOR
-					+ "assemble." + feature.getFeature().getId() + ".xml",
-					new String[]{"main"}, destination, exportType,
-					exportSource, createProperties(destination, exportType),
-					new SubProgressMonitor(monitor, 2));
+			runScript(getBuildScriptName(feature), getBuildExecutionTargets(),
+					properties, new SubProgressMonitor(monitor, 2));
+			runScript(getAssemblyScriptName(feature), new String[]{"main"},
+					properties, new SubProgressMonitor(monitor, 2));
 		} finally {
-//			deleteBuildFiles(feature);
-//			monitor.done();
+			deleteBuildFiles(feature);
+			monitor.done();
 		}
+	}
+	
+	private String getBuildScriptName(IFeatureModel feature) {
+		return feature.getInstallLocation() + Path.SEPARATOR + "build.xml";
+	}
+	
+	private String getAssemblyScriptName(IFeatureModel feature) {
+		return feature.getInstallLocation() + Path.SEPARATOR + "assemble."
+				+ feature.getFeature().getId() + ".xml";
+	}
+	
+	private String[] getBuildExecutionTargets() {
+		if (fExportSource && fExportType != EXPORT_AS_UPDATE_JARS)
+			return new String[] {"build.jars", "build.sources"};
+		return new String[] {"build.jars"};
 	}
 
 	private void deleteBuildFiles(IFeatureModel model) throws CoreException {
-
 		deleteBuildFile(model);
-
 		IFeaturePlugin[] plugins = model.getFeature().getPlugins();
 		PluginModelManager manager = PDECore.getDefault().getModelManager();
 		for (int i = 0; i < plugins.length; i++) {
@@ -116,23 +106,29 @@ public class FeatureExportJob extends BaseExportJob {
 			if (entry != null) {
 				deleteBuildFile(entry.getActiveModel());
 			}
-
 		}
-
 	}
 
 	public void deleteBuildFile(IModel model) throws CoreException {
-		if (isCustomBuild(model))
-			return;
 		String directory =
 			(model instanceof IFeatureModel)
 				? ((IFeatureModel) model).getInstallLocation()
 				: ((IPluginModelBase) model).getInstallLocation();
-
-		File file = new File(directory, "build.xml");
-		if (file.exists()) {
-			file.delete();
+		if (!isCustomBuild(model)) {
+			File file = new File(directory, "build.xml");
+			if (file.exists() && !file.isDirectory()) {
+				file.delete();
+			}
 		}
+		if (model instanceof IFeatureModel) {
+			String id = ((IFeatureModel)model).getFeature().getId();
+			File file = new File(directory, "assemble." + id + ".all.xml");
+			if (file.exists() && !file.isDirectory())
+				file.delete();
+			file = new File(directory, "assemble." + id + ".xml");
+			if (file.exists() && !file.isDirectory())
+				file.delete();				
+		}		
 	}
 
 	private void makeScript(IFeatureModel model) throws CoreException {
@@ -142,20 +138,11 @@ public class FeatureExportJob extends BaseExportJob {
 		generator.setWorkingDirectory(model.getUnderlyingResource().getProject().getLocation().toOSString());
 		generator.setElements(new String[] {"feature@" + model.getFeature().getId()});
 		generator.setPluginPath(getPaths());
-		if (exportType == EXPORT_AS_ZIP)
-			generator.setOutputFormat("antzip");
-		else if (exportType == EXPORT_AS_DIRECTORY)
-			generator.setOutputFormat("folder");
-		setConfigInfo(model.getFeature());
+		generator.setOutputFormat(fExportType == EXPORT_AS_ZIP ? "antzip" : "folder");
+		generator.setForceUpdateJar(fExportType == EXPORT_AS_UPDATE_JARS);
+		generator.setEmbeddedSource(fExportSource);
+		BuildScriptGenerator.setConfigInfo("*,*,*");
 		generator.generate();	
-	}
-
-	private void setConfigInfo(IFeature feature) throws CoreException {
-		String os = feature.getOS() == null ? "*" : TargetPlatform.getOS();
-		String ws = feature.getWS() == null ? "*" : TargetPlatform.getWS();
-		String arch = feature.getArch() == null ? "*" : TargetPlatform.getOSArch();
-
-		FeatureBuildScriptGenerator.setConfigInfo(os + "," + ws + "," + arch);
 	}
 
 	private String[] getPaths() throws CoreException {

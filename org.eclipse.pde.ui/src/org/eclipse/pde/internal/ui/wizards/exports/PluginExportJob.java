@@ -18,7 +18,6 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.SubProgressMonitor;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.pde.core.IModel;
@@ -44,22 +43,22 @@ public class PluginExportJob extends BaseExportJob {
 		IPluginBase model,
 		int exportType) {
 		HashMap map = new HashMap(4);
-		String location = buildTempLocation + "/build_result/" + model.getId();
+		String location = fBuildTempLocation + "/build_result/" + model.getId();
 		File dir = new File(location);
 		if (!dir.exists() || !dir.isDirectory())
 			dir.mkdirs();
 		map.put("build.result.folder", location);
 		map.put(
 			"temp.folder",
-			buildTempLocation + "/temp.folder/" + model.getId());
+			fBuildTempLocation + "/temp.folder/" + model.getId());
 		if (exportType != BaseExportJob.EXPORT_AS_UPDATE_JARS)
 			map.put(
 				"destination.temp.folder",
-				buildTempLocation + "/destination/plugins");
+				fBuildTempLocation + "/destination/plugins");
 		else
 			map.put(
 				"destination.temp.folder",
-				buildTempLocation + "/temp.folder/" + model.getId());
+				fBuildTempLocation + "/temp.folder/" + model.getId());
 		map.put("plugin.destination", destination);
 		map.put("baseos", TargetPlatform.getOS());
 		map.put("basews", TargetPlatform.getWS());
