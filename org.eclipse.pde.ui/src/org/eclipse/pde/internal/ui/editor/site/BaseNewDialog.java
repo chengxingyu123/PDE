@@ -15,14 +15,14 @@ import org.eclipse.swt.layout.*;
 import org.eclipse.swt.widgets.*;
 import org.eclipse.ui.help.WorkbenchHelp;
 
-public abstract class BaseDialog extends StatusDialog {
+public abstract class BaseNewDialog extends StatusDialog {
 	private Button okButton;
 	private ISiteModel siteModel;
 	private ISiteObject siteObject;
 	private IStatus errorStatus;
 	private IStatus okStatus;
 
-	public BaseDialog(
+	public BaseNewDialog(
 		Shell shell,
 		ISiteModel siteModel,
 		ISiteObject siteObject) {
