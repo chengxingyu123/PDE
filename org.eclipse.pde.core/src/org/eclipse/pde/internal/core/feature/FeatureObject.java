@@ -15,8 +15,8 @@ import org.w3c.dom.Node;
 public abstract class FeatureObject
 	extends PlatformObject
 	implements IFeatureObject {
-	transient IFeatureModel model;
-	transient IFeatureObject parent;
+	IFeatureModel model;
+	IFeatureObject parent;
 	protected String label;
 	boolean inTheModel;
 
@@ -92,6 +92,14 @@ public abstract class FeatureObject
 			}
 		}
 		return 0;
+	}
+	
+	boolean getBooleanAttribute(Node node, String name) {
+		String value = getNodeAttribute(node, name);
+		if (value != null) {
+			return value.equalsIgnoreCase("true");
+		}
+		return false;
 	}
 
 	protected String getNormalizedText(String source) {
@@ -181,12 +189,5 @@ public abstract class FeatureObject
 	}
 
 	public void write(String indent, PrintWriter writer) {
-	}
-	public void setModel(IFeatureModel model) {
-		this.model = model;
-	}
-	
-	public void setParent(IFeatureObject parent) {
-		this.parent = parent;
 	}
 }
