@@ -78,6 +78,10 @@ public class FeatureExportWizard extends BaseExportWizard {
 			}
 			map.put("feature.destination", dest);
 		}
+		map.put("baseos", TargetPlatform.getOS());
+		map.put("basews", TargetPlatform.getWS());
+		map.put("basearch", TargetPlatform.getOSArch());
+		map.put("basenl", TargetPlatform.getNL());
 		return map;
 	}
 	
