@@ -109,7 +109,7 @@ public class FeatureExportWizard extends BaseExportWizard {
 				createProperties(destination, exportZip),
 				new SubProgressMonitor(monitor, 9));
 		} finally {
-			//deleteBuildFiles(feature);
+			deleteBuildFiles(feature);
 			monitor.done();
 		}
 	}
