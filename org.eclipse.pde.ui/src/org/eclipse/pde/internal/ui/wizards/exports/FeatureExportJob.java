@@ -9,62 +9,126 @@
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
 package org.eclipse.pde.internal.ui.wizards.exports;
-
 import java.io.*;
 import java.lang.reflect.*;
 import java.util.*;
+import org.eclipse.ant.core.*;
+import org.eclipse.core.resources.*;
 import org.eclipse.core.runtime.*;
+import org.eclipse.core.runtime.jobs.*;
+import org.eclipse.jface.dialogs.*;
 import org.eclipse.jface.preference.*;
 import org.eclipse.pde.core.*;
+import org.eclipse.pde.core.build.*;
 import org.eclipse.pde.core.plugin.*;
 import org.eclipse.pde.internal.build.*;
 import org.eclipse.pde.internal.core.*;
+import org.eclipse.pde.internal.core.build.*;
 import org.eclipse.pde.internal.core.ifeature.*;
 import org.eclipse.pde.internal.ui.*;
+import org.eclipse.swt.widgets.*;
 
-public class FeatureExportJob extends BaseExportJob {
+public class FeatureExportJob extends Job implements IPreferenceConstants {
+	// The three supported export types
+	public static final int EXPORT_AS_ZIP = 0;
+	public static final int EXPORT_AS_DIRECTORY = 1;
+	public static final int EXPORT_AS_UPDATE_JARS = 2;
+	
+	// write to the ant build listener log
+	protected static PrintWriter writer;
+	protected static File logFile;
+	
+	// Export options specified in the wizard
+	protected int fExportType;
+	protected boolean fExportSource;
+	protected String fDestinationDirectory;
+	protected String fZipFilename;
+	protected Object[] fItems;
+	
+	// Location where the build takes place
+	protected String fBuildTempLocation;
+	
+	protected HashMap fBuildProperties;
 
-	public FeatureExportJob(
-			int exportType,
-			boolean exportSource,
-			String destination,
-			String zipFileName,
-			Object[] items) {
-			super(exportType, exportSource, destination, zipFileName, items);
+	public FeatureExportJob(int exportType, boolean exportSource, String destination, String zipFileName, Object[] items) {
+		super("Building Plug-ins");
+		fExportType = exportType;
+		fExportSource = exportSource;
+		fDestinationDirectory = destination;
+		fZipFilename = zipFileName;
+		fItems = items;
+		fBuildTempLocation = PDEPlugin.getDefault().getStateLocation().append("temp").toOSString();
+		setRule(null);
+	}
+	
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.eclipse.core.internal.jobs.InternalJob#run(org.eclipse.core.runtime.IProgressMonitor)
+	 */
+	protected IStatus run(IProgressMonitor monitor) {
+		String errorMessage = null;
+		try {
+			createLogWriter();
+			doExports(monitor);
+		} catch (final CoreException e) {
+			final Display display = getStandardDisplay();
+			display.asyncExec(new Runnable() {
+				public void run() {
+					ErrorDialog.openError(display.getActiveShell(), "Error", e.getMessage(), e.getStatus());
+					done(new Status(IStatus.OK, PDEPlugin.getPluginId(), IStatus.OK, "", null));
+				}
+			});
+			return Job.ASYNC_FINISH;
+		} catch (InvocationTargetException e) {
+			String message = e.getTargetException().getMessage();
+			if (message != null && message.length() > 0) {
+				errorMessage = e.getTargetException().getMessage();
+			}
+		} finally {
+			if (writer != null)
+				writer.close();
 		}
-
-	protected HashMap createBuildProperties() {
-		HashMap map = new HashMap(15);
-		map.put(IXMLConstants.PROPERTY_BUILD_TEMP, fBuildTempLocation + "/destination");
-		map.put(IXMLConstants.PROPERTY_TEMP_FOLDER, fBuildTempLocation + "/temp.folder");
-		map.put(IXMLConstants.PROPERTY_FEATURE_TEMP_FOLDER, fBuildTempLocation + "/destination");
-		map.put(IXMLConstants.PROPERTY_INCLUDE_CHILDREN, "true");
-		map.put("eclipse.running", "true");
-		map.put(IXMLConstants.PROPERTY_BASE_OS, TargetPlatform.getOS());
-		map.put(IXMLConstants.PROPERTY_BASE_WS, TargetPlatform.getWS());
-		map.put(IXMLConstants.PROPERTY_BASE_ARCH, TargetPlatform.getOSArch());
-		map.put(IXMLConstants.PROPERTY_BASE_NL, TargetPlatform.getNL());
-		IPreferenceStore store = PDEPlugin.getDefault().getPreferenceStore();
-		map.put(IXMLConstants.PROPERTY_JAVAC_FAIL_ON_ERROR, "false");
-		map.put(IXMLConstants.PROPERTY_JAVAC_DEBUG_INFO, store.getBoolean(PROP_JAVAC_DEBUG_INFO) ? "on" : "off");
-		map.put(IXMLConstants.PROPERTY_JAVAC_VERBOSE, store.getString(PROP_JAVAC_VERBOSE));
-		map.put(IXMLConstants.PROPERTY_JAVAC_SOURCE, store.getString(PROP_JAVAC_SOURCE));
-		map.put(IXMLConstants.PROPERTY_JAVAC_TARGET, store.getString(PROP_JAVAC_TARGET));
+		if (errorMessage == null && logFile != null && logFile.exists() && logFile.length() > 0) {
+			errorMessage = getLogFoundMessage();
+		}
 		
-		// for the assembler...
-		map.put(IXMLConstants.PROPERTY_BUILD_DIRECTORY,  fBuildTempLocation + "/assemblyLocation");	//TODO this should be set to the folder location
-		map.put(IXMLConstants.PROPERTY_BUILD_LABEL, ".");
-		map.put(IXMLConstants.PROPERTY_COLLECTING_FOLDER, ".");
-		map.put(IXMLConstants.PROPERTY_ARCHIVE_PREFIX, ".");
-		if (fExportType == EXPORT_AS_ZIP)
-			map.put(IXMLConstants.PROPERTY_ARCHIVE_FULLPATH, fDestinationDirectory + File.separator + fZipFilename);
-		else 
-			map.put(IXMLConstants.PROPERTY_ASSEMBLY_TMP, fDestinationDirectory);
-		return map;
+		if (errorMessage != null) {
+			final String em = errorMessage;
+			getStandardDisplay().asyncExec(new Runnable() {
+				public void run() {
+					asyncNotifyExportException(em);
+				}
+			});
+			return Job.ASYNC_FINISH;
+		}
+		return new Status(IStatus.OK, PDEPlugin.getPluginId(), IStatus.OK, "", null);
+	}
+	
+	
+	protected void doExports(IProgressMonitor monitor) throws InvocationTargetException, CoreException {
+		createDestination();
+		monitor.beginTask("", fItems.length + 1);
+		try {
+			for (int i = 0; i < fItems.length; i++) {
+				IModel model = (IModel) fItems[i];
+				doExport(model, new SubProgressMonitor(monitor, 1));
+			}
+		} finally {	
+			cleanup(new SubProgressMonitor(monitor, 1));
+		}
+	}
+	
+	private void createDestination() throws InvocationTargetException {
+		File file = new File(fDestinationDirectory);
+		if (!file.exists() || !file.isDirectory()) {
+			if (!file.mkdirs())
+				throw new InvocationTargetException(new Exception(PDEPlugin.getResourceString("ExportWizard.badDirectory")));
+		}
 	}
 	
 	protected void doExport(IModel model, IProgressMonitor monitor)
-			throws CoreException, InvocationTargetException {
+		throws CoreException, InvocationTargetException {
 		IFeatureModel feature = (IFeatureModel) model;
 		String label = PDEPlugin.getDefault().getLabelProvider().getObjectText(feature);
 		monitor.beginTask("", 5);
@@ -82,7 +146,64 @@ public class FeatureExportJob extends BaseExportJob {
 			monitor.done();
 		}
 	}
+
+	protected HashMap createBuildProperties() {
+		if (fBuildProperties == null) {
+			fBuildProperties = new HashMap(15);
+			fBuildProperties.put(IXMLConstants.PROPERTY_BUILD_TEMP, fBuildTempLocation + "/destination");
+			fBuildProperties.put(IXMLConstants.PROPERTY_TEMP_FOLDER, fBuildTempLocation + "/temp.folder");
+			fBuildProperties.put(IXMLConstants.PROPERTY_FEATURE_TEMP_FOLDER, fBuildTempLocation + "/destination");
+			fBuildProperties.put(IXMLConstants.PROPERTY_INCLUDE_CHILDREN, "true");
+			fBuildProperties.put("eclipse.running", "true");
+			fBuildProperties.put(IXMLConstants.PROPERTY_BASE_OS, TargetPlatform.getOS());
+			fBuildProperties.put(IXMLConstants.PROPERTY_BASE_WS, TargetPlatform.getWS());
+			fBuildProperties.put(IXMLConstants.PROPERTY_BASE_ARCH, TargetPlatform.getOSArch());
+			fBuildProperties.put(IXMLConstants.PROPERTY_BASE_NL, TargetPlatform.getNL());
+			IPreferenceStore store = PDEPlugin.getDefault().getPreferenceStore();
+			fBuildProperties.put(IXMLConstants.PROPERTY_JAVAC_FAIL_ON_ERROR, "false");
+			fBuildProperties.put(IXMLConstants.PROPERTY_JAVAC_DEBUG_INFO, store.getBoolean(PROP_JAVAC_DEBUG_INFO) ? "on" : "off");
+			fBuildProperties.put(IXMLConstants.PROPERTY_JAVAC_VERBOSE, store.getString(PROP_JAVAC_VERBOSE));
+			fBuildProperties.put(IXMLConstants.PROPERTY_JAVAC_SOURCE, store.getString(PROP_JAVAC_SOURCE));
+			fBuildProperties.put(IXMLConstants.PROPERTY_JAVAC_TARGET, store.getString(PROP_JAVAC_TARGET));
+			
+			// for the assembler...
+			fBuildProperties.put(IXMLConstants.PROPERTY_BUILD_DIRECTORY,  fBuildTempLocation + "/assemblyLocation");	//TODO this should be set to the folder location
+			fBuildProperties.put(IXMLConstants.PROPERTY_BUILD_LABEL, ".");
+			fBuildProperties.put(IXMLConstants.PROPERTY_COLLECTING_FOLDER, ".");
+			fBuildProperties.put(IXMLConstants.PROPERTY_ARCHIVE_PREFIX, ".");
+			if (fExportType == EXPORT_AS_ZIP)
+				fBuildProperties.put(IXMLConstants.PROPERTY_ARCHIVE_FULLPATH, fDestinationDirectory + File.separator + fZipFilename);
+			else 
+				fBuildProperties.put(IXMLConstants.PROPERTY_ASSEMBLY_TMP, fDestinationDirectory);
+		}
+		return fBuildProperties;
+	}
 	
+	private void makeScript(IFeatureModel model) throws CoreException {
+		BuildScriptGenerator generator = new BuildScriptGenerator();
+		generator.setBuildingOSGi(PDECore.getDefault().getModelManager().isOSGiRuntime());
+		generator.setChildren(true);
+		generator.setWorkingDirectory(model.getUnderlyingResource().getProject().getLocation().toOSString());
+		generator.setElements(new String[] {"feature@" + model.getFeature().getId()});
+		generator.setPluginPath(getPaths());
+		generator.setOutputFormat(fExportType == EXPORT_AS_ZIP ? "antzip" : "folder");
+		generator.setForceUpdateJar(fExportType == EXPORT_AS_UPDATE_JARS);
+		generator.setEmbeddedSource(fExportSource && fExportType != EXPORT_AS_UPDATE_JARS);
+		BuildScriptGenerator.setConfigInfo("*,*,*");
+		generator.generate();	
+	}
+
+	protected void runScript(String location, String[] targets, Map properties,
+			IProgressMonitor monitor) throws InvocationTargetException, CoreException {
+		AntRunner runner = new AntRunner();
+		runner.addUserProperties(properties);
+		runner.setAntHome(location);
+		runner.setBuildFileLocation(location);
+		runner.addBuildListener("org.eclipse.pde.internal.ui.ant.ExportBuildListener");
+		runner.setExecutionTargets(targets);
+		runner.run(monitor);
+	}
+
 	private String getBuildScriptName(IFeatureModel feature) {
 		return feature.getInstallLocation() + Path.SEPARATOR + "build.xml";
 	}
@@ -133,18 +254,25 @@ public class FeatureExportJob extends BaseExportJob {
 		}		
 	}
 
-	private void makeScript(IFeatureModel model) throws CoreException {
-		BuildScriptGenerator generator = new BuildScriptGenerator();
-		generator.setBuildingOSGi(PDECore.getDefault().getModelManager().isOSGiRuntime());
-		generator.setChildren(true);
-		generator.setWorkingDirectory(model.getUnderlyingResource().getProject().getLocation().toOSString());
-		generator.setElements(new String[] {"feature@" + model.getFeature().getId()});
-		generator.setPluginPath(getPaths());
-		generator.setOutputFormat(fExportType == EXPORT_AS_ZIP ? "antzip" : "folder");
-		generator.setForceUpdateJar(fExportType == EXPORT_AS_UPDATE_JARS);
-		generator.setEmbeddedSource(fExportSource && fExportType != EXPORT_AS_UPDATE_JARS);
-		BuildScriptGenerator.setConfigInfo("*,*,*");
-		generator.generate();	
+	protected boolean isCustomBuild(IModel model) throws CoreException {
+		IBuildModel buildModel = null;
+		IFile buildFile = model.getUnderlyingResource().getProject().getFile("build.properties");
+		if (buildFile.exists()) {
+			buildModel = new WorkspaceBuildModel(buildFile);
+			buildModel.load();
+		}
+		if (buildModel != null) {
+			IBuild build = buildModel.getBuild();
+			IBuildEntry entry = build.getEntry("custom");
+			if (entry != null) {
+				String[] tokens = entry.getTokens();
+				for (int i = 0; i < tokens.length; i++) {
+					if (tokens[i].equals("true"))
+						return true;
+				}
+			}
+		}
+		return false;
 	}
 
 	private String[] getPaths() throws CoreException {
@@ -162,4 +290,109 @@ public class FeatureExportJob extends BaseExportJob {
 		return all;
 	}
 
+	private static void createLogWriter() {
+		try {
+			String path = PDEPlugin.getDefault().getStateLocation().toOSString();
+			logFile = new File(path, "exportLog.txt");
+			if (logFile.exists()) {
+				logFile.delete();
+				logFile.createNewFile();
+			}
+			writer = new PrintWriter(new FileWriter(logFile), true);
+		} catch (IOException e) {
+		}
+	}
+	
+	public static PrintWriter getWriter() {
+		if (writer == null)
+			createLogWriter();
+		return writer;
+	}
+	
+	protected void cleanup(IProgressMonitor monitor) {
+		File scriptFile = null;
+		try {
+			scriptFile = createScriptFile();
+			writer = new PrintWriter(new FileWriter(scriptFile), true);
+			generateHeader(writer);
+			generateDeleteZipTarget(writer);
+			generateCleanTarget(writer);
+			boolean errors = generateZipLogsTarget(writer);
+			generateClosingTag(writer);
+			writer.close();
+			
+			ArrayList targets = new ArrayList();
+			targets.add("deleteZip");
+			if (errors)
+				targets.add("zip.logs");
+			targets.add("clean");
+			AntRunner runner = new AntRunner();
+			runner.setBuildFileLocation(scriptFile.getAbsolutePath());
+			runner.setExecutionTargets((String[]) targets.toArray(new String[targets.size()]));
+			runner.run(monitor);
+		} catch (IOException e) {
+		} catch (CoreException e) {
+		} finally {
+			if (scriptFile != null && scriptFile.exists())
+				scriptFile.delete();
+		}
+	}
+	private File createScriptFile() throws IOException {
+		String path = PDEPlugin.getDefault().getStateLocation().toOSString();
+		File zip = new File(path, "zip.xml");
+		if (zip.exists()) {
+			zip.delete();
+			zip.createNewFile();
+		}
+		return zip;
+	}
+	private void generateHeader(PrintWriter writer) {
+		writer.println("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
+		writer.println("<project name=\"temp\" default=\"clean\" basedir=\".\">");
+	}
+	private void generateCleanTarget(PrintWriter writer) {
+		writer.println("<target name=\"clean\">");
+		writer.println("<delete dir=\"" + fBuildTempLocation + "\"/>");
+		writer.println("</target>");
+	}
+	private void generateDeleteZipTarget(PrintWriter writer) {
+		writer.println("<target name=\"deleteZip\">");
+		writer.println("<delete file=\"" + fDestinationDirectory + "/logs.zip\"/>");
+		writer.println("</target>");	
+	}
+	
+	private boolean generateZipLogsTarget(PrintWriter writer) {
+		if (logFile != null && logFile.exists() && logFile.length() > 0) {
+			writer.println("<target name=\"zip.logs\">");
+			writer.println("<zip zipfile=\"" + fDestinationDirectory + "/logs.zip\" basedir=\"" + fBuildTempLocation + "/temp.folder\"/>");
+			writer.println("</target>");
+			return true;
+		}
+		return false;
+	}
+	private void generateClosingTag(PrintWriter writer) {
+		writer.println("</project>");
+	}
+	/**
+	 * Returns the standard display to be used. The method first checks, if the
+	 * thread calling this method has an associated disaply. If so, this display
+	 * is returned. Otherwise the method returns the default display.
+	 */
+	public static Display getStandardDisplay() {
+		Display display;
+		display = Display.getCurrent();
+		if (display == null)
+			display = Display.getDefault();
+		return display;
+	}
+	
+	private void asyncNotifyExportException(String errorMessage) {
+		getStandardDisplay().beep();
+		MessageDialog.openError(PDEPlugin.getActiveWorkbenchShell(), "Error", errorMessage);
+		done(new Status(IStatus.OK, PDEPlugin.getPluginId(), IStatus.OK, "", null));
+	}
+	
+	protected String getLogFoundMessage() {
+		return PDEPlugin.getFormattedMessage("ExportJob.error.message", fDestinationDirectory + File.separator + "logs.zip");
+	}
 }

@@ -27,7 +27,7 @@ import org.eclipse.pde.internal.build.builder.ModelBuildScriptGenerator;
 import org.eclipse.pde.internal.core.TargetPlatform;
 import org.eclipse.pde.internal.ui.PDEPlugin;
 
-public class PluginExportJob extends BaseExportJob {
+public class PluginExportJob extends FeatureExportJob {
 
 	public PluginExportJob(
 		int exportType,
@@ -51,7 +51,7 @@ public class PluginExportJob extends BaseExportJob {
 		map.put(
 			"temp.folder",
 			fBuildTempLocation + "/temp.folder/" + model.getId());
-		if (exportType != BaseExportJob.EXPORT_AS_UPDATE_JARS)
+		if (exportType != FeatureExportJob.EXPORT_AS_UPDATE_JARS)
 			map.put(
 				"destination.temp.folder",
 				fBuildTempLocation + "/destination/plugins");
