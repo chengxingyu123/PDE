@@ -56,14 +56,22 @@ public class BuildFeatureAction extends BaseBuildAction {
 		System.arraycopy(features, 0, all, plugins.length, features.length);
 		
 		generator.setPluginPath(all);
-		FeatureBuildScriptGenerator.setConfigInfo(TargetPlatform.getOS()+","+TargetPlatform.getWS()+"," + TargetPlatform.getOSArch());
-
+		setConfigInfo(model.getFeature());
+		
 		try {
 			generator.setFeature(model.getFeature().getId());
 			generator.generate();
 		} catch (Exception e) {
 			PDEPlugin.logException(e);
 		}
+	}
+	
+	private void setConfigInfo(IFeature feature) throws CoreException {
+		String os = feature.getOS() == null ? "*" : feature.getOS();
+		String ws = feature.getWS() == null ? "*" : feature.getWS();
+		String arch = feature.getArch() == null ? "*" : feature.getArch();
+		
+		FeatureBuildScriptGenerator.setConfigInfo(os + "," + ws + "," + arch);
 	}
 
 	private void refreshLocal(IFeature feature, IProgressMonitor monitor)

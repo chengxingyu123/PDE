@@ -28,6 +28,7 @@ import org.eclipse.pde.internal.core.ModelEntry;
 import org.eclipse.pde.internal.core.PDECore;
 import org.eclipse.pde.internal.core.PluginModelManager;
 import org.eclipse.pde.internal.core.TargetPlatform;
+import org.eclipse.pde.internal.core.ifeature.IFeature;
 import org.eclipse.pde.internal.core.ifeature.IFeatureModel;
 import org.eclipse.pde.internal.core.ifeature.IFeaturePlugin;
 import org.eclipse.pde.internal.ui.*;
@@ -55,6 +56,7 @@ public class FeatureExportWizard extends BaseExportWizard {
 
 	protected HashMap createProperties(String destination, boolean exportZip) {		
 		HashMap map = new HashMap(5);
+		map.put("build.result.folder", buildTempLocation + Path.SEPARATOR + "build_result");
 		map.put("temp.folder", buildTempLocation + Path.SEPARATOR + "eclipse");
 		map.put("feature.temp.folder", buildTempLocation + Path.SEPARATOR + "eclipse");
 		if (exportZip) {
@@ -77,6 +79,9 @@ public class FeatureExportWizard extends BaseExportWizard {
 			}
 			map.put("feature.destination", dest);
 		}
+		map.put("os", TargetPlatform.getOS());
+		map.put("ws", TargetPlatform.getWS());
+		map.put("arch", TargetPlatform.getOSArch());
 		return map;
 	}
 	
@@ -166,11 +171,20 @@ public class FeatureExportWizard extends BaseExportWizard {
 
 		generator.setAnalyseChildren(true);
 		generator.setPluginPath(getPaths());
-		FeatureBuildScriptGenerator.setConfigInfo(TargetPlatform.getOS()+","+TargetPlatform.getWS()+"," + TargetPlatform.getOSArch());
+		setConfigInfo(model.getFeature());
 		generator.setFeature(model.getFeature().getId());
 		generator.generate();
 	}
 	
+	private void setConfigInfo(IFeature feature) throws CoreException {
+		String os = feature.getOS() == null ? "*" : feature.getOS();
+		String ws = feature.getWS() == null ? "*" : feature.getWS();
+		String arch = feature.getArch() == null ? "*" : feature.getArch();
+		
+		//FeatureBuildScriptGenerator.setConfigInfo(os + "," + ws + "," + arch);
+		FeatureBuildScriptGenerator.setConfigInfo("*,*,*");
+	}
+
 	private URL[] getPaths() throws CoreException {
 		ArrayList paths = new ArrayList();
 		IFeatureModel[] models = PDECore.getDefault().getWorkspaceModelManager().getWorkspaceFeatureModels();

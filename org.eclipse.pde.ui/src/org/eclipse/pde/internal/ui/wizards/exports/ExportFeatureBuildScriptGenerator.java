@@ -40,7 +40,7 @@ public class ExportFeatureBuildScriptGenerator extends FeatureBuildScriptGenerat
 		script.printMkdirTask(featureTempFolder);
 		Map params = new HashMap(1);
 		params.put(PROPERTY_TARGET, TARGET_GATHER_SOURCES);
-		params.put(PROPERTY_DESTINATION_TEMP_FOLDER, featureTempFolder + "/" + DEFAULT_PLUGIN_LOCATION + "/" + sourceFeatureFullNameVersionned + "/" + "src"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+		params.put(PROPERTY_DESTINATION_TEMP_FOLDER, featureTempFolder + "/plugins"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
 		script.printAntCallTask(TARGET_ALL_CHILDREN, null, params);
 		script.printTargetEnd();
 	}
