@@ -111,11 +111,16 @@ public class FeatureExportJob extends Job implements IPreferenceConstants {
 		monitor.beginTask("", fItems.length + 1);
 		try {
 			for (int i = 0; i < fItems.length; i++) {
-				IModel model = (IModel) fItems[i];
-				doExport(model, new SubProgressMonitor(monitor, 1));
+				IFeatureModel model = (IFeatureModel)fItems[i];
+				try {
+					doExport(model.getFeature().getId(), model.getInstallLocation(), new SubProgressMonitor(monitor, 1));
+				} finally {
+					deleteBuildFiles(model);
+				}
 			}
 		} finally {	
 			cleanup(new SubProgressMonitor(monitor, 1));
+			monitor.done();
 		}
 	}
 	
@@ -127,22 +132,19 @@ public class FeatureExportJob extends Job implements IPreferenceConstants {
 		}
 	}
 	
-	protected void doExport(IModel model, IProgressMonitor monitor)
+	protected void doExport(String featureID, String featureLocation, IProgressMonitor monitor)
 		throws CoreException, InvocationTargetException {
-		IFeatureModel feature = (IFeatureModel) model;
-		String label = PDEPlugin.getDefault().getLabelProvider().getObjectText(feature);
 		monitor.beginTask("", 5);
-		monitor.setTaskName(PDEPlugin.getResourceString("ExportJob.exporting") + " " + label);
+		monitor.setTaskName(PDEPlugin.getResourceString("ExportJob.exporting") + " " + featureID);
 		try {
 			HashMap properties = createBuildProperties();
-			makeScript(feature);
+			makeScript(featureID, featureLocation);
 			monitor.worked(1);
-			runScript(getBuildScriptName(feature), getBuildExecutionTargets(),
+			runScript(getBuildScriptName(featureLocation), getBuildExecutionTargets(),
 					properties, new SubProgressMonitor(monitor, 2));
-			runScript(getAssemblyScriptName(feature), new String[]{"main"},
+			runScript(getAssemblyScriptName(featureID, featureLocation), new String[]{"main"},
 					properties, new SubProgressMonitor(monitor, 2));
 		} finally {
-			deleteBuildFiles(feature);
 			monitor.done();
 		}
 	}
@@ -179,12 +181,12 @@ public class FeatureExportJob extends Job implements IPreferenceConstants {
 		return fBuildProperties;
 	}
 	
-	private void makeScript(IFeatureModel model) throws CoreException {
+	private void makeScript(String featureID, String featureLocation) throws CoreException {
 		BuildScriptGenerator generator = new BuildScriptGenerator();
 		generator.setBuildingOSGi(PDECore.getDefault().getModelManager().isOSGiRuntime());
 		generator.setChildren(true);
-		generator.setWorkingDirectory(model.getUnderlyingResource().getProject().getLocation().toOSString());
-		generator.setElements(new String[] {"feature@" + model.getFeature().getId()});
+		generator.setWorkingDirectory(featureLocation);
+		generator.setElements(new String[] {"feature@" + featureID});
 		generator.setPluginPath(getPaths());
 		generator.setOutputFormat(fExportType == EXPORT_AS_ZIP ? "antzip" : "folder");
 		generator.setForceUpdateJar(fExportType == EXPORT_AS_UPDATE_JARS);
@@ -204,13 +206,13 @@ public class FeatureExportJob extends Job implements IPreferenceConstants {
 		runner.run(monitor);
 	}
 
-	private String getBuildScriptName(IFeatureModel feature) {
-		return feature.getInstallLocation() + Path.SEPARATOR + "build.xml";
+	private String getBuildScriptName(String featureLocation) {
+		return featureLocation + Path.SEPARATOR + "build.xml";
 	}
 	
-	private String getAssemblyScriptName(IFeatureModel feature) {
-		return feature.getInstallLocation() + Path.SEPARATOR + "assemble."
-				+ feature.getFeature().getId() + ".xml";
+	private String getAssemblyScriptName(String featureID, String featureLocation) {
+		return featureLocation + Path.SEPARATOR + "assemble."
+				+ featureID + ".xml";
 	}
 	
 	private String[] getBuildExecutionTargets() {
@@ -219,38 +221,44 @@ public class FeatureExportJob extends Job implements IPreferenceConstants {
 		return new String[] {"build.jars", "gather.logs"};
 	}
 
-	private void deleteBuildFiles(IFeatureModel model) throws CoreException {
-		deleteBuildFile(model);
-		IFeaturePlugin[] plugins = model.getFeature().getPlugins();
-		PluginModelManager manager = PDECore.getDefault().getModelManager();
-		for (int i = 0; i < plugins.length; i++) {
-			ModelEntry entry =
-				manager.findEntry(plugins[i].getId(), plugins[i].getVersion());
-			if (entry != null) {
-				deleteBuildFile(entry.getActiveModel());
-			}
-		}
-	}
-
-	public void deleteBuildFile(IModel model) throws CoreException {
+	public void deleteBuildFiles(IModel model) throws CoreException {
 		String directory =
 			(model instanceof IFeatureModel)
 				? ((IFeatureModel) model).getInstallLocation()
 				: ((IPluginModelBase) model).getInstallLocation();
-		if (!isCustomBuild(model)) {
+				
+		if (model.getUnderlyingResource() != null && !isCustomBuild(model)) {
 			File file = new File(directory, "build.xml");
 			if (file.exists() && !file.isDirectory()) {
 				file.delete();
 			}
+			if (model instanceof IFeatureModel) {
+				String id = ((IFeatureModel)model).getFeature().getId();
+				file = new File(directory, "assemble." + id + ".all.xml");
+				if (file.exists() && !file.isDirectory())
+					file.delete();
+				file = new File(directory, "assemble." + id + ".xml");
+				if (file.exists() && !file.isDirectory())
+					file.delete();
+			}
 		}
+		
 		if (model instanceof IFeatureModel) {
-			String id = ((IFeatureModel)model).getFeature().getId();
-			File file = new File(directory, "assemble." + id + ".all.xml");
-			if (file.exists() && !file.isDirectory())
-				file.delete();
-			file = new File(directory, "assemble." + id + ".xml");
-			if (file.exists() && !file.isDirectory())
-				file.delete();				
+			IFeature feature = ((IFeatureModel)model).getFeature();
+			IFeatureChild[] children = feature.getIncludedFeatures();
+			for (int i = 0; i < children.length; i++) {
+				deleteBuildFiles(children[i].getModel());
+			}
+			
+			IFeaturePlugin[] plugins = feature.getPlugins();
+			PluginModelManager manager = PDECore.getDefault().getModelManager();
+			for (int i = 0; i < plugins.length; i++) {
+				ModelEntry entry =
+					manager.findEntry(plugins[i].getId(), plugins[i].getVersion());
+				if (entry != null) {
+					deleteBuildFiles(entry.getActiveModel());
+				}
+			}
 		}		
 	}
 
@@ -275,7 +283,7 @@ public class FeatureExportJob extends Job implements IPreferenceConstants {
 		return false;
 	}
 
-	private String[] getPaths() throws CoreException {
+	protected String[] getPaths() throws CoreException {
 		ArrayList paths = new ArrayList();
 		IFeatureModel[] models = PDECore.getDefault().getWorkspaceModelManager().getFeatureModels();
 		for (int i = 0; i < models.length; i++) {
