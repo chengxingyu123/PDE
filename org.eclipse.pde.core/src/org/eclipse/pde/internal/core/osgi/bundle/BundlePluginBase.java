@@ -187,13 +187,11 @@ public class BundlePluginBase
 	 * @see org.eclipse.pde.core.plugin.IPluginBase#getImports()
 	 */
 	public IPluginImport[] getImports() {
-		if (imports == null) {
 			imports = new ArrayList();
 			Set uniqueIds = new HashSet();
 			addImportsFromRequiredBundles(imports, uniqueIds);
 			if (imports.size() == 0)
 				addImportsFromImportedPackages(imports, uniqueIds);
-		}
 		return (IPluginImport[]) imports.toArray(
 			new IPluginImport[imports.size()]);
 	}
@@ -204,9 +202,13 @@ public class BundlePluginBase
 		while (stok.hasMoreTokens()) {
 			String token = stok.nextToken().trim();
 			try {
+				int semiColon = token.indexOf(";");
+				String id = (semiColon != -1) ? token.substring(0,semiColon) : token;
 				if (!uniqueIds.contains(token)) {
 					IPluginImport iimport = model.createImport();
-					iimport.setId(token);
+					iimport.setId(id);
+					iimport.setReexported(token.indexOf("provide-packages=true") != -1);
+					iimport.setOptional(token.indexOf("optional=true") != -1);
 					uniqueIds.add(token);
 					imports.add(iimport);
 				}
