@@ -10,34 +10,18 @@
  *******************************************************************************/
 package org.eclipse.pde.internal.ui.wizards.exports;
 
-import java.io.File;
-import java.lang.reflect.InvocationTargetException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.HashMap;
-
-import org.eclipse.core.resources.IProject;
-import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IPath;
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.Path;
-import org.eclipse.core.runtime.SubProgressMonitor;
-import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.jface.preference.IPreferenceStore;
-import org.eclipse.pde.core.IModel;
-import org.eclipse.pde.core.plugin.IPluginModelBase;
-import org.eclipse.pde.internal.build.AbstractScriptGenerator;
-import org.eclipse.pde.internal.build.BuildScriptGenerator;
-import org.eclipse.pde.internal.build.builder.FeatureBuildScriptGenerator;
-import org.eclipse.pde.internal.core.ModelEntry;
-import org.eclipse.pde.internal.core.PDECore;
-import org.eclipse.pde.internal.core.PluginModelManager;
-import org.eclipse.pde.internal.core.TargetPlatform;
-import org.eclipse.pde.internal.core.ifeature.IFeature;
-import org.eclipse.pde.internal.core.ifeature.IFeatureModel;
-import org.eclipse.pde.internal.core.ifeature.IFeaturePlugin;
-import org.eclipse.pde.internal.ui.PDEPlugin;
+import java.io.*;
+import java.lang.reflect.*;
+import java.util.*;
+import org.eclipse.core.runtime.*;
+import org.eclipse.jface.preference.*;
+import org.eclipse.pde.core.*;
+import org.eclipse.pde.core.plugin.*;
+import org.eclipse.pde.internal.build.*;
+import org.eclipse.pde.internal.build.builder.*;
+import org.eclipse.pde.internal.core.*;
+import org.eclipse.pde.internal.core.ifeature.*;
+import org.eclipse.pde.internal.ui.*;
 
 public class FeatureExportJob extends BaseExportJob {
 
@@ -101,8 +85,15 @@ public class FeatureExportJob extends BaseExportJob {
 		try {
 			makeScript(feature);
 			monitor.worked(1);
-			runScript(feature.getInstallLocation() + Path.SEPARATOR + "build.xml", new String[] {"build.jars"}, destination, exportType, exportSource, createProperties(destination, exportType), new SubProgressMonitor(monitor, 9));
-			runScript(feature.getInstallLocation() + Path.SEPARATOR + "assemble."+ feature.getFeature().getId() + ".xml", new String[] {"main"}, destination, exportType, exportSource, createProperties(destination, exportType), new SubProgressMonitor(monitor, 9));
+			runScript(feature.getInstallLocation() + Path.SEPARATOR
+					+ "build.xml", new String[]{"build.jars"}, destination,
+					exportType, exportSource, createProperties(destination,
+							exportType), new SubProgressMonitor(monitor, 9));
+			runScript(feature.getInstallLocation() + Path.SEPARATOR
+					+ "assemble." + feature.getFeature().getId() + ".xml",
+					new String[]{"main"}, destination, exportType,
+					exportSource, createProperties(destination, exportType),
+					new SubProgressMonitor(monitor, 9));
 		} finally {
 //			deleteBuildFiles(feature);
 //			monitor.done();
@@ -141,30 +132,14 @@ public class FeatureExportJob extends BaseExportJob {
 	}
 
 	private void makeScript(IFeatureModel model) throws CoreException {
-		ExportFeatureBuildScriptGenerator generator =
-			new ExportFeatureBuildScriptGenerator();
-
-		generator.setFeatureRootLocation(model.getInstallLocation());
-		generator.setWorkingDirectory(model.getInstallLocation());
-
-		IProject project = model.getUnderlyingResource().getProject();
-		if (project.hasNature(JavaCore.NATURE_ID)) {
-			IPath path =
-				JavaCore
-					.create(project)
-					.getOutputLocation()
-					.removeFirstSegments(
-					1);
-			generator.setDevEntries(new String[] { path.toOSString()});
-		} else {
-			generator.setDevEntries(new String[] { "bin" });
-		}
-
-		generator.setAnalyseChildren(true);
+		BuildScriptGenerator generator = new BuildScriptGenerator();
+		generator.setBuildingOSGi(PDECore.getDefault().getModelManager().isOSGiRuntime());
+		generator.setChildren(true);
+		generator.setWorkingDirectory(model.getUnderlyingResource().getProject().getLocation().toOSString());
+		generator.setElements(new String[] {"feature@" + model.getFeature().getId()});
 		generator.setPluginPath(getPaths());
 		setConfigInfo(model.getFeature());
-		generator.setFeature(model.getFeature().getId());
-		generator.generate();
+		generator.generate();	
 	}
 
 	private void setConfigInfo(IFeature feature) throws CoreException {
@@ -175,24 +150,16 @@ public class FeatureExportJob extends BaseExportJob {
 		FeatureBuildScriptGenerator.setConfigInfo(os + "," + ws + "," + arch);
 	}
 
-	private URL[] getPaths() throws CoreException {
+	private String[] getPaths() throws CoreException {
 		ArrayList paths = new ArrayList();
-		IFeatureModel[] models =
-			PDECore.getDefault().getWorkspaceModelManager().getFeatureModels();
+		IFeatureModel[] models = PDECore.getDefault().getWorkspaceModelManager().getFeatureModels();
 		for (int i = 0; i < models.length; i++) {
-			try {
-				paths.add(
-					new URL(
-						"file:"
-							+ models[i].getInstallLocation()
-							+ Path.SEPARATOR
-							+ "feature.xml"));
-			} catch (MalformedURLException e1) {
-			}
+			paths.add(models[i].getInstallLocation() + Path.SEPARATOR + "feature.xml");
 		}
-		URL[] plugins = TargetPlatform.createPluginPath();
-		URL[] features = (URL[]) paths.toArray(new URL[paths.size()]);
-		URL[] all = new URL[plugins.length + paths.size()];
+		
+		String[] plugins = TargetPlatform.createPluginPath();
+		String[] features = (String[]) paths.toArray(new String[paths.size()]);
+		String[] all = new String[plugins.length + paths.size()];
 		System.arraycopy(plugins, 0, all, 0, plugins.length);
 		System.arraycopy(features, 0, all, plugins.length, features.length);
 		return all;

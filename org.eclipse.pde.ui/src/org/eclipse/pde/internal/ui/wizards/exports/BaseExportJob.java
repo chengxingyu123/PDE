@@ -9,34 +9,20 @@
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
 package org.eclipse.pde.internal.ui.wizards.exports;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.Map;
-import org.eclipse.ant.core.AntRunner;
-import org.eclipse.core.resources.IFile;
-import org.eclipse.core.resources.IResource;
-import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Path;
-import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.SubProgressMonitor;
-import org.eclipse.core.runtime.jobs.ISchedulingRule;
-import org.eclipse.core.runtime.jobs.Job;
-import org.eclipse.core.runtime.jobs.MultiRule;
-import org.eclipse.jface.dialogs.MessageDialog;
-import org.eclipse.pde.core.IModel;
-import org.eclipse.pde.core.build.IBuild;
-import org.eclipse.pde.core.build.IBuildEntry;
-import org.eclipse.pde.core.build.IBuildModel;
-import org.eclipse.pde.internal.core.build.WorkspaceBuildModel;
-import org.eclipse.pde.internal.ui.IPreferenceConstants;
-import org.eclipse.pde.internal.ui.PDEPlugin;
-import org.eclipse.swt.widgets.Display;
+import java.io.*;
+import java.lang.reflect.*;
+import java.util.*;
+import org.eclipse.ant.core.*;
+import org.eclipse.core.resources.*;
+import org.eclipse.core.runtime.*;
+import org.eclipse.core.runtime.jobs.*;
+import org.eclipse.jface.dialogs.*;
+import org.eclipse.pde.core.*;
+import org.eclipse.pde.core.build.*;
+import org.eclipse.pde.internal.core.build.*;
+import org.eclipse.pde.internal.ui.*;
+import org.eclipse.swt.widgets.*;
+
 public abstract class BaseExportJob extends Job implements IPreferenceConstants {
 	public static final int EXPORT_AS_ZIP = 0;
 	public static final int EXPORT_AS_DIRECTORY = 1;
@@ -139,7 +125,7 @@ public abstract class BaseExportJob extends Job implements IPreferenceConstants 
 			IModel model = (IModel) items[i];
 			doExport(model, new SubProgressMonitor(monitor, 1));
 		}
-		cleanup(zipFileName, destination, exportType, new SubProgressMonitor(monitor, 1));
+		//cleanup(zipFileName, destination, exportType, new SubProgressMonitor(monitor, 1));
 	}
 	protected abstract void doExport(IModel model, IProgressMonitor monitor) throws CoreException, InvocationTargetException;
 	private static void createLogWriter() {

@@ -93,7 +93,8 @@ public class PluginExportJob extends BaseExportJob {
 			monitor.beginTask("", 10);
 			makeScript(modelBase);
 			monitor.worked(1);
-			runScript(
+			//TODO uncomment this
+			/*runScript(
 				modelBase.getInstallLocation(),
 				destination,
 				exportType,
@@ -102,7 +103,7 @@ public class PluginExportJob extends BaseExportJob {
 					destination,
 					modelBase.getPluginBase(),
 					exportType),
-				new SubProgressMonitor(monitor, 9));
+				new SubProgressMonitor(monitor, 9));*/
 		} finally {
 			deleteBuildFile(modelBase);
 			monitor.done();
