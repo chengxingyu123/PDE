@@ -136,8 +136,6 @@ public abstract class BaseBuildAction implements IObjectActionDelegate {
 	}
 	
 	private void setDefaultValues() {
-		if (file.getName().equals("feature.xml"))
-			return;
 		IProject project = file.getProject();
 		IFile generatedFile = (IFile) project.findMember("build.xml");
 		if (generatedFile == null)
@@ -160,9 +158,10 @@ public abstract class BaseBuildAction implements IObjectActionDelegate {
 			Map properties = new HashMap();
 			properties =
 				launchCopy.getAttribute(IAntUIConstants.ATTR_ANT_PROPERTIES, properties);
-			properties.put("ws", TargetPlatform.getWS());
-			properties.put("os", TargetPlatform.getOS());
-			properties.put("arch", TargetPlatform.getOSArch());
+			properties.put("basews", TargetPlatform.getWS());
+			properties.put("baseos", TargetPlatform.getOS());
+			properties.put("basearch", TargetPlatform.getOSArch());
+			properties.put("basenl", TargetPlatform.getNL());
 			launchCopy.setAttribute(IAntUIConstants.ATTR_ANT_PROPERTIES, properties);
 			launchCopy.doSave();
 		} catch (CoreException e) {
