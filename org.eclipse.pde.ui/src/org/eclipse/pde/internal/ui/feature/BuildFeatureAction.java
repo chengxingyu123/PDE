@@ -35,6 +35,7 @@ public class BuildFeatureAction extends BaseBuildAction {
 		String location = file.getProject().getLocation().toOSString();
 		generator.setWorkingDirectory(location);
 		generator.setFeatureRootLocation(location);
+		generator.setGenerateIncludedFeatures(true);
 		generator.setDevEntries(new String[] { "bin" }); // FIXME: look at bug #5747		
 
 		ArrayList paths = new ArrayList();
