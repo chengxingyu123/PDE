@@ -126,7 +126,7 @@ public abstract class BaseExportJob extends Job implements IPreferenceConstants 
 			IModel model = (IModel) fItems[i];
 			doExport(model, new SubProgressMonitor(monitor, 1));
 		}
-		cleanup(new SubProgressMonitor(monitor, 1));
+		//cleanup(new SubProgressMonitor(monitor, 1));
 	}
 	
 	protected abstract void doExport(IModel model, IProgressMonitor monitor) throws CoreException, InvocationTargetException;
