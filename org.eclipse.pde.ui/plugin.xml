@@ -2,7 +2,7 @@
 <plugin
    id="org.eclipse.pde.ui"
    name="%name"
-   version="3.0.0"
+   version="2.1.2"
    provider-name="%provider-name"
    class="org.eclipse.pde.internal.ui.PDEPlugin">
 
@@ -13,25 +13,25 @@
       </library>
    </runtime>
    <requires>
-      <import plugin="org.apache.xerces"/>
-      <import plugin="org.eclipse.ant.core"/>
-      <import plugin="org.eclipse.core.resources"/>
-      <import plugin="org.eclipse.debug.core"/>
-      <import plugin="org.eclipse.debug.ui"/>
-      <import plugin="org.eclipse.help"/>
-      <import plugin="org.eclipse.jdt.core"/>
-      <import plugin="org.eclipse.jdt.debug.ui"/>
-      <import plugin="org.eclipse.jdt.launching"/>
-      <import plugin="org.eclipse.jdt.ui"/>
-      <import plugin="org.eclipse.pde"/>
-      <import plugin="org.eclipse.pde.build"/>
-      <import plugin="org.eclipse.search"/>
-      <import plugin="org.eclipse.team.core"/>
       <import plugin="org.eclipse.ui"/>
-      <import plugin="org.eclipse.update.core"/>
+      <import plugin="org.eclipse.jdt.ui"/>
+      <import plugin="org.eclipse.debug.core"/>
+      <import plugin="org.eclipse.jdt.launching"/>
+      <import plugin="org.eclipse.debug.ui"/>
       <import plugin="org.eclipse.update.ui.forms"/>
-      <import plugin="org.eclipse.ant.ui"/>
-      <import plugin="org.eclipse.jdt.junit"/>
+      <import plugin="org.eclipse.pde.build"/>
+      <import plugin="org.eclipse.pde"/>
+      <import plugin="org.eclipse.update.core"/>
+      <import plugin="org.eclipse.jdt.debug.ui"/>
+      <import plugin="org.eclipse.search"/>
+      <import plugin="org.eclipse.core.resources"/>
+      <import plugin="org.eclipse.team.core"/>
+      <import plugin="org.eclipse.ant.core"/>
+      <import plugin="org.apache.ant"/>
+      <import plugin="org.eclipse.jdt.core"/>
+      <import plugin="org.eclipse.jface.text"/>
+      <import plugin="org.apache.xerces"/>
+      <import plugin="org.eclipse.help"/>
    </requires>
 
 
@@ -92,12 +92,6 @@
             category="org.eclipse.pde.ui.MainPreferencePage"
             class="org.eclipse.pde.internal.ui.preferences.CompilersPreferencePage"
             id="org.eclipse.pde.ui.CompilersPreferencePage">
-      </page>
-      <page
-            name="%preferences.buildOptions.name"
-            category="org.eclipse.pde.ui.MainPreferencePage"
-            class="org.eclipse.pde.internal.ui.preferences.BuildOptionsPreferencePage"
-            id="org.eclipse.pde.ui.buildOptionsPreferencePage">
       </page>
    </extension>
    <extension
@@ -169,6 +163,7 @@
             category="org.eclipse.pde.PDE"
             class="org.eclipse.pde.internal.ui.feature.NewSiteProjectWizard"
             project="true"
+            finalPerspective="org.eclipse.ui.resourcePerspective"
             id="org.eclipse.pde.ui.NewSiteProjectWizard">
          <description>
             %new.site.description
@@ -215,9 +210,6 @@
                name="fragment.xml"
                class="org.eclipse.core.resources.IFile">
          </selection>
-         <selection
-               class="org.eclipse.core.resources.IProject">
-         </selection>
       </wizard>
       <wizard
             name="%FeatureExportWizard.label"
@@ -230,9 +222,6 @@
          <selection
                name="feature.xml"
                class="org.eclipse.core.resources.IFile">
-         </selection>
-         <selection
-               class="org.eclipse.core.resources.IProject">
          </selection>
       </wizard>
    </extension>
@@ -693,38 +682,6 @@
                id="org.eclipse.pde.ui.PreviewReference">
          </action>
       </objectContribution>
-<!--     
-      <objectContribution
-            objectClass="org.eclipse.core.resources.IFile"
-            nameFilter="plugin.xml"
-            id="org.eclipse.pde.ui.PluginToBundle1">
-         <action
-               label="%PluginToBundleWizardAction.label"
-               helpContextId="org.eclipse.pde.doc.user.update_classpath"
-               class="org.eclipse.pde.internal.ui.wizards.bundles.PluginToBundleAction"
-               menubarPath="additions"
-               enablesFor="+"
-               id="org.eclipse.pde.ui.PluginToBundleWizard1">
-         </action>
-      </objectContribution>
-      <objectContribution
-            objectClass="org.eclipse.core.resources.IProject"
-            adaptable="true"
-            id="org.eclipse.pde.PluginToBundle3">
-         <filter
-               name="projectNature"
-               value="org.eclipse.pde.PluginNature">
-         </filter>
-         <action
-               menubarPath="additions"
-               class="org.eclipse.pde.internal.ui.wizards.bundles.PluginToBundleAction"
-               label="%PluginToBundleWizardAction.label"
-               enablesFor="+"
-               id="org.eclipse.pde.ui.PluginToBundleWizard2"
-               helpContextId="org.eclipse.pde.doc.user.update_classpath">
-         </action>
-      </objectContrubution>
--->
       <objectContribution
             objectClass="org.eclipse.core.resources.IFile"
             nameFilter="*.exsd"
@@ -747,20 +704,6 @@
             modes="run, debug"
             id="org.eclipse.pde.ui.RuntimeWorkbench">
       </launchConfigurationType>
-      <launchConfigurationType
-            name="%launcher.junit.name"
-            delegate="org.eclipse.pde.internal.ui.launcher.JUnitLaunchConfiguration"
-            modes="run, debug"
-            id="org.eclipse.pde.ui.JunitLaunchConfig">
-         <fileExtension
-               default="false"
-               extension="java">
-         </fileExtension>
-         <fileExtension
-               default="false"
-               extension="class">
-         </fileExtension>
-      </launchConfigurationType>
    </extension>
    <extension
          point="org.eclipse.debug.ui.launchConfigurationTypeImages">
@@ -768,11 +711,6 @@
             icon="icons/full/ctool16/eclipse_launcher_wiz.gif"
             configTypeID="org.eclipse.pde.ui.RuntimeWorkbench"
             id="org.eclipse.pde.ui.runtimeWorkbenchLaunchImage">
-      </launchConfigurationTypeImage>
-      <launchConfigurationTypeImage
-            icon="icons/full/obj16/julaunchpgn.gif"
-            configTypeID="org.eclipse.pde.ui.JunitLaunchConfig"
-            id="org.eclipse.pde.ui.JunitLaunchImage">
       </launchConfigurationTypeImage>
    </extension>
    <extension
@@ -782,36 +720,9 @@
             class="org.eclipse.pde.internal.ui.launcher.WorkbenchLauncherTabGroup"
             id="org.eclipse.pde.ui.launcher.WorkbenchLauncherTabGroup">
       </launchConfigurationTabGroup>
-      <launchConfigurationTabGroup
-            type="org.eclipse.pde.ui.JunitLaunchConfig"
-            class="org.eclipse.pde.internal.ui.launcher.JUnitTabGroup"
-            id="org.eclipse.pde.ui.launcher.JUnitTabGroup">
-      </launchConfigurationTabGroup>
    </extension>
    <extension
          point="org.eclipse.debug.ui.launchShortcuts">
-      <shortcut
-            label="%launcher.junit.name"
-            icon="icons/full/obj16/julaunchpgn.gif"
-            modes="run, debug"
-            class="org.eclipse.pde.internal.ui.launcher.JUnitWorkbenchShortcut"
-            id="org.eclipse.pde.ui.junitWorkbenchShortcut">
-         <perspective
-               id="org.eclipse.jdt.ui.JavaPerspective">
-         </perspective>
-         <perspective
-               id="org.eclipse.jdt.ui.JavaHierarchyPerspective">
-         </perspective>
-         <perspective
-               id="org.eclipse.jdt.ui.JavaBrowsingPerspective">
-         </perspective>
-         <perspective
-               id="org.eclipse.debug.ui.DebugPerspective">
-         </perspective>
-         <perspective
-               id="org.eclipse.pde.PDEPerspective">
-         </perspective>
-      </shortcut>
       <shortcut
             label="%launcher.shortcut.label"
             icon="icons/full/ctool16/eclipse_launcher_wiz.gif"
@@ -966,7 +877,6 @@
          point="org.eclipse.search.searchPages">
       <page
             showScopeSection="true"
-            canSearchEnclosingProjects="true"
             label="%PluginSearchPage.label"
             enabled="true"
             icon="icons/full/obj16/psearch_obj.gif"
@@ -984,6 +894,42 @@
             class="org.eclipse.pde.internal.ui.search.DependencyExtentViewerSorter"
             id="org.eclipse.pde.ui.sorter1">
       </sorter>
+   </extension>
+   <extension
+         point="org.eclipse.ui.perspectiveExtensions">
+      <perspectiveExtension
+            targetID="org.eclipse.pde.ui.PDEPerspective">
+         <viewShortcut
+               id="org.eclipse.jdt.ui.PackagesView">
+         </viewShortcut>
+         <viewShortcut
+               id="org.eclipse.jdt.ui.TypeHierarchy">
+         </viewShortcut>
+         <viewShortcut
+               id="org.eclipse.pde.ui.PluginsView">
+         </viewShortcut>
+         <viewShortcut
+               id="org.eclipse.pde.ui.DependenciesView">
+         </viewShortcut>
+         <viewShortcut
+               id="org.eclipse.pde.runtime.LogView">
+         </viewShortcut>
+         <viewShortcut
+               id="org.eclipse.pde.runtime.RegistryBrowser">
+         </viewShortcut>
+         <viewShortcut
+               id="org.eclipse.ui.views.ResourceNavigator">
+         </viewShortcut>
+         <viewShortcut
+               id="org.eclipse.ui.views.ContentOutline">
+         </viewShortcut>
+         <viewShortcut
+               id="org.eclipse.ui.views.PropertySheet">
+         </viewShortcut>
+         <viewShortcut
+               id="org.eclipse.ui.views.TaskLists">
+         </viewShortcut>
+      </perspectiveExtension>
    </extension>
    <extension
          point="org.eclipse.ant.core.extraClasspathEntries">
