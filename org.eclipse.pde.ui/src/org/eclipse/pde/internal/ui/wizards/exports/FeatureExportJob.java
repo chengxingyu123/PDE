@@ -215,6 +215,7 @@ public class FeatureExportJob extends Job implements IPreferenceConstants {
 					properties, new SubProgressMonitor(monitor, 2));
 			runScript(getAssemblyScriptName(featureID, os, ws, arch, featureLocation), new String[]{"main"}, //$NON-NLS-1$
 					properties, new SubProgressMonitor(monitor, 2));
+			runScript(getPackagerScriptName(featureID, os, ws, arch, featureLocation), null, properties, new SubProgressMonitor(monitor, 2));
 		} finally {
 			monitor.done();
 		}
@@ -337,6 +338,13 @@ public class FeatureExportJob extends Job implements IPreferenceConstants {
 
 	private String getBuildScriptName(String featureLocation) {
 		return featureLocation + IPath.SEPARATOR + "build.xml"; //$NON-NLS-1$
+	}
+
+	protected String getPackagerScriptName(String featureID, String os, String ws, String arch, String featureLocation) {
+		return featureLocation + IPath.SEPARATOR + "package." //$NON-NLS-1$
+				+ featureID + "." + os + "." //$NON-NLS-1$ //$NON-NLS-2$
+				+ ws + "." + arch //$NON-NLS-1$
+				+ ".xml"; //$NON-NLS-1$
 	}
 	
 	protected String getAssemblyScriptName(String featureID, String os, String ws, String arch, String featureLocation) {
