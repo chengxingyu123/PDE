@@ -44,7 +44,7 @@ public class FeatureExportJob extends BaseExportJob {
 		map.put(IXMLConstants.PROPERTY_BASE_ARCH, TargetPlatform.getOSArch());
 		map.put(IXMLConstants.PROPERTY_BASE_NL, TargetPlatform.getNL());
 		IPreferenceStore store = PDEPlugin.getDefault().getPreferenceStore();
-		map.put(IXMLConstants.PROPERTY_JAVAC_FAIL_ON_ERROR, "true");
+		map.put(IXMLConstants.PROPERTY_JAVAC_FAIL_ON_ERROR, "false");
 		map.put(IXMLConstants.PROPERTY_JAVAC_DEBUG_INFO, store.getBoolean(PROP_JAVAC_DEBUG_INFO) ? "on" : "off");
 		map.put(IXMLConstants.PROPERTY_JAVAC_VERBOSE, store.getString(PROP_JAVAC_VERBOSE));
 		map.put(IXMLConstants.PROPERTY_JAVAC_SOURCE, store.getString(PROP_JAVAC_SOURCE));
