@@ -162,20 +162,7 @@ public abstract class BaseExportJob extends Job implements IPreferenceConstants 
 		runner.setExecutionTargets(target);
 		runner.run(monitor);
 	}
-//	protected String[] getExecutionTargets(int exportType, boolean exportSource) {
-//		ArrayList targets = new ArrayList();
-//		if (exportType == BaseExportJob.EXPORT_AS_UPDATE_JARS) {
-//			targets.add("build.update.jar");
-//		} else {
-//			targets.add("build.jars");
-//			targets.add("gather.bin.parts");
-//			if (exportSource) {
-//				targets.add("build.sources");
-//				targets.add("gather.sources");
-//			}
-//		}
-//		return (String[]) targets.toArray(new String[targets.size()]);
-//	}
+
 	protected void cleanup(String filename, String destination, int exportType, IProgressMonitor monitor) {
 		File scriptFile = null;
 		try {
@@ -184,19 +171,12 @@ public abstract class BaseExportJob extends Job implements IPreferenceConstants 
 			generateHeader(writer);
 			generateCleanTarget(writer);
 			boolean errors = generateZipLogsTarget(writer, destination);
-			if (exportType == EXPORT_AS_ZIP)
-				generateZipFolderTarget(writer, destination, filename);
-			else if (exportType == EXPORT_AS_DIRECTORY)
-				generateCopyResultTarget(writer, destination);
 			generateClosingTag(writer);
 			writer.close();
+			
 			ArrayList targets = new ArrayList();
 			if (errors)
 				targets.add("zip.logs");
-			if (exportType == EXPORT_AS_ZIP)
-				targets.add("zip.folder");
-			else if (exportType == EXPORT_AS_DIRECTORY)
-				targets.add("copy.result");
 			targets.add("clean");
 			AntRunner runner = new AntRunner();
 			runner.setBuildFileLocation(scriptFile.getAbsolutePath());
@@ -225,18 +205,6 @@ public abstract class BaseExportJob extends Job implements IPreferenceConstants 
 	private void generateCleanTarget(PrintWriter writer) {
 		writer.println("<target name=\"clean\">");
 		writer.println("<delete dir=\"" + buildTempLocation + "\"/>");
-		writer.println("</target>");
-	}
-	private void generateCopyResultTarget(PrintWriter writer, String destination) {
-		writer.println("<target name=\"copy.result\">");
-		writer.println("<copy todir=\"" + destination + "\">");
-		writer.println("<fileset dir=\"" + buildTempLocation + "/destination\"/>");
-		writer.println("</copy>");
-		writer.println("</target>");
-	}
-	private void generateZipFolderTarget(PrintWriter writer, String destination, String filename) {
-		writer.println("<target name=\"zip.folder\">");
-		writer.println("<zip zipfile=\"" + destination + "/" + filename + "\" basedir=\"" + buildTempLocation + "/destination\"/>");
 		writer.println("</target>");
 	}
 	private boolean generateZipLogsTarget(PrintWriter writer, String destination) {

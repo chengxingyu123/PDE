@@ -72,15 +72,19 @@ public class FeatureExportJob extends BaseExportJob {
 		//For the assembler....
 		map.put("buildDirectory",  buildTempLocation + "/assemblyLocation");	//TODO this should be set to the folder location
 		map.put("collectingFolder", "eclipse");
-		map.put("archivePrefix", "eclipse");
-		map.put("archiveFullPath", "d:/tmp/myFeature.zip");
+		map.put("archivePrefix", ".");
+		if (zipFileName != null)
+			map.put("archiveFullPath", destination + File.separator + zipFileName);
+		else
+			map.put("archiveFullPath", destination);
+			
 		return map;
 	}
 
 	protected void doExport(IModel model, IProgressMonitor monitor) throws CoreException, InvocationTargetException {
 		IFeatureModel feature = (IFeatureModel) model;
 		String label = PDEPlugin.getDefault().getLabelProvider().getObjectText(feature);
-		monitor.beginTask("", 10);
+		monitor.beginTask("", 5);
 		monitor.setTaskName(PDEPlugin.getResourceString("ExportJob.exporting") + " " + label);
 		try {
 			makeScript(feature);
@@ -88,12 +92,12 @@ public class FeatureExportJob extends BaseExportJob {
 			runScript(feature.getInstallLocation() + Path.SEPARATOR
 					+ "build.xml", new String[]{"build.jars"}, destination,
 					exportType, exportSource, createProperties(destination,
-							exportType), new SubProgressMonitor(monitor, 9));
+							exportType), new SubProgressMonitor(monitor, 2));
 			runScript(feature.getInstallLocation() + Path.SEPARATOR
 					+ "assemble." + feature.getFeature().getId() + ".xml",
 					new String[]{"main"}, destination, exportType,
 					exportSource, createProperties(destination, exportType),
-					new SubProgressMonitor(monitor, 9));
+					new SubProgressMonitor(monitor, 2));
 		} finally {
 //			deleteBuildFiles(feature);
 //			monitor.done();
@@ -138,6 +142,10 @@ public class FeatureExportJob extends BaseExportJob {
 		generator.setWorkingDirectory(model.getUnderlyingResource().getProject().getLocation().toOSString());
 		generator.setElements(new String[] {"feature@" + model.getFeature().getId()});
 		generator.setPluginPath(getPaths());
+		if (exportType == EXPORT_AS_ZIP)
+			generator.setOutputFormat("antzip");
+		else if (exportType == EXPORT_AS_DIRECTORY)
+			generator.setOutputFormat("folder");
 		setConfigInfo(model.getFeature());
 		generator.generate();	
 	}
@@ -163,23 +171,6 @@ public class FeatureExportJob extends BaseExportJob {
 		System.arraycopy(plugins, 0, all, 0, plugins.length);
 		System.arraycopy(features, 0, all, plugins.length, features.length);
 		return all;
-	}
-
-	protected String[] getExecutionTargets(
-		int exportType,
-		boolean exportSource) {
-		ArrayList targets = new ArrayList();
-		if (exportType == EXPORT_AS_UPDATE_JARS) {
-			targets.add("build.update.jar");
-		} else {
-			targets.add("build.jars");
-			targets.add("zip.distribution");
-			if (exportSource) {
-				targets.add("build.sources");
-				targets.add("zip.sources");
-			}
-		}
-		return (String[]) targets.toArray(new String[targets.size()]);
 	}
 
 }
