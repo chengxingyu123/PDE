@@ -15,7 +15,6 @@ import java.util.ArrayList;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.*;
 import org.eclipse.pde.core.plugin.IPluginModelBase;
-import org.eclipse.pde.internal.build.BuildScriptGenerator;
 import org.eclipse.pde.internal.build.builder.*;
 import org.eclipse.pde.internal.core.PDECore;
 import org.eclipse.pde.internal.core.TargetPlatform;
@@ -40,7 +39,6 @@ public class BuildFeatureAction extends BaseBuildAction {
 		String[] all = new String[plugins.length + paths.size()];
 		System.arraycopy(plugins, 0, all, 0, plugins.length);
 		System.arraycopy(features, 0, all, plugins.length, features.length);
-		setConfigInfo(model.getFeature());
 		
 		FeatureBuildScriptGenerator generator = new FeatureBuildScriptGenerator();
 		generator.setWorkingDirectory(file.getProject().getLocation().toOSString());
@@ -48,17 +46,10 @@ public class BuildFeatureAction extends BaseBuildAction {
 		generator.setAnalyseChildren(true);
 		generator.setFeature(model.getFeature().getId());
 		generator.setPluginPath(all);
+		FeatureBuildScriptGenerator.setConfigInfo("*,*,*");
 		generator.generate();	
 	}
 	
-	private void setConfigInfo(IFeature feature) throws CoreException {
-		String os = feature.getOS() == null ? "*" : TargetPlatform.getOS();
-		String ws = feature.getWS() == null ? "*" : TargetPlatform.getWS();
-		String arch = feature.getArch() == null ? "*" : TargetPlatform.getOSArch();
-		
-		BuildScriptGenerator.setConfigInfo(os + "," + ws + "," + arch);
-	}
-
 	private void refreshLocal(IFeature feature, IProgressMonitor monitor)
 		throws CoreException {
 		IFeaturePlugin[] references = feature.getPlugins();
