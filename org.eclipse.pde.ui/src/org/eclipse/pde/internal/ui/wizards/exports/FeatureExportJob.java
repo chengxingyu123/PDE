@@ -38,6 +38,7 @@ public class FeatureExportJob extends BaseExportJob {
 		map.put(IXMLConstants.PROPERTY_BUILD_TEMP, fBuildTempLocation + "/destination");
 		map.put(IXMLConstants.PROPERTY_FEATURE_TEMP_FOLDER, fBuildTempLocation + "/destination");
 		map.put(IXMLConstants.PROPERTY_INCLUDE_CHILDREN, "true");
+		map.put("eclipes.running", "true");
 		map.put(IXMLConstants.PROPERTY_BASE_OS, TargetPlatform.getOS());
 		map.put(IXMLConstants.PROPERTY_BASE_WS, TargetPlatform.getWS());
 		map.put(IXMLConstants.PROPERTY_BASE_ARCH, TargetPlatform.getOSArch());
