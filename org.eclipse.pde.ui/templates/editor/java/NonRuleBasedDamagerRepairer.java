@@ -20,7 +20,7 @@ public class NonRuleBasedDamagerRepairer
 	protected IDocument fDocument;
 	/** The default text attribute if non is returned as data by the current token */
 	protected TextAttribute fDefaultTextAttribute;
-	
+
 	/**
 	 * Constructor for NonRuleBasedDamagerRepairer.
 	 */

@@ -135,7 +135,7 @@ public class $wizardPageClassName$ extends WizardPage {
 			updateStatus("File name must be specified");
 			return;
 		}
-		int dotLoc = fileName.lastIndexOf('.');
+		int dotLoc = fileName.indexOf('.');
 		if (dotLoc != -1) {
 			String ext = fileName.substring(dotLoc + 1);
 			if (ext.equalsIgnoreCase("$extension$") == false) {

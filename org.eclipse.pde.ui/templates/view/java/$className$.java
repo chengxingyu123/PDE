@@ -1,9 +1,5 @@
 package $packageName$;
 
-%  if viewType =="treeViewer"
-import java.util.ArrayList;
-% endif
-
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.part.*;
 import org.eclipse.jface.viewers.*;
@@ -14,10 +10,6 @@ import org.eclipse.ui.*;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.swt.SWT;
-% if viewType == "treeViewer"
-import org.eclipse.core.runtime.IAdaptable;
-% endif
-
 
 /**
  * This sample class demonstrates how to plug-in a new
