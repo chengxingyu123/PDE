@@ -122,11 +122,14 @@ public abstract class BaseExportJob extends Job implements IPreferenceConstants 
 	protected void doExports(IProgressMonitor monitor) throws InvocationTargetException, CoreException {
 		createDestination(fDestinationDirectory);
 		monitor.beginTask("", fItems.length + 1);
-		for (int i = 0; i < fItems.length; i++) {
-			IModel model = (IModel) fItems[i];
-			doExport(model, new SubProgressMonitor(monitor, 1));
+		try {
+			for (int i = 0; i < fItems.length; i++) {
+				IModel model = (IModel) fItems[i];
+				doExport(model, new SubProgressMonitor(monitor, 1));
+			}
+		} finally {	
+			cleanup(new SubProgressMonitor(monitor, 1));
 		}
-		//cleanup(new SubProgressMonitor(monitor, 1));
 	}
 	
 	protected abstract void doExport(IModel model, IProgressMonitor monitor) throws CoreException, InvocationTargetException;
@@ -176,7 +179,7 @@ public abstract class BaseExportJob extends Job implements IPreferenceConstants 
 			writer = new PrintWriter(new FileWriter(scriptFile), true);
 			generateHeader(writer);
 			generateCleanTarget(writer);
-			boolean errors = generateZipLogsTarget(writer, fDestinationDirectory);
+			boolean errors = generateZipLogsTarget(writer);
 			generateClosingTag(writer);
 			writer.close();
 			
@@ -213,11 +216,11 @@ public abstract class BaseExportJob extends Job implements IPreferenceConstants 
 		writer.println("<delete dir=\"" + fBuildTempLocation + "\"/>");
 		writer.println("</target>");
 	}
-	private boolean generateZipLogsTarget(PrintWriter writer, String destination) {
+	private boolean generateZipLogsTarget(PrintWriter writer) {
 		if (logFile != null && logFile.exists() && logFile.length() > 0) {
 			writer.println("<target name=\"zip.logs\">");
-			writer.println("<delete file=\"" + destination + "/logs.zip\"/>");
-			writer.println("<zip zipfile=\"" + destination + "/logs.zip\" basedir=\"" + fBuildTempLocation + "/temp.folder\"/>");
+			writer.println("<delete file=\"" + fDestinationDirectory + "/logs.zip\"/>");
+			writer.println("<zip zipfile=\"" + fDestinationDirectory + "/logs.zip\" basedir=\"" + fBuildTempLocation + "/temp.folder\"/>");
 			writer.println("</target>");
 			return true;
 		}

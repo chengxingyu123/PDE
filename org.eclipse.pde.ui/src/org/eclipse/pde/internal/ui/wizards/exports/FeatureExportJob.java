@@ -36,6 +36,7 @@ public class FeatureExportJob extends BaseExportJob {
 	protected HashMap createBuildProperties() {
 		HashMap map = new HashMap(15);
 		map.put(IXMLConstants.PROPERTY_BUILD_TEMP, fBuildTempLocation + "/destination");
+		map.put(IXMLConstants.PROPERTY_TEMP_FOLDER, fBuildTempLocation + "/temp.folder");
 		map.put(IXMLConstants.PROPERTY_FEATURE_TEMP_FOLDER, fBuildTempLocation + "/destination");
 		map.put(IXMLConstants.PROPERTY_INCLUDE_CHILDREN, "true");
 		map.put("eclipse.running", "true");
@@ -93,8 +94,8 @@ public class FeatureExportJob extends BaseExportJob {
 	
 	private String[] getBuildExecutionTargets() {
 		if (fExportSource && fExportType != EXPORT_AS_UPDATE_JARS)
-			return new String[] {"build.jars", "build.sources"};
-		return new String[] {"build.jars"};
+			return new String[] {"build.jars", "build.sources", "gather.logs"};
+		return new String[] {"build.jars", "gather.logs"};
 	}
 
 	private void deleteBuildFiles(IFeatureModel model) throws CoreException {
