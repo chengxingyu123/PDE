@@ -15,11 +15,10 @@ import java.util.Map;
 
 import org.eclipse.pde.internal.build.Config;
 import org.eclipse.pde.internal.build.Policy;
-import org.eclipse.pde.internal.build.ant.AntScript;
 import org.eclipse.pde.internal.build.builder.FeatureBuildScriptGenerator;
 
 public class ExportFeatureBuildScriptGenerator extends FeatureBuildScriptGenerator {
-	protected void generateZipDistributionWholeTarget(AntScript script) {
+	protected void generateZipDistributionWholeTarget() {
 		script.println();
 		script.printTargetDeclaration(TARGET_ZIP_DISTRIBUTION, TARGET_INIT, null, null, Policy.bind("build.feature.zips", featureIdentifier)); //$NON-NLS-1$
 		script.printMkdirTask(featureTempFolder);
@@ -35,10 +34,7 @@ public class ExportFeatureBuildScriptGenerator extends FeatureBuildScriptGenerat
 		script.printTargetEnd();
 	}
 	
-	/* (non-Javadoc)
-	 * @see org.eclipse.pde.internal.build.FeatureBuildScriptGenerator#generateZipSourcesTarget(org.eclipse.pde.internal.build.ant.AntScript)
-	 */
-	protected void generateZipSourcesTarget(AntScript script) {
+	protected void generateZipSourcesTarget() {
 		script.println();
 		script.printTargetDeclaration(TARGET_ZIP_SOURCES, TARGET_INIT, null, null, null);
 		script.printMkdirTask(featureTempFolder);

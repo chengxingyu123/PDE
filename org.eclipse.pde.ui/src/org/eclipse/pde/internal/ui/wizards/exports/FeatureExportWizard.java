@@ -150,7 +150,7 @@ public class FeatureExportWizard extends BaseExportWizard {
 	}
 
 	private void makeScript(IFeatureModel model) throws CoreException {
-		FeatureBuildScriptGenerator generator = new ExportFeatureBuildScriptGenerator();
+		ExportFeatureBuildScriptGenerator generator = new ExportFeatureBuildScriptGenerator();
 
 		generator.setFeatureRootLocation(model.getInstallLocation());
 		generator.setWorkingDirectory(model.getInstallLocation());
