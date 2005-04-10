@@ -17,10 +17,10 @@ import org.eclipse.jdt.core.*;
  *
  */
 public abstract class PDEClasspathContainer implements IClasspathContainer {
-	protected IClasspathEntry[] entries;
+	protected IClasspathEntry[] fEntries;
 
 	public void reset() {
-		entries = null;
+		fEntries = null;
 	}
 
 	protected IClasspathEntry[] verifyWithAttachmentManager(IClasspathEntry[] entries) {

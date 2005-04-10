@@ -31,16 +31,16 @@ public class ExternalJavaSearchClasspathContainer extends PDEClasspathContainer 
 	 */
 	public IClasspathEntry[] getClasspathEntries() {
 		if (manager==null) return new IClasspathEntry[0];
-		if (entries == null) {
+		if (fEntries == null) {
 			try {
-				entries = manager.computeContainerClasspathEntries();
+				fEntries = manager.computeContainerClasspathEntries();
 			}
 			catch (CoreException e) {
 				PDECore.logException(e);
 			}
-			entries = verifyWithAttachmentManager(entries);
+			fEntries = verifyWithAttachmentManager(fEntries);
 		}
-		return entries;
+		return fEntries;
 	}
 
 	/**
