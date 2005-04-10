@@ -15,6 +15,7 @@ import java.util.Vector;
 
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.*;
+import org.eclipse.jdt.core.IClasspathContainer;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.osgi.service.resolver.BaseDescription;
 import org.eclipse.osgi.service.resolver.BundleDescription;
@@ -23,8 +24,9 @@ import org.eclipse.osgi.service.resolver.HostSpecification;
 import org.eclipse.pde.core.plugin.IPluginModel;
 import org.eclipse.pde.core.plugin.IPluginModelBase;
 
-public class RequiredPluginsClasspathContainer extends PDEClasspathContainer {
+public class RequiredPluginsClasspathContainer implements IClasspathContainer {
 	private IPluginModelBase fModel;
+	private Vector fEntries;
 	
 	private static boolean DEBUG = false;
 	
@@ -32,6 +34,7 @@ public class RequiredPluginsClasspathContainer extends PDEClasspathContainer {
 		DEBUG  = PDECore.getDefault().isDebugging() 
 					&& "true".equals(Platform.getDebugOption("org.eclipse.pde.core/classpath")); //$NON-NLS-1$ //$NON-NLS-2$
 	}
+	
 	/**
 	 * Constructor for RequiredPluginsClasspathContainer.
 	 */
@@ -39,6 +42,32 @@ public class RequiredPluginsClasspathContainer extends PDEClasspathContainer {
 		fModel = model;
 	}
 
+	
+	public void reset() {
+		fEntries = null;
+	}
+
+	/**
+	 * @see org.eclipse.jdt.core.IClasspathContainer#getKind()
+	 */
+	public int getKind() {
+		return K_APPLICATION;
+	}
+
+	/**
+	 * @see org.eclipse.jdt.core.IClasspathContainer#getPath()
+	 */
+	public IPath getPath() {
+		return new Path(PDECore.CLASSPATH_CONTAINER_ID);
+	}
+	
+	/**
+	 * @see org.eclipse.jdt.core.IClasspathContainer#getDescription()
+	 */
+	public String getDescription() {
+		return PDECoreMessages.RequiredPluginsClasspathContainer_description; //$NON-NLS-1$
+	}
+	
 	/**
 	 * @see org.eclipse.jdt.core.IClasspathContainer#getClasspathEntries()
 	 */
@@ -63,13 +92,6 @@ public class RequiredPluginsClasspathContainer extends PDEClasspathContainer {
 		return (IClasspathEntry[])fEntries.toArray(new IClasspathEntry[fEntries.size()]);
 	}
 
-	/**
-	 * @see org.eclipse.jdt.core.IClasspathContainer#getDescription()
-	 */
-	public String getDescription() {
-		return PDECoreMessages.RequiredPluginsClasspathContainer_description; //$NON-NLS-1$
-	}
-	
 	private void computePluginEntries() {
 		fEntries = new Vector();
 		try {			
