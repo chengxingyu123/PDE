@@ -13,7 +13,6 @@ package org.eclipse.pde.internal.core;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Vector;
 import java.util.zip.ZipFile;
 
 import org.eclipse.core.resources.IFile;
@@ -55,7 +54,7 @@ public class ClasspathUtilCore {
 		return JavaCore.newContainerEntry(new Path("org.eclipse.jdt.launching.JRE_CONTAINER")); //$NON-NLS-1$
 	}
 	
-	public static void addLibraries(IPluginModelBase model, boolean isExported, boolean useInclusionPatterns, Vector result) throws CoreException {
+	public static void addLibraries(IPluginModelBase model, boolean isExported, boolean useInclusionPatterns, ArrayList result) throws CoreException {
 		if (new File(model.getInstallLocation()).isFile()) {
 			addJARdPlugin(model, isExported, useInclusionPatterns, result);
 		} else {
@@ -71,7 +70,7 @@ public class ClasspathUtilCore {
 		}
 	}
 
-	protected static void addProjectEntry(IPluginModelBase model, boolean isExported, boolean useinclusionPatterns, Vector result) throws CoreException {
+	protected static void addProjectEntry(IPluginModelBase model, boolean isExported, boolean useinclusionPatterns, ArrayList result) throws CoreException {
 		IProject project = model.getUnderlyingResource().getProject();
 		if (project.hasNature(JavaCore.NATURE_ID)) {
 			IClasspathEntry entry = null;
@@ -95,7 +94,7 @@ public class ClasspathUtilCore {
 	}
 	
 	private static void addJARdPlugin(IPluginModelBase model,
-			boolean isExported, boolean useInclusionPatterns, Vector result)
+			boolean isExported, boolean useInclusionPatterns, ArrayList result)
 			throws CoreException {
 		
 		IPath sourcePath = getSourceAnnotation(model, "."); //$NON-NLS-1$
@@ -369,7 +368,7 @@ public class ClasspathUtilCore {
 	}
 
 	protected static void addExtraClasspathEntries(IPluginModelBase model,
-			Vector result) throws CoreException {
+			ArrayList result) throws CoreException {
 		IBuild build = ClasspathUtilCore.getBuild(model);
 		IBuildEntry entry = (build == null) ? null : build
 				.getEntry(IBuildEntry.JARS_EXTRA_CLASSPATH);

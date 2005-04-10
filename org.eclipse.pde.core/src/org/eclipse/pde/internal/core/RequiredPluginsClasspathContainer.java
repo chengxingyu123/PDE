@@ -10,8 +10,8 @@
  *******************************************************************************/
 package org.eclipse.pde.internal.core;
 
+import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Vector;
 
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.*;
@@ -26,7 +26,7 @@ import org.eclipse.pde.core.plugin.IPluginModelBase;
 
 public class RequiredPluginsClasspathContainer implements IClasspathContainer {
 	private IPluginModelBase fModel;
-	private Vector fEntries;
+	private ArrayList fEntries;
 	
 	private static boolean DEBUG = false;
 	
@@ -93,7 +93,7 @@ public class RequiredPluginsClasspathContainer implements IClasspathContainer {
 	}
 
 	private void computePluginEntries() {
-		fEntries = new Vector();
+		fEntries = new ArrayList();
 		try {			
 			BundleDescription desc = fModel.getBundleDescription();
 			if (desc == null)
