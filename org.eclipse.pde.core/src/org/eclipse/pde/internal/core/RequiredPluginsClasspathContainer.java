@@ -10,8 +10,12 @@
  *******************************************************************************/
 package org.eclipse.pde.internal.core;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.zip.ZipFile;
 
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.*;
@@ -20,13 +24,17 @@ import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.osgi.service.resolver.BaseDescription;
 import org.eclipse.osgi.service.resolver.BundleDescription;
 import org.eclipse.osgi.service.resolver.BundleSpecification;
+import org.eclipse.osgi.service.resolver.ExportPackageDescription;
 import org.eclipse.osgi.service.resolver.HostSpecification;
+import org.eclipse.osgi.service.resolver.StateHelper;
 import org.eclipse.pde.core.plugin.IPluginModel;
 import org.eclipse.pde.core.plugin.IPluginModelBase;
+import org.eclipse.pde.internal.core.ibundle.IBundlePluginModelBase;
 
-public class RequiredPluginsClasspathContainer implements IClasspathContainer {
+public class RequiredPluginsClasspathContainer extends PDEClasspathContainer implements IClasspathContainer {
 	private IPluginModelBase fModel;
-	private ArrayList fEntries;
+	
+	private HashMap fVisiblePackages = new HashMap();
 	
 	private static boolean DEBUG = false;
 	
@@ -98,8 +106,9 @@ public class RequiredPluginsClasspathContainer implements IClasspathContainer {
 			BundleDescription desc = fModel.getBundleDescription();
 			if (desc == null)
 				return;
-
-			Platform.getPlatformAdmin().getStateHelper().getVisiblePackages(desc);
+			
+			retrieveVisiblePackagesFromState(desc);
+			
 			HashSet added = new HashSet();
 
 			HostSpecification host = desc.getHost();
@@ -123,6 +132,28 @@ public class RequiredPluginsClasspathContainer implements IClasspathContainer {
 			addImplicitDependencies(added);
 		} catch (CoreException e) {
 		}
+	}
+	
+	private void retrieveVisiblePackagesFromState(BundleDescription bundle) {
+		fVisiblePackages.clear();
+		if (bundle.isResolved()) {
+			BundleDescription desc = bundle;
+			if (desc.getHost() != null)
+				desc = desc.getHost().getHosts()[0];
+			
+			StateHelper helper = Platform.getPlatformAdmin().getStateHelper();
+			ExportPackageDescription[] exports = helper.getVisiblePackages(desc);
+			for (int i = 0; i < exports.length; i++) {
+				BundleDescription exporter = exports[i].getExporter();
+				if (exporter == null)
+					continue;
+				ArrayList list = (ArrayList)fVisiblePackages.get(exporter);
+				if (list == null) 
+					list = new ArrayList();
+				list.add(new Path(exports[i].getName().replaceAll("\\.", "/") + "/*"));
+				fVisiblePackages.put(exporter, list);
+			}
+		}		
 	}
 
 
@@ -152,16 +183,39 @@ public class RequiredPluginsClasspathContainer implements IClasspathContainer {
 	}
 
 	private boolean addPlugin(BundleDescription desc, boolean isExported,
-			boolean useInclusionPatterns, HashSet added)
+			boolean useInclusions, HashSet added)
 			throws CoreException {		
 		IPluginModelBase model = PDECore.getDefault().getModelManager().findModel(desc);
 		IResource resource = model.getUnderlyingResource();
 		if (resource != null) {
-			ClasspathUtilCore.addProjectEntry(model, isExported, useInclusionPatterns, fEntries);
+			addProjectEntry(resource.getProject(), isExported, getInclusions(model));
 		} else {
-			ClasspathUtilCore.addLibraries(model, isExported, useInclusionPatterns, fEntries);
+			addExternalPlugin(model, isExported, getInclusions(model));
 		}
 		return resource != null;
+	}
+	
+	private IPath[] getInclusions(IPluginModelBase model) {
+		BundleDescription desc = model.getBundleDescription();
+		if (desc == null)
+			return null;
+		
+		IPath[] inclusions = getInclusions(desc);
+		
+		return (inclusions.length == 0 && !isBundle(model)) ? null : inclusions;
+
+	}
+	
+	private IPath[] getInclusions(BundleDescription desc) {
+		ArrayList list = (ArrayList)fVisiblePackages.get(desc);
+		if (list == null) {
+			list = new ArrayList();
+			ExportPackageDescription[] exports = desc.getExportPackages();
+			for (int i = 0; i < exports.length; i++) {
+				list.add(new Path(exports[i].getName().replaceAll("\\.", "/") + "/*"));
+			}
+		}
+		return (IPath[])list.toArray(new IPath[list.size()]);		
 	}
 
 	private void addImplicitDependencies(HashSet added) throws CoreException {
@@ -230,5 +284,28 @@ public class RequiredPluginsClasspathContainer implements IClasspathContainer {
 					: false;
 	}
 	
+	protected boolean isBundle(IPluginModelBase model) {
+		if (model instanceof IBundlePluginModelBase)
+			return true;
+		if (model.getUnderlyingResource() == null) {
+			File file = new File(model.getInstallLocation());
+			if (file.isDirectory())
+				return new File(file, "META-INF/MANIFEST.MF").exists();
+			ZipFile jarFile = null;
+			try {
+				jarFile = new ZipFile(file, ZipFile.OPEN_READ);
+				return jarFile.getEntry("META-INF/MANIFEST.MF") != null;
+			} catch (IOException e) {
+			} finally {
+				try {
+					if (jarFile != null)
+						jarFile.close();
+				} catch (IOException e) {
+				}
+			}
+		}
+		return false;
+	}
+
 
 }
