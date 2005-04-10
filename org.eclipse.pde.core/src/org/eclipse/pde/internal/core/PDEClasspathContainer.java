@@ -10,6 +10,8 @@
  *******************************************************************************/
 package org.eclipse.pde.internal.core;
 
+import java.util.Vector;
+
 import org.eclipse.core.runtime.*;
 import org.eclipse.jdt.core.*;
 
@@ -17,7 +19,7 @@ import org.eclipse.jdt.core.*;
  *
  */
 public abstract class PDEClasspathContainer implements IClasspathContainer {
-	protected IClasspathEntry[] fEntries;
+	protected Vector fEntries;
 
 	public void reset() {
 		fEntries = null;

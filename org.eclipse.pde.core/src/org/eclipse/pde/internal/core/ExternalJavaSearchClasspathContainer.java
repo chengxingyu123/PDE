@@ -11,13 +11,18 @@
 package org.eclipse.pde.internal.core;
 
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.Path;
+import org.eclipse.jdt.core.IClasspathContainer;
 import org.eclipse.jdt.core.IClasspathEntry;
 
 /**
  *
  */
-public class ExternalJavaSearchClasspathContainer extends PDEClasspathContainer {
+public class ExternalJavaSearchClasspathContainer implements IClasspathContainer {
 	private SearchablePluginsManager manager;
+	
+	private IClasspathEntry[] fEntries;
 
 	/**
 	 * Constructor for RequiredPluginsClasspathContainer.
@@ -38,7 +43,6 @@ public class ExternalJavaSearchClasspathContainer extends PDEClasspathContainer 
 			catch (CoreException e) {
 				PDECore.logException(e);
 			}
-			fEntries = verifyWithAttachmentManager(fEntries);
 		}
 		return fEntries;
 	}
@@ -48,5 +52,17 @@ public class ExternalJavaSearchClasspathContainer extends PDEClasspathContainer 
 	 */
 	public String getDescription() {
 		return PDECoreMessages.ExternalJavaSearchClasspathContainer_description; //$NON-NLS-1$
+	}
+
+	public int getKind() {
+		return K_APPLICATION;
+	}
+
+	public IPath getPath() {
+		return new Path(PDECore.JAVA_SEARCH_CONTAINER_ID);
+	}
+	
+	public void reset() {
+		fEntries = null;
 	}
 }

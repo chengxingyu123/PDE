@@ -51,16 +51,16 @@ public class RequiredPluginsClasspathContainer extends PDEClasspathContainer {
 			return new IClasspathEntry[0];
 		}
 		if (fEntries == null) {
-			fEntries = computePluginEntries();
+			computePluginEntries();
 		}
 		if (DEBUG) {
 			System.out.println("Dependencies for plugin '" + fModel.getPluginBase().getId() + "':"); //$NON-NLS-1$ //$NON-NLS-2$
-			for (int i = 0; i < fEntries.length; i++) {
-				System.out.println(fEntries[i].toString());
+			for (int i = 0; i < fEntries.size(); i++) {
+				System.out.println(fEntries.get(i).toString());
 			}
 			System.out.println();
 		}
-		return fEntries;
+		return (IClasspathEntry[])fEntries.toArray(new IClasspathEntry[fEntries.size()]);
 	}
 
 	/**
@@ -70,19 +70,19 @@ public class RequiredPluginsClasspathContainer extends PDEClasspathContainer {
 		return PDECoreMessages.RequiredPluginsClasspathContainer_description; //$NON-NLS-1$
 	}
 	
-	private IClasspathEntry[] computePluginEntries() {
-		Vector result = new Vector();
+	private void computePluginEntries() {
+		fEntries = new Vector();
 		try {			
 			BundleDescription desc = fModel.getBundleDescription();
 			if (desc == null)
-				return new IClasspathEntry[0];
+				return;
 
 			Platform.getPlatformAdmin().getStateHelper().getVisiblePackages(desc);
 			HashSet added = new HashSet();
 
 			HostSpecification host = desc.getHost();
 			if (desc.isResolved() && host != null) {
-				addHostPlugin(host, result, added);
+				addHostPlugin(host, added);
 			}
 
 			// add dependencies
@@ -91,33 +91,30 @@ public class RequiredPluginsClasspathContainer extends PDEClasspathContainer {
 				if (required[i].isResolved()) {
 					addDependency((BundleDescription)required[i].getSupplier(),
 							required[i].isExported(), 
-							result,
 							added);
 				}
 			}
 
-			ClasspathUtilCore.addExtraClasspathEntries(fModel, result);
+			ClasspathUtilCore.addExtraClasspathEntries(fModel, fEntries);
 
 			// add implicit dependencies
-			addImplicitDependencies(result, added);
+			addImplicitDependencies(added);
 		} catch (CoreException e) {
 		}
-		return (IClasspathEntry[])result.toArray(new IClasspathEntry[result.size()]);
 	}
 
 
-	private void addDependency(BundleDescription desc, boolean isExported,
-			Vector result, HashSet added) throws CoreException {
+	private void addDependency(BundleDescription desc, boolean isExported, HashSet added) throws CoreException {
 		if (desc == null || !added.add(desc.getSymbolicName()))
 			return;
 
-		boolean inWorkspace = addPlugin(desc, isExported, true, result, added);
+		boolean inWorkspace = addPlugin(desc, isExported, true, added);
 
 		if (hasExtensibleAPI(desc)) {
 			BundleDescription[] fragments = desc.getFragments();
 			for (int i = 0; i < fragments.length; i++) {
 				if (fragments[i].isResolved())
-					addDependency(fragments[i], isExported, result, added);
+					addDependency(fragments[i], isExported, added);
 			}
 		}
 
@@ -126,27 +123,26 @@ public class RequiredPluginsClasspathContainer extends PDEClasspathContainer {
 			for (int i = 0; i < required.length; i++) {
 				if (required[i].isResolved() && required[i].isExported()) {
 					BundleDescription supplier = (BundleDescription)required[i].getSupplier();
-					addDependency(supplier, isExported, result, added);
+					addDependency(supplier, isExported, added);
 				}
 			}
 		}
 	}
 
 	private boolean addPlugin(BundleDescription desc, boolean isExported,
-			boolean useInclusionPatterns, Vector result, HashSet added)
+			boolean useInclusionPatterns, HashSet added)
 			throws CoreException {		
 		IPluginModelBase model = PDECore.getDefault().getModelManager().findModel(desc);
 		IResource resource = model.getUnderlyingResource();
 		if (resource != null) {
-			ClasspathUtilCore.addProjectEntry(model, isExported, useInclusionPatterns, result);
+			ClasspathUtilCore.addProjectEntry(model, isExported, useInclusionPatterns, fEntries);
 		} else {
-			ClasspathUtilCore.addLibraries(model, isExported, useInclusionPatterns, result);
+			ClasspathUtilCore.addLibraries(model, isExported, useInclusionPatterns, fEntries);
 		}
 		return resource != null;
 	}
 
-	private void addImplicitDependencies(Vector result, HashSet added)
-			throws CoreException {
+	private void addImplicitDependencies(HashSet added) throws CoreException {
 
 		String id = fModel.getPluginBase().getId();
 		String schemaVersion = fModel.getPluginBase().getSchemaVersion();
@@ -165,28 +161,28 @@ public class RequiredPluginsClasspathContainer extends PDEClasspathContainer {
 				IPluginModelBase plugin = manager.findModel(
 						"org.eclipse.core.runtime.compatibility"); //$NON-NLS-1$
 				if (plugin != null)
-					addDependency(plugin.getBundleDescription(), false, result, added);
+					addDependency(plugin.getBundleDescription(), false, added);
 			}
 		} else {
 			IPluginModelBase plugin = manager.findModel("org.eclipse.core.boot"); //$NON-NLS-1$
 			if (plugin != null)
-				addDependency(plugin.getBundleDescription(), false, result, added);
+				addDependency(plugin.getBundleDescription(), false, added);
 			
 			if (!id.equals("org.eclipse.core.runtime")) { //$NON-NLS-1$
 				plugin = manager.findModel("org.eclipse.core.runtime"); //$NON-NLS-1$
 				if (plugin != null)
-					addDependency(plugin.getBundleDescription(), false, result, added);
+					addDependency(plugin.getBundleDescription(), false, added);
 			}
 		}
 	}
 
-	private void addHostPlugin(HostSpecification hostSpec, Vector result, HashSet added) throws CoreException {
+	private void addHostPlugin(HostSpecification hostSpec, HashSet added) throws CoreException {
 		BaseDescription desc = hostSpec.getSupplier();
 		
 		if (desc instanceof BundleDescription && added.add(desc.getName())) {
 			BundleDescription host = (BundleDescription)desc;
 			// add host plug-in
-			boolean inWorkspace = addPlugin(host, false, false, result, added);
+			boolean inWorkspace = addPlugin(host, false, false, added);
 			
 			BundleSpecification[] required = host.getRequiredBundles();
 			for (int i = 0; i < required.length; i++) {
@@ -198,7 +194,7 @@ public class RequiredPluginsClasspathContainer extends PDEClasspathContainer {
 				if ((!inWorkspace || !required[i].isExported()) && required[i].isResolved()) {
 					desc = required[i].getSupplier();
 					if (desc instanceof BundleDescription) {
-						addDependency((BundleDescription)desc, false, result, added);
+						addDependency((BundleDescription)desc, false, added);
 					}
 				}
 			}
