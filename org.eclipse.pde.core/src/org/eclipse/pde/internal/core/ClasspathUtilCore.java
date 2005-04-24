@@ -178,17 +178,18 @@ public class ClasspathUtilCore {
 
 	public static IPath getSourceAnnotation(IPluginModelBase model, String libraryName)
 		throws CoreException {
-		IPath path = null;
-		int dot = libraryName.lastIndexOf('.');
-		if (dot != -1) {
-			String zipName = libraryName.substring(0, dot) + "src.zip"; //$NON-NLS-1$
-			path = getPath(model, zipName);
-			if (path == null) {
-				SourceLocationManager manager = PDECore.getDefault().getSourceLocationManager();
-				path = manager.findSourcePath(model.getPluginBase(), new Path(zipName));
-			}
+		String zipName = getSourceZipName(libraryName);
+		IPath path = getPath(model, zipName);
+		if (path == null) {
+			SourceLocationManager manager = PDECore.getDefault().getSourceLocationManager();
+			path = manager.findSourcePath(model.getPluginBase(), new Path(zipName));
 		}
 		return path;
+	}
+	
+	public static String getSourceZipName(String libraryName) {
+		int dot = libraryName.lastIndexOf('.');
+		return (dot != -1) ? libraryName.substring(0, dot) + "src.zip" : libraryName;	
 	}
 
 	private static IPluginModelBase resolveLibraryInFragments(

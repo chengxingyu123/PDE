@@ -117,7 +117,7 @@ public class ClasspathComputer {
 
 	protected static void addSourceFolder(String name, IProject project,
 			Vector result) throws CoreException {
-		CoreUtility.createFolder(project.getFolder(name), true, true, null);
+		CoreUtility.createFolder(project.getFolder(name));
 		IClasspathEntry entry = JavaCore.newSourceEntry(project.getFullPath()
 				.append(name));
 		if (!result.contains(entry))
