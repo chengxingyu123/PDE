@@ -104,6 +104,29 @@ public abstract class JarImportOperation implements IWorkspaceRunnable {
 			}
 		}
 	}
+	
+	protected void extractJavaResources(File file, IResource dest, IProgressMonitor monitor) throws CoreException {
+		ZipFile zipFile = null;
+		try {
+			zipFile = new ZipFile(file);
+			ZipFileStructureProvider provider = new ZipFileStructureProvider(zipFile);
+			ArrayList collected = new ArrayList();
+			collectJavaResources(provider, provider.getRoot(), collected);
+			importContent(provider.getRoot(), dest.getFullPath(), provider, collected,
+					monitor);
+		} catch (IOException e) {
+			IStatus status = new Status(IStatus.ERROR, PDEPlugin.getPluginId(),
+					IStatus.ERROR, e.getMessage(), e);
+			throw new CoreException(status);
+		} finally {
+			if (zipFile != null) {
+				try {
+					zipFile.close();
+				} catch (IOException e) {
+				}
+			}
+		}
+	}
 
 	protected void importArchive(IProject project, File archive, IPath destPath)
 			throws CoreException {
@@ -153,6 +176,38 @@ public abstract class JarImportOperation implements IWorkspaceRunnable {
 					}
 				} else if (!provider.getLabel(curr).endsWith(".class")) { //$NON-NLS-1$
 					collected.add(curr);
+				}
+			}
+		}
+	}
+	
+	protected void collectJavaFiles(ZipFileStructureProvider provider, Object element, ArrayList collected) {
+		List children = provider.getChildren(element);
+		if (children != null && !children.isEmpty()) {
+			for (int i = 0; i < children.size(); i++) {
+				Object curr = children.get(i);
+				if (provider.isFolder(curr)) {
+					if (provider.getLabel(curr).equals("src")) {
+						ArrayList list = new ArrayList();
+						collectResources(provider, curr, false, list);
+						collected.addAll(list);
+					}
+				}
+			}
+		}
+	}
+	
+	protected void collectJavaResources(ZipFileStructureProvider provider, Object element, ArrayList collected) {
+		List children = provider.getChildren(element);
+		if (children != null && !children.isEmpty()) {
+			for (int i = 0; i < children.size(); i++) {
+				Object curr = children.get(i);
+				if (provider.isFolder(curr)) {
+					if (isClassFolder(provider, curr)) {
+						ArrayList list = new ArrayList();
+						collectResources(provider, curr, false, list);
+						collected.addAll(list);
+					}
 				}
 			}
 		}

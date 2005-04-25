@@ -99,14 +99,11 @@ public class ClasspathUtilCore {
 					return null;
 				path = getPath(model, expandedName);
 			}
-			
-
-				entry = JavaCore.newLibraryEntry(
-						path, 
-						getSourceAnnotation(model, expandedName),
-						null, 
-						exported);
-		
+			entry = JavaCore.newLibraryEntry(
+					path, 
+					getSourceAnnotation(model, expandedName),
+					null, 
+					exported);		
 		} catch (CoreException e) {
 		}
 		return entry;
