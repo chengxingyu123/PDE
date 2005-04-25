@@ -21,6 +21,7 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaModelStatus;
 import org.eclipse.jdt.core.IJavaProject;
@@ -135,8 +136,9 @@ public class ClasspathUtil {
 		IResource jarFile = project.findMember(name);
 		if (jarFile != null) {
 			IResource resource = project.findMember(getSourceZipName(name));
+			if (resource == null)
+				resource = project.findMember(new Path(getSourceZipName(name)).lastSegment());
 			IPath srcAttachment = resource != null ? resource.getFullPath() : null;
-			
 			IClasspathEntry entry = JavaCore.newLibraryEntry(jarFile.getFullPath(), srcAttachment, null, exported);
 			if (!result.contains(entry))
 				result.add(entry);
