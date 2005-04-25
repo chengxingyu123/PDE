@@ -108,7 +108,7 @@ public class ClasspathUtil {
 			addJARdPlugin(project, getFilename(model), result);
 	}
 	
-	private static String getFilename(IPluginModelBase model) {
+	public static String getFilename(IPluginModelBase model) {
 		StringBuffer buffer = new StringBuffer();
 		String id = model.getPluginBase().getId();
 		if (id != null)

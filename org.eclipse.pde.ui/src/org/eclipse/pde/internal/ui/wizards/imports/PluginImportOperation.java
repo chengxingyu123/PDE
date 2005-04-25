@@ -50,6 +50,7 @@ import org.eclipse.pde.internal.core.ClasspathUtil;
 import org.eclipse.pde.internal.core.ClasspathUtilCore;
 import org.eclipse.pde.internal.core.ModelEntry;
 import org.eclipse.pde.internal.core.PDECore;
+import org.eclipse.pde.internal.core.PDEPluginConverter;
 import org.eclipse.pde.internal.core.SourceLocationManager;
 import org.eclipse.pde.internal.ui.PDEPlugin;
 import org.eclipse.pde.internal.ui.PDEUIMessages;
@@ -388,6 +389,9 @@ public class PluginImportOperation extends JarImportOperation {
 					}
 				}
 			}
+			if (fImportType != IMPORT_WITH_SOURCE) {
+				PDEPluginConverter.modifyManifest(project, model);
+			}
 			setPermissions(model, project);
 		} catch (IOException e) {
 			IStatus status = new Status(IStatus.ERROR, PDEPlugin.getPluginId(),
@@ -402,6 +406,8 @@ public class PluginImportOperation extends JarImportOperation {
 			}
 		}
 	}
+
+
 
 	private IProject findProject(String id) {
 		ModelEntry entry = PDECore.getDefault().getModelManager().findEntry(id);
