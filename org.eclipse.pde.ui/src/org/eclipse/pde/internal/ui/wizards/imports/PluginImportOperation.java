@@ -38,6 +38,8 @@ import org.eclipse.core.runtime.SubProgressMonitor;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.osgi.service.environment.Constants;
+import org.eclipse.osgi.service.resolver.BundleDescription;
+import org.eclipse.osgi.service.resolver.BundleSpecification;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.pde.core.plugin.IFragment;
 import org.eclipse.pde.core.plugin.IFragmentModel;
@@ -432,7 +434,21 @@ public class PluginImportOperation extends JarImportOperation {
 	}
 
 	private boolean needsJavaNature(IProject project, IPluginModelBase model) {
-		return true;
+		if (model.getPluginBase().getLibraries().length > 0)
+			return true;
+		
+		BundleDescription desc = model.getBundleDescription();
+		if (desc != null) {
+			if (desc.getExportPackages().length > 0)
+				return true;
+			BundleSpecification[] specs = desc.getRequiredBundles();
+			for (int i = 0; i < specs.length; i++) {
+				if (specs[i].isExported())
+					return true;
+			}
+		}
+		
+		return false;
 	}
 	
 	private boolean isExempt(IPluginModelBase model) {
