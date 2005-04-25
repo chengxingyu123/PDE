@@ -1748,8 +1748,6 @@ public class PDEUIMessages extends NLS {
 	public static String TargetPlatformPreferencePage_sourceCode;
 	public static String TargetPlatformPreferencePage_environmentTab;
 	public static String EnvironmentBlock_jreGroup;
-	public static String EnvironmentBlock_defaultJRE;
-	public static String EnvironmentBlock_thisJRE;
 	public static String EnvironmentBlock_jreNote;
 	public static String EnvironmentBlock_targetEnv;
 	public static String MailTemplate_productName;
