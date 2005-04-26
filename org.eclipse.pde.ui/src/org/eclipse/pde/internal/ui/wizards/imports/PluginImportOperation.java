@@ -15,7 +15,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Hashtable;
-import java.util.List;
 import java.util.zip.ZipFile;
 
 import org.eclipse.core.resources.IFile;
@@ -41,6 +40,7 @@ import org.eclipse.osgi.service.environment.Constants;
 import org.eclipse.osgi.service.resolver.BundleDescription;
 import org.eclipse.osgi.service.resolver.BundleSpecification;
 import org.eclipse.osgi.util.NLS;
+import org.eclipse.pde.core.build.IBuild;
 import org.eclipse.pde.core.plugin.IFragment;
 import org.eclipse.pde.core.plugin.IFragmentModel;
 import org.eclipse.pde.core.plugin.IPluginLibrary;
@@ -52,6 +52,7 @@ import org.eclipse.pde.internal.core.ModelEntry;
 import org.eclipse.pde.internal.core.PDECore;
 import org.eclipse.pde.internal.core.PDEPluginConverter;
 import org.eclipse.pde.internal.core.SourceLocationManager;
+import org.eclipse.pde.internal.core.build.WorkspaceBuildModel;
 import org.eclipse.pde.internal.ui.PDEPlugin;
 import org.eclipse.pde.internal.ui.PDEUIMessages;
 import org.eclipse.team.core.RepositoryProvider;
@@ -247,6 +248,9 @@ public class PluginImportOperation extends JarImportOperation {
 		monitor.beginTask("", 3); //$NON-NLS-1$
 		importAsBinary(project, model, false, new SubProgressMonitor(monitor, 2));
 		
+		WorkspaceBuildModel buildModel = new WorkspaceBuildModel(project.getFile("build.properties"));
+		IBuild build = buildModel.getBuild(true);
+		
 		String[] libraries = getLibraryNames(model, false);
 		for (int i = 0; i < libraries.length; i++) {
 			if (ClasspathUtilCore.containsVariables(libraries[i]))
@@ -254,6 +258,7 @@ public class PluginImportOperation extends JarImportOperation {
 			String name = libraries[i];
 			if (name.equals(".") && isJARd(model)) {
 				if (project.getFolder("src").exists()) {
+					if (build.getEntry("source..") == null)
 					continue;
 				} 
 				name = new File(model.getInstallLocation()).getName();			
@@ -300,10 +305,13 @@ public class PluginImportOperation extends JarImportOperation {
 						path = new Path(ClasspathUtilCore.getSourceZipName(new File(model
 								.getInstallLocation()).getName()));
 					}
-					project.getFile(path).createLink(
-							srcPath,
-							IResource.NONE,
-							new SubProgressMonitor(monitor, 1));
+					IFile zipFile = project.getFile(path.lastSegment());
+					if (!zipFile.exists()) {
+						zipFile.createLink(
+								srcPath,
+								IResource.NONE,
+								new SubProgressMonitor(monitor, 1));
+					}
 				}
 			}
 			monitor.worked(1);
@@ -354,6 +362,10 @@ public class PluginImportOperation extends JarImportOperation {
 		try {
 			zipFile = new ZipFile(model.getInstallLocation());
 			ZipFileStructureProvider provider = new ZipFileStructureProvider(zipFile);
+			if (!containsCode(provider)) {
+				extractZipFile(new File(model.getInstallLocation()), project.getFullPath(), monitor);
+				return;
+			}
 			ArrayList collected = new ArrayList();
 			collectNonJavaResources(provider, provider.getRoot(), collected);
 			importContent(provider.getRoot(), project.getFullPath(), provider, collected, monitor);
@@ -452,8 +464,7 @@ public class PluginImportOperation extends JarImportOperation {
 				if (specs[i].isExported())
 					return true;
 			}
-		}
-		
+		}		
 		return false;
 	}
 	
@@ -471,19 +482,6 @@ public class PluginImportOperation extends JarImportOperation {
 
 	private boolean isJARd(IPluginModelBase model) {
 		return new File(model.getInstallLocation()).isFile();
-	}
-	
-	private boolean hasEmbeddedSource(ZipFileStructureProvider provider) {
-		List children = provider.getChildren(provider.getRoot());
-		if (children != null && !children.isEmpty()) {
-			for (int i = 0; i < children.size(); i++) {
-				Object curr = children.get(i);
-				if (provider.isFolder(curr) && provider.getLabel(curr).equals("src")) {
-					return true;
-				}
-			}
-		}
-		return false;
 	}
 	
 	private void setPermissions(IPluginModelBase model, IProject project) {

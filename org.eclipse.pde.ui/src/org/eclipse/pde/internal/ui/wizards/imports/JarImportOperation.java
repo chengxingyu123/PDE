@@ -230,4 +230,30 @@ public abstract class JarImportOperation implements IWorkspaceRunnable {
 		return false;
 	}
 	
+	protected boolean hasEmbeddedSource(ZipFileStructureProvider provider) {
+		List children = provider.getChildren(provider.getRoot());
+		if (children != null && !children.isEmpty()) {
+			for (int i = 0; i < children.size(); i++) {
+				Object curr = children.get(i);
+				if (provider.isFolder(curr) && provider.getLabel(curr).equals("src")) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+	
+	protected boolean containsCode(ZipFileStructureProvider provider) {
+		List children = provider.getChildren(provider.getRoot());
+		if (children != null && !children.isEmpty()) {
+			for (int i = 0; i < children.size(); i++) {
+				Object curr = children.get(i);
+				if (provider.isFolder(curr) && isClassFolder(provider, curr)) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+	
 }
