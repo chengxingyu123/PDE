@@ -23,6 +23,7 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IProjectDescription;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IWorkspaceDescription;
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -104,7 +105,7 @@ public class PluginImportOperation extends JarImportOperation {
 	 * @see IWorkspaceRunnable#run(IProgressMonitor)
 	 */
 	public void run(IProgressMonitor monitor) throws CoreException,
-			OperationCanceledException {
+			OperationCanceledException{
 		if (monitor == null) {
 			monitor = new NullProgressMonitor();
 		}
@@ -134,6 +135,11 @@ public class PluginImportOperation extends JarImportOperation {
 			}
 		} finally {
 			setClasspaths(new SubProgressMonitor(monitor, 1));
+			try {
+				Platform.getJobManager().join(ResourcesPlugin.FAMILY_AUTO_BUILD, null);
+			} catch (OperationCanceledException e) {
+			} catch (InterruptedException e) {
+			}
 			if (isAutobuilding || fTurnAutobuild)
 				toggleAutobuild(true);			
 			
