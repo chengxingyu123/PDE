@@ -36,6 +36,7 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.SubProgressMonitor;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.osgi.service.environment.Constants;
 import org.eclipse.osgi.service.resolver.BundleDescription;
 import org.eclipse.osgi.service.resolver.BundleSpecification;
@@ -73,6 +74,8 @@ public class PluginImportOperation extends JarImportOperation {
 	private int fImportType;
 
 	private IReplaceQuery fReplaceQuery;
+	
+	private boolean fTurnAutobuild;
 
 	private Hashtable fProjectClasspaths = new Hashtable();
 
@@ -91,6 +94,11 @@ public class PluginImportOperation extends JarImportOperation {
 		fImportType = importType;
 		fReplaceQuery = replaceQuery;
 	}
+	
+	public PluginImportOperation(IPluginModelBase[] models, int importType, boolean turnAutoBuild, IReplaceQuery replaceQuery) {
+		this(models, importType, replaceQuery);
+		fTurnAutobuild = turnAutoBuild;
+	}
 
 	/*
 	 * @see IWorkspaceRunnable#run(IProgressMonitor)
@@ -100,13 +108,11 @@ public class PluginImportOperation extends JarImportOperation {
 		if (monitor == null) {
 			monitor = new NullProgressMonitor();
 		}
-		monitor.beginTask(PDEUIMessages.ImportWizard_operation_creating, fModels.length);
+		monitor.beginTask(PDEUIMessages.ImportWizard_operation_creating, fModels.length + 1);
+		boolean isAutobuilding = PDEPlugin.getWorkspace().isAutoBuilding();
 		try {
-			if (PDEPlugin.getWorkspace().isAutoBuilding()) {
-				IWorkspaceDescription desc = PDEPlugin.getWorkspace().getDescription();
-				desc.setAutoBuilding(false);
-				PDEPlugin.getWorkspace().setDescription(desc);
-			}
+			if (isAutobuilding) 
+				toggleAutobuild(false);
 			
 			MultiStatus multiStatus = new MultiStatus(PDEPlugin.getPluginId(),
 					IStatus.OK,
@@ -127,14 +133,29 @@ public class PluginImportOperation extends JarImportOperation {
 				throw new CoreException(multiStatus);
 			}
 		} finally {
-			Enumeration keys = fProjectClasspaths.keys();
-			while (keys.hasMoreElements()) {
-				IProject project = (IProject)keys.nextElement();
-				IClasspathEntry[] classpath = (IClasspathEntry[])fProjectClasspaths.get(project);
-				JavaCore.create(project).setRawClasspath(classpath, null);
-			}
+			setClasspaths(new SubProgressMonitor(monitor, 1));
+			if (isAutobuilding || fTurnAutobuild)
+				toggleAutobuild(true);			
+			
 			monitor.done();
 		}
+	}
+	
+	private void toggleAutobuild(boolean on) throws CoreException {
+		IWorkspaceDescription desc = PDEPlugin.getWorkspace().getDescription();
+		desc.setAutoBuilding(on);
+		PDEPlugin.getWorkspace().setDescription(desc);	
+	}
+	
+	private void setClasspaths(IProgressMonitor monitor) throws JavaModelException {
+		monitor.beginTask("Setting classpath...", fProjectClasspaths.size());
+		Enumeration keys = fProjectClasspaths.keys();
+		while (keys.hasMoreElements()) {
+			IProject project = (IProject)keys.nextElement();
+			IClasspathEntry[] classpath = (IClasspathEntry[])fProjectClasspaths.get(project);
+			monitor.subTask(project.getName());
+			JavaCore.create(project).setRawClasspath(classpath, new SubProgressMonitor(monitor, 1));
+		}		
 	}
 
 	private void importPlugin(IPluginModelBase model, IProgressMonitor monitor)
