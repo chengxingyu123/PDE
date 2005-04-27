@@ -464,7 +464,7 @@ public class TargetPlatform implements IEnvironmentVariables {
 	
 	public static File getBundleClasspathFile(PDEState state) {
 		Properties properties = getBundleClasspaths(state);
-		File file = new File(PDECore.getDefault().getStateLocation().toOSString(), "bundle.properties");
+		File file = new File(PDECore.getDefault().getStateLocation().toOSString(), "bundle.properties"); //$NON-NLS-1$
 		try {
 			FileOutputStream stream = new FileOutputStream(file);
 			properties.store(stream, "Bundle Classpaths"); //$NON-NLS-1$
@@ -483,18 +483,18 @@ public class TargetPlatform implements IEnvironmentVariables {
 			IPluginLibrary[] libs = model.getPluginBase().getLibraries();
 			for (int i = 0; i < libs.length; i++) {
 				if (buffer.length() > 0)
-					buffer.append(",");
+					buffer.append(","); //$NON-NLS-1$
 				buffer.append(libs[i].getName());
 			}
 		} else {
 			String[] libs = state.getLibraryNames(bundle.getBundleId());
 			for (int i = 0; i < libs.length; i++) {
 				if (buffer.length() > 0)
-					buffer.append(",");
+					buffer.append(","); //$NON-NLS-1$
 				buffer.append(libs[i]);
 			}			
 		}
-		return buffer.length() == 0 ? "." : buffer.toString();
+		return buffer.length() == 0 ? "." : buffer.toString(); //$NON-NLS-1$
 	}
 
 }

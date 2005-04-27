@@ -222,7 +222,7 @@ public class PluginImportOperation extends JarImportOperation {
 							IResource.NONE,
 							new SubProgressMonitor(monitor, 1));
 					} else {
-						if (!name.equals(".project")) { //$NON-NLS-1$ //$NON-NLS-2$
+						if (!name.equals(".project")) { //$NON-NLS-1$ 
 							project.getFile(name).createLink(
 								new Path(sourceFile.getPath()),
 								IResource.NONE,

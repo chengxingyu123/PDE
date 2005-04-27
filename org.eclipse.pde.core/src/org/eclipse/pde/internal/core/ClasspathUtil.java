@@ -85,7 +85,7 @@ public class ClasspathUtil {
 		IBuild build = getBuild(project);
 		IPluginLibrary[] libraries = model.getPluginBase().getLibraries();
 		for (int i = 0; i < libraries.length; i++) {
-			IBuildEntry buildEntry = build == null ? null : build.getEntry("source." + libraries[i].getName());
+			IBuildEntry buildEntry = build == null ? null : build.getEntry("source." + libraries[i].getName()); //$NON-NLS-1$
 			if (buildEntry != null) {
 				String[] folders = buildEntry.getTokens();
 				for (int j = 0; j < folders.length; j++) {
@@ -98,7 +98,7 @@ public class ClasspathUtil {
 					} 
 				}
 			} else {
-				if (libraries[i].getName().equals("."))
+				if (libraries[i].getName().equals(".")) //$NON-NLS-1$
 					addJARdPlugin(project, getFilename(model), result);
 				else
 					addLibraryEntry(project, libraries[i], libraries[i].isExported(), result);
@@ -113,11 +113,11 @@ public class ClasspathUtil {
 		String id = model.getPluginBase().getId();
 		if (id != null)
 			buffer.append(id);
-		buffer.append("_");
+		buffer.append("_"); //$NON-NLS-1$
 		String version = model.getPluginBase().getVersion();
 		if (version != null)
 			buffer.append(version);
-		buffer.append(".jar");
+		buffer.append(".jar"); //$NON-NLS-1$
 		return buffer.toString();
 	}
 
@@ -160,7 +160,7 @@ public class ClasspathUtil {
 
 	public static String getSourceZipName(String libraryName) {
 		int dot = libraryName.lastIndexOf('.');
-		return (dot != -1) ? libraryName.substring(0, dot) + "src.zip" : libraryName;	
+		return (dot != -1) ? libraryName.substring(0, dot) + "src.zip" : libraryName;	 //$NON-NLS-1$
 	}
 	
 	public static boolean isBundle(IPluginModelBase model) {
@@ -169,11 +169,11 @@ public class ClasspathUtil {
 		if (model.getUnderlyingResource() == null) {
 			File file = new File(model.getInstallLocation());
 			if (file.isDirectory())
-				return new File(file, "META-INF/MANIFEST.MF").exists();
+				return new File(file, "META-INF/MANIFEST.MF").exists(); //$NON-NLS-1$
 			ZipFile jarFile = null;
 			try {
 				jarFile = new ZipFile(file, ZipFile.OPEN_READ);
-				return jarFile.getEntry("META-INF/MANIFEST.MF") != null;
+				return jarFile.getEntry("META-INF/MANIFEST.MF") != null; //$NON-NLS-1$
 			} catch (IOException e) {
 			} finally {
 				try {

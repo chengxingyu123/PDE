@@ -123,11 +123,11 @@ public class ClasspathUtilCore {
 		if (model.getUnderlyingResource() == null) {
 			File file = new File(model.getInstallLocation());
 			if (file.isDirectory())
-				return new File(file, "META-INF/MANIFEST.MF").exists();
+				return new File(file, "META-INF/MANIFEST.MF").exists(); //$NON-NLS-1$
 			ZipFile jarFile = null;
 			try {
 				jarFile = new ZipFile(file, ZipFile.OPEN_READ);
-				return jarFile.getEntry("META-INF/MANIFEST.MF") != null;
+				return jarFile.getEntry("META-INF/MANIFEST.MF") != null; //$NON-NLS-1$
 			} catch (IOException e) {
 			} finally {
 				try {
@@ -186,7 +186,7 @@ public class ClasspathUtilCore {
 	
 	public static String getSourceZipName(String libraryName) {
 		int dot = libraryName.lastIndexOf('.');
-		return (dot != -1) ? libraryName.substring(0, dot) + "src.zip" : libraryName;	
+		return (dot != -1) ? libraryName.substring(0, dot) + "src.zip" : libraryName;	 //$NON-NLS-1$
 	}
 
 	private static IPluginModelBase resolveLibraryInFragments(
