@@ -299,7 +299,31 @@ public class PluginImportOperation extends JarImportOperation {
 				}
 			}	
 		}
+		configureBinIncludes(buildModel, model);
 		buildModel.save();
+	}
+	
+	private void configureBinIncludes(WorkspaceBuildModel buildModel, IPluginModelBase model) throws CoreException {
+		IBuildEntry entry = buildModel.getBuild(true).getEntry("bin.includes");
+		if (entry == null) {
+			entry = buildModel.getFactory().createEntry("bin.includes");
+			File location = new File(model.getInstallLocation());
+			if (location.isDirectory()) {
+				File[] files = location.listFiles();
+				for (int i = 0; i < files.length; i++) {
+					String token = files[i].getName();
+					if (files[i].isDirectory())
+						token = token + "/"; //$NON-NLS-1$
+					entry.addToken(token);
+				}
+			} else {
+				String[] tokens = getTopLevelResources(location);
+				for (int i = 0; i < tokens.length; i++) {
+					entry.addToken(tokens[i]);
+				}
+			}
+			buildModel.getBuild().add(entry);
+		}
 	}
 	
 	private String addBuildEntry(WorkspaceBuildModel model, String key, String value) throws CoreException {

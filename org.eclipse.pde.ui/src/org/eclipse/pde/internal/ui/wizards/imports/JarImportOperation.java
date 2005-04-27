@@ -273,4 +273,38 @@ public abstract class JarImportOperation implements IWorkspaceRunnable {
 		return true;
 	}
 	
+	protected String[] getTopLevelResources(File file) {
+		ArrayList result = new ArrayList();
+		ZipFile zipFile = null;
+		try {
+			zipFile = new ZipFile(file);
+			ZipFileStructureProvider provider = new ZipFileStructureProvider(zipFile);
+			List children = provider.getChildren(provider.getRoot());
+			if (children != null && !children.isEmpty()) {
+				for (int i = 0; i < children.size(); i++) {
+					Object curr = children.get(i);
+					if (provider.isFolder(curr)) {
+						if (!isClassFolder(provider, curr)) 
+							result.add(provider.getLabel(curr) + "/");
+						else {
+							if (!result.contains("."))
+								result.add(".");
+						}
+					} else {
+						result.add(provider.getLabel(curr));
+					}
+				}
+			}			
+		} catch (IOException e) {
+		} finally {
+			if (zipFile != null) {
+				try {
+					zipFile.close();
+				} catch (IOException e) {
+				}
+			}
+		}	
+		return (String[])result.toArray(new String[result.size()]);
+	}
+	
 }
