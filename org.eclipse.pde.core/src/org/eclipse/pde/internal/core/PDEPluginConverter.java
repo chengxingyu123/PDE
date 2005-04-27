@@ -57,7 +57,7 @@ public class PDEPluginConverter {
 				String classpath = prop.getProperty(Constants.BUNDLE_CLASSPATH);
 				if (classpath == null) {
 					prop.put(Constants.BUNDLE_CLASSPATH, 
-							ClasspathUtil.getFilename(model));
+							ClasspathComputer.getFilename(model));
 				} else {
 					ManifestElement[] elements = ManifestElement.parseHeader(Constants.BUNDLE_CLASSPATH, classpath);
 					StringBuffer buffer = new StringBuffer();
@@ -67,7 +67,7 @@ public class PDEPluginConverter {
 							buffer.append(", "); //$NON-NLS-1$
 						}
 						if (elements[i].getValue().equals(".")) //$NON-NLS-1$
-							buffer.append(ClasspathUtil.getFilename(model));
+							buffer.append(ClasspathComputer.getFilename(model));
 						else
 							buffer.append(elements[i].getValue());
 					}

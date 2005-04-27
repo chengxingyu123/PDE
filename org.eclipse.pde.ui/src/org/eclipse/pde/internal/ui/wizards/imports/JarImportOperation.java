@@ -256,4 +256,21 @@ public abstract class JarImportOperation implements IWorkspaceRunnable {
 		return false;
 	}
 	
+	protected boolean containsCode(File file) {
+		ZipFile zipFile = null;
+		try {
+			zipFile = new ZipFile(file);
+			return containsCode(new ZipFileStructureProvider(zipFile));
+		} catch (IOException e) {
+		} finally {
+			if (zipFile != null) {
+				try {
+					zipFile.close();
+				} catch (IOException e) {
+				}
+			}
+		}
+		return true;
+	}
+	
 }

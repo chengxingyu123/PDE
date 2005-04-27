@@ -22,7 +22,6 @@ import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IProjectDescription;
 import org.eclipse.core.resources.IResource;
-import org.eclipse.core.resources.IWorkspaceDescription;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
@@ -43,12 +42,13 @@ import org.eclipse.osgi.service.resolver.BundleDescription;
 import org.eclipse.osgi.service.resolver.BundleSpecification;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.pde.core.build.IBuild;
+import org.eclipse.pde.core.build.IBuildEntry;
 import org.eclipse.pde.core.plugin.IFragment;
 import org.eclipse.pde.core.plugin.IFragmentModel;
 import org.eclipse.pde.core.plugin.IPluginLibrary;
 import org.eclipse.pde.core.plugin.IPluginModelBase;
 import org.eclipse.pde.internal.PDE;
-import org.eclipse.pde.internal.core.ClasspathUtil;
+import org.eclipse.pde.internal.core.ClasspathComputer;
 import org.eclipse.pde.internal.core.ClasspathUtilCore;
 import org.eclipse.pde.internal.core.ModelEntry;
 import org.eclipse.pde.internal.core.PDECore;
@@ -76,8 +76,6 @@ public class PluginImportOperation extends JarImportOperation {
 
 	private IReplaceQuery fReplaceQuery;
 	
-	private boolean fTurnAutobuild;
-
 	private Hashtable fProjectClasspaths = new Hashtable();
 
 	public interface IReplaceQuery {
@@ -96,11 +94,6 @@ public class PluginImportOperation extends JarImportOperation {
 		fReplaceQuery = replaceQuery;
 	}
 	
-	public PluginImportOperation(IPluginModelBase[] models, int importType, boolean turnAutoBuild, IReplaceQuery replaceQuery) {
-		this(models, importType, replaceQuery);
-		fTurnAutobuild = turnAutoBuild;
-	}
-
 	/*
 	 * @see IWorkspaceRunnable#run(IProgressMonitor)
 	 */
@@ -110,10 +103,9 @@ public class PluginImportOperation extends JarImportOperation {
 			monitor = new NullProgressMonitor();
 		}
 		monitor.beginTask(PDEUIMessages.ImportWizard_operation_creating, fModels.length + 1);
-		boolean isAutobuilding = PDEPlugin.getWorkspace().isAutoBuilding();
 		try {
-			if (isAutobuilding) 
-				toggleAutobuild(false);
+			//if (isAutobuilding) 
+				//toggleAutobuild(false);
 			
 			MultiStatus multiStatus = new MultiStatus(PDEPlugin.getPluginId(),
 					IStatus.OK,
@@ -140,18 +132,18 @@ public class PluginImportOperation extends JarImportOperation {
 			} catch (OperationCanceledException e) {
 			} catch (InterruptedException e) {
 			}
-			if (isAutobuilding || fTurnAutobuild)
-				toggleAutobuild(true);			
+			//if (isAutobuilding || fTurnAutobuild)
+				//toggleAutobuild(true);			
 			
 			monitor.done();
 		}
 	}
 	
-	private void toggleAutobuild(boolean on) throws CoreException {
+	/*private void toggleAutobuild(boolean on) throws CoreException {
 		IWorkspaceDescription desc = PDEPlugin.getWorkspace().getDescription();
 		desc.setAutoBuilding(on);
 		PDEPlugin.getWorkspace().setDescription(desc);	
-	}
+	}*/
 	
 	private void setClasspaths(IProgressMonitor monitor) throws JavaModelException {
 		monitor.beginTask("Setting classpath...", fProjectClasspaths.size());
@@ -202,7 +194,7 @@ public class PluginImportOperation extends JarImportOperation {
 			setProjectDescription(project, model);
 
 			if (project.hasNature(JavaCore.NATURE_ID) && project.findMember(".classpath") == null) //$NON-NLS-1$
-				fProjectClasspaths .put(project, ClasspathUtil.getClasspath(project, model, true));
+				fProjectClasspaths .put(project, ClasspathComputer.getClasspath(project, model, true));
 		} catch (CoreException e) {
 		} finally {
 			monitor.done();
@@ -276,42 +268,50 @@ public class PluginImportOperation extends JarImportOperation {
 		importAsBinary(project, model, false, new SubProgressMonitor(monitor, 2));
 		
 		WorkspaceBuildModel buildModel = new WorkspaceBuildModel(project.getFile("build.properties"));
-		IBuild build = buildModel.getBuild(true);
-		
-		String[] libraries = getLibraryNames(model, false);
-		for (int i = 0; i < libraries.length; i++) {
-			if (ClasspathUtilCore.containsVariables(libraries[i]))
-				continue;
-			String name = libraries[i];
-			if (name.equals(".") && isJARd(model)) {
-				if (project.getFolder("src").exists()) {
-					if (build.getEntry("source..") == null)
+		if (!isJARd(model) || containsCode(new File(model.getInstallLocation()))) {
+			String[] libraries = getLibraryNames(model, false);
+			for (int i = 0; i < libraries.length; i++) {
+				if (ClasspathUtilCore.containsVariables(libraries[i]))
 					continue;
-				} 
-				name = new File(model.getInstallLocation()).getName();			
-			}
-			name = ClasspathUtilCore.expandLibraryName(name);
-			IPath libraryPath = new Path(name);
-			IResource jarFile = project.findMember(libraryPath);
-			if (jarFile != null) {
-				IResource srcZip = jarFile.getProject().findMember(ClasspathUtilCore.getSourceZipName(name));
-				if (srcZip != null) {
-					String jarName = libraries[i].equals(".") ? "" : libraryPath.removeFileExtension().lastSegment();
-					IFolder dest = jarFile.getProject().getFolder("src" + (jarName.length() == 0 ? "" : "-" + jarName)); //$NON-NLS-1$
-					if (!dest.exists()) {
-						dest.create(true, true, null);
+				String name = ClasspathUtilCore.expandLibraryName(libraries[i]);
+				IPath libraryPath = (name.equals(".") && isJARd(model))
+										? new Path(new File(model.getInstallLocation()).getName())
+										: new Path(name);
+				IResource jarFile = project.findMember(libraryPath);
+				if (jarFile != null) {
+					IResource srcZip = jarFile.getProject().findMember(ClasspathUtilCore.getSourceZipName(jarFile.getName()));
+					if (srcZip != null) {
+						String jarName = libraries[i].equals(".") ? "" : libraryPath.removeFileExtension().lastSegment();
+						String folder = addBuildEntry(buildModel, "source." + libraries[i], "src" + (jarName.length() == 0 ? "/" : "-" + jarName + "/"));
+						IFolder dest = jarFile.getProject().getFolder(folder); //$NON-NLS-1$
+						if (!dest.exists()) {
+							dest.create(true, true, null);
+						}
+						extractZipFile(srcZip.getLocation().toFile(), dest.getFullPath(), monitor);
+						if (isJARd(model)) {
+							extractJavaResources(jarFile.getLocation().toFile(), dest, monitor);
+						} else {
+							extractResources(jarFile.getLocation().toFile(), dest, monitor);
+						}
+						srcZip.delete(true, null);
+						jarFile.delete(true, null);
 					}
-					extractZipFile(srcZip.getLocation().toFile(), dest.getFullPath(), monitor);
-					if (isJARd(model)) {
-						extractJavaResources(jarFile.getLocation().toFile(), dest, monitor);
-					} else {
-						extractResources(jarFile.getLocation().toFile(), dest, monitor);
-					}
-					srcZip.delete(true, null);
-					jarFile.delete(true, null);
 				}
-			}
-		}			
+			}	
+		}
+		buildModel.save();
+	}
+	
+	private String addBuildEntry(WorkspaceBuildModel model, String key, String value) throws CoreException {
+		IBuild build = model.getBuild(true);
+		IBuildEntry entry = build.getEntry(key);
+		if (entry == null) {
+			entry = model.getFactory().createEntry(key);
+			entry.addToken(value);
+			build.add(entry);
+		}
+		String[] tokens = entry.getTokens();
+		return (tokens.length > 0) ? tokens[0] : "src/";
 	}
 
 	private void linkSourceArchives(IProject project, IPluginModelBase model,
@@ -499,7 +499,8 @@ public class PluginImportOperation extends JarImportOperation {
 		String id = model.getPluginBase().getId();
 		if ("org.apache.ant".equals(id)
 			|| "org.eclipse.osgi.util".equals(id)
-			|| "org.eclipse.osgi.services".equals(id))
+			|| "org.eclipse.osgi.services".equals(id)
+			|| "org.eclipse.team.cvs.ssh2".equals(id))
 			return true;
 		
 		if ("org.eclipse.swt".equals(id) && !isJARd(model))
