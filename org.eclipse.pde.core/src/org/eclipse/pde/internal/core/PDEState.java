@@ -355,6 +355,8 @@ public class PDEState extends MinimalState {
 				model = new ExternalFragmentModel();
 			model.load(desc, this, !fResolve);
 			fModels[i] = model;
+			fExtensions.remove(Long.toString(desc.getBundleId()));
+			fPluginInfos.remove(Long.toString(desc.getBundleId()));
 		}
 
 		fMonitor.done();		
