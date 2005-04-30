@@ -121,7 +121,6 @@ public class PDEState extends MinimalState {
 		File file = new File(dir, ".pluginInfo"); //$NON-NLS-1$
 		fPluginInfos = new HashMap();
 		if (file.exists() && file.isFile()) {
-			long start = System.currentTimeMillis();
 			try {
 				DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 				Document doc = factory.newDocumentBuilder().parse(file);
@@ -139,10 +138,6 @@ public class PDEState extends MinimalState {
 				PDECore.log(e);
 			} catch (ParserConfigurationException e) {
 				PDECore.log(e);
-			} finally {
-				long end = System.currentTimeMillis();
-				if (DEBUG)
-					System.out.println("########Time to read plugin info from cache: " + (end - start) + "ms"); //$NON-NLS-1$ //$NON-NLS-2$
 			}
 		} 
 		return false;
@@ -152,7 +147,6 @@ public class PDEState extends MinimalState {
 		fExtensions = new HashMap();
 		File file = new File(dir, ".extensions"); //$NON-NLS-1$
 		if (file.exists() && file.isFile()) {
-			long start = System.currentTimeMillis();
 			try {
 				DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 				Document doc = factory.newDocumentBuilder().parse(file);
@@ -173,10 +167,6 @@ public class PDEState extends MinimalState {
 				PDECore.log(e);
 			} catch (ParserConfigurationException e) {
 				PDECore.log(e);
-			} finally {
-				long end = System.currentTimeMillis();
-				if (DEBUG)
-					System.out.println("########Time to read extensions from cache: " + (end - start) + "ms"); //$NON-NLS-1$ //$NON-NLS-2$
 			}
 		} 
 		return false;
@@ -253,7 +243,6 @@ public class PDEState extends MinimalState {
 	
 	private void saveExtensions(File dir) {
 		fExtensions = new HashMap();
-		long start = System.currentTimeMillis();
 		File file = new File(dir, ".extensions"); //$NON-NLS-1$
 		OutputStream out = null;
 		Writer writer = null;
@@ -291,12 +280,8 @@ public class PDEState extends MinimalState {
 			} catch (IOException e1) {
 			}
 		}
-		long end = System.currentTimeMillis();
-		if (DEBUG)
-			System.out.println("########Time to parse and save extensions: " + (end - start) + "ms"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
-	
 	public BundleDescription addBundle(Dictionary manifest, File bundleLocation, boolean keepLibraries, long bundleId) {
 		BundleDescription desc = super.addBundle(manifest, bundleLocation, keepLibraries, bundleId);
 		if (desc != null)
@@ -358,7 +343,6 @@ public class PDEState extends MinimalState {
 	}
 	
 	private void createModels() {
-		long start = System.currentTimeMillis();
 		BundleDescription[] bundleDescriptions = fResolve ? fState.getResolvedBundles() : fState.getBundles();
 		fModels = new IPluginModelBase[bundleDescriptions.length];
 		for (int i = 0; i < bundleDescriptions.length; i++) {
@@ -372,14 +356,7 @@ public class PDEState extends MinimalState {
 			model.load(desc, this, !fResolve);
 			fModels[i] = model;
 		}
-		long end = System.currentTimeMillis();
-		
-		if (DEBUG) {
-			System.out.println("########Time to populate models: " + (end - start) + " ms"); //$NON-NLS-1$ //$NON-NLS-2$
-		}
-		if (fExtensions != null)
-			fExtensions.clear();
-		fPluginInfos.clear();
+
 		fMonitor.done();		
 	}
 	
