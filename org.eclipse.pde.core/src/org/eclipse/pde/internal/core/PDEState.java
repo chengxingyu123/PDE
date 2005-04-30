@@ -284,7 +284,7 @@ public class PDEState extends MinimalState {
 
 	public BundleDescription addBundle(Dictionary manifest, File bundleLocation, boolean keepLibraries, long bundleId) {
 		BundleDescription desc = super.addBundle(manifest, bundleLocation, keepLibraries, bundleId);
-		if (desc != null)
+		if (desc != null && keepLibraries)
 			createPluginInfo(desc, manifest);
 		return desc;
 	}
