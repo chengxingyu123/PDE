@@ -159,13 +159,6 @@ public class WorkspaceModelManager
 		return (URL[])list.toArray(new URL[list.size()]);
 	}
 	
-	/**
-	 * 
-	 */
-	public WorkspaceModelManager() {
-		super();
-	}
-
 	/* (non-Javadoc)
 	 * @see org.eclipse.pde.core.IWorkspaceModelManager#getWorkspaceModel(org.eclipse.core.resources.IProject)
 	 */
@@ -362,6 +355,35 @@ public class WorkspaceModelManager
 		return null;		
 	}
 	
+	public void initializeModels(IPluginModelBase[] models) {
+		fModels = Collections.synchronizedMap(new HashMap());
+		fFragmentModels = Collections.synchronizedMap(new HashMap());
+		fFeatureModels = Collections.synchronizedMap(new HashMap());
+		
+		for (int i = 0; i < models.length; i++) {
+			IProject project = models[i].getUnderlyingResource().getProject();
+			if (models[i] instanceof IPluginModel) {
+				fModels.put(project, models[i]);
+			} else {
+				fFragmentModels.put(project, models[i]);
+			}
+		}
+				fFeatureModels = Collections.synchronizedMap(new HashMap());
+		
+		IWorkspace workspace = PDECore.getWorkspace();
+		IProject[] projects = workspace.getRoot().getProjects();
+		for (int i = 0; i < projects.length; i++) {
+			IProject project = projects[i];
+			if (!isFeatureProject(project))
+				continue;
+			addWorkspaceModel(project, false);			
+		}
+
+		PDECore.getWorkspace().addResourceChangeListener(this, IResourceChangeEvent.PRE_CLOSE);
+		JavaCore.addPreProcessingResourceChangedListener(this);
+		fInitialized = true;
+	}
+	
 	/* (non-Javadoc)
 	 * @see org.eclipse.pde.core.IModelManager#getAllModels()
 	 */
@@ -499,7 +521,7 @@ public class WorkspaceModelManager
 		fModelsLocked = false;
 		fInitialized = true;
 	}
-	
+
 	/**
 	 * @param project
 	 * @return

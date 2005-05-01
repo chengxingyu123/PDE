@@ -18,6 +18,7 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -72,7 +73,8 @@ public class PDEState extends MinimalState {
 	private Map fPluginInfos;
 	private Map fExtensions;
 	private Dictionary fPlatformProperties;
-	private IPluginModelBase[] fModels;
+	private ArrayList fTargetModels = new ArrayList();
+	private ArrayList fWorkspaceModels = new ArrayList();
 	private boolean fCombined;
 	private long fTargetTimestamp;
 	private boolean fResolve = true;
@@ -376,11 +378,14 @@ public class PDEState extends MinimalState {
  	
  	private void createModels() {
 		BundleDescription[] bundleDescriptions = fCombined || !fResolve ? fState.getBundles() : fState.getResolvedBundles();
-		fModels = new IPluginModelBase[bundleDescriptions.length];
 		for (int i = 0; i < bundleDescriptions.length; i++) {
 			BundleDescription desc = bundleDescriptions[i];
 			fMonitor.subTask(bundleDescriptions[i].getSymbolicName());
-			fModels[i] = createModel(desc);
+			IPluginModelBase model = createModel(desc);
+			if (model.getUnderlyingResource() == null)
+				fTargetModels.add(model);
+			else
+				fWorkspaceModels.add(model);
 			fExtensions.remove(Long.toString(desc.getBundleId()));
 			fPluginInfos.remove(Long.toString(desc.getBundleId()));
 		}
@@ -433,8 +438,23 @@ public class PDEState extends MinimalState {
 		return model;
  	}
  	
+ 	public IPluginModelBase[] getTargetModels() {
+ 		return (IPluginModelBase[])fTargetModels.toArray(new IPluginModelBase[fTargetModels.size()]);
+ 	}
+ 	
+ 	public IPluginModelBase[] getWorkspaceModels() {
+ 		return (IPluginModelBase[])fWorkspaceModels.toArray(new IPluginModelBase[fWorkspaceModels.size()]);		
+ 	}
+ 	
  	public IPluginModelBase[] getModels() {
- 		return fModels == null ? new IPluginModelBase[0] : fModels;
+ 		IPluginModelBase[] workspace = getWorkspaceModels();
+ 		IPluginModelBase[] target = getTargetModels();
+ 		IPluginModelBase[] all = new IPluginModelBase[workspace.length + target.length];
+ 		if (workspace.length > 0)
+ 			System.arraycopy(workspace, 0, all, 0, workspace.length);
+ 		if (target.length > 0)
+ 			System.arraycopy(target, 0, all, workspace.length, target.length);
+ 		return all;
  	}
 	
 	public String getClassName(long bundleID) {
