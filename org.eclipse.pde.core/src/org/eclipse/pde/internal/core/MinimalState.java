@@ -55,8 +55,6 @@ public class MinimalState {
 
 	protected State fState;
 	
-	protected URL[] fURLs;
-	
 	protected boolean fResolve;
 	
 	private String fTargetMode = null;
@@ -93,8 +91,7 @@ public class MinimalState {
         fState.setPlatformProperties(TargetPlatform.getTargetEnvironment());		
 	}
 	
-	public MinimalState(URL[] urls, boolean resolve) {
-		fURLs = urls;
+	public MinimalState(boolean resolve) {
 		fResolve = resolve;
 	}
 
@@ -317,10 +314,10 @@ public class MinimalState {
 		return fState;
 	}
 
-	protected void setTargetMode() {
+	protected void setTargetMode(URL[] urls) {
 		fTargetMode = ICoreConstants.TARGET21;
-		for (int i = 0; i < fURLs.length; i++) {
-			if (fURLs[i].getFile().indexOf("org.eclipse.osgi") != -1) {//$NON-NLS-1$
+		for (int i = 0; i < urls.length; i++) {
+			if (urls[i].getFile().indexOf("org.eclipse.osgi") != -1) {//$NON-NLS-1$
 				fTargetMode = null;
 				break;
 			}

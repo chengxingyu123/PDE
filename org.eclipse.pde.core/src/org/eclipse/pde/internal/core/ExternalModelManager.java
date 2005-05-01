@@ -144,11 +144,7 @@ public class ExternalModelManager {
 	private synchronized void loadModels(IProgressMonitor monitor) {
 		if (fInitialized)
 			return;
-		Preferences pref = PDECore.getDefault().getPluginPreferences();
-		URL[] pluginPaths =
-			PluginPathFinder.getPluginPaths(
-				pref.getString(ICoreConstants.PLATFORM_PATH));
-		fState = new PDEState(pluginPaths, true, monitor);
+		fState = new PDEState(getPluginPaths(), true, monitor);
 		IPluginModelBase[] resolved = fState.getModels();
 		for (int i = 0; i < resolved.length; i++) {
 			if (resolved[i] instanceof IPluginModel) {
@@ -159,6 +155,11 @@ public class ExternalModelManager {
 		}		
 		initializeAllModels();
 		fInitialized=true;
+	}
+	
+	public static URL[] getPluginPaths() {
+		Preferences pref = PDECore.getDefault().getPluginPreferences();
+		return PluginPathFinder.getPluginPaths(pref.getString(ICoreConstants.PLATFORM_PATH));	
 	}
 	
 	public void removeModelProviderListener(IModelProviderListener listener) {

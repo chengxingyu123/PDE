@@ -11,6 +11,8 @@
 package org.eclipse.pde.internal.core;
 
 import java.io.*;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.*;
 
 import org.eclipse.core.resources.*;
@@ -140,18 +142,30 @@ public class WorkspaceModelManager
 				|| isBinaryPluginProject(project);
 	}
 	
+	public static URL[] getPluginPaths() {
+		ArrayList list = new ArrayList();
+		IProject[] projects = PDECore.getWorkspace().getRoot().getProjects();
+		for (int i = 0; i < projects.length; i++) {
+			if (isPluginProject(projects[i])) {			
+				try {
+					IPath path = projects[i].getLocation();
+					if (path != null) {
+						list.add(path.toFile().toURL());
+					}
+				} catch (MalformedURLException e) {
+				}
+			}
+		}
+		return (URL[])list.toArray(new URL[list.size()]);
+	}
+	
 	/**
 	 * 
 	 */
 	public WorkspaceModelManager() {
 		super();
 	}
-	/* (non-Javadoc)
-	 * @see org.eclipse.pde.core.IWorkspaceModelManager#getAllEditableModelsUnused(java.lang.Class)
-	 */
-	public boolean getAllEditableModelsUnused(Class modelClass) {
-		return true;
-	}
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.pde.core.IWorkspaceModelManager#getWorkspaceModel(org.eclipse.core.resources.IProject)
 	 */
@@ -636,28 +650,7 @@ public class WorkspaceModelManager
 		initializeWorkspaceModels();
 		return (IFeatureModel[]) fFeatureModels.values().toArray(new IFeatureModel[fFeatureModels.size()]);
 	}
-	/* (non-Javadoc)
-	 * @see org.eclipse.pde.core.IModelManager#getFragmentsFor(java.lang.String, java.lang.String)
-	 */
-	public IFragment[] getFragmentsFor(String pluginId, String version) {
-		initializeWorkspaceModels();
-		ArrayList result = new ArrayList();
-		
-		Iterator iter = fFragmentModels.values().iterator();
-		while (iter.hasNext()) {
-			IFragment fragment = ((IFragmentModel)iter.next()).getFragment();
-			if (PDECore
-				.compare(
-					fragment.getPluginId(),
-					fragment.getPluginVersion(),
-					pluginId,
-					version,
-					fragment.getRule())) {
-				result.add(fragment);
-			}
-		}
-		return (IFragment[]) result.toArray(new IFragment[result.size()]);
-	}
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.pde.core.IModelManager#shutdown()
 	 */

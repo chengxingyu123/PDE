@@ -48,44 +48,43 @@ public class PDEState extends MinimalState {
 	
 	private IProgressMonitor fMonitor;
 
-	private IPluginModelBase[] fModels;
 	private HashMap fPluginInfos;
 	private HashMap fExtensions;
-	private long fTimestamp;
+	protected long fTimestamp;
 
-	private Dictionary fPlatfromProperties;
-
+	protected Dictionary fPlatformProperties;
+	
 	public PDEState(URL[] urls, boolean resolve, IProgressMonitor monitor) {
 		this(urls, TargetPlatform.getTargetEnvironment(), resolve, monitor);
 	}
 	
 	public PDEState(URL[] urls, Dictionary properties, boolean resolve, IProgressMonitor monitor) {
-		super(urls, resolve);
+		super(resolve);
 		fMonitor = monitor;
-		fPlatfromProperties = properties;
-		load();
+		fPlatformProperties = properties;
+		if (resolve)
+			fTimestamp = computeTimestamp(urls);
+		load(urls);
 	}
 	
-	protected void load() {
+	protected void load(URL[] urls) {
 		if (fResolve) {
-			fTimestamp = computeTimestamp(fURLs);
 			File dir = new File(DIR, Long.toString(fTimestamp) + ".cache"); //$NON-NLS-1$
-			restoreState(dir);
+			restoreState(urls, dir);
 			restoreExtensions(dir);
 		} else {
-			createState();
+			createState(urls);
 		}
 		fState.setResolver(Platform.getPlatformAdmin().getResolver());
-		fState.setPlatformProperties(fPlatfromProperties);
+		fState.setPlatformProperties(fPlatformProperties);
 		fState.resolve(false);
 		if (fResolve)
 			logResolutionErrors();
-		createModels();		
 	}
 	
-	private void restoreState(File dir) {
+	protected void restoreState(URL[] urls, File dir) {
 		if (dir.exists() && (!readStateCache(dir) || !readPluginInfoCache(dir))) {
-			createState();
+			createState(urls);
 			saveState(dir);
 			savePluginInfo(dir);
 		} else {
@@ -93,20 +92,20 @@ public class PDEState extends MinimalState {
 				fId = fState.getBundles().length;
 			} else {
 				dir.mkdirs();
-				createState();
+				createState(urls);
 				saveState(dir);
 				savePluginInfo(dir);					
 			}				
 		}
 	}
 	
-	private void createState() {
+	private void createState(URL[] urls) {
 		fState = stateObjectFactory.createState();
 		fPluginInfos = new HashMap();
-		setTargetMode();
-		fMonitor.beginTask("", fURLs.length); //$NON-NLS-1$
-		for (int i = 0; i < fURLs.length; i++) {
-			addBundle(new File(fURLs[i].getFile()), true, -1);
+		setTargetMode(urls);
+		fMonitor.beginTask("", urls.length); //$NON-NLS-1$
+		for (int i = 0; i < urls.length; i++) {
+			addBundle(new File(urls[i].getFile()), true, -1);
 			fMonitor.worked(1);
 		}		
 	}
@@ -289,7 +288,7 @@ public class PDEState extends MinimalState {
 		return desc;
 	}
 	
-	private long computeTimestamp(URL[] urls) {
+	protected long computeTimestamp(URL[] urls) {
 		long timestamp = 0;
 		for (int i = 0; i < urls.length; i++) {
 			File file = new File(urls[i].getFile());
@@ -342,9 +341,9 @@ public class PDEState extends MinimalState {
 		fPluginInfos.put(element.getAttribute("bundleID"), info); //$NON-NLS-1$
 	}
 	
-	private void createModels() {
+	public IPluginModelBase[] getModels() {
 		BundleDescription[] bundleDescriptions = fResolve ? fState.getResolvedBundles() : fState.getBundles();
-		fModels = new IPluginModelBase[bundleDescriptions.length];
+		IPluginModelBase[] models = new IPluginModelBase[bundleDescriptions.length];
 		for (int i = 0; i < bundleDescriptions.length; i++) {
 			BundleDescription desc = bundleDescriptions[i];
 			fMonitor.subTask(bundleDescriptions[i].getSymbolicName());
@@ -354,16 +353,11 @@ public class PDEState extends MinimalState {
 			else
 				model = new ExternalFragmentModel();
 			model.load(desc, this, !fResolve);
-			fModels[i] = model;
+			models[i] = model;
 			fExtensions.remove(Long.toString(desc.getBundleId()));
 			fPluginInfos.remove(Long.toString(desc.getBundleId()));
 		}
-
-		fMonitor.done();		
-	}
-	
-	public IPluginModelBase[] getModels() {
-		return fModels;
+		return models;
 	}
 	
 	public String getClassName(long bundleID) {
