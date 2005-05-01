@@ -27,6 +27,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.eclipse.core.resources.IContainer;
+import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.runtime.CoreException;
@@ -37,9 +38,17 @@ import org.eclipse.osgi.service.pluginconversion.PluginConversionException;
 import org.eclipse.osgi.service.resolver.BundleDescription;
 import org.eclipse.osgi.service.resolver.State;
 import org.eclipse.pde.core.plugin.IPluginModelBase;
+import org.eclipse.pde.internal.core.bundle.BundleFragmentModel;
+import org.eclipse.pde.internal.core.bundle.BundlePluginModel;
+import org.eclipse.pde.internal.core.bundle.BundlePluginModelBase;
+import org.eclipse.pde.internal.core.bundle.WorkspaceBundleModel;
 import org.eclipse.pde.internal.core.plugin.ExternalFragmentModel;
 import org.eclipse.pde.internal.core.plugin.ExternalPluginModel;
 import org.eclipse.pde.internal.core.plugin.ExternalPluginModelBase;
+import org.eclipse.pde.internal.core.plugin.WorkspaceExtensionsModel;
+import org.eclipse.pde.internal.core.plugin.WorkspaceFragmentModel;
+import org.eclipse.pde.internal.core.plugin.WorkspacePluginModel;
+import org.eclipse.pde.internal.core.plugin.WorkspacePluginModelBase;
 import org.eclipse.pde.internal.core.util.CoreUtility;
 import org.osgi.framework.Constants;
 import org.w3c.dom.Document;
@@ -376,7 +385,34 @@ public class PDEState extends MinimalState {
  	}
  	
  	private IPluginModelBase createWorkspaceModel(BundleDescription desc, IProject project) {
-		return null;
+ 		if (WorkspaceModelManager.hasBundleManifest(project)) {
+ 			BundlePluginModelBase model = null;
+ 			if (desc.getHost() == null)
+ 				model = new BundlePluginModel();
+ 			else
+ 				model = new BundleFragmentModel();
+ 			WorkspaceBundleModel bundle = new WorkspaceBundleModel(project.getFile("META-INF/MANIFEST.MF"));
+ 			bundle.load(desc, this);
+ 			model.setBundleDescription(desc);
+ 			model.setBundleModel(bundle);
+ 			
+ 			String filename = (desc.getHost() == null) ? "plugin.xml" : "fragment.xml";
+ 			IFile file = project.getFile(filename);
+ 			if (file.exists()) {
+ 				WorkspaceExtensionsModel extensions = new WorkspaceExtensionsModel(file);
+ 				extensions.load(desc, this);
+ 				model.setExtensionsModel(extensions);
+ 			}
+ 			return model;
+ 		}
+ 		
+		WorkspacePluginModelBase model = null;
+		if (desc.getHost() == null)
+			model = new WorkspacePluginModel(project.getFile("plugin.xml"), true);
+		else
+			model = new WorkspaceFragmentModel(project.getFile("fragment.xml"), true);
+		model.load(desc, this, false);
+		return model;
 	}
 
 	private IPluginModelBase createExternalModel(BundleDescription desc) {
