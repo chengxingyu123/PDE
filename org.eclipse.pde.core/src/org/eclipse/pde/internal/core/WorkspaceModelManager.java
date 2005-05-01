@@ -595,7 +595,6 @@ public class WorkspaceModelManager
 		}
 	}
 
-
 	/**
 	 * @param project
 	 */

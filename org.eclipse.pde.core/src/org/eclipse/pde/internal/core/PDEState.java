@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2003, 2005 IBM Corporation and others.
+ * Copyright (c) 2005 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -9,6 +9,7 @@
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
 package org.eclipse.pde.internal.core;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -20,21 +21,31 @@ import java.net.URL;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
+import org.eclipse.core.resources.IContainer;
+import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IWorkspaceRoot;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Platform;
+import org.eclipse.osgi.service.pluginconversion.PluginConversionException;
 import org.eclipse.osgi.service.resolver.BundleDescription;
+import org.eclipse.osgi.service.resolver.State;
 import org.eclipse.pde.core.plugin.IPluginModelBase;
 import org.eclipse.pde.internal.core.plugin.ExternalFragmentModel;
 import org.eclipse.pde.internal.core.plugin.ExternalPluginModel;
 import org.eclipse.pde.internal.core.plugin.ExternalPluginModelBase;
+import org.eclipse.pde.internal.core.util.CoreUtility;
 import org.osgi.framework.Constants;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
+
 
 public class PDEState extends MinimalState {
 	
@@ -46,146 +57,149 @@ public class PDEState extends MinimalState {
 		String[] libraries;
 	}
 	
+	private URL[] fWorkspaceURLs;
+	private URL[] fTargetURLs;
 	private IProgressMonitor fMonitor;
-
-	private HashMap fPluginInfos;
-	private HashMap fExtensions;
-	protected long fTimestamp;
-
-	protected Dictionary fPlatformProperties;
+	private Map fPluginInfos;
+	private Map fExtensions;
+	private Dictionary fPlatformProperties;
+	private IPluginModelBase[] fModels;
+	private boolean fCombined;
+	private long fTargetTimestamp;
+	private boolean fResolve = true;
 	
 	public PDEState(URL[] urls, boolean resolve, IProgressMonitor monitor) {
-		this(urls, TargetPlatform.getTargetEnvironment(), resolve, monitor);
+		this(new URL[0], urls, TargetPlatform.getTargetEnvironment(), monitor);
+		fResolve = resolve;
 	}
 	
-	public PDEState(URL[] urls, Dictionary properties, boolean resolve, IProgressMonitor monitor) {
-		super(resolve);
+	public PDEState(URL[] workspace, URL[] target, Dictionary properties, IProgressMonitor monitor) {
+		fWorkspaceURLs = workspace;
+		fTargetURLs = target;
 		fMonitor = monitor;
 		fPlatformProperties = properties;
-		if (resolve)
-			fTimestamp = computeTimestamp(urls);
-		load(urls);
+		if (fResolve) {
+			load();
+		} else {
+			createState();
+		}
+		createModels();
 	}
 	
-	protected void load(URL[] urls) {
-		if (fResolve) {
-			File dir = new File(DIR, Long.toString(fTimestamp) + ".cache"); //$NON-NLS-1$
-			restoreState(urls, dir);
-			restoreExtensions(dir);
-		} else {
-			createState(urls);
+	private void load() {
+		fTargetTimestamp = computeTimestamp(fTargetURLs);
+		long workspace = computeTimestamp(fWorkspaceURLs);
+		long combined = fTargetTimestamp ^ workspace;
+		
+		// read combined (workspace + target) state first
+		File dir = new File(DIR, Long.toString(combined) + ".state");
+		fCombined = readCachedState(dir);
+		if (!fCombined) {
+			dir = new File(DIR, Long.toString(fTargetTimestamp) + ".target");
+			// do not give up.
+			// attempt to read cached target state, if any
+			if (!readCachedState(dir)) {
+				// no target state.  Create one from scratch.
+				createState();
+				saveState(dir);
+				savePluginInfo(dir);
+				saveExtensions(dir);
+			}
 		}
 		fState.setResolver(Platform.getPlatformAdmin().getResolver());
 		fState.setPlatformProperties(fPlatformProperties);
 		fState.resolve(false);
-		if (fResolve)
-			logResolutionErrors();
+		logResolutionErrors();
 	}
 	
-	protected void restoreState(URL[] urls, File dir) {
-		if (dir.exists() && (!readStateCache(dir) || !readPluginInfoCache(dir))) {
-			createState(urls);
-			saveState(dir);
-			savePluginInfo(dir);
-		} else {
-			if (fState != null) {
-				fId = fState.getBundles().length;
-			} else {
-				dir.mkdirs();
-				createState(urls);
-				saveState(dir);
-				savePluginInfo(dir);					
-			}				
-		}
-	}
-	
-	private void createState(URL[] urls) {
+	private void createState() {
 		fState = stateObjectFactory.createState();
 		fPluginInfos = new HashMap();
-		setTargetMode(urls);
-		fMonitor.beginTask("", urls.length); //$NON-NLS-1$
-		for (int i = 0; i < urls.length; i++) {
-			addBundle(new File(urls[i].getFile()), true, -1);
-			fMonitor.worked(1);
-		}		
-	}
-	
-	private void restoreExtensions(File dir) {
-		if (!readExtensionsCache(dir)) {
-			saveExtensions(dir);
-		}		
-	}
-	
-	private boolean readPluginInfoCache(File dir) {
-		File file = new File(dir, ".pluginInfo"); //$NON-NLS-1$
-		fPluginInfos = new HashMap();
-		if (file.exists() && file.isFile()) {
+		for (int i = 0; i < fTargetURLs.length; i++) {
 			try {
-				DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-				Document doc = factory.newDocumentBuilder().parse(file);
-				Element root = doc.getDocumentElement();
-				if (root != null) {
-					NodeList bundles = root.getElementsByTagName("bundle"); //$NON-NLS-1$
-					for (int i = 0; i < bundles.getLength(); i++) {
-						createPluginInfo((Element)bundles.item(i));
-					}
-				}
-				return true;
-			} catch (org.xml.sax.SAXException e) {
-				PDECore.log(e);
-			} catch (IOException e) {
-				PDECore.log(e);
-			} catch (ParserConfigurationException e) {
-				PDECore.log(e);
+				addBundle(new File(fTargetURLs[i].getFile()), true, -1);
+			} catch (PluginConversionException e) {
+			} catch (CoreException e) {
 			}
-		} 
-		return false;
+		}		
+	}
+	
+	public BundleDescription addBundle(Dictionary manifest, File bundleLocation, boolean keepLibraries, long bundleId) {
+		BundleDescription desc = super.addBundle(manifest, bundleLocation, keepLibraries, bundleId);
+		if (desc != null && keepLibraries)
+			createPluginInfo(desc, manifest);
+		return desc;
 	}
 
-	private boolean readExtensionsCache(File dir) {
-		fExtensions = new HashMap();
-		File file = new File(dir, ".extensions"); //$NON-NLS-1$
-		if (file.exists() && file.isFile()) {
-			try {
-				DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-				Document doc = factory.newDocumentBuilder().parse(file);
-				Element root = doc.getDocumentElement();
-				if (root != null) {
-					root.normalize();
-					NodeList bundles = root.getElementsByTagName("bundle"); //$NON-NLS-1$
-					for (int i = 0; i < bundles.getLength(); i++) {
-						Element bundle = (Element)bundles.item(i); 
-						String id = bundle.getAttribute("bundleID"); //$NON-NLS-1$
-						fExtensions.put(id, bundle.getChildNodes());
-					}
-				}
-				return true;
-			} catch (org.xml.sax.SAXException e) {
-				PDECore.log(e);
-			} catch (IOException e) {
-				PDECore.log(e);
-			} catch (ParserConfigurationException e) {
-				PDECore.log(e);
-			}
-		} 
-		return false;
+	private void createPluginInfo(BundleDescription desc, Dictionary manifest) {
+		PluginInfo info = new PluginInfo();
+		info.name = (String)manifest.get(Constants.BUNDLE_NAME);
+		info.providerName = (String)manifest.get(Constants.BUNDLE_VENDOR);
+		
+		String className = (String)manifest.get("Plugin-Class"); //$NON-NLS-1$
+		info.className	= className != null ? className : (String)manifest.get(Constants.BUNDLE_ACTIVATOR);	
+		info.libraries = PDEStateHelper.getClasspath(manifest);
+		info.hasExtensibleAPI = "true".equals((String)manifest.get(ICoreConstants.EXTENSIBLE_API)); //$NON-NLS-1$ 
+		
+		fPluginInfos.put(Long.toString(desc.getBundleId()), info);
 	}
 	
-	private boolean readStateCache(File dir) {
-		if (dir.exists() && dir.isDirectory()) {
+	private void createPluginInfo(Map map, Element element) {
+		PluginInfo info = new PluginInfo();
+		info.name = element.getAttribute("name"); //$NON-NLS-1$
+		info.providerName = element.getAttribute("provider"); //$NON-NLS-1$
+		info.className	= element.getAttribute("class"); //$NON-NLS-1$
+		info.hasExtensibleAPI = "true".equals(element.getAttribute("hasExtensibleAPI")); //$NON-NLS-1$ //$NON-NLS-2$
+		
+		NodeList libs = element.getElementsByTagName("library"); //$NON-NLS-1$
+		info.libraries = new String[libs.getLength()];
+		for (int i = 0; i < libs.getLength(); i++) {
+			Element lib = (Element)libs.item(i);
+			info.libraries[i] = lib.getAttribute("name"); //$NON-NLS-1$
+		}
+		map.put(element.getAttribute("bundleID"), info); //$NON-NLS-1$
+	}
+	
+	
+	private void saveExtensions(File dir) {
+		fExtensions = new HashMap();
+		File file = new File(dir, ".extensions"); //$NON-NLS-1$
+		OutputStream out = null;
+		Writer writer = null;
+		try {
+			out = new FileOutputStream(file);
+			writer = new OutputStreamWriter(out, "UTF-8"); //$NON-NLS-1$
+			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+			Document doc = factory.newDocumentBuilder().newDocument();
+			Element root = doc.createElement("extensions"); //$NON-NLS-1$
+			
+			BundleDescription[] bundles = fState.getBundles();
+			for (int i = 0; i < bundles.length; i++) {
+				BundleDescription desc = bundles[i];
+				Element element = doc.createElement("bundle"); //$NON-NLS-1$
+				element.setAttribute("bundleID", Long.toString(desc.getBundleId())); //$NON-NLS-1$
+				PDEStateHelper.parseExtensions(desc, element);
+				if (element.hasChildNodes()) {
+					root.appendChild(element);
+					fExtensions.put(Long.toString(desc.getBundleId()), element);
+				}
+			}	
+			doc.appendChild(root);
+			XMLPrintHandler.printNode(writer, doc, "UTF-8"); //$NON-NLS-1$
+		} catch (Exception e) {
+			PDECore.log(e);
+		} finally {
 			try {
-				fState = stateObjectFactory.readState(dir);	
-				return fState != null;
-			} catch (IllegalStateException e) {
-				PDECore.log(e);
-			} catch (FileNotFoundException e) {
-				PDECore.log(e);
-			} catch (IOException e) {
-				PDECore.log(e);
-			} finally {
+				if (writer != null)
+					writer.close();
+			} catch (IOException e1) {
 			}
-		} 
-		return false;
+			try {
+				if (out != null)
+					out.close();
+			} catch (IOException e1) {
+			}
+		}
 	}
 
 	private void savePluginInfo(File dir) {
@@ -239,56 +253,87 @@ public class PDEState extends MinimalState {
 			}
 		}
 	}
+
+	private boolean readCachedState(File dir) {
+		fState = readStateCache(dir);
+		fPluginInfos = readPluginInfoCache(dir);
+		fExtensions = readExtensionsCache(dir);
+		return fState != null && fPluginInfos != null && fExtensions != null;
+	}
 	
-	private void saveExtensions(File dir) {
-		fExtensions = new HashMap();
+	private Map readExtensionsCache(File dir) {
 		File file = new File(dir, ".extensions"); //$NON-NLS-1$
-		OutputStream out = null;
-		Writer writer = null;
-		try {
-			out = new FileOutputStream(file);
-			writer = new OutputStreamWriter(out, "UTF-8"); //$NON-NLS-1$
-			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-			Document doc = factory.newDocumentBuilder().newDocument();
-			Element root = doc.createElement("extensions"); //$NON-NLS-1$
-			
-			BundleDescription[] bundles = fState.getBundles();
-			for (int i = 0; i < bundles.length; i++) {
-				BundleDescription desc = bundles[i];
-				Element element = doc.createElement("bundle"); //$NON-NLS-1$
-				element.setAttribute("bundleID", Long.toString(desc.getBundleId())); //$NON-NLS-1$
-				PDEStateHelper.parseExtensions(desc, element);
-				if (element.hasChildNodes()) {
-					root.appendChild(element);
-					fExtensions.put(Long.toString(desc.getBundleId()), element);
+		if (file.exists() && file.isFile()) {
+			try {
+				Map map = new HashMap();
+				DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+				Document doc = factory.newDocumentBuilder().parse(file);
+				Element root = doc.getDocumentElement();
+				if (root != null) {
+					root.normalize();
+					NodeList bundles = root.getElementsByTagName("bundle"); //$NON-NLS-1$
+					for (int i = 0; i < bundles.getLength(); i++) {
+						Element bundle = (Element)bundles.item(i); 
+						String id = bundle.getAttribute("bundleID"); //$NON-NLS-1$
+						map.put(id, bundle.getChildNodes());
+					}
 				}
-			}	
-			doc.appendChild(root);
-			XMLPrintHandler.printNode(writer, doc, "UTF-8"); //$NON-NLS-1$
-		} catch (Exception e) {
-			PDECore.log(e);
-		} finally {
-			try {
-				if (writer != null)
-					writer.close();
-			} catch (IOException e1) {
+				return map;
+			} catch (org.xml.sax.SAXException e) {
+				PDECore.log(e);
+			} catch (IOException e) {
+				PDECore.log(e);
+			} catch (ParserConfigurationException e) {
+				PDECore.log(e);
 			}
-			try {
-				if (out != null)
-					out.close();
-			} catch (IOException e1) {
-			}
-		}
+		} 
+		return null;
 	}
 
-	public BundleDescription addBundle(Dictionary manifest, File bundleLocation, boolean keepLibraries, long bundleId) {
-		BundleDescription desc = super.addBundle(manifest, bundleLocation, keepLibraries, bundleId);
-		if (desc != null && keepLibraries)
-			createPluginInfo(desc, manifest);
-		return desc;
+	private Map readPluginInfoCache(File dir) {
+		File file = new File(dir, ".pluginInfo"); //$NON-NLS-1$
+		if (file.exists() && file.isFile()) {
+			try {
+				Map map = new HashMap();
+				DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+				Document doc = factory.newDocumentBuilder().parse(file);
+				Element root = doc.getDocumentElement();
+				if (root != null) {
+					NodeList bundles = root.getElementsByTagName("bundle"); //$NON-NLS-1$
+					for (int i = 0; i < bundles.getLength(); i++) {
+						createPluginInfo(map, (Element)bundles.item(i));
+					}
+				}
+				return map;
+			} catch (org.xml.sax.SAXException e) {
+				PDECore.log(e);
+			} catch (IOException e) {
+				PDECore.log(e);
+			} catch (ParserConfigurationException e) {
+				PDECore.log(e);
+			}
+		} 
+		return null;
+	}
+
+	private State readStateCache(File dir) {
+		if (dir.exists() && dir.isDirectory()) {
+			try {
+				fState = stateObjectFactory.readState(dir);	
+				return fState;
+			} catch (IllegalStateException e) {
+				PDECore.log(e);
+			} catch (FileNotFoundException e) {
+				PDECore.log(e);
+			} catch (IOException e) {
+				PDECore.log(e);
+			} finally {
+			}
+		} 
+		return null;
 	}
 	
-	protected long computeTimestamp(URL[] urls) {
+ 	private long computeTimestamp(URL[] urls) {
 		long timestamp = 0;
 		for (int i = 0; i < urls.length; i++) {
 			File file = new File(urls[i].getFile());
@@ -311,54 +356,42 @@ public class PDEState extends MinimalState {
 		}
 		return timestamp;
 	}
-	
-	private void createPluginInfo(BundleDescription desc, Dictionary manifest) {
-		PluginInfo info = new PluginInfo();
-		info.name = (String)manifest.get(Constants.BUNDLE_NAME);
-		info.providerName = (String)manifest.get(Constants.BUNDLE_VENDOR);
-		
-		String className = (String)manifest.get("Plugin-Class"); //$NON-NLS-1$
-		info.className	= className != null ? className : (String)manifest.get(Constants.BUNDLE_ACTIVATOR);	
-		info.libraries = PDEStateHelper.getClasspath(manifest);
-		info.hasExtensibleAPI = "true".equals((String)manifest.get(ICoreConstants.EXTENSIBLE_API)); //$NON-NLS-1$ 
-		
-		fPluginInfos.put(Long.toString(desc.getBundleId()), info);
-	}
-	
-	private void createPluginInfo(Element element) {
-		PluginInfo info = new PluginInfo();
-		info.name = element.getAttribute("name"); //$NON-NLS-1$
-		info.providerName = element.getAttribute("provider"); //$NON-NLS-1$
-		info.className	= element.getAttribute("class"); //$NON-NLS-1$
-		info.hasExtensibleAPI = "true".equals(element.getAttribute("hasExtensibleAPI")); //$NON-NLS-1$ //$NON-NLS-2$
-		
-		NodeList libs = element.getElementsByTagName("library"); //$NON-NLS-1$
-		info.libraries = new String[libs.getLength()];
-		for (int i = 0; i < libs.getLength(); i++) {
-			Element lib = (Element)libs.item(i);
-			info.libraries[i] = lib.getAttribute("name"); //$NON-NLS-1$
-		}
-		fPluginInfos.put(element.getAttribute("bundleID"), info); //$NON-NLS-1$
-	}
-	
-	public IPluginModelBase[] getModels() {
-		BundleDescription[] bundleDescriptions = fResolve ? fState.getResolvedBundles() : fState.getBundles();
-		IPluginModelBase[] models = new IPluginModelBase[bundleDescriptions.length];
+ 	
+ 	private void createModels() {
+		BundleDescription[] bundleDescriptions = fCombined || !fResolve ? fState.getBundles() : fState.getResolvedBundles();
+		fModels = new IPluginModelBase[bundleDescriptions.length];
 		for (int i = 0; i < bundleDescriptions.length; i++) {
 			BundleDescription desc = bundleDescriptions[i];
 			fMonitor.subTask(bundleDescriptions[i].getSymbolicName());
-			ExternalPluginModelBase model = null;
-			if (desc.getHost() == null)
-				model = new ExternalPluginModel();
-			else
-				model = new ExternalFragmentModel();
-			model.load(desc, this, !fResolve);
-			models[i] = model;
+			fModels[i] = createModel(desc);
 			fExtensions.remove(Long.toString(desc.getBundleId()));
 			fPluginInfos.remove(Long.toString(desc.getBundleId()));
 		}
-		return models;
 	}
+ 	
+ 	private IPluginModelBase createModel(BundleDescription desc) {
+		IWorkspaceRoot root = PDECore.getWorkspace().getRoot();
+ 		IContainer container = root.getContainerForLocation(new Path(desc.getLocation()));
+ 		return (container == null) ? createExternalModel(desc) : createWorkspaceModel(desc, (IProject) container);
+ 	}
+ 	
+ 	private IPluginModelBase createWorkspaceModel(BundleDescription desc, IProject project) {
+		return null;
+	}
+
+	private IPluginModelBase createExternalModel(BundleDescription desc) {
+ 		ExternalPluginModelBase model = null;
+ 		if (desc.getHost() == null)
+			model = new ExternalPluginModel();
+		else
+			model = new ExternalFragmentModel();
+		model.load(desc, this, !fResolve);
+		return model;
+ 	}
+ 	
+ 	public IPluginModelBase[] getModels() {
+ 		return fModels == null ? new IPluginModelBase[0] : fModels;
+ 	}
 	
 	public String getClassName(long bundleID) {
 		PluginInfo info = (PluginInfo)fPluginInfos.get(Long.toString(bundleID));
@@ -403,8 +436,25 @@ public class PDEState extends MinimalState {
 		return null;
 	}
 	
-	public long getTimestamp() {
-		return fTimestamp;
+	public void shutdown() {
+		clearStaleStates(".target", fTargetTimestamp);
 	}
+	
+	private void clearStaleStates(String extension, long latest) {
+		File dir = new File(PDECore.getDefault().getStateLocation().toOSString());
+		File[] children = dir.listFiles();
+		if (children != null) {
+			for (int i = 0; i < children.length; i++) {
+				File child = children[i];
+				if (child.isDirectory()) {
+					String name = child.getName();
+					if (name.endsWith(extension)
+							&& !name.equals(Long.toString(latest) + extension)) { //$NON-NLS-1$
+						CoreUtility.deleteContent(child);
+					}
+				}
+			}
+		}
+	}	
 
 }

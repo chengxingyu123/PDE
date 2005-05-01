@@ -30,11 +30,13 @@ import java.util.jar.Manifest;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.MultiStatus;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.osgi.service.pluginconversion.PluginConversionException;
 import org.eclipse.osgi.service.pluginconversion.PluginConverter;
 import org.eclipse.osgi.service.resolver.BundleDescription;
 import org.eclipse.osgi.service.resolver.BundleSpecification;
@@ -54,9 +56,7 @@ import org.osgi.util.tracker.ServiceTracker;
 public class MinimalState {
 
 	protected State fState;
-	
-	protected boolean fResolve;
-	
+		
 	private String fTargetMode = null;
 
 	protected long fId;
@@ -91,19 +91,25 @@ public class MinimalState {
         fState.setPlatformProperties(TargetPlatform.getTargetEnvironment());		
 	}
 	
-	public MinimalState(boolean resolve) {
-		fResolve = resolve;
-	}
-
 	public void addBundle(IPluginModelBase model) {
 		BundleDescription desc = model.getBundleDescription();
 		long bundleId = desc == null ? -1 : desc.getBundleId();
-		model.setBundleDescription(
-				addBundle(new File(model.getInstallLocation()), false,  bundleId));
+		try {
+			model.setBundleDescription(
+					addBundle(new File(model.getInstallLocation()), false,  bundleId));
+		} catch (PluginConversionException e) {
+			PDECore.log(e);
+		} catch (CoreException e) {
+			PDECore.log(e);
+		}
 	}
 
 	public void addBundle(IPluginModelBase model, long bundleId) {
-		addBundle(new File(model.getInstallLocation()), false, -1);
+		try {
+			addBundle(new File(model.getInstallLocation()), false, -1);
+		} catch (PluginConversionException e) {
+		} catch (CoreException e) {
+		}
 	}
 
 	public BundleDescription addBundle(Dictionary manifest, File bundleLocation, boolean keepLibraries, long bundleId) {
@@ -124,28 +130,22 @@ public class MinimalState {
 		return null;
 	}
 
-	public BundleDescription addBundle(File bundleLocation, boolean keepLibraries, long bundleId) {
+	public BundleDescription addBundle(File bundleLocation, boolean keepLibraries, long bundleId) throws PluginConversionException, CoreException {
 		Dictionary manifest = loadManifest(bundleLocation);
 		if (manifest == null || manifest.get(Constants.BUNDLE_SYMBOLICNAME) == null) {
-			try {
-				if (!bundleLocation.isFile() 
-						&& !new File(bundleLocation, "plugin.xml").exists() //$NON-NLS-1$
-						&& !new File(bundleLocation, "fragment.xml").exists()) //$NON-NLS-1$
-					return null;
-				PluginConverter converter = acquirePluginConverter();
-				manifest = converter.convertManifest(bundleLocation, false, getTargetMode(), false, null);
-				if (manifest == null
-						|| manifest.get(Constants.BUNDLE_SYMBOLICNAME) == null)
-					throw new Exception();
-			} catch (Exception e1) {
-				if (fResolve)
-					PDECore.log(new Status(
-									IStatus.ERROR,
-									PDECore.PLUGIN_ID,
-									IStatus.ERROR,
-									"Error parsing plugin manifest file at " + bundleLocation.toString(), null)); //$NON-NLS-1$
+			if (!bundleLocation.isFile() 
+					&& !new File(bundleLocation, "plugin.xml").exists() //$NON-NLS-1$
+					&& !new File(bundleLocation, "fragment.xml").exists()) //$NON-NLS-1$
 				return null;
-			}
+			PluginConverter converter = acquirePluginConverter();
+			manifest = converter.convertManifest(bundleLocation, false, getTargetMode(), false, null);
+			if (manifest == null
+					|| manifest.get(Constants.BUNDLE_SYMBOLICNAME) == null)
+				throw new CoreException(new Status(
+						IStatus.ERROR,
+						PDECore.PLUGIN_ID,
+						IStatus.ERROR,
+						"Error parsing plug-in manifest file at " + bundleLocation.toString(), null)); //$NON-NLS-1$
 		}
 		BundleDescription desc = addBundle(manifest, bundleLocation, keepLibraries, bundleId);
 		if (SYSTEM_BUNDLE.equals(desc.getSymbolicName())) {
@@ -158,6 +158,8 @@ public class MinimalState {
 
 	protected void saveState(File dir) {
 		try {
+			if (!dir.exists())
+				dir.mkdirs();
 			stateObjectFactory.writeState(fState, dir);
 		} catch (FileNotFoundException e) {
 			PDECore.log(e);
@@ -390,7 +392,7 @@ public class MinimalState {
 		fState.addBundle(toAdd);
 	}
 
-	private PluginConverter acquirePluginConverter() throws Exception {
+	private PluginConverter acquirePluginConverter() {
 		if (fConverter == null) {
 			ServiceTracker tracker = new ServiceTracker(PDECore.getDefault()
 					.getBundleContext(), PluginConverter.class.getName(), null);

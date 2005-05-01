@@ -9,14 +9,25 @@
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
 package org.eclipse.pde.internal.core;
-import java.io.*;
-import java.net.*;
-import java.util.*;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.StringTokenizer;
+import java.util.Vector;
 
-import org.eclipse.core.runtime.*;
-import org.eclipse.pde.core.*;
-import org.eclipse.pde.core.plugin.*;
-import org.eclipse.pde.internal.core.util.CoreUtility;
+import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.core.runtime.Path;
+import org.eclipse.core.runtime.Platform;
+import org.eclipse.core.runtime.Preferences;
+import org.eclipse.pde.core.IModelProviderEvent;
+import org.eclipse.pde.core.IModelProviderListener;
+import org.eclipse.pde.core.plugin.IFragmentModel;
+import org.eclipse.pde.core.plugin.IPluginModel;
+import org.eclipse.pde.core.plugin.IPluginModelBase;
 
 public class ExternalModelManager {
 	private List fModels;
@@ -144,7 +155,7 @@ public class ExternalModelManager {
 	private synchronized void loadModels(IProgressMonitor monitor) {
 		if (fInitialized)
 			return;
-		fState = new PDEState(getPluginPaths(), true, monitor);
+		fState = new PDEState(new URL[0], getPluginPaths(), null, monitor);
 		IPluginModelBase[] resolved = fState.getModels();
 		for (int i = 0; i < resolved.length; i++) {
 			if (resolved[i] instanceof IPluginModel) {
@@ -211,28 +222,8 @@ public class ExternalModelManager {
 		}
 		
 		PDECore.getDefault().savePluginPreferences();
-		if (fState != null)
-			clearStaleStates();
 	}
 	
-	private void clearStaleStates() {
-		File dir = new File(PDECore.getDefault().getStateLocation().toOSString());
-		File[] children = dir.listFiles();
-		if (children != null) {
-			for (int i = 0; i < children.length; i++) {
-				File child = children[i];
-				if (child.isDirectory()) {
-					String name = child.getName();
-					if (name.endsWith(".cache")  //$NON-NLS-1$
-							&& name.length() != 6
-							&& !name.equals(Long.toString(fState.getTimestamp()) + ".cache")) { //$NON-NLS-1$
-						CoreUtility.deleteContent(child);
-					}
-				}
-			}
-		}
-	}
-
 	public PDEState getState() {
 		loadModels(new NullProgressMonitor());
 		return fState;
