@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Dictionary;
@@ -134,11 +135,16 @@ public class PDEState extends MinimalState {
 	private void createState() {
 		fState = stateObjectFactory.createState();
 		fPluginInfos = new HashMap();
+		fMonitor.beginTask("Reading plug-ins...", fTargetURLs.length);
 		for (int i = 0; i < fTargetURLs.length; i++) {
 			try {
-				addBundle(new File(fTargetURLs[i].getFile()), true, -1);
+				File file = new File(fTargetURLs[i].getFile());
+				fMonitor.subTask(file.getName());
+				addBundle(file, true, -1);
 			} catch (PluginConversionException e) {
 			} catch (CoreException e) {
+			} finally {
+				fMonitor.worked(1);
 			}
 		}		
 	}
@@ -178,7 +184,6 @@ public class PDEState extends MinimalState {
 		}
 		map.put(element.getAttribute("bundleID"), info); //$NON-NLS-1$
 	}
-	
 	
 	private void saveExtensions(File dir) {
 		fExtensions = new HashMap();
@@ -501,7 +506,24 @@ public class PDEState extends MinimalState {
 	}
 	
 	public void shutdown() {
+		IPluginModelBase[] models = PDECore.getDefault().getModelManager().getWorkspaceModels();
+		long combined = computeTimestamp(models) ^ fTargetTimestamp;
+		
+		File dir = new File(DIR, Long.toString(combined) + ".state");
+		saveState(dir);
+		
 		clearStaleStates(".target", fTargetTimestamp);
+	}
+	
+	private long computeTimestamp(IPluginModelBase[] models) {
+		URL[] urls = new URL[models.length];
+		for (int i = 0; i < models.length; i++) {
+			try {
+				urls[i] = new File(models[i].getInstallLocation()).toURL();
+			} catch (MalformedURLException e) {
+			}
+		}
+		return computeTimestamp(urls);
 	}
 	
 	private void clearStaleStates(String extension, long latest) {
