@@ -155,7 +155,7 @@ public class ExternalModelManager {
 	private synchronized void loadModels(IProgressMonitor monitor) {
 		if (fInitialized)
 			return;
-		fState = new PDEState(new URL[0], getPluginPaths(), null, monitor);
+		fState = new PDEState(getPluginPaths(), true, monitor);
 		IPluginModelBase[] resolved = fState.getModels();
 		for (int i = 0; i < resolved.length; i++) {
 			if (resolved[i] instanceof IPluginModel) {
