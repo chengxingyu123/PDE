@@ -501,21 +501,12 @@ public class WorkspaceModelManager
 		IWorkspace workspace = PDECore.getWorkspace();
 		IProject[] projects = workspace.getRoot().getProjects();
 		
-		// must do plugins/fragments before features
 		for (int i = 0; i < projects.length; i++) {
 			IProject project = projects[i];
-			if (!isPluginProject(project))
-				continue;
-			addWorkspaceModel(project, false);			
+			if (isPluginProject(project) || isFeatureProject(project))
+				addWorkspaceModel(project, false);			
 		}
 		
-		// must do features after plugins/fragments
-		for (int i = 0; i < projects.length; i++) {
-			IProject project = projects[i];
-			if (!isFeatureProject(project))
-				continue;
-			addWorkspaceModel(project, false);			
-		}
 		workspace.addResourceChangeListener(this, IResourceChangeEvent.PRE_CLOSE);
 		JavaCore.addPreProcessingResourceChangedListener(this);
 		fModelsLocked = false;
