@@ -183,7 +183,7 @@ public class WorkspaceModelManager
 		return null;
 	}
 	
-	public IPluginModelBase getWorkspacePluginModel(IProject project) {
+	protected IPluginModelBase getWorkspacePluginModel(IProject project) {
 		IModel model = getWorkspaceModel(project);
 		return (model instanceof IPluginModelBase) ? (IPluginModelBase)model : null;
 	}
@@ -355,7 +355,7 @@ public class WorkspaceModelManager
 		return null;		
 	}
 	
-	public void initializeModels(IPluginModelBase[] models) {
+	protected void initializeModels(IPluginModelBase[] models) {
 		fModels = Collections.synchronizedMap(new HashMap());
 		fFragmentModels = Collections.synchronizedMap(new HashMap());
 		fFeatureModels = Collections.synchronizedMap(new HashMap());
@@ -387,7 +387,7 @@ public class WorkspaceModelManager
 	/* (non-Javadoc)
 	 * @see org.eclipse.pde.core.IModelManager#getAllModels()
 	 */
-	public IPluginModelBase[] getAllModels() {
+	protected IPluginModelBase[] getAllModels() {
 		initializeWorkspaceModels();
 		
 		ArrayList result = new ArrayList();

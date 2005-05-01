@@ -218,7 +218,7 @@ public class LauncherUtils {
 	public static IPluginModelBase[] getSelectedPlugins(ILaunchConfiguration config) throws CoreException {
 		TreeMap map = new TreeMap();
 		boolean automaticAdd = config.getAttribute(ILauncherSettings.AUTOMATIC_ADD, true);
-		IPluginModelBase[] wsmodels = PDECore.getDefault().getWorkspaceModelManager().getAllModels();
+		IPluginModelBase[] wsmodels = PDECore.getDefault().getModelManager().getWorkspaceModels();
 		Set wsPlugins = parseWorkspacePluginIds(config);
 		for (int i = 0; i < wsmodels.length; i++) {
 			String id = wsmodels[i].getPluginBase().getId();		
@@ -245,7 +245,7 @@ public class LauncherUtils {
 		boolean useDefault = config.getAttribute(ILauncherSettings.USE_DEFAULT, true);
 
 		ArrayList projects = new ArrayList();		
-		IPluginModelBase[] models = PDECore.getDefault().getWorkspaceModelManager().getAllModels();
+		IPluginModelBase[] models = PDECore.getDefault().getModelManager().getWorkspaceModels();
 		Set wsPlugins = parseWorkspacePluginIds(config);
 		for (int i = 0; i < models.length; i++) {
 			String id = models[i].getPluginBase().getId();

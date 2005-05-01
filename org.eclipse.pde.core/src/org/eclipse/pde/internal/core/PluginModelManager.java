@@ -520,6 +520,8 @@ public class PluginModelManager implements IAdaptable {
 			fWorkspaceManager.removeModelProviderListener(fProviderListener);
 		if (fExternalManager != null)
 			fExternalManager.removeModelProviderListener(fProviderListener);
+		if (fState != null)
+			fState.shutdown();
 		fSearchablePluginsManager.shutdown();
 	}
 	
