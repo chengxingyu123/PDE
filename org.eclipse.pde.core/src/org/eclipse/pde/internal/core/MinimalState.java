@@ -257,6 +257,8 @@ public class MinimalState {
 		if (fJavaProfile == null)
 			return null;
 		File location = getOSGiLocation();
+		if (location == null)
+			return null;
 		InputStream is = null;
 		ZipFile zipFile = null;
 		try {
