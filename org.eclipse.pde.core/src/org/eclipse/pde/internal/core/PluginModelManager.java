@@ -32,15 +32,15 @@ public class PluginModelManager implements IAdaptable {
 	private PDEState fState;
 
 	public PluginModelManager(WorkspaceModelManager wm, ExternalModelManager em) {
-		fWorkspaceManager = wm;
-		fExternalManager = em;
-		fExternalManager.addModelProviderListener(fProviderListener);
-		fWorkspaceManager.addModelProviderListener(fProviderListener);
 		fProviderListener = new IModelProviderListener() {
 			public void modelsChanged(IModelProviderEvent e) {
 				handleModelsChanged(e);
 			}
 		};
+		fWorkspaceManager = wm;
+		fExternalManager = em;
+		fExternalManager.addModelProviderListener(fProviderListener);
+		fWorkspaceManager.addModelProviderListener(fProviderListener);
 		fListeners = new ArrayList();
 		fSearchablePluginsManager = new SearchablePluginsManager(this);
 	}
