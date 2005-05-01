@@ -113,7 +113,11 @@ public class PDEState extends MinimalState {
 				saveState(dir);
 				savePluginInfo(dir);
 				saveExtensions(dir);
+			} else {
+				fId = fState.getBundles().length;
 			}
+		} else {
+			fId = fState.getBundles().length;
 		}
 		fState.setResolver(Platform.getPlatformAdmin().getResolver());
 		fState.setPlatformProperties(fPlatformProperties);
