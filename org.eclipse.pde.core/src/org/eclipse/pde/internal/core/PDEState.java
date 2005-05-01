@@ -125,6 +125,10 @@ public class PDEState extends MinimalState {
 		logResolutionErrors();
 	}
 	
+	public boolean isCombined() {
+		return fCombined;
+	}
+	
 	private void createState() {
 		fState = stateObjectFactory.createState();
 		fPluginInfos = new HashMap();

@@ -629,20 +629,6 @@ public class WorkspaceModelManager
 	}
 
 	/* (non-Javadoc)
-	 * @see org.eclipse.pde.core.IModelManager#getPluginModels()
-	 */
-	public IPluginModel[] getPluginModels() {
-		initializeWorkspaceModels();
-		return (IPluginModel[])fModels.values().toArray(new IPluginModel[fModels.size()]);
-	}
-	/* (non-Javadoc)
-	 * @see org.eclipse.pde.core.IModelManager#getFragmentModels()
-	 */
-	public IFragmentModel[] getFragmentModels() {
-		initializeWorkspaceModels();
-		return (IFragmentModel[]) fFragmentModels.values().toArray(new IFragmentModel[fFragmentModels.size()]);
-	}
-	/* (non-Javadoc)
 	 * @see org.eclipse.pde.core.IModelManager#getFeatureModels()
 	 */
 	public IFeatureModel[] getFeatureModels() {

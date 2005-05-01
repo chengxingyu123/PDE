@@ -222,6 +222,8 @@ public class ExternalModelManager {
 		}
 		
 		PDECore.getDefault().savePluginPreferences();
+		if (fState != null)
+			fState.shutdown();
 	}
 	
 	public PDEState getState() {
