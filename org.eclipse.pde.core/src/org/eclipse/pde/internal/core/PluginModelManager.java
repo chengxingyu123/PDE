@@ -439,8 +439,10 @@ public class PluginModelManager implements IAdaptable {
 						new NullProgressMonitor());
 		if (fState.isCombined())
 			fWorkspaceManager.initializeModels(fState.getWorkspaceModels());
+		fExternalManager.initializeModels(fState.getTargetModels());	
 		addToTable(fWorkspaceManager.getAllModels(), true);
 		addToTable(fExternalManager.getAllModels(), false);
+		
 		if (!fState.isCombined())
 			addWorkspaceBundlesToState();
 		fSearchablePluginsManager.initialize();
@@ -449,6 +451,12 @@ public class PluginModelManager implements IAdaptable {
 	public PDEState getState() {
 		initializeTable();
 		return fState;
+	}
+	
+	public void setState(PDEState state) {
+		fState = state;
+		fExternalManager.setModels(state.getTargetModels());
+		addWorkspaceBundlesToState();
 	}
 
 	private void addToTable(IPluginModelBase[] models, boolean workspace) {
@@ -554,5 +562,15 @@ public class PluginModelManager implements IAdaptable {
 	public SearchablePluginsManager getSearchablePluginsManager() {
 		initializeTable();
 		return fSearchablePluginsManager;
+	}
+	
+	public IPluginModelBase[] getExternalModels() {
+		initializeTable();
+		return fExternalManager.getAllModels();
+	}
+	
+	public IPluginModelBase[] getWorkspaceModels() {
+		initializeTable();
+		return fWorkspaceManager.getAllModels();
 	}
 }

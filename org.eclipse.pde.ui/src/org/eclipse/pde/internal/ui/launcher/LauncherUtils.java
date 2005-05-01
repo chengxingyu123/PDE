@@ -229,7 +229,7 @@ public class LauncherUtils {
 		
 		Set exModels = parseExternalPluginIds(config);
 		IPluginModelBase[] exmodels =
-			PDECore.getDefault().getExternalModelManager().getAllModels();
+			PDECore.getDefault().getModelManager().getExternalModels();
 		for (int i = 0; i < exmodels.length; i++) {
 			String id = exmodels[i].getPluginBase().getId();
 			if (id != null && exModels.contains(id) && !map.containsKey(id))

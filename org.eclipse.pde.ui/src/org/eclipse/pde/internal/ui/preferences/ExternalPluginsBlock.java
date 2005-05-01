@@ -218,7 +218,7 @@ public class ExternalPluginsBlock {
 	public IPluginModelBase[] getAllModels() {
 		if (fModels == null) {
 			fInitialModels =
-				PDECore.getDefault().getExternalModelManager().getAllModels();
+				PDECore.getDefault().getModelManager().getExternalModels();
 			return fInitialModels;
 		}
 		return fModels;
@@ -299,7 +299,7 @@ public class ExternalPluginsBlock {
 		}
 
 		if (fReloaded) {
-			PDECore.getDefault().getExternalModelManager().reset(fCurrentState, fModels);
+			PDECore.getDefault().getModelManager().setState(fCurrentState);
 		}
 	}
 	

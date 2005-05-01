@@ -102,11 +102,12 @@ public class ExternalModelManager {
 		}
 	}
 
-	public IPluginModelBase[] getAllModels() {
+	protected IPluginModelBase[] getAllModels() {
 		return fModels;
 	}
 	
-	private void initializeAllModels() {
+	protected void initializeModels(IPluginModelBase[] models) {
+		fModels = models;
 		Preferences pref = PDECore.getDefault().getPluginPreferences();
 		String saved = pref.getString(ICoreConstants.CHECKED_PLUGINS);
 		if (saved.equals(ICoreConstants.VALUE_SAVED_ALL))
@@ -118,10 +119,9 @@ public class ExternalModelManager {
 			}
 		}
 	}
-
-	public  void setModels(IPluginModelBase[] models) {
+	
+	protected void setModels(IPluginModelBase[] models) {
 		fModels = models;
-		initializeAllModels();
 	}
 
 	public static URL[] getPluginPaths() {

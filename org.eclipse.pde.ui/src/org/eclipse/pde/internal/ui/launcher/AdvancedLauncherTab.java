@@ -126,8 +126,8 @@ public class AdvancedLauncherTab
 		this.fShowFeatures = showFeatures;
 		PDEPlugin.getDefault().getLabelProvider().connect(this);
 		fImage = PDEPluginImages.DESC_REQ_PLUGINS_OBJ.createImage();
-		fExternalModels = PDECore.getDefault().getExternalModelManager().getAllModels();
-		fWorkspaceModels = PDECore.getDefault().getWorkspaceModelManager().getAllModels();
+		fExternalModels = PDECore.getDefault().getModelManager().getExternalModels();
+		fWorkspaceModels = PDECore.getDefault().getModelManager().getWorkspaceModels();
 	}
 
 	public void dispose() {
