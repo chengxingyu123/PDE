@@ -54,6 +54,7 @@ public abstract class BundleModel
 			fBundle.load(manifestToProperties(m.getMainAttributes()));
 			if (!outOfSync)
 				updateTimeStamp();
+			setLoaded(true);
 		} catch (IOException e) {
 		} finally {
 		}
@@ -90,6 +91,8 @@ public abstract class BundleModel
 			properties.put(Constants.FRAGMENT_HOST, writeFragmentHost(desc.getHost()));
 		}
 		fBundle.load(properties);
+		updateTimeStamp();
+		setLoaded(true);
 	}
 	
 	private String writeFragmentHost(HostSpecification host) {

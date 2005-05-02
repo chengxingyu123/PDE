@@ -521,14 +521,17 @@ public class PDEState extends MinimalState {
 	
 	public void shutdown() {
 		IPluginModelBase[] models = PDECore.getDefault().getModelManager().getWorkspaceModels();
+		long combined = 0;
 		if (shouldSaveState(models)) {
-			long combined = fTargetTimestamp ^ computeTimestamp(models);
+			combined = fTargetTimestamp ^ computeTimestamp(models);
 			File dir = new File(DIR, Long.toString(combined) + ".state");
 			saveState(dir);
 			writePluginInfo(models, new File(DIR, Long.toString(fTargetTimestamp) + ".target"), dir);
 			writeExtensions(models, new File(DIR, Long.toString(fTargetTimestamp) + ".target"), dir);
 		}
 		clearStaleStates(".target", fTargetTimestamp);
+		clearStaleStates(".state", combined);
+		clearStaleStates(".cache", 0);
 	}
 	
 	public void writePluginInfo(IPluginModelBase[] models, File origin, File destination) {
@@ -651,6 +654,7 @@ public class PDEState extends MinimalState {
 				if (child.isDirectory()) {
 					String name = child.getName();
 					if (name.endsWith(extension)
+							&& name.length() > extension.length()
 							&& !name.equals(Long.toString(latest) + extension)) { //$NON-NLS-1$
 						CoreUtility.deleteContent(child);
 					}

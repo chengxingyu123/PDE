@@ -102,6 +102,8 @@ public abstract class AbstractExtensionsModel
 		list = state.getExtensions(desc.getBundleId());
 		if (list != null && list.getLength() > 0)
 			fExtensions.load(list.item(0).getParentNode());
+		updateTimeStamp();
+		setLoaded(true);
 	}
 
 	public void reload(InputStream stream, boolean outOfSync)
