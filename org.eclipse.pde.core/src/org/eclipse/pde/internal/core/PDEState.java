@@ -63,7 +63,6 @@ import org.osgi.framework.Constants;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
 
 
 public class PDEState extends MinimalState {
@@ -87,6 +86,7 @@ public class PDEState extends MinimalState {
 	private boolean fCombined;
 	private long fTargetTimestamp;
 	private boolean fResolve = true;
+	private boolean fNewState;
 	
 	public PDEState(URL[] urls, boolean resolve, IProgressMonitor monitor) {
 		this(new URL[0], urls, TargetPlatform.getTargetEnvironment(), monitor);
@@ -99,48 +99,41 @@ public class PDEState extends MinimalState {
 		fMonitor = monitor;
 		fPlatformProperties = properties;
 		if (fResolve) {
-			load();
+			readTargetState();
 		} else {
-			createState();
-		}
-		createModels();
-	}
-	
-	private void load() {
-		fTargetTimestamp = computeTimestamp(fTargetURLs);
-		long workspace = computeTimestamp(fWorkspaceURLs);
-		long combined = fTargetTimestamp ^ workspace;
-		
-		// read combined (workspace + target) state first
-		File dir = new File(DIR, Long.toString(combined) + ".state");
-		fCombined = readCachedState(dir);
-		if (!fCombined) {
-			dir = new File(DIR, Long.toString(fTargetTimestamp) + ".target");
-			// do not give up.
-			// attempt to read cached target state, if any
-			if (!readCachedState(dir)) {
-				// no target state.  Create one from scratch.
-				createState();
-				saveState(dir);
-				savePluginInfo(dir);
-				saveExtensions(dir);
-			} else {
-				fId = fState.getBundles().length;
-			}
-		} else {
-			fId = fState.getBundles().length;
+			createNewTargetState();
 		}
 		fState.setResolver(Platform.getPlatformAdmin().getResolver());
 		fState.setPlatformProperties(fPlatformProperties);
 		fState.resolve(false);
-		logResolutionErrors();
+		
+		if (fResolve)
+			logResolutionErrors();
+		
+		createTargetModels();
+		
+		if (fResolve && workspace.length > 0 && !fNewState) {
+			readWorkspaceState();
+		}
+		
+		fId = fState.getBundles().length;
+	}
+
+	private void readTargetState() {
+		fTargetTimestamp = computeTimestamp(fTargetURLs);
+		File dir = new File(DIR, Long.toString(fTargetTimestamp) + ".target");
+		if ((fState = readStateCache(dir)) == null
+				|| (fPluginInfos = readPluginInfoCache(dir)) == null) {
+			createNewTargetState();
+			saveState(dir);
+			savePluginInfo(dir);
+			fNewState = true;
+		}
+		if ((fExtensions = readExtensionsCache(dir)) == null)
+			saveExtensions(dir);
 	}
 	
-	public boolean isCombined() {
-		return fCombined;
-	}
-	
-	private void createState() {
+	private void createNewTargetState() {
 		fState = stateObjectFactory.createState();
 		fPluginInfos = new HashMap();
 		fMonitor.beginTask("Reading plug-ins...", fTargetURLs.length);
@@ -155,6 +148,61 @@ public class PDEState extends MinimalState {
 				fMonitor.worked(1);
 			}
 		}		
+	}
+	
+	private void createTargetModels() {
+		BundleDescription[] bundleDescriptions = fResolve ? fState.getResolvedBundles() : fState.getBundles();
+		for (int i = 0; i < bundleDescriptions.length; i++) {
+			BundleDescription desc = bundleDescriptions[i];
+			fMonitor.subTask(bundleDescriptions[i].getSymbolicName());
+			fTargetModels.add(createExternalModel(desc));
+			fExtensions.remove(Long.toString(desc.getBundleId()));
+			fPluginInfos.remove(Long.toString(desc.getBundleId()));
+		}
+	}
+ 	
+	private void readWorkspaceState() {
+		long workspace = computeTimestamp(fWorkspaceURLs);
+		File dir = new File(DIR, Long.toString(workspace) + ".workspace");
+		State localState = readStateCache(dir);
+		Map localPluginInfos = readPluginInfoCache(dir);
+		Map localExtensions = readExtensionsCache(dir);
+		
+		fCombined = localState != null && localPluginInfos != null && localExtensions != null;
+		if (fCombined) {
+			Iterator iter = localPluginInfos.keySet().iterator();
+			while (iter.hasNext()) {
+				String key = iter.next().toString();
+				fPluginInfos.put(key, localPluginInfos.get(key));
+			}
+			
+			iter = localExtensions.keySet().iterator();
+			while (iter.hasNext()) {
+				String key = iter.next().toString();
+				fExtensions.put(key, localExtensions.get(key));
+			}
+			
+			BundleDescription[] bundles = localState.getBundles();
+			for (int i = 0; i < bundles.length; i++) {
+				BundleDescription desc = bundles[i];
+				String id = desc.getSymbolicName();
+				BundleDescription[] conflicts = fState.getBundles(id);
+				for (int j = 0; j < conflicts.length; j++) {
+					fState.removeBundle(conflicts[j]);
+				}
+				BundleDescription newbundle = stateObjectFactory.createBundleDescription(desc);
+				if (fState.addBundle(newbundle)) {
+					fWorkspaceModels.add(createWorkspaceModel(newbundle));
+				}
+				fExtensions.remove(Long.toString(newbundle.getBundleId()));
+				fPluginInfos.remove(Long.toString(newbundle.getBundleId()));
+			}
+			fState.resolve();
+		}
+	}
+	
+	public boolean isCombined() {
+		return fCombined;
 	}
 	
 	public BundleDescription addBundle(Dictionary manifest, File bundleLocation, boolean keepLibraries, long bundleId) {
@@ -291,13 +339,6 @@ public class PDEState extends MinimalState {
 		}
 	}
 
-	private boolean readCachedState(File dir) {
-		fState = readStateCache(dir);
-		fPluginInfos = readPluginInfoCache(dir);
-		fExtensions = readExtensionsCache(dir);
-		return fState != null && fPluginInfos != null && fExtensions != null;
-	}
-	
 	private Map readExtensionsCache(File dir) {
 		File file = new File(dir, ".extensions"); //$NON-NLS-1$
 		if (file.exists() && file.isFile()) {
@@ -356,8 +397,7 @@ public class PDEState extends MinimalState {
 	private State readStateCache(File dir) {
 		if (dir.exists() && dir.isDirectory()) {
 			try {
-				fState = stateObjectFactory.readState(dir);	
-				return fState;
+				return stateObjectFactory.readState(dir);	
 			} catch (IllegalStateException e) {
 				PDECore.log(e);
 			} catch (FileNotFoundException e) {
@@ -394,28 +434,13 @@ public class PDEState extends MinimalState {
 		return timestamp;
 	}
  	
- 	private void createModels() {
-		BundleDescription[] bundleDescriptions = fCombined || !fResolve ? fState.getBundles() : fState.getResolvedBundles();
-		for (int i = 0; i < bundleDescriptions.length; i++) {
-			BundleDescription desc = bundleDescriptions[i];
-			fMonitor.subTask(bundleDescriptions[i].getSymbolicName());
-			IPluginModelBase model = createModel(desc);
-			if (model.getUnderlyingResource() == null)
-				fTargetModels.add(model);
-			else
-				fWorkspaceModels.add(model);
-			fExtensions.remove(Long.toString(desc.getBundleId()));
-			fPluginInfos.remove(Long.toString(desc.getBundleId()));
-		}
-	}
- 	
- 	private IPluginModelBase createModel(BundleDescription desc) {
-		IWorkspaceRoot root = PDECore.getWorkspace().getRoot();
+ 	private IPluginModelBase createWorkspaceModel(BundleDescription desc) {
+ 		IWorkspaceRoot root = PDECore.getWorkspace().getRoot();
  		IContainer container = root.getContainerForLocation(new Path(desc.getLocation()));
- 		return (container == null) ? createExternalModel(desc) : createWorkspaceModel(desc, (IProject) container);
- 	}
- 	
- 	private IPluginModelBase createWorkspaceModel(BundleDescription desc, IProject project) {
+ 		if (!(container instanceof IProject))
+ 			return null;
+ 		
+ 		IProject project = (IProject)container;
  		if (WorkspaceModelManager.hasBundleManifest(project)) {
  			BundlePluginModelBase model = null;
  			if (desc.getHost() == null)
@@ -445,6 +470,7 @@ public class PDEState extends MinimalState {
 		else
 			model = new WorkspaceFragmentModel(project.getFile("fragment.xml"), true);
 		model.load(desc, this, false);
+		model.setBundleDescription(desc);
 		return model;
 	}
 
@@ -455,6 +481,7 @@ public class PDEState extends MinimalState {
 		else
 			model = new ExternalFragmentModel();
 		model.load(desc, this, !fResolve);
+		model.setBundleDescription(desc);
 		return model;
  	}
  	
@@ -522,37 +549,29 @@ public class PDEState extends MinimalState {
 	
 	public void shutdown() {
 		IPluginModelBase[] models = PDECore.getDefault().getModelManager().getWorkspaceModels();
-		long combined = 0;
+		long workspace = computeTimestamp(models);
 		if (shouldSaveState(models)) {
-			combined = fTargetTimestamp ^ computeTimestamp(models);
-			File dir = new File(DIR, Long.toString(combined) + ".state");
-			saveState(dir);
-			writePluginInfo(models, new File(DIR, Long.toString(fTargetTimestamp) + ".target"), dir);
-			writeExtensions(models, new File(DIR, Long.toString(fTargetTimestamp) + ".target"), dir);
+			File dir = new File(DIR, Long.toString(workspace) + ".workspace");
+			State state = stateObjectFactory.createState();
+			for (int i = 0; i < models.length; i++) {
+				state.addBundle(models[i].getBundleDescription());
+			}
+			saveState(state, dir);
+			writePluginInfo(models, dir);
+			writeExtensions(models, dir);
 		}
 		clearStaleStates(".target", fTargetTimestamp);
-		clearStaleStates(".state", combined);
+		clearStaleStates(".workspace", workspace);
 		clearStaleStates(".cache", 0);
 	}
 	
-	public void writePluginInfo(IPluginModelBase[] models, File origin, File destination) {
+	public void writePluginInfo(IPluginModelBase[] models, File destination) {
 		try {
 			DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-			Document doc = null;
-			if (fTargetTimestamp != 0) {
-				File file = new File(origin, ".pluginInfo"); //$NON-NLS-1$
-				if (file.exists() && file.isFile()) {
-					doc = builder.parse(file);
-				}
-			}
-			if (doc == null)
-				doc = builder.newDocument();
+			Document doc = builder.newDocument();
 		
-			Element root = doc.getDocumentElement();
-			if (root == null) {
-				root = doc.createElement("map"); //$NON-NLS-1$
-				doc.appendChild(root);
-			}
+			Element root = doc.createElement("map"); //$NON-NLS-1$
+			doc.appendChild(root);
 			for (int i = 0; i < models.length; i++) {
 				IPluginBase plugin = models[i].getPluginBase();
 				BundleDescription desc = models[i].getBundleDescription();
@@ -579,29 +598,18 @@ public class PDEState extends MinimalState {
 			writeXMLFile(doc, new File(destination, ".pluginInfo"));
 		} catch (ParserConfigurationException e) {
 		} catch (FactoryConfigurationError e) {
-		} catch (SAXException e) {
 		} catch (IOException e) {
 		}
 	}
 	
-	public void writeExtensions(IPluginModelBase[] models, File origin, File destination) {
+	public void writeExtensions(IPluginModelBase[] models, File destination) {
 		try {
 			DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-			Document doc = null;
-			if (fTargetTimestamp != 0) {
-				File file = new File(origin, ".extensions"); //$NON-NLS-1$
-				if (file.exists() && file.isFile()) {
-					doc = builder.parse(file);
-				}
-			}
-			if (doc == null)
-				doc = builder.newDocument();
+			Document doc = builder.newDocument();
 		
-			Element root = doc.getDocumentElement();
-			if (root == null) {
-				root = doc.createElement("extensions"); //$NON-NLS-1$
-				doc.appendChild(root);
-			}
+			Element root = doc.createElement("extensions"); //$NON-NLS-1$
+			doc.appendChild(root);
+		
 			for (int i = 0; i < models.length; i++) {
 				IPluginBase plugin = models[i].getPluginBase();
 				IPluginExtension[] extensions = plugin.getExtensions();
@@ -621,10 +629,8 @@ public class PDEState extends MinimalState {
 			writeXMLFile(doc, new File(destination, ".extensions"));
 		} catch (ParserConfigurationException e) {
 		} catch (FactoryConfigurationError e) {
-		} catch (SAXException e) {
 		} catch (IOException e) {
-		}
-		
+		}	
 	}
 	
 	private long computeTimestamp(IPluginModelBase[] models) {

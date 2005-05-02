@@ -96,12 +96,14 @@ public abstract class AbstractExtensionsModel
 		fExtensions = (Extensions) createExtensions();
 		fExtensions.setModel(this);
 		
-		NodeList list = state.getExtensionPoints(desc.getBundleId());
+		NodeList list = state.getExtensions(desc.getBundleId());
 		if (list != null && list.getLength() > 0)
 			fExtensions.load(list.item(0).getParentNode());
-		list = state.getExtensions(desc.getBundleId());
-		if (list != null && list.getLength() > 0)
-			fExtensions.load(list.item(0).getParentNode());
+		else {
+			list = state.getExtensionPoints(desc.getBundleId());
+			if (list != null && list.getLength() > 0)
+				fExtensions.load(list.item(0).getParentNode());
+		}
 		updateTimeStamp();
 		setLoaded(true);
 	}

@@ -157,10 +157,14 @@ public class MinimalState {
 	}
 
 	protected void saveState(File dir) {
+		saveState(fState, dir);
+	}
+	
+	protected void saveState(State state, File dir) {
 		try {
 			if (!dir.exists())
 				dir.mkdirs();
-			stateObjectFactory.writeState(fState, dir);
+			stateObjectFactory.writeState(state, dir);
 		} catch (FileNotFoundException e) {
 			PDECore.log(e);
 		} catch (IOException e) {
