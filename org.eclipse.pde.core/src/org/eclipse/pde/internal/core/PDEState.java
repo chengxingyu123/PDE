@@ -25,7 +25,9 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.FactoryConfigurationError;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.eclipse.core.resources.IContainer;
@@ -39,6 +41,11 @@ import org.eclipse.core.runtime.Platform;
 import org.eclipse.osgi.service.pluginconversion.PluginConversionException;
 import org.eclipse.osgi.service.resolver.BundleDescription;
 import org.eclipse.osgi.service.resolver.State;
+import org.eclipse.pde.core.plugin.IPlugin;
+import org.eclipse.pde.core.plugin.IPluginBase;
+import org.eclipse.pde.core.plugin.IPluginExtension;
+import org.eclipse.pde.core.plugin.IPluginExtensionPoint;
+import org.eclipse.pde.core.plugin.IPluginLibrary;
 import org.eclipse.pde.core.plugin.IPluginModelBase;
 import org.eclipse.pde.internal.core.bundle.BundleFragmentModel;
 import org.eclipse.pde.internal.core.bundle.BundlePluginModel;
@@ -56,6 +63,7 @@ import org.osgi.framework.Constants;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
 
 public class PDEState extends MinimalState {
@@ -227,12 +235,7 @@ public class PDEState extends MinimalState {
 	}
 
 	private void savePluginInfo(File dir) {
-		File file = new File(dir, ".pluginInfo"); //$NON-NLS-1$
-		OutputStream out = null;
-		Writer writer = null;
 		try {
-			out = new FileOutputStream(file);
-			writer = new OutputStreamWriter(out, "UTF-8"); //$NON-NLS-1$
 			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 			Document doc = factory.newDocumentBuilder().newDocument();
 			Element root = doc.createElement("map"); //$NON-NLS-1$
@@ -261,9 +264,19 @@ public class PDEState extends MinimalState {
 				root.appendChild(element);
 			}
 			doc.appendChild(root);
-			XMLPrintHandler.printNode(writer, doc, "UTF-8"); //$NON-NLS-1$
+			writeXMLFile(doc, new File(dir, ".pluginInfo")); //$NON-NLS-1$
 		} catch (Exception e) {
 			PDECore.log(e);
+		} 
+	}
+	
+	private void writeXMLFile(Document doc, File file) throws IOException {
+		Writer writer = null;
+		OutputStream out = null;
+		try {
+			out = new FileOutputStream(file);
+			writer = new OutputStreamWriter(out, "UTF-8"); //$NON-NLS-1$
+			XMLPrintHandler.printNode(writer, doc, "UTF-8"); //$NON-NLS-1$
 		} finally {
 			try {
 				if (writer != null)
@@ -419,6 +432,7 @@ public class PDEState extends MinimalState {
  			if (file.exists()) {
  				WorkspaceExtensionsModel extensions = new WorkspaceExtensionsModel(file);
  				extensions.load(desc, this);
+ 				extensions.setBundleModel(model);
  				model.setExtensionsModel(extensions);
  			}
  			return model;
@@ -507,12 +521,106 @@ public class PDEState extends MinimalState {
 	
 	public void shutdown() {
 		IPluginModelBase[] models = PDECore.getDefault().getModelManager().getWorkspaceModels();
-		long combined = computeTimestamp(models) ^ fTargetTimestamp;
-		
-		File dir = new File(DIR, Long.toString(combined) + ".state");
-		saveState(dir);
-		
+		if (shouldSaveState(models)) {
+			long combined = fTargetTimestamp ^ computeTimestamp(models);
+			File dir = new File(DIR, Long.toString(combined) + ".state");
+			saveState(dir);
+			writePluginInfo(models, new File(DIR, Long.toString(fTargetTimestamp) + ".target"), dir);
+			writeExtensions(models, new File(DIR, Long.toString(fTargetTimestamp) + ".target"), dir);
+		}
 		clearStaleStates(".target", fTargetTimestamp);
+	}
+	
+	public void writePluginInfo(IPluginModelBase[] models, File origin, File destination) {
+		try {
+			DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+			Document doc = null;
+			if (fTargetTimestamp != 0) {
+				File file = new File(origin, ".pluginInfo"); //$NON-NLS-1$
+				if (file.exists() && file.isFile()) {
+					doc = builder.parse(file);
+				}
+			}
+			if (doc == null)
+				doc = builder.newDocument();
+		
+			Element root = doc.getDocumentElement();
+			if (root == null) {
+				root = doc.createElement("map"); //$NON-NLS-1$
+				doc.appendChild(root);
+			}
+			for (int i = 0; i < models.length; i++) {
+				IPluginBase plugin = models[i].getPluginBase();
+				BundleDescription desc = models[i].getBundleDescription();
+				Element element = doc.createElement("bundle"); //$NON-NLS-1$
+				element.setAttribute("bundleID", Long.toString(desc.getBundleId())); //$NON-NLS-1$
+				if (plugin instanceof IPlugin && ((IPlugin)plugin).getClassName() != null)
+					element.setAttribute("class", ((IPlugin)plugin).getClassName()); //$NON-NLS-1$
+				if (plugin.getProviderName() != null)
+					element.setAttribute("provider", plugin.getProviderName()); //$NON-NLS-1$
+				if (plugin.getName() != null)
+					element.setAttribute("name", plugin.getName()); //$NON-NLS-1$
+				if (plugin instanceof IPlugin && ClasspathUtilCore.hasExtensibleAPI((IPlugin)plugin))
+					element.setAttribute("hasExtensibleAPI", "true"); //$NON-NLS-1$ //$NON-NLS-2$
+				IPluginLibrary[] libraries = plugin.getLibraries();
+				for (int j = 0; j < libraries.length; j++) {
+						Element lib = doc.createElement("library"); //$NON-NLS-1$
+						lib.setAttribute("name", libraries[j].getName()); //$NON-NLS-1$
+						if (!libraries[j].isExported())
+							lib.setAttribute("exported", "false");
+						element.appendChild(lib);
+				}
+				root.appendChild(element);
+			}
+			writeXMLFile(doc, new File(destination, ".pluginInfo"));
+		} catch (ParserConfigurationException e) {
+		} catch (FactoryConfigurationError e) {
+		} catch (SAXException e) {
+		} catch (IOException e) {
+		}
+	}
+	
+	public void writeExtensions(IPluginModelBase[] models, File origin, File destination) {
+		try {
+			DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+			Document doc = null;
+			if (fTargetTimestamp != 0) {
+				File file = new File(origin, ".extensions"); //$NON-NLS-1$
+				if (file.exists() && file.isFile()) {
+					doc = builder.parse(file);
+				}
+			}
+			if (doc == null)
+				doc = builder.newDocument();
+		
+			Element root = doc.getDocumentElement();
+			if (root == null) {
+				root = doc.createElement("extensions"); //$NON-NLS-1$
+				doc.appendChild(root);
+			}
+			for (int i = 0; i < models.length; i++) {
+				IPluginBase plugin = models[i].getPluginBase();
+				IPluginExtension[] extensions = plugin.getExtensions();
+				IPluginExtensionPoint[] extPoints = plugin.getExtensionPoints();
+				if (extensions.length == 0 && extensions.length == 0)
+					continue;
+				Element element = doc.createElement("bundle"); //$NON-NLS-1$
+				element.setAttribute("bundleID", Long.toString(models[i].getBundleDescription().getBundleId())); //$NON-NLS-1$
+				for (int j = 0; j < extensions.length; j++) {
+					element.appendChild(CoreUtility.writeExtension(doc, extensions[j]));
+				}				
+				for (int j = 0; j < extPoints.length; j++) {
+					element.appendChild(CoreUtility.writeExtensionPoint(doc, extPoints[j]));
+				}			
+				root.appendChild(element);
+			}
+			writeXMLFile(doc, new File(destination, ".extensions"));
+		} catch (ParserConfigurationException e) {
+		} catch (FactoryConfigurationError e) {
+		} catch (SAXException e) {
+		} catch (IOException e) {
+		}
+		
 	}
 	
 	private long computeTimestamp(IPluginModelBase[] models) {
@@ -524,6 +632,14 @@ public class PDEState extends MinimalState {
 			}
 		}
 		return computeTimestamp(urls);
+	}
+	
+	private boolean shouldSaveState(IPluginModelBase[] models) {
+		for (int i = 0; i < models.length; i++) {
+			if (!models[i].isInSync() || models[i].getBundleDescription() == null)
+				return false;
+		}
+		return models.length > 0;
 	}
 	
 	private void clearStaleStates(String extension, long latest) {
