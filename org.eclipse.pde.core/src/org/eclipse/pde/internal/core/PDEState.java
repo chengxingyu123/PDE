@@ -422,9 +422,10 @@ public class PDEState extends MinimalState {
  				model = new BundlePluginModel();
  			else
  				model = new BundleFragmentModel();
+ 			model.setEnabled(true);
  			WorkspaceBundleModel bundle = new WorkspaceBundleModel(project.getFile("META-INF/MANIFEST.MF"));
  			bundle.load(desc, this);
- 			model.setBundleDescription(desc);
+  			model.setBundleDescription(desc);
  			model.setBundleModel(bundle);
  			
  			String filename = (desc.getHost() == null) ? "plugin.xml" : "fragment.xml";
