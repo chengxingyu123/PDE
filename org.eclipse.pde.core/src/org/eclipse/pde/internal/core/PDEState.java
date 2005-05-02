@@ -191,8 +191,9 @@ public class PDEState extends MinimalState {
 					fState.removeBundle(conflicts[j]);
 				}
 				BundleDescription newbundle = stateObjectFactory.createBundleDescription(desc);
-				if (fState.addBundle(newbundle)) {
-					fWorkspaceModels.add(createWorkspaceModel(newbundle));
+				IPluginModelBase model = createWorkspaceModel(newbundle);
+				if (model != null && fState.addBundle(newbundle)) {
+					fWorkspaceModels.add(model);
 				}
 				fExtensions.remove(Long.toString(newbundle.getBundleId()));
 				fPluginInfos.remove(Long.toString(newbundle.getBundleId()));
@@ -437,6 +438,10 @@ public class PDEState extends MinimalState {
  	private IPluginModelBase createWorkspaceModel(BundleDescription desc) {
  		IWorkspaceRoot root = PDECore.getWorkspace().getRoot();
  		IContainer container = root.getContainerForLocation(new Path(desc.getLocation()));
+ 		if (container == null) {
+ 			container = root.getProject(desc.getSymbolicName());
+ 		}
+ 		
  		if (!(container instanceof IProject))
  			return null;
  		
@@ -637,7 +642,8 @@ public class PDEState extends MinimalState {
 		URL[] urls = new URL[models.length];
 		for (int i = 0; i < models.length; i++) {
 			try {
-				urls[i] = new File(models[i].getInstallLocation()).toURL();
+				IProject project = models[i].getUnderlyingResource().getProject();
+				urls[i] = new File(project.getLocation().toString()).toURL();
 			} catch (MalformedURLException e) {
 			}
 		}
