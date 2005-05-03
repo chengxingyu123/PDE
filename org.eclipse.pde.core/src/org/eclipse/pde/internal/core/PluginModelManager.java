@@ -431,6 +431,7 @@ public class PluginModelManager implements IAdaptable {
 	 */
 	private synchronized void initializeTable() {
 		if (fEntries != null) return;
+		long start = System.currentTimeMillis();
 		fEntries = Collections.synchronizedMap(new TreeMap());
 		fState = new PDEState(
 						WorkspaceModelManager.getPluginPaths(),
@@ -446,6 +447,7 @@ public class PluginModelManager implements IAdaptable {
 		if (!fState.isCombined())
 			addWorkspaceBundlesToState();
 		fSearchablePluginsManager.initialize();
+		PDECore.logErrorMessage("Time to initialize models: " + (System.currentTimeMillis() - start) + " ms");
 	}
 	
 	public PDEState getState() {

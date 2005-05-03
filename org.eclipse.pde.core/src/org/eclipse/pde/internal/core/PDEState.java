@@ -170,6 +170,7 @@ public class PDEState extends MinimalState {
 		
 		fCombined = localState != null && localPluginInfos != null && localExtensions != null;
 		if (fCombined) {
+			long start = System.currentTimeMillis();
 			Iterator iter = localPluginInfos.keySet().iterator();
 			while (iter.hasNext()) {
 				String key = iter.next().toString();
@@ -187,9 +188,11 @@ public class PDEState extends MinimalState {
 				BundleDescription desc = bundles[i];
 				String id = desc.getSymbolicName();
 				BundleDescription[] conflicts = fState.getBundles(id);
+				
 				for (int j = 0; j < conflicts.length; j++) {
 					fState.removeBundle(conflicts[j]);
 				}
+				
 				BundleDescription newbundle = stateObjectFactory.createBundleDescription(desc);
 				IPluginModelBase model = createWorkspaceModel(newbundle);
 				if (model != null && fState.addBundle(newbundle)) {
@@ -198,7 +201,9 @@ public class PDEState extends MinimalState {
 				fExtensions.remove(Long.toString(newbundle.getBundleId()));
 				fPluginInfos.remove(Long.toString(newbundle.getBundleId()));
 			}
-			fState.resolve();
+			fState.resolve(true);
+			long end = System.currentTimeMillis();			
+			PDECore.logErrorMessage("Time to create models: " + (end - start) + " ms");
 		}
 	}
 	
