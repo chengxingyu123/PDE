@@ -32,7 +32,6 @@ import org.eclipse.pde.core.plugin.IPluginExtensionPoint;
 import org.eclipse.pde.core.plugin.IPluginObject;
 import org.eclipse.pde.internal.core.AbstractModel;
 import org.eclipse.pde.internal.core.PDEState;
-import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 public abstract class AbstractExtensionsModel
@@ -95,15 +94,7 @@ public abstract class AbstractExtensionsModel
 	public void load(BundleDescription desc, PDEState state) {
 		fExtensions = (Extensions) createExtensions();
 		fExtensions.setModel(this);
-		
-		NodeList list = state.getExtensions(desc.getBundleId());
-		if (list != null && list.getLength() > 0)
-			fExtensions.load(list.item(0).getParentNode());
-		else {
-			list = state.getExtensionPoints(desc.getBundleId());
-			if (list != null && list.getLength() > 0)
-				fExtensions.load(list.item(0).getParentNode());
-		}
+		fExtensions.load(state.getAllExtensions(desc.getBundleId()));
 		updateTimeStamp();
 		setLoaded(true);
 	}

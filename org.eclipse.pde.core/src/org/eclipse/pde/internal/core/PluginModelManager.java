@@ -438,14 +438,17 @@ public class PluginModelManager implements IAdaptable {
 						ExternalModelManager.getPluginPaths(),
 						TargetPlatform.getTargetEnvironment(),
 						new NullProgressMonitor());
-		if (fState.isCombined())
-			fWorkspaceManager.initializeModels(fState.getWorkspaceModels());
-		fExternalManager.initializeModels(fState.getTargetModels());	
-		addToTable(fWorkspaceManager.getAllModels(), true);
-		addToTable(fExternalManager.getAllModels(), false);
 		
-		if (!fState.isCombined())
+		fExternalManager.initializeModels(fState.getTargetModels());	
+		addToTable(fExternalManager.getAllModels(), false);
+		if (fState.isCombined()) {
+			IPluginModelBase[] models = fState.getWorkspaceModels();
+			fWorkspaceManager.initializeModels(models);
+			addToTable(models, true);
+		} else {
+			addToTable(fWorkspaceManager.getAllModels(), true);			
 			addWorkspaceBundlesToState();
+		}
 		fSearchablePluginsManager.initialize();
 		PDECore.logErrorMessage("Time to initialize models: " + (System.currentTimeMillis() - start) + " ms");
 	}

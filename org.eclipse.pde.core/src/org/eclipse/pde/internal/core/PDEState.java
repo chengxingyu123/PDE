@@ -30,13 +30,10 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.FactoryConfigurationError;
 import javax.xml.parsers.ParserConfigurationException;
 
-import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.osgi.service.pluginconversion.PluginConversionException;
 import org.eclipse.osgi.service.resolver.BundleDescription;
@@ -62,6 +59,7 @@ import org.eclipse.pde.internal.core.util.CoreUtility;
 import org.osgi.framework.Constants;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 
@@ -73,6 +71,7 @@ public class PDEState extends MinimalState {
 		String className;
 		boolean hasExtensibleAPI;
 		String[] libraries;
+		String project;
 	}
 	
 	private URL[] fWorkspaceURLs;
@@ -94,6 +93,7 @@ public class PDEState extends MinimalState {
 	}
 	
 	public PDEState(URL[] workspace, URL[] target, Dictionary properties, IProgressMonitor monitor) {
+		long start = System.currentTimeMillis();
 		fWorkspaceURLs = workspace;
 		fTargetURLs = target;
 		fMonitor = monitor;
@@ -117,6 +117,7 @@ public class PDEState extends MinimalState {
 		}
 		
 		fId = fState.getBundles().length;
+		System.out.println("Time to parse: " + (System.currentTimeMillis() - start) + " ms");
 	}
 
 	private void readTargetState() {
@@ -170,7 +171,6 @@ public class PDEState extends MinimalState {
 		
 		fCombined = localState != null && localPluginInfos != null && localExtensions != null;
 		if (fCombined) {
-			long start = System.currentTimeMillis();
 			Iterator iter = localPluginInfos.keySet().iterator();
 			while (iter.hasNext()) {
 				String key = iter.next().toString();
@@ -202,8 +202,6 @@ public class PDEState extends MinimalState {
 				fPluginInfos.remove(Long.toString(newbundle.getBundleId()));
 			}
 			fState.resolve(true);
-			long end = System.currentTimeMillis();			
-			PDECore.logErrorMessage("Time to create models: " + (end - start) + " ms");
 		}
 	}
 	
@@ -237,13 +235,17 @@ public class PDEState extends MinimalState {
 		info.providerName = element.getAttribute("provider"); //$NON-NLS-1$
 		info.className	= element.getAttribute("class"); //$NON-NLS-1$
 		info.hasExtensibleAPI = "true".equals(element.getAttribute("hasExtensibleAPI")); //$NON-NLS-1$ //$NON-NLS-2$
+		info.project = element.getAttribute("project");
 		
-		NodeList libs = element.getElementsByTagName("library"); //$NON-NLS-1$
-		info.libraries = new String[libs.getLength()];
+		NodeList libs = element.getChildNodes(); //$NON-NLS-1$
+		ArrayList list = new ArrayList(libs.getLength());
 		for (int i = 0; i < libs.getLength(); i++) {
-			Element lib = (Element)libs.item(i);
-			info.libraries[i] = lib.getAttribute("name"); //$NON-NLS-1$
+			if (libs.item(i).getNodeType() == Node.ELEMENT_NODE) {
+				Element lib = (Element)libs.item(i);
+				list.add(lib.getAttribute("name")); //$NON-NLS-1$
+			}
 		}
+		info.libraries = (String[])list.toArray(new String[list.size()]);
 		map.put(element.getAttribute("bundleID"), info); //$NON-NLS-1$
 	}
 	
@@ -354,12 +356,13 @@ public class PDEState extends MinimalState {
 				Document doc = factory.newDocumentBuilder().parse(file);
 				Element root = doc.getDocumentElement();
 				if (root != null) {
-					root.normalize();
-					NodeList bundles = root.getElementsByTagName("bundle"); //$NON-NLS-1$
+					NodeList bundles = root.getChildNodes();
 					for (int i = 0; i < bundles.getLength(); i++) {
-						Element bundle = (Element)bundles.item(i); 
-						String id = bundle.getAttribute("bundleID"); //$NON-NLS-1$
-						map.put(id, bundle.getChildNodes());
+						if (bundles.item(i).getNodeType() == Node.ELEMENT_NODE) {
+							Element bundle = (Element)bundles.item(i); 
+							String id = bundle.getAttribute("bundleID"); //$NON-NLS-1$
+							map.put(id, bundle.getChildNodes());
+						}
 					}
 				}
 				return map;
@@ -383,9 +386,10 @@ public class PDEState extends MinimalState {
 				Document doc = factory.newDocumentBuilder().parse(file);
 				Element root = doc.getDocumentElement();
 				if (root != null) {
-					NodeList bundles = root.getElementsByTagName("bundle"); //$NON-NLS-1$
-					for (int i = 0; i < bundles.getLength(); i++) {
-						createPluginInfo(map, (Element)bundles.item(i));
+					NodeList list = root.getChildNodes();
+					for (int i = 0; i < list.getLength(); i++) {
+						if (list.item(i).getNodeType() == Node.ELEMENT_NODE)
+							createPluginInfo(map, (Element)list.item(i));
 					}
 				}
 				return map;
@@ -441,16 +445,10 @@ public class PDEState extends MinimalState {
 	}
  	
  	private IPluginModelBase createWorkspaceModel(BundleDescription desc) {
- 		IWorkspaceRoot root = PDECore.getWorkspace().getRoot();
- 		IContainer container = root.getContainerForLocation(new Path(desc.getLocation()));
- 		if (container == null) {
- 			container = root.getProject(desc.getSymbolicName());
- 		}
- 		
- 		if (!(container instanceof IProject))
+ 		String projectName = getProject(desc.getBundleId());
+ 		IProject project = PDECore.getWorkspace().getRoot().getProject(projectName);
+ 		if (!project.exists())
  			return null;
- 		
- 		IProject project = (IProject)container;
  		if (WorkspaceModelManager.hasBundleManifest(project)) {
  			BundlePluginModelBase model = null;
  			if (desc.getHost() == null)
@@ -539,24 +537,52 @@ public class PDEState extends MinimalState {
 		return info == null ? new String[0] : info.libraries;
 	}
 	
-	public NodeList getExtensions(long bundleID) {
+	public String getProject(long bundleID) {
+		PluginInfo info = (PluginInfo)fPluginInfos.get(Long.toString(bundleID));
+		return info == null ? null : info.project;		
+	}
+	
+	public Node[] getExtensions(long bundleID) {
 		return getChildren(bundleID, "extension"); //$NON-NLS-1$
 	}
 	
-	public NodeList getExtensionPoints(long bundleID) {
+	public Node[] getExtensionPoints(long bundleID) {
 		return getChildren(bundleID, "extension-point"); //$NON-NLS-1$
 	}
 	
-	private NodeList getChildren(long bundleID, String tagName) {
+	private Node[] getChildren(long bundleID, String tagName) {
+		ArrayList list = new ArrayList();
 		if (fExtensions != null) {
 			Element bundle = (Element)fExtensions.get(Long.toString(bundleID));
 			if (bundle != null) {
-				return bundle.getElementsByTagName(tagName);
+				NodeList children = bundle.getChildNodes();
+				for (int i = 0; i < children.getLength(); i++) {
+					if (tagName.equals(children.item(i).getNodeName())) {
+						list.add(children.item(i));
+					}
+				}
 			}
 		}
-		return null;
+		return (Node[])list.toArray(new Node[list.size()]);
 	}
-	
+
+	public Node[] getAllExtensions(long bundleID) {
+		ArrayList list = new ArrayList();
+		if (fExtensions != null) {
+			Element bundle = (Element)fExtensions.get(Long.toString(bundleID));
+			if (bundle != null) {
+				NodeList children = bundle.getChildNodes();
+				for (int i = 0; i < children.getLength(); i++) {
+					String name = children.item(i).getNodeName();
+					if ("extension".equals(name) || "extension-point".equals(name)) {
+						list.add(children.item(i));
+					}
+				}
+			}
+		}
+		return (Node[])list.toArray(new Node[list.size()]);
+	}
+
 	public void shutdown() {
 		IPluginModelBase[] models = PDECore.getDefault().getModelManager().getWorkspaceModels();
 		long workspace = computeTimestamp(models);
@@ -587,6 +613,7 @@ public class PDEState extends MinimalState {
 				BundleDescription desc = models[i].getBundleDescription();
 				Element element = doc.createElement("bundle"); //$NON-NLS-1$
 				element.setAttribute("bundleID", Long.toString(desc.getBundleId())); //$NON-NLS-1$
+				element.setAttribute("project", models[i].getUnderlyingResource().getProject().getName());
 				if (plugin instanceof IPlugin && ((IPlugin)plugin).getClassName() != null)
 					element.setAttribute("class", ((IPlugin)plugin).getClassName()); //$NON-NLS-1$
 				if (plugin.getProviderName() != null)
