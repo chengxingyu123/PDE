@@ -112,7 +112,7 @@ public class PDEState extends MinimalState {
 		
 		createTargetModels();
 		
-		if (fResolve && workspace.length > 0 && !fNewState) {
+		if (fResolve && workspace.length > 0 && !fNewState && !"true".equals(System.getProperty("pde.nocache"))) {
 			readWorkspaceState();
 		}
 		
@@ -590,7 +590,7 @@ public class PDEState extends MinimalState {
 	public void shutdown() {
 		IPluginModelBase[] models = PDECore.getDefault().getModelManager().getWorkspaceModels();
 		long timestamp = 0;
-		if (shouldSaveState(models)) {
+		if (!"true".equals(System.getProperty("pde.nocache")) && shouldSaveState(models)) {
 			timestamp = computeTimestamp(models);
 			File dir = new File(DIR, Long.toString(timestamp) + ".workspace");
 			State state = stateObjectFactory.createState();
