@@ -117,7 +117,8 @@ public class PDEState extends MinimalState {
 		}
 		
 		fId = fState.getBundles().length;
-		System.out.println("Time to parse: " + (System.currentTimeMillis() - start) + " ms");
+		if (DEBUG)
+			System.out.println("Time to create state: " + (System.currentTimeMillis() - start) + " ms");
 	}
 
 	private void readTargetState() {
@@ -348,6 +349,7 @@ public class PDEState extends MinimalState {
 	}
 
 	private Map readExtensionsCache(File dir) {
+		long start = System.currentTimeMillis();
 		File file = new File(dir, ".extensions"); //$NON-NLS-1$
 		if (file.exists() && file.isFile()) {
 			try {
@@ -365,6 +367,8 @@ public class PDEState extends MinimalState {
 						}
 					}
 				}
+				if (DEBUG)
+					System.out.println("Time to read extensions: " + (System.currentTimeMillis() - start) + " ms");
 				return map;
 			} catch (org.xml.sax.SAXException e) {
 				PDECore.log(e);
@@ -373,7 +377,7 @@ public class PDEState extends MinimalState {
 			} catch (ParserConfigurationException e) {
 				PDECore.log(e);
 			}
-		} 
+		}
 		return null;
 	}
 
@@ -585,9 +589,10 @@ public class PDEState extends MinimalState {
 
 	public void shutdown() {
 		IPluginModelBase[] models = PDECore.getDefault().getModelManager().getWorkspaceModels();
-		long workspace = computeTimestamp(models);
+		long timestamp = 0;
 		if (shouldSaveState(models)) {
-			File dir = new File(DIR, Long.toString(workspace) + ".workspace");
+			timestamp = computeTimestamp(models);
+			File dir = new File(DIR, Long.toString(timestamp) + ".workspace");
 			State state = stateObjectFactory.createState();
 			for (int i = 0; i < models.length; i++) {
 				state.addBundle(models[i].getBundleDescription());
@@ -597,7 +602,7 @@ public class PDEState extends MinimalState {
 			writeExtensions(models, dir);
 		}
 		clearStaleStates(".target", fTargetTimestamp);
-		clearStaleStates(".workspace", workspace);
+		clearStaleStates(".workspace", timestamp);
 		clearStaleStates(".cache", 0);
 	}
 	
@@ -684,7 +689,12 @@ public class PDEState extends MinimalState {
 	
 	private boolean shouldSaveState(IPluginModelBase[] models) {
 		for (int i = 0; i < models.length; i++) {
-			if (!models[i].isInSync() || models[i].getBundleDescription() == null)
+			String id = models[i].getPluginBase().getId();
+			if (id == null
+					|| id.trim().length() == 0
+					|| !models[i].isLoaded()
+					||!models[i].isInSync() 
+					|| models[i].getBundleDescription() == null)
 				return false;
 		}
 		return models.length > 0;

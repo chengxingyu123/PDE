@@ -493,7 +493,6 @@ public class WorkspaceModelManager
 	private synchronized void initializeWorkspaceModels() {
 		if (fInitialized || fModelsLocked)
 			return;
-		long start = System.currentTimeMillis();
 		fModelsLocked = true;
 		fModels = Collections.synchronizedMap(new HashMap());
 		fFragmentModels = Collections.synchronizedMap(new HashMap());
@@ -510,9 +509,7 @@ public class WorkspaceModelManager
 		
 		workspace.addResourceChangeListener(this, IResourceChangeEvent.PRE_CLOSE);
 		JavaCore.addPreProcessingResourceChangedListener(this);
-		long end = System.currentTimeMillis();
 		
-		PDECore.logErrorMessage("From scratch: " + (end - start) + " ms");
 		fModelsLocked = false;
 		fInitialized = true;
 	}
