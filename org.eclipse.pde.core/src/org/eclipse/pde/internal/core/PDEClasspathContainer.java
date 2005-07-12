@@ -64,7 +64,7 @@ public class PDEClasspathContainer {
 			IPath srcPath = ClasspathUtilCore.getSourceAnnotation(model, "."); //$NON-NLS-1$
 			if (srcPath == null)
 				srcPath = new Path(model.getInstallLocation());			
-			addLibraryEntry(new Path(model.getInstallLocation()), srcPath, rules, getClasspathAttributes(model), entries);			
+			addLibraryEntry(new Path(model.getInstallLocation()), srcPath, rules, entries);			
 		} else {
 			IPluginLibrary[] libraries = model.getPluginBase().getLibraries();
 			for (int i = 0; i < libraries.length; i++) {
@@ -80,12 +80,12 @@ public class PDEClasspathContainer {
 						path = getPath(model, expandedName);
 				}
 				if (path != null && !path.toFile().isDirectory())
-					addLibraryEntry(path, ClasspathUtilCore.getSourceAnnotation(model, expandedName), rules, getClasspathAttributes(model), entries);
+					addLibraryEntry(path, ClasspathUtilCore.getSourceAnnotation(model, expandedName), rules, entries);
 			}		
 		}
 	}
 	
-	protected void addLibraryEntry(IPath path, IPath srcPath, Rule[] rules, IClasspathAttribute[] attributes, ArrayList entries) {
+	protected void addLibraryEntry(IPath path, IPath srcPath, Rule[] rules, ArrayList entries) {
 		IClasspathEntry entry = null;
 		if (rules != null) {
 			entry = JavaCore.newLibraryEntry(
@@ -93,10 +93,10 @@ public class PDEClasspathContainer {
 						srcPath, 
 						null,
 						getAccessRules(rules),
-						attributes,
+						new IClasspathAttribute[0],
 						false);
 		} else {
-			entry = JavaCore.newLibraryEntry(path, srcPath, null, new IAccessRule[0], attributes, false);
+			entry = JavaCore.newLibraryEntry(path, srcPath, null);
 		}
 		if (!entries.contains(entry)) {
 			entries.add(entry);
@@ -120,14 +120,6 @@ public class PDEClasspathContainer {
 			ACCESSIBLE_RULES.put(path, rule);
 		}
 		return rule;
-	}
-	
-	private IClasspathAttribute[] getClasspathAttributes(IPluginModelBase model) {
-		JavadocLocationManager manager = PDECore.getDefault().getJavadocLocationManager();
-		String location = manager.getJavadocLocation(model);
-		if (location == null)
-			return new IClasspathAttribute[0];
-		return new IClasspathAttribute[] {JavaCore.newClasspathAttribute(IClasspathAttribute.JAVADOC_LOCATION_ATTRIBUTE_NAME, location)};
 	}
 	
 	private synchronized IAccessRule getDiscouragedRule(IPath path) {
