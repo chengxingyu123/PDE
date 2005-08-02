@@ -643,9 +643,6 @@ public class PDEUIMessages extends NLS {
 	public static String LauncherSection_tiny;
 	public static String Launcher_error_code13;
 	public static String Launcher_error_code15;
-	public static String Launcher_error_displayInLogView;
-	public static String Launcher_error_displayInSystemEditor;
-	public static String Launcher_error_displayNo;
 	public static String LauncherSection_browse;
 	public static String LauncherSection_title;
 	public static String LauncherSection_label;
@@ -1679,6 +1676,7 @@ public class PDEUIMessages extends NLS {
 	public static String GeneralInfoSection_name;
 	public static String GeneralInfoSection_class;
 	public static String GeneralInfoSection_browse;
+	public static String GeneralInfoSection_platformFilter;
 	public static String GeneralInfoSection_selectionTitle;
 	public static String RequiresSection_title;
 	public static String RequiresSection_fDesc;
@@ -1972,6 +1970,4 @@ public class PDEUIMessages extends NLS {
 	public static String BaseExportWizardPage_javacTarget;
 
 	public static String BaseExportWizardPage_javacSource;
-
-	public static String PluginWorkingSet_message;
 }
