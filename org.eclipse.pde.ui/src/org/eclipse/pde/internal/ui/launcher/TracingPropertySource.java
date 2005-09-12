@@ -12,6 +12,7 @@ package org.eclipse.pde.internal.ui.launcher;
 import java.util.*;
 import org.eclipse.core.runtime.*;
 import org.eclipse.pde.core.plugin.IPluginModelBase;
+import org.eclipse.pde.ui.launcher.TracingTab;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.*;
 import org.eclipse.swt.widgets.*;
@@ -27,7 +28,7 @@ public class TracingPropertySource {
 	private static final String[] fBooleanChoices = {"false", "true"}; //$NON-NLS-1$ //$NON-NLS-2$
 	private Properties fMasterOptions;
 	private boolean fModified;
-	private TracingLauncherTab fTab;
+	private TracingTab fTab;
 	private abstract class PropertyEditor {
 		private String key;
 		private String label;
@@ -106,7 +107,7 @@ public class TracingPropertySource {
 	}
 	public TracingPropertySource(IPluginModelBase model,
 			Properties masterOptions, Hashtable template,
-			TracingLauncherTab tab) {
+			TracingTab tab) {
 		this.fModel = model;
 		this.fMasterOptions = masterOptions;
 		this.fTemplate = template;

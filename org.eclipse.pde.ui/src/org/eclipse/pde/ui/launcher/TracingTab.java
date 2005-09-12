@@ -39,6 +39,7 @@ import org.eclipse.pde.internal.ui.PDEPluginImages;
 import org.eclipse.pde.internal.ui.PDEUIMessages;
 import org.eclipse.pde.internal.ui.launcher.AbstractLauncherTab;
 import org.eclipse.pde.internal.ui.launcher.ILauncherSettings;
+import org.eclipse.pde.internal.ui.launcher.TracingPropertySource;
 import org.eclipse.pde.internal.ui.util.SWTUtil;
 import org.eclipse.pde.internal.ui.wizards.ListUtil;
 import org.eclipse.swt.SWT;

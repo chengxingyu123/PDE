@@ -33,14 +33,14 @@ import org.eclipse.ui.PlatformUI;
 public class MainTab extends AbstractLauncherTab implements ILauncherSettings {
 	
 	private WorkspaceDataBlock fDataBlock;
-	private ProgramBlock fProgramBlock;
+	protected ProgramBlock fProgramBlock;
 	private JREBlock fJreBlock;
 	
 	private Image fImage;
 
 	public MainTab() {
 		fDataBlock = new WorkspaceDataBlock(this);
-		fProgramBlock = new ProgramBlock(this);
+		createProgramBlock();
 		fJreBlock = new JREBlock(this);
 		fImage = PDEPluginImages.DESC_MAIN_TAB.createImage();
 	}
@@ -95,6 +95,10 @@ public class MainTab extends AbstractLauncherTab implements ILauncherSettings {
 	
 	public Image getImage() {
 		return fImage;
+	}
+	
+	protected void createProgramBlock() {
+		fProgramBlock = new ProgramBlock(this);		
 	}
 	
 }
