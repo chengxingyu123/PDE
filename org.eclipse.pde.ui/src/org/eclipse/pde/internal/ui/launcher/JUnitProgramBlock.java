@@ -38,7 +38,7 @@ public class JUnitProgramBlock extends ProgramBlock {
 	
 	protected String[] getApplicationNames() {
 		TreeSet result = new TreeSet();
-		result.add(PDEUIMessages.JUnitArgumentsTab_headless); 
+		result.add(PDEUIMessages.JUnitProgramBlock_headless); 
 		String[] appNames = super.getApplicationNames();
 		for (int i = 0; i < appNames.length; i++) {
 			result.add(appNames[i]);
@@ -53,7 +53,7 @@ public class JUnitProgramBlock extends ProgramBlock {
 			throws CoreException {
 		String application = config.getAttribute(IPDELauncherConstants.APPLICATION, (String)null);
 		if (JUnitLaunchConfiguration.CORE_APPLICATION.equals(application)) 
-			fApplicationCombo.setText(PDEUIMessages.JUnitArgumentsTab_headless); 
+			fApplicationCombo.setText(PDEUIMessages.JUnitProgramBlock_headless); 
 		else
 			super.initializeApplicationSection(config);
 	}
@@ -62,7 +62,7 @@ public class JUnitProgramBlock extends ProgramBlock {
 	 * @see org.eclipse.pde.internal.ui.launcher.BasicLauncherTab#saveApplicationSection(org.eclipse.debug.core.ILaunchConfigurationWorkingCopy)
 	 */
 	protected void saveApplicationSection(ILaunchConfigurationWorkingCopy config) {
-		if (fApplicationCombo.getText().equals(PDEUIMessages.JUnitArgumentsTab_headless)) { 
+		if (fApplicationCombo.getText().equals(PDEUIMessages.JUnitProgramBlock_headless)) { 
 			config.setAttribute(IPDELauncherConstants.APPLICATION, JUnitLaunchConfiguration.CORE_APPLICATION);
 			config.setAttribute(IPDELauncherConstants.APP_TO_TEST, (String)null);
 		} else {

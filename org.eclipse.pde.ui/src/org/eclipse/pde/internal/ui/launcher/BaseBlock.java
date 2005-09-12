@@ -98,8 +98,8 @@ public abstract class BaseBlock {
 	private void handleBrowseFileSystem() {
 		DirectoryDialog dialog = new DirectoryDialog(fTab.getControl().getShell());
 		dialog.setFilterPath(getLocation());
-		dialog.setText(PDEUIMessages.BasicLauncherTab_workspace_title); 
-		dialog.setMessage(PDEUIMessages.BasicLauncherTab_workspace_message); 
+		dialog.setText(PDEUIMessages.BaseBlock_workspace_title); 
+		dialog.setMessage(PDEUIMessages.BaseBlock_workspace_message); 
 		String result = dialog.open();
 		if (result != null)
 			fLocationText.setText(result);

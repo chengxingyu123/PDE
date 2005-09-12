@@ -90,7 +90,7 @@ public class MainTab extends AbstractLauncherTab implements ILauncherSettings {
 	}
 	
 	public String getName() {
-		return PDEUIMessages.BasicLauncherTab_name;
+		return PDEUIMessages.MainTab_name;
 	}
 	
 	public Image getImage() {

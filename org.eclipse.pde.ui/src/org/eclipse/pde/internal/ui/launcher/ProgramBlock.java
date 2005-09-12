@@ -51,7 +51,7 @@ public class ProgramBlock {
 	
 	public void createControl(Composite parent) {
 		Group group = new Group(parent, SWT.NONE);
-		group.setText(PDEUIMessages.BasicLauncherTab_programToRun); 
+		group.setText(PDEUIMessages.ProgramBlock_programToRun); 
 		GridLayout layout = new GridLayout();
 		layout.numColumns = 2;
 		group.setLayout(layout);
@@ -63,7 +63,7 @@ public class ProgramBlock {
 	
 	protected void createProductSection(Composite parent) {
 		fProductButton = new Button(parent, SWT.RADIO);
-		fProductButton.setText(PDEUIMessages.BasicLauncherTab_runProduct); 
+		fProductButton.setText(PDEUIMessages.ProgramBlock_runProduct); 
 		fProductButton.addSelectionListener(fListener);
 		
 		fProductCombo = new Combo(parent, SWT.READ_ONLY|SWT.DROP_DOWN);
@@ -74,7 +74,7 @@ public class ProgramBlock {
 	
 	protected void createApplicationSection(Composite parent) {
 		fApplicationButton = new Button(parent, SWT.RADIO);
-		fApplicationButton.setText(PDEUIMessages.BasicLauncherTab_runApplication); 
+		fApplicationButton.setText(PDEUIMessages.ProgramBlock_runApplication); 
 			
 		fApplicationCombo = new Combo(parent, SWT.READ_ONLY|SWT.DROP_DOWN);
 		fApplicationCombo.setItems(getApplicationNames());

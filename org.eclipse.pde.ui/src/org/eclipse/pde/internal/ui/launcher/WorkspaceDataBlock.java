@@ -36,13 +36,13 @@ public class WorkspaceDataBlock extends BaseBlock {
 	
 	public void createControl(Composite parent) {
 		Group group = new Group(parent, SWT.NONE);
-		group.setText(PDEUIMessages.BasicLauncherTab_workspace); 
+		group.setText(PDEUIMessages.WorkspaceDataBlock_workspace); 
 		GridLayout layout = new GridLayout();
 		layout.numColumns = 2;
 		group.setLayout(layout);
 		group.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 
-		createText(group, PDEUIMessages.BasicLauncherTab_location);
+		createText(group, PDEUIMessages.WorkspaceDataBlock_location);
 		
 		Composite buttons = new Composite(group, SWT.NONE);
 		layout = new GridLayout(4, false);
@@ -53,14 +53,14 @@ public class WorkspaceDataBlock extends BaseBlock {
 		buttons.setLayoutData(gd);
 		
 		fClearWorkspaceCheck = new Button(buttons, SWT.CHECK);
-		fClearWorkspaceCheck.setText(PDEUIMessages.BasicLauncherTab_clear);	
+		fClearWorkspaceCheck.setText(PDEUIMessages.WorkspaceDataBlock_clear);	
 		fClearWorkspaceCheck.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 		fClearWorkspaceCheck.addSelectionListener(fListener);
 		
 		createButtons(buttons);
 		
 		fAskClearCheck = new Button(group, SWT.CHECK);
-		fAskClearCheck.setText(PDEUIMessages.BasicLauncherTab_askClear);
+		fAskClearCheck.setText(PDEUIMessages.WorkspaceDataBlock_askClear);
 		gd = new GridData();
 		gd.horizontalSpan = 2;
 		fAskClearCheck.setLayoutData(gd);
@@ -100,14 +100,14 @@ public class WorkspaceDataBlock extends BaseBlock {
 		if (!Path.ROOT.isValidPath(location)) {
 			return AbstractLauncherTab.createStatus(
 				IStatus.ERROR,
-				PDEUIMessages.BasicLauncherTab_invalidWorkspace); 
+				PDEUIMessages.WorkspaceDataBlock_invalidWorkspace); 
 		}
 		
 		IPath curr = new Path(location);
 		if (curr.segmentCount() == 0 && curr.getDevice() == null) {
 			return AbstractLauncherTab.createStatus(
 				IStatus.ERROR,
-				PDEUIMessages.BasicLauncherTab_noWorkspace); 
+				PDEUIMessages.WorkspaceDataBlock_noWorkspace); 
 		}
 
 		return AbstractLauncherTab.createStatus(IStatus.OK, ""); //$NON-NLS-1$
