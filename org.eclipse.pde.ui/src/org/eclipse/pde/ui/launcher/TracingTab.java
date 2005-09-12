@@ -386,4 +386,6 @@ public class TracingTab extends AbstractLauncherTab
 		}
 		return null;
 	}
+	public void validatePage() {
+	}
 }

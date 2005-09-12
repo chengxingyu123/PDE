@@ -474,7 +474,7 @@ public class PluginsTab
 				pluginsImage);
 		fExternalPlugins =
 			new NamedElement(
-				"Target Platform", 
+				PDEUIMessages.PluginsTab_target, 
 				pluginsImage);
 	}
 
@@ -742,21 +742,16 @@ public class PluginsTab
 		}
 	}
 
-	private void updateStatus() {
-		updateStatus(validate());
-	}
-
-	private IStatus validate() {
+	public void validate() {
 		if (fShowFeatures && fUseFeaturesRadio.getSelection()) {
 			IPath workspacePath = PDEPlugin.getWorkspace().getRoot().getLocation();
 			IPath featurePath = workspacePath.removeLastSegments(1).append("features"); //$NON-NLS-1$
 			if (!workspacePath.lastSegment().equalsIgnoreCase("plugins") //$NON-NLS-1$
 				|| !featurePath.toFile().exists())
-				return createStatus(
-					IStatus.ERROR,
+				setErrorMessage(
 					PDEUIMessages.AdvancedLauncherTab_error_featureSetup); 
 		} 
-		return createStatus(IStatus.OK, ""); //$NON-NLS-1$
+		setErrorMessage(null);
 	}
 
 	public String getName() {
@@ -798,6 +793,5 @@ public class PluginsTab
 		} catch (CoreException e) {
 		}
 	}
-	
-	
+
 }

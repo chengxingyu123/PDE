@@ -100,5 +100,9 @@ public class MainTab extends AbstractLauncherTab implements ILauncherSettings {
 	protected void createProgramBlock() {
 		fProgramBlock = new ProgramBlock(this);		
 	}
+
+	public void validatePage() {
+		setErrorMessage(fDataBlock.validate());
+	}
 	
 }

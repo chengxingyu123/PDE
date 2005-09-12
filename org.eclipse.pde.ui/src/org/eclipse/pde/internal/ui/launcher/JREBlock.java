@@ -11,7 +11,6 @@
 package org.eclipse.pde.internal.ui.launcher;
 
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IStatus;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
 import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants;
@@ -207,15 +206,4 @@ public class JREBlock {
 		config.setAttribute(IPDELauncherConstants.BOOTSTRAP_ENTRIES, ""); //$NON-NLS-1$
 	}
 	
-	protected IStatus validateJRESelection() {
-		if (fJreCombo.getSelectionIndex() == -1) {
-			return AbstractLauncherTab.createStatus(
-				IStatus.ERROR,
-				PDEUIMessages.BasicLauncherTab_noJRE); 
-		}
-		return AbstractLauncherTab.createStatus(IStatus.OK, ""); //$NON-NLS-1$
-	}
-
-
-
 }

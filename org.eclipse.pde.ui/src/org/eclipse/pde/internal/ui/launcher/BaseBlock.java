@@ -20,6 +20,7 @@ import org.eclipse.core.runtime.Path;
 import org.eclipse.core.variables.IStringVariableManager;
 import org.eclipse.core.variables.VariablesPlugin;
 import org.eclipse.debug.ui.StringVariableSelectionDialog;
+import org.eclipse.osgi.util.NLS;
 import org.eclipse.pde.internal.ui.PDEPlugin;
 import org.eclipse.pde.internal.ui.PDEUIMessages;
 import org.eclipse.pde.internal.ui.util.SWTUtil;
@@ -48,6 +49,8 @@ public abstract class BaseBlock {
 	
 	protected Listener fListener = new Listener();
 
+	protected Label fLocationLabel;
+
 	class Listener extends SelectionAdapter implements ModifyListener {		
 		public void widgetSelected(SelectionEvent e) {
 			Object source= e.getSource();
@@ -57,13 +60,13 @@ public abstract class BaseBlock {
 				handleBrowseWorkspace();
 			} else if (source == fVariablesButton) {
 				handleInsertVariable();
-			} else {
-				fTab.updateLaunchConfigurationDialog();
+			} else {			
+				validate();
 			}
 		}
 
 		public void modifyText(ModifyEvent e) {
-			fTab.updateLaunchConfigurationDialog();
+			validate();
 		}
 	}
 	
@@ -71,9 +74,14 @@ public abstract class BaseBlock {
 		fTab = tab;
 	}
 	
-	protected void createText(Composite parent, String text) {
-		Label label = new Label(parent, SWT.NONE);
-		label.setText(text); 
+	protected void createText(Composite parent, String text, int indent) {
+		fLocationLabel = new Label(parent, SWT.NONE);
+		fLocationLabel.setText(text);
+		if (indent > 0) {
+			GridData gd = new GridData();
+			gd.horizontalIndent = indent;
+			fLocationLabel.setLayoutData(gd);
+		}
 
 		fLocationText = new Text(parent, SWT.SINGLE|SWT.BORDER);
 		fLocationText.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
@@ -81,9 +89,9 @@ public abstract class BaseBlock {
 	}
 	
 	protected void createButtons(Composite parent) {
-		fWorkspaceButton = createButton(parent, "Workspace..."); 
-		fFileSystemButton = createButton(parent, "File System..."); 
-		fVariablesButton = createButton(parent, "Variables..."); 	
+		fWorkspaceButton = createButton(parent, PDEUIMessages.BaseBlock_workspace); 
+		fFileSystemButton = createButton(parent, PDEUIMessages.BaseBlock_filesystem); 
+		fVariablesButton = createButton(parent, PDEUIMessages.BaseBlock_variables); 	
 	}
 	
 	protected Button createButton(Composite parent, String text) {
@@ -95,7 +103,7 @@ public abstract class BaseBlock {
 		return button;
 	}
 		
-	private void handleBrowseFileSystem() {
+	protected void handleBrowseFileSystem() {
 		DirectoryDialog dialog = new DirectoryDialog(fTab.getControl().getShell());
 		dialog.setFilterPath(getLocation());
 		dialog.setText(PDEUIMessages.BaseBlock_workspace_title); 
@@ -105,16 +113,16 @@ public abstract class BaseBlock {
 			fLocationText.setText(result);
 	}
 	
-	private void handleBrowseWorkspace() {
+	protected void handleBrowseWorkspace() {
 		ContainerSelectionDialog dialog = 
 			new ContainerSelectionDialog(
 					PDEPlugin.getActiveWorkbenchShell(),
 					getContainer(), 
 					true,
-					"Choose a location relative to the workspace:"); 
+					PDEUIMessages.BaseBlock_relative); 
 		if (dialog.open() == ContainerSelectionDialog.OK) {
 			IPath path = (IPath)dialog.getResult()[0];
-			fLocationText.setText("${workspace_loc:" + path.makeRelative().toString() + "}");
+			fLocationText.setText("${workspace_loc:" + path.makeRelative().toString() + "}"); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 	}
 	
@@ -151,6 +159,23 @@ public abstract class BaseBlock {
 	
 	protected String getLocation() {
 		return fLocationText.getText().trim();
+	}
+	
+	public String validate() {
+		return (fLocationText.isEnabled() && getLocation().length() == 0)
+					? NLS.bind("The {0} is not specified", getName())
+					: null;
+	}
+	
+	protected abstract String getName();
+	
+	protected void enableBrowseSection(boolean enabled) {
+		fLocationLabel.setEnabled(enabled);
+		fLocationText.setEnabled(enabled);
+		fFileSystemButton.setEnabled(enabled);
+		fWorkspaceButton.setEnabled(enabled);
+		fVariablesButton.setEnabled(enabled);
+		fTab.validatePage();
 	}
 	
 }

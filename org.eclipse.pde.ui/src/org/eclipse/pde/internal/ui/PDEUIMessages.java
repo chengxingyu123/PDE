@@ -540,12 +540,10 @@ public class PDEUIMessages extends NLS {
 	public static String BaseBlock_workspace_message;
 	public static String BasicLauncherTab_noJRE;
 	public static String WorkspaceDataBlock_noWorkspace;
-	public static String WorkspaceDataBlock_invalidWorkspace;
 	public static String JUnitProgramBlock_headless;
 
 	public static String AdvancedLauncherTab_name;
 	public static String AdvancedLauncherTab_workspacePlugins;
-	public static String AdvancedLauncherTab_externalPlugins;
 	public static String AdvancedLauncherTab_validatePlugins;
 	public static String AdvancedLauncherTab_useDefault;
 	public static String AdvancedLauncherTab_useFeatures;
@@ -598,8 +596,6 @@ public class PDEUIMessages extends NLS {
 	public static String ConfigurationSection_existing;
 	public static String ConfigurationTab_configLocTitle;
 	public static String ConfigurationTab_configLocMessage;
-	public static String ConfigurationTab_noConfigLoc;
-	public static String ConfigurationTab_noTemplateLoc;
 	public static String ConfigurationTab_templateNotExists;
 	public static String ConfigurationTab_configFileGroup;
 	public static String ConfigurationTab_defaultConfigIni;
@@ -2078,5 +2074,15 @@ public class PDEUIMessages extends NLS {
 	public static String PluginDevelopmentPage_equinox;
 
 	public static String MainTab_jreSection;
+
+	public static String PluginsTab_target;
+
+	public static String BaseBlock_workspace;
+
+	public static String BaseBlock_filesystem;
+
+	public static String BaseBlock_variables;
+
+	public static String BaseBlock_relative;
 	
 }

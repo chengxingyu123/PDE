@@ -10,13 +10,13 @@
  *******************************************************************************/
 package org.eclipse.pde.internal.ui.launcher;
 
-import org.eclipse.debug.core.*;
-import org.eclipse.debug.ui.*;
-import org.eclipse.swt.widgets.*;
-import org.eclipse.core.runtime.*;
-import org.eclipse.pde.internal.ui.PDEPlugin;
-import org.eclipse.swt.layout.GridData;
+import org.eclipse.debug.core.ILaunchConfiguration;
+import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
+import org.eclipse.debug.ui.AbstractLaunchConfigurationTab;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Label;
 
 public abstract class AbstractLauncherTab extends AbstractLaunchConfigurationTab {
 
@@ -44,44 +44,13 @@ public abstract class AbstractLauncherTab extends AbstractLaunchConfigurationTab
 	}
 
 	/**
-	 * Updates the status line and the ok button depending on the status
-	 */
-	protected void updateStatus(IStatus status) {
-		applyToStatusLine(this, status);
-	}
-
-	/**
-	 * Applies the status to a dialog page
-	 */
-	public static void applyToStatusLine(AbstractLauncherTab tab, IStatus status) {
-		String errorMessage= null;
-		String warningMessage= null;
-		String statusMessage= status.getMessage();
-		if (statusMessage.length() > 0) {
-			if (status.matches(IStatus.ERROR)) {
-				errorMessage= statusMessage;
-			} else if (!status.isOK()) {
-				warningMessage= statusMessage;
-			}
-		}
-		tab.setErrorMessage(errorMessage);
-		tab.setMessage(warningMessage);
-		tab.updateLaunchConfigurationDialog();
-	}
-	
-	public static IStatus getMoreSevere(IStatus s1, IStatus s2) {
-		return (s1.getSeverity() >= s2.getSeverity()) ? s1 : s2;
-	}	
-	
-	public static IStatus createStatus(int severity, String message) {
-		return new Status(severity, PDEPlugin.getPluginId(), severity, message, null);
-	}
-	
-	/**
 	 * @see org.eclipse.debug.ui.AbstractLaunchConfigurationTab#updateLaunchConfigurationDialog()
 	 */
 	public void updateLaunchConfigurationDialog() {
+		validatePage();
 		super.updateLaunchConfigurationDialog();
 	}
+	
+	public abstract void validatePage();
 		
 }

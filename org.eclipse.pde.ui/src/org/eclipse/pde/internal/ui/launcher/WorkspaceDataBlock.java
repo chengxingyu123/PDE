@@ -11,9 +11,6 @@
 package org.eclipse.pde.internal.ui.launcher;
 
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IPath;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Path;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
 import org.eclipse.pde.internal.ui.PDEUIMessages;
@@ -42,13 +39,13 @@ public class WorkspaceDataBlock extends BaseBlock {
 		group.setLayout(layout);
 		group.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 
-		createText(group, PDEUIMessages.WorkspaceDataBlock_location);
+		createText(group, PDEUIMessages.WorkspaceDataBlock_location, 0);
 		
 		Composite buttons = new Composite(group, SWT.NONE);
 		layout = new GridLayout(4, false);
 		layout.marginHeight = layout.marginWidth = 0;
 		buttons.setLayout(layout);
-		GridData gd = new GridData(GridData.FILL_HORIZONTAL);
+		GridData gd = new GridData();
 		gd.horizontalSpan = 2;
 		buttons.setLayoutData(gd);
 		
@@ -77,16 +74,14 @@ public class WorkspaceDataBlock extends BaseBlock {
 		String location = configuration.getAttribute(IPDELauncherConstants.LOCATION, (String)null);
 
 		// backward compatibility
-		if (location == null) {	
-			location = configuration.getAttribute(
-										IPDELauncherConstants.LOCATION + "0", 
+		if (location == null)	
+			location = configuration.getAttribute(IPDELauncherConstants.LOCATION + "0",  //$NON-NLS-1$
 									    LauncherUtils.getDefaultWorkspace());
-		}
+		
 		fLocationText.setText(location);
 		fClearWorkspaceCheck.setSelection(configuration.getAttribute(IPDELauncherConstants.DOCLEAR, false));
 		fAskClearCheck.setSelection(configuration.getAttribute(IPDELauncherConstants.ASKCLEAR, true));
 		fAskClearCheck.setEnabled(fClearWorkspaceCheck.getSelection());
-		validateWorkspaceSelection();
 	}
 	
 	public void setDefaults(ILaunchConfigurationWorkingCopy configuration) {		
@@ -94,23 +89,9 @@ public class WorkspaceDataBlock extends BaseBlock {
 		configuration.setAttribute(IPDELauncherConstants.DOCLEAR, false);
 		configuration.setAttribute(IPDELauncherConstants.ASKCLEAR, true);
 	}
-	
-	private IStatus validateWorkspaceSelection() {
-		String location = getLocation();
-		if (!Path.ROOT.isValidPath(location)) {
-			return AbstractLauncherTab.createStatus(
-				IStatus.ERROR,
-				PDEUIMessages.WorkspaceDataBlock_invalidWorkspace); 
-		}
-		
-		IPath curr = new Path(location);
-		if (curr.segmentCount() == 0 && curr.getDevice() == null) {
-			return AbstractLauncherTab.createStatus(
-				IStatus.ERROR,
-				PDEUIMessages.WorkspaceDataBlock_noWorkspace); 
-		}
 
-		return AbstractLauncherTab.createStatus(IStatus.OK, ""); //$NON-NLS-1$
+	protected String getName() {
+		return "workspace location";
 	}
 	
 }
