@@ -22,10 +22,9 @@ import org.eclipse.core.variables.IStringVariableManager;
 import org.eclipse.core.variables.VariablesPlugin;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
-import org.eclipse.jface.viewers.Viewer;
-import org.eclipse.jface.viewers.ViewerFilter;
 import org.eclipse.pde.internal.ui.PDEPlugin;
 import org.eclipse.pde.internal.ui.PDEUIMessages;
+import org.eclipse.pde.internal.ui.util.FileNameFilter;
 import org.eclipse.pde.ui.launcher.IPDELauncherConstants;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -125,19 +124,13 @@ public class ConfigurationTemplateBlock extends BaseBlock {
 		if (file != null)
 			dialog.setInitialSelection(file);
 		dialog.setInput(PDEPlugin.getWorkspace().getRoot());
-		dialog.addFilter(new ViewerFilter() {
-			public boolean select(Viewer viewer, Object parentElement, Object element) {
-				if (element instanceof IFile)
-					return ((IFile)element).getName().equals("config.ini"); //$NON-NLS-1$
-				return true;
-			}
-		});
+		dialog.addFilter(new FileNameFilter("config.ini"));
 		dialog.setAllowMultiple(false);
 		dialog.setTitle(PDEUIMessages.ConfigurationTab_fileSelection); 
 		dialog.setMessage(PDEUIMessages.ConfigurationTab_fileDialogMessage); 
 		dialog.setValidator(new ISelectionStatusValidator() {
 			public IStatus validate(Object[] selection) {
-				if (selection[0] instanceof IFile)
+				if (selection.length > 0 && selection[0] instanceof IFile)
 					return new Status(IStatus.OK, PDEPlugin.getPluginId(),
 							IStatus.OK, "", null); //$NON-NLS-1$
 				
@@ -147,7 +140,7 @@ public class ConfigurationTemplateBlock extends BaseBlock {
 		});
 		if (dialog.open() == ElementTreeSelectionDialog.OK) {
 			file = (IFile) dialog.getFirstResult();
-			fLocationText.setText("${workspace_loc:" + file.getProjectRelativePath() + "}"); //$NON-NLS-1$ //$NON-NLS-2$
+			fLocationText.setText("${workspace_loc:" + file.getFullPath().makeRelative() + "}"); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 	}
 	

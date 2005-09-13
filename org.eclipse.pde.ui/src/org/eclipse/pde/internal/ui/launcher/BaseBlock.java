@@ -61,12 +61,12 @@ public abstract class BaseBlock {
 			} else if (source == fVariablesButton) {
 				handleInsertVariable();
 			} else {			
-				validate();
+				fTab.updateLaunchConfigurationDialog();
 			}
 		}
 
 		public void modifyText(ModifyEvent e) {
-			validate();
+			fTab.updateLaunchConfigurationDialog();
 		}
 	}
 	
@@ -106,8 +106,8 @@ public abstract class BaseBlock {
 	protected void handleBrowseFileSystem() {
 		DirectoryDialog dialog = new DirectoryDialog(fTab.getControl().getShell());
 		dialog.setFilterPath(getLocation());
-		dialog.setText(PDEUIMessages.BaseBlock_workspace_title); 
-		dialog.setMessage(PDEUIMessages.BaseBlock_workspace_message); 
+		dialog.setText("Directory Selection"); 
+		dialog.setMessage("Choose a directory:"); 
 		String result = dialog.open();
 		if (result != null)
 			fLocationText.setText(result);
@@ -175,7 +175,7 @@ public abstract class BaseBlock {
 		fFileSystemButton.setEnabled(enabled);
 		fWorkspaceButton.setEnabled(enabled);
 		fVariablesButton.setEnabled(enabled);
-		fTab.validatePage();
+		fTab.updateLaunchConfigurationDialog();
 	}
 	
 }

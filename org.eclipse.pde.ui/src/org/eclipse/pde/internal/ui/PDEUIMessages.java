@@ -534,10 +534,8 @@ public class PDEUIMessages extends NLS {
 	public static String BasicLauncherTab_jrePreferencePage;
 	public static String ProgramBlock_programToRun;
 	public static String BasicLauncherTab_bootstrap;
-	public static String BaseBlock_workspace_title;
 	public static String BasicLauncherTab_javaExecDefault;
 	public static String ProgramBlock_runApplication;
-	public static String BaseBlock_workspace_message;
 	public static String BasicLauncherTab_noJRE;
 	public static String WorkspaceDataBlock_noWorkspace;
 	public static String JUnitProgramBlock_headless;

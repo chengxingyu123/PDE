@@ -54,7 +54,9 @@ public class ConfigurationTab extends AbstractLauncherTab implements ILauncherSe
 		container.setLayout(new GridLayout());
 		container.setLayoutData(new GridData(GridData.FILL_BOTH));
 		
+		createStartingSpace(container, 1);
 		fConfigurationArea.createControl(container);
+		createStartingSpace(container, 1);
 		fTemplateArea.createControl(container);
 		
 		Dialog.applyDialogFont(container);

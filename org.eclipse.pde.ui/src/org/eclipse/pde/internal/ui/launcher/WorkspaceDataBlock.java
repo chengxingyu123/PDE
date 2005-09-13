@@ -16,6 +16,8 @@ import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
 import org.eclipse.pde.internal.ui.PDEUIMessages;
 import org.eclipse.pde.ui.launcher.IPDELauncherConstants;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -52,7 +54,12 @@ public class WorkspaceDataBlock extends BaseBlock {
 		fClearWorkspaceCheck = new Button(buttons, SWT.CHECK);
 		fClearWorkspaceCheck.setText(PDEUIMessages.WorkspaceDataBlock_clear);	
 		fClearWorkspaceCheck.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-		fClearWorkspaceCheck.addSelectionListener(fListener);
+		fClearWorkspaceCheck.addSelectionListener(new SelectionAdapter() {
+			public void widgetSelected(SelectionEvent e) {
+				fAskClearCheck.setEnabled(fClearWorkspaceCheck.getSelection());
+				fTab.updateLaunchConfigurationDialog();
+			}
+		});
 		
 		createButtons(buttons);
 		
@@ -92,6 +99,18 @@ public class WorkspaceDataBlock extends BaseBlock {
 
 	protected String getName() {
 		return "workspace location";
+	}
+	
+	protected void handleBrowseWorkspace() {
+		super.handleBrowseWorkspace();
+		if (fClearWorkspaceCheck.getSelection())
+			fClearWorkspaceCheck.setSelection(false);
+	}
+	
+	protected void handleBrowseFileSystem() {
+		super.handleBrowseFileSystem();
+		if (fClearWorkspaceCheck.getSelection())
+			fClearWorkspaceCheck.setSelection(false);
 	}
 	
 }

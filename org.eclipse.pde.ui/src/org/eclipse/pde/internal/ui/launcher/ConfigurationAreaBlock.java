@@ -30,6 +30,7 @@ public class ConfigurationAreaBlock extends BaseBlock {
 	private Button fUseDefaultLocationButton;
 	private Button fClearConfig;
 	private String fLastEnteredConfigArea;
+	private String fConfigName;
 
 	public ConfigurationAreaBlock(AbstractLauncherTab tab) {
 		super(tab);
@@ -48,7 +49,12 @@ public class ConfigurationAreaBlock extends BaseBlock {
 		fUseDefaultLocationButton.setText(PDEUIMessages.ConfigurationTab_useDefaultLoc); 
 		fUseDefaultLocationButton.addSelectionListener(new SelectionAdapter() {
 			public void widgetSelected(SelectionEvent e) {
-				enableBrowseSection(!fUseDefaultLocationButton.getSelection());
+				boolean useDefaultArea = fUseDefaultLocationButton.getSelection();
+				if (useDefaultArea)
+					fLocationText.setText(PDECore.getDefault().getStateLocation().append(fConfigName).toOSString());
+				else
+					fLocationText.setText(fLastEnteredConfigArea);
+				enableBrowseSection(!useDefaultArea);
 			}
 		});
 
@@ -71,6 +77,7 @@ public class ConfigurationAreaBlock extends BaseBlock {
 	}
 	
 	public void initializeFrom(ILaunchConfiguration configuration) throws CoreException {
+		fConfigName = configuration.getName();
 		boolean useDefaultArea = configuration.getAttribute(IPDELauncherConstants.CONFIG_USE_DEFAULT_AREA, true);
 		fUseDefaultLocationButton.setSelection(useDefaultArea);
 		enableBrowseSection(!useDefaultArea);
@@ -89,6 +96,8 @@ public class ConfigurationAreaBlock extends BaseBlock {
 		if (!fUseDefaultLocationButton.getSelection()) {
 			fLastEnteredConfigArea = getLocation();
 			configuration.setAttribute(IPDELauncherConstants.CONFIG_LOCATION, fLastEnteredConfigArea);
+		} else {
+			configuration.setAttribute(IPDELauncherConstants.CONFIG_LOCATION, "");
 		}
 		configuration.setAttribute(IPDELauncherConstants.CONFIG_CLEAR_AREA, fClearConfig.getSelection());
 	}
