@@ -52,17 +52,17 @@ public class ConfigurationAreaBlock extends BaseBlock {
 			}
 		});
 
-		createText(group, PDEUIMessages.ConfigurationTab_configLog, 0);
+		createText(group, PDEUIMessages.ConfigurationTab_configLog, 20);
 		
 		Composite buttons = new Composite(group, SWT.NONE);
 		GridLayout layout = new GridLayout(4, false);
 		layout.marginHeight = layout.marginWidth = 0;
 		buttons.setLayout(layout);
-		gd = new GridData();
+		gd = new GridData(GridData.FILL_HORIZONTAL);
 		gd.horizontalSpan = 2;
 		buttons.setLayoutData(gd);
 		
-		fClearConfig = new Button(group, SWT.CHECK);
+		fClearConfig = new Button(buttons, SWT.CHECK);
 		fClearConfig.setText(PDEUIMessages.ConfigurationTab_clearArea); 
 		fClearConfig.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 		fClearConfig.addSelectionListener(fListener);

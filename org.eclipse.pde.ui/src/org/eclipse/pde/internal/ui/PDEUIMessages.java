@@ -594,9 +594,7 @@ public class PDEUIMessages extends NLS {
 	public static String ConfigurationSection_file;
 	public static String ConfigurationTab_configBrowse;
 	public static String ConfigurationSection_existing;
-	public static String ConfigurationTab_configLocTitle;
 	public static String ConfigurationTab_configLocMessage;
-	public static String ConfigurationTab_templateNotExists;
 	public static String ConfigurationTab_configFileGroup;
 	public static String ConfigurationTab_defaultConfigIni;
 	public static String ConfigurationTab_existingConfigIni;

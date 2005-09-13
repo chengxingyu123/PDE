@@ -45,7 +45,7 @@ public class WorkspaceDataBlock extends BaseBlock {
 		layout = new GridLayout(4, false);
 		layout.marginHeight = layout.marginWidth = 0;
 		buttons.setLayout(layout);
-		GridData gd = new GridData();
+		GridData gd = new GridData(GridData.FILL_HORIZONTAL);
 		gd.horizontalSpan = 2;
 		buttons.setLayoutData(gd);
 		

@@ -23,7 +23,6 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.IPath;
-import org.eclipse.core.runtime.IStatus;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
 import org.eclipse.debug.ui.ILaunchConfigurationTab;
@@ -178,14 +177,14 @@ public class PluginsTab
 		fDefaultsButton.addSelectionListener(new SelectionAdapter() {
 			public void widgetSelected(SelectionEvent e) {
 				computeInitialCheckState();
-				updateStatus();
+				validatePage();
 			}
 		});
 		
 		fWorkingSetButton.addSelectionListener(new SelectionAdapter() {
 			public void widgetSelected(SelectionEvent e) {
 				handleWorkingSets();
-				updateStatus();
+				validatePage();
 			}
 		});
 
@@ -194,7 +193,7 @@ public class PluginsTab
 				BusyIndicator.showWhile(getControl().getDisplay(), new Runnable() {
 					public void run() {
 						computeSubset();
-						updateStatus();
+						validatePage();
 					}
 				});
 			}
@@ -203,26 +202,26 @@ public class PluginsTab
 		fSelectAllButton.addSelectionListener(new SelectionAdapter() {
 			public void widgetSelected(SelectionEvent e) {
 				toggleGroups(true);
-				updateStatus();
+				validatePage();
 			}}
 		);
 		
 		fDeselectButton.addSelectionListener(new SelectionAdapter() {
 			public void widgetSelected(SelectionEvent e) {
 				toggleGroups(false);
-				updateStatus();
+				validatePage();
 			}}
 		);
 		
 		fIncludeOptionalButton.addSelectionListener(new SelectionAdapter() {
 			public void widgetSelected(SelectionEvent e) {
-				updateStatus();
+				validatePage();
 			}
 		});
 
 		fAddWorkspaceButton.addSelectionListener(new SelectionAdapter() {
 			public void widgetSelected(SelectionEvent e) {
-				updateStatus();
+				validatePage();
 			}
 		});
 	}
@@ -280,7 +279,7 @@ public class PluginsTab
 
 	private void useDefaultChanged() {
 		adjustCustomControlEnableState(fUseListRadio.getSelection());
-		updateStatus();
+		validatePage();
 	}
 
 	private void adjustCustomControlEnableState(boolean enable) {
@@ -605,7 +604,7 @@ public class PluginsTab
 		}
 
 		adjustCustomControlEnableState(fUseListRadio.getSelection());
-		updateStatus();
+		validatePage();
 	}
 
 	private void computeInitialCheckState() {
@@ -792,6 +791,9 @@ public class PluginsTab
 			}
 		} catch (CoreException e) {
 		}
+	}
+
+	public void validatePage() {
 	}
 
 }
