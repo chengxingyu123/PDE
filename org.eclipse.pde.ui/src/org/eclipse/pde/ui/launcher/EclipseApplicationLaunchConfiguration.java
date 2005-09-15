@@ -40,11 +40,10 @@ import org.eclipse.pde.internal.core.PDECore;
 import org.eclipse.pde.internal.core.TargetPlatform;
 import org.eclipse.pde.internal.ui.PDEPlugin;
 import org.eclipse.pde.internal.ui.PDEUIMessages;
-import org.eclipse.pde.internal.ui.launcher.ILauncherSettings;
 import org.eclipse.pde.internal.ui.launcher.LauncherUtils;
 
 public class EclipseApplicationLaunchConfiguration extends LaunchConfigurationDelegate 
-			implements ILauncherSettings {
+			implements IPDELauncherConstants {
 	protected File fConfigDir = null;
 	
 	/*
@@ -70,7 +69,7 @@ public class EclipseApplicationLaunchConfiguration extends LaunchConfigurationDe
 			// clear config area, if necessary
 			if (configuration.getAttribute(CONFIG_CLEAR_AREA, false))
 				LauncherUtils.clearConfigArea(getConfigDir(configuration), new SubProgressMonitor(monitor, 1));
-			launch.setAttribute(ILauncherSettings.CONFIG_LOCATION, getConfigDir(configuration).toString());
+			launch.setAttribute(IPDELauncherConstants.CONFIG_LOCATION, getConfigDir(configuration).toString());
 			
 			
 			// create launcher

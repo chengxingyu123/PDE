@@ -49,7 +49,6 @@ import org.eclipse.pde.internal.ui.PDEPluginImages;
 import org.eclipse.pde.internal.ui.PDEUIMessages;
 import org.eclipse.pde.internal.ui.elements.DefaultContentProvider;
 import org.eclipse.pde.internal.ui.elements.NamedElement;
-import org.eclipse.pde.internal.ui.launcher.AbstractLauncherTab;
 import org.eclipse.pde.internal.ui.launcher.JUnitLaunchConfiguration;
 import org.eclipse.pde.internal.ui.launcher.LauncherUtils;
 import org.eclipse.pde.internal.ui.launcher.PluginStatusDialog;

@@ -28,6 +28,7 @@ import org.eclipse.jdt.launching.IVMInstall;
 import org.eclipse.jdt.launching.JavaRuntime;
 import org.eclipse.jdt.launching.StandardSourcePathProvider;
 import org.eclipse.pde.internal.ui.PDEPlugin;
+import org.eclipse.pde.ui.launcher.IPDELauncherConstants;
 /**
  * Generates a source lookup path for Runtime Workbench launch configurations.
  */
@@ -48,7 +49,7 @@ public class WorkbenchSourcePathProvider extends StandardSourcePathProvider {
 		// first on the source lookup path, goes the class libraries for the
 		// JRE
 		String vmInstallName = configuration.getAttribute(
-				ILauncherSettings.VMINSTALL, LauncherUtils
+				IPDELauncherConstants.VMINSTALL, LauncherUtils
 						.getDefaultVMInstallName());
 		IVMInstall[] vmInstallations = LauncherUtils.getAllVMInstances();
 		IVMInstall jre = null;

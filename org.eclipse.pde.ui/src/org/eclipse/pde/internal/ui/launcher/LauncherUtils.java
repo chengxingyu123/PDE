@@ -24,6 +24,7 @@ import org.eclipse.osgi.util.NLS;
 import org.eclipse.pde.core.plugin.*;
 import org.eclipse.pde.internal.core.*;
 import org.eclipse.pde.internal.ui.*;
+import org.eclipse.pde.ui.launcher.IPDELauncherConstants;
 import org.eclipse.swt.widgets.*;
 
 public class LauncherUtils {
@@ -97,7 +98,7 @@ public class LauncherUtils {
 	public static TreeSet parseWorkspacePluginIds(ILaunchConfiguration config)
 		throws CoreException {
 		TreeSet set = new TreeSet();
-		String ids = config.getAttribute(ILauncherSettings.WSPROJECT, (String) null);
+		String ids = config.getAttribute(IPDELauncherConstants.WSPROJECT, (String) null);
 		if (ids != null) {
 			StringTokenizer tok = new StringTokenizer(ids, File.pathSeparator);
 			while (tok.hasMoreTokens())
@@ -109,7 +110,7 @@ public class LauncherUtils {
 	public static TreeSet parseExternalPluginIds(ILaunchConfiguration config)
 		throws CoreException {
 		TreeSet selected = new TreeSet();
-		String ids = config.getAttribute(ILauncherSettings.EXTPLUGINS, (String) null);
+		String ids = config.getAttribute(IPDELauncherConstants.EXTPLUGINS, (String) null);
 		if (ids != null) {
 			StringTokenizer tok = new StringTokenizer(ids, File.pathSeparator);
 			while (tok.hasMoreTokens()) {
@@ -133,7 +134,7 @@ public class LauncherUtils {
 		
 		ArrayList entries = new ArrayList();
 		entries.add(jarPath);
-		StringTokenizer tok = new StringTokenizer(configuration.getAttribute(ILauncherSettings.BOOTSTRAP_ENTRIES, ""), ","); //$NON-NLS-1$ //$NON-NLS-2$
+		StringTokenizer tok = new StringTokenizer(configuration.getAttribute(IPDELauncherConstants.BOOTSTRAP_ENTRIES, ""), ","); //$NON-NLS-1$ //$NON-NLS-2$
 		while (tok.hasMoreTokens())
 			entries.add(tok.nextToken().trim());
 		return (String[])entries.toArray(new String[entries.size()]);
@@ -173,7 +174,7 @@ public class LauncherUtils {
 		TreeMap map = null;
 		ArrayList statusEntries = new ArrayList();
 		
-		if (!config.getAttribute(ILauncherSettings.USE_DEFAULT, true)) {
+		if (!config.getAttribute(IPDELauncherConstants.USE_DEFAULT, true)) {
 			map = validatePlugins(getSelectedPlugins(config), statusEntries);
 		}
 		
@@ -218,7 +219,7 @@ public class LauncherUtils {
 	
 	public static IPluginModelBase[] getSelectedPlugins(ILaunchConfiguration config) throws CoreException {
 		TreeMap map = new TreeMap();
-		boolean automaticAdd = config.getAttribute(ILauncherSettings.AUTOMATIC_ADD, true);
+		boolean automaticAdd = config.getAttribute(IPDELauncherConstants.AUTOMATIC_ADD, true);
 		IPluginModelBase[] wsmodels = PDECore.getDefault().getModelManager().getWorkspaceModels();
 		Set wsPlugins = parseWorkspacePluginIds(config);
 		for (int i = 0; i < wsmodels.length; i++) {
@@ -241,9 +242,9 @@ public class LauncherUtils {
 	}
 	
 	public static IProject[] getAffectedProjects(ILaunchConfiguration config) throws CoreException {
-		boolean doAdd = config.getAttribute(ILauncherSettings.AUTOMATIC_ADD, true);
-		boolean useFeatures = config.getAttribute(ILauncherSettings.USEFEATURES, false);
-		boolean useDefault = config.getAttribute(ILauncherSettings.USE_DEFAULT, true);
+		boolean doAdd = config.getAttribute(IPDELauncherConstants.AUTOMATIC_ADD, true);
+		boolean useFeatures = config.getAttribute(IPDELauncherConstants.USEFEATURES, false);
+		boolean useDefault = config.getAttribute(IPDELauncherConstants.USE_DEFAULT, true);
 
 		ArrayList projects = new ArrayList();		
 		IPluginModelBase[] models = PDECore.getDefault().getModelManager().getWorkspaceModels();
@@ -349,7 +350,7 @@ public class LauncherUtils {
 	public static IVMInstall createLauncher(
 		ILaunchConfiguration configuration)
 		throws CoreException {
-		String vm = configuration.getAttribute(ILauncherSettings.VMINSTALL, (String) null);
+		String vm = configuration.getAttribute(IPDELauncherConstants.VMINSTALL, (String) null);
 		IVMInstall launcher = LauncherUtils.getVMInstall(vm);
 
 		if (launcher == null) 
@@ -398,8 +399,8 @@ public class LauncherUtils {
 	
 	public static boolean clearWorkspace(ILaunchConfiguration configuration, String workspace, IProgressMonitor monitor) throws CoreException {
 		File workspaceFile = new Path(workspace).toFile();
-		if (configuration.getAttribute(ILauncherSettings.DOCLEAR, false) && workspaceFile.exists()) {
-			boolean doClear = !configuration.getAttribute(ILauncherSettings.ASKCLEAR, true);
+		if (configuration.getAttribute(IPDELauncherConstants.DOCLEAR, false) && workspaceFile.exists()) {
+			boolean doClear = !configuration.getAttribute(IPDELauncherConstants.ASKCLEAR, true);
 			if (!doClear) {
 				int result = confirmDeleteWorkspace(workspaceFile);
 				if (result == 2) {
@@ -439,8 +440,8 @@ public class LauncherUtils {
 	public static File createConfigArea(ILaunchConfiguration config) {
 		File dir = new File(PDECore.getDefault().getStateLocation().toOSString(), config.getName());
 		try {
-			if (!config.getAttribute(ILauncherSettings.CONFIG_USE_DEFAULT_AREA, true)) {
-				String userPath = config.getAttribute(ILauncherSettings.CONFIG_LOCATION, (String)null);
+			if (!config.getAttribute(IPDELauncherConstants.CONFIG_USE_DEFAULT_AREA, true)) {
+				String userPath = config.getAttribute(IPDELauncherConstants.CONFIG_LOCATION, (String)null);
 				if (userPath != null)
 					dir = new File(userPath);
 			}
@@ -480,11 +481,11 @@ public class LauncherUtils {
 		try {
 			TracingOptionsManager mng = PDECore.getDefault().getTracingOptionsManager();
 			Map options =
-				config.getAttribute(ILauncherSettings.TRACING_OPTIONS, (Map) null);
-			String selected = config.getAttribute(ILauncherSettings.TRACING_CHECKED, (String)null);
+				config.getAttribute(IPDELauncherConstants.TRACING_OPTIONS, (Map) null);
+			String selected = config.getAttribute(IPDELauncherConstants.TRACING_CHECKED, (String)null);
 			if (selected == null) {
 				mng.save(optionsFileName, options);
-			} else if (!selected.equals(ILauncherSettings.TRACING_NONE)) {
+			} else if (!selected.equals(IPDELauncherConstants.TRACING_NONE)) {
 				HashSet result = new HashSet();
 				StringTokenizer tokenizer = new StringTokenizer(selected, ","); //$NON-NLS-1$
 				while (tokenizer.hasMoreTokens()) {
@@ -512,11 +513,11 @@ public class LauncherUtils {
 	
 	public static String getProductID(ILaunchConfiguration configuration) throws CoreException {
 		String result = null;
-		if (configuration.getAttribute(ILauncherSettings.USE_PRODUCT, false)) {
-			result = configuration.getAttribute(ILauncherSettings.PRODUCT, (String)null);
+		if (configuration.getAttribute(IPDELauncherConstants.USE_PRODUCT, false)) {
+			result = configuration.getAttribute(IPDELauncherConstants.PRODUCT, (String)null);
 		} else {
 			// find the product associated with the application, and return its contributing plug-in
-			String appID = configuration.getAttribute(ILauncherSettings.APPLICATION, getDefaultApplicationName());
+			String appID = configuration.getAttribute(IPDELauncherConstants.APPLICATION, getDefaultApplicationName());
 			IPluginModelBase[] plugins = PDECore.getDefault().getModelManager().getPlugins();
 			for (int i = 0; i < plugins.length; i++) {
 				String id = plugins[i].getPluginBase().getId();
@@ -595,7 +596,7 @@ public class LauncherUtils {
 	
 	public static Properties createConfigIniFile(ILaunchConfiguration configuration, String productID, Map map, File directory) throws CoreException {
 		Properties properties = new Properties();
-		if (configuration.getAttribute(ILauncherSettings.CONFIG_GENERATE_DEFAULT, true)) {
+		if (configuration.getAttribute(IPDELauncherConstants.CONFIG_GENERATE_DEFAULT, true)) {
 			properties.setProperty("osgi.install.area", "file:" + ExternalModelManager.getEclipseHome().toOSString()); //$NON-NLS-1$ //$NON-NLS-2$
 			properties.setProperty("osgi.configuration.cascaded", "false"); //$NON-NLS-1$ //$NON-NLS-2$
 			properties.setProperty("osgi.framework", "org.eclipse.osgi"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -621,7 +622,7 @@ public class LauncherUtils {
 			}
 			properties.setProperty("osgi.bundles.defaultStartLevel", "4"); //$NON-NLS-1$ //$NON-NLS-2$
 		} else {
-			String templateLoc = configuration.getAttribute(ILauncherSettings.CONFIG_TEMPLATE_LOCATION, (String)null);
+			String templateLoc = configuration.getAttribute(IPDELauncherConstants.CONFIG_TEMPLATE_LOCATION, (String)null);
 			if (templateLoc != null) {
 				File templateFile = new File(templateLoc);
 				if (templateFile.exists() && templateFile.isFile()) {
@@ -715,7 +716,7 @@ public class LauncherUtils {
 		if (!PDECore.getDefault().getModelManager().isOSGiRuntime())
 			return;
 		try {
-			String programArgs = config.getAttribute(ILauncherSettings.PROGARGS, ""); //$NON-NLS-1$
+			String programArgs = config.getAttribute(IPDELauncherConstants.PROGARGS, ""); //$NON-NLS-1$
 			if (programArgs.indexOf("-clean") != -1) //$NON-NLS-1$
 				return;
 		} catch (CoreException e) {

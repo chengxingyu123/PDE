@@ -46,12 +46,13 @@ import org.eclipse.pde.internal.core.PluginModelManager;
 import org.eclipse.pde.internal.core.TargetPlatform;
 import org.eclipse.pde.internal.ui.PDEPlugin;
 import org.eclipse.pde.internal.ui.PDEUIMessages;
+import org.eclipse.pde.ui.launcher.IPDELauncherConstants;
 import org.eclipse.update.configurator.ConfiguratorUtils;
 
 /**
  * Launch configuration delegate for a plain JUnit test.
  */
-public class JUnitLaunchConfiguration extends JUnitBaseLaunchConfiguration implements ILauncherSettings {
+public class JUnitLaunchConfiguration extends JUnitBaseLaunchConfiguration implements IPDELauncherConstants {
 
 	public static final String CORE_APPLICATION = "org.eclipse.pde.junit.runtime.coretestapplication"; //$NON-NLS-1$
 	public static final String LEGACY_CORE_APPLICATION = "org.eclipse.pde.junit.runtime.legacyCoretestapplication"; //$NON-NLS-1$
@@ -81,7 +82,7 @@ public class JUnitLaunchConfiguration extends JUnitBaseLaunchConfiguration imple
 
 			if (configuration.getAttribute(CONFIG_CLEAR_AREA, false))
 				LauncherUtils.clearConfigArea(getConfigDir(configuration), new SubProgressMonitor(monitor, 1));
-			launch.setAttribute(ILauncherSettings.CONFIG_LOCATION, getConfigDir(configuration).toString());
+			launch.setAttribute(IPDELauncherConstants.CONFIG_LOCATION, getConfigDir(configuration).toString());
 			
 			IVMInstall launcher = LauncherUtils.createLauncher(configuration);
 			monitor.worked(1);
@@ -353,12 +354,12 @@ public class JUnitLaunchConfiguration extends JUnitBaseLaunchConfiguration imple
 	
 	public String getProgramArguments(ILaunchConfiguration configuration)
 		throws CoreException {
-		return configuration.getAttribute(ILauncherSettings.PROGARGS, ""); //$NON-NLS-1$
+		return configuration.getAttribute(IPDELauncherConstants.PROGARGS, ""); //$NON-NLS-1$
 	}
 	
 	public String getVMArguments(ILaunchConfiguration configuration)
 		throws CoreException {
-		return configuration.getAttribute(ILauncherSettings.VMARGS, ""); //$NON-NLS-1$
+		return configuration.getAttribute(IPDELauncherConstants.VMARGS, ""); //$NON-NLS-1$
 	}
 
 	protected void setDefaultSourceLocator(ILaunch launch, ILaunchConfiguration configuration) throws CoreException {

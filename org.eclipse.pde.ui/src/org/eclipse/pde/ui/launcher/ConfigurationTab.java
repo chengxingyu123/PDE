@@ -17,7 +17,6 @@ import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.pde.internal.ui.IHelpContextIds;
 import org.eclipse.pde.internal.ui.PDEPluginImages;
 import org.eclipse.pde.internal.ui.PDEUIMessages;
-import org.eclipse.pde.internal.ui.launcher.AbstractLauncherTab;
 import org.eclipse.pde.internal.ui.launcher.ConfigurationAreaBlock;
 import org.eclipse.pde.internal.ui.launcher.ConfigurationTemplateBlock;
 import org.eclipse.swt.SWT;

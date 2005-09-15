@@ -17,7 +17,6 @@ import org.eclipse.pde.internal.ui.IHelpContextIds;
 import org.eclipse.pde.internal.ui.PDEPlugin;
 import org.eclipse.pde.internal.ui.PDEPluginImages;
 import org.eclipse.pde.internal.ui.PDEUIMessages;
-import org.eclipse.pde.internal.ui.launcher.AbstractLauncherTab;
 import org.eclipse.pde.internal.ui.launcher.TracingBlock;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
