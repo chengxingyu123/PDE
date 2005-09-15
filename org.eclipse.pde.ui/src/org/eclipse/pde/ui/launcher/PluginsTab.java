@@ -50,7 +50,6 @@ import org.eclipse.pde.internal.ui.PDEUIMessages;
 import org.eclipse.pde.internal.ui.elements.DefaultContentProvider;
 import org.eclipse.pde.internal.ui.elements.NamedElement;
 import org.eclipse.pde.internal.ui.launcher.AbstractLauncherTab;
-import org.eclipse.pde.internal.ui.launcher.ILauncherSettings;
 import org.eclipse.pde.internal.ui.launcher.JUnitLaunchConfiguration;
 import org.eclipse.pde.internal.ui.launcher.LauncherUtils;
 import org.eclipse.pde.internal.ui.launcher.PluginStatusDialog;
@@ -74,7 +73,7 @@ import org.eclipse.ui.dialogs.IWorkingSetSelectionDialog;
 
 public class PluginsTab
 	extends AbstractLauncherTab
-	implements ILaunchConfigurationTab, ILauncherSettings {
+	implements ILaunchConfigurationTab, IPDELauncherConstants {
 
 	private Button fUseDefaultRadio;
 	private Button fUseFeaturesRadio;

@@ -20,7 +20,6 @@ import org.eclipse.pde.internal.ui.PDEUIMessages;
 import org.eclipse.pde.internal.ui.launcher.AbstractLauncherTab;
 import org.eclipse.pde.internal.ui.launcher.ConfigurationAreaBlock;
 import org.eclipse.pde.internal.ui.launcher.ConfigurationTemplateBlock;
-import org.eclipse.pde.internal.ui.launcher.ILauncherSettings;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
@@ -28,7 +27,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.PlatformUI;
 
-public class ConfigurationTab extends AbstractLauncherTab implements ILauncherSettings {
+public class ConfigurationTab extends AbstractLauncherTab implements IPDELauncherConstants {
 	
 	private ConfigurationAreaBlock fConfigurationArea;
 	private ConfigurationTemplateBlock fTemplateArea;

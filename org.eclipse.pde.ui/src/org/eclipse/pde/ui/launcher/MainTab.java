@@ -19,7 +19,6 @@ import org.eclipse.pde.internal.ui.PDEPlugin;
 import org.eclipse.pde.internal.ui.PDEPluginImages;
 import org.eclipse.pde.internal.ui.PDEUIMessages;
 import org.eclipse.pde.internal.ui.launcher.AbstractLauncherTab;
-import org.eclipse.pde.internal.ui.launcher.ILauncherSettings;
 import org.eclipse.pde.internal.ui.launcher.JREBlock;
 import org.eclipse.pde.internal.ui.launcher.ProgramBlock;
 import org.eclipse.pde.internal.ui.launcher.WorkspaceDataBlock;
@@ -30,7 +29,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.PlatformUI;
 
-public class MainTab extends AbstractLauncherTab implements ILauncherSettings {
+public class MainTab extends AbstractLauncherTab implements IPDELauncherConstants {
 	
 	private WorkspaceDataBlock fDataBlock;
 	protected ProgramBlock fProgramBlock;
