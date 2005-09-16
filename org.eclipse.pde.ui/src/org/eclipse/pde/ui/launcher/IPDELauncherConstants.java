@@ -34,7 +34,6 @@ public interface IPDELauncherConstants {
 	String WSPROJECT = "wsproject"; //$NON-NLS-1$
 	String EXTPLUGINS = "extplugins"; //$NON-NLS-1$
 	String INCLUDE_OPTIONAL = "includeOptional"; //$NON-NLS-1$
-	String INCLUDE_FRAGMENTS = "includeFragments"; //$NON-NLS-1$
 	String AUTOMATIC_ADD = "automaticAdd"; //$NON-NLS-1$
 	
 	// Tracing settings

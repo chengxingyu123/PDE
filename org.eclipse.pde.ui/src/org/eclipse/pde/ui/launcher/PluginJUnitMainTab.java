@@ -12,7 +12,7 @@ package org.eclipse.pde.ui.launcher;
 
 import org.eclipse.pde.internal.ui.launcher.JUnitProgramBlock;
 
-public class PluginJUnitTab extends MainTab {
+public class PluginJUnitMainTab extends MainTab {
 
 	protected void createProgramBlock() {
 		fProgramBlock = new JUnitProgramBlock(this);
