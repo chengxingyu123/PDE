@@ -115,6 +115,11 @@ public class WorkspaceDataBlock extends BaseBlock {
 	}
 	
 	public String validate() {
+		int length = getLocation().length();
+		fClearWorkspaceCheck.setEnabled(length > 0);
+		fAskClearCheck.setEnabled(fClearWorkspaceCheck.getSelection() && length > 0);
+		if (length == 0)
+			fClearWorkspaceCheck.setSelection(false);
 		return null;
 	}
 	
