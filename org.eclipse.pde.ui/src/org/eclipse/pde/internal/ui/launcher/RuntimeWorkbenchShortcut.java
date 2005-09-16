@@ -305,7 +305,7 @@ public class RuntimeWorkbenchShortcut implements ILaunchShortcut {
 	}
 	
 	public static String getDefaultWorkspaceLocation(String uniqueName) {
-		return LauncherUtils.getDefaultPath().append("runtime-" + uniqueName.replaceAll("\\s", "")).toOSString();		//$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		return LauncherUtils.getDefaultPath().append("runtime-" + uniqueName.replaceAll("\\s", "")).toPortableString();		//$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	}
 	
 	public static void addPluginAndDependencies(IPluginModelBase model, TreeMap map) {

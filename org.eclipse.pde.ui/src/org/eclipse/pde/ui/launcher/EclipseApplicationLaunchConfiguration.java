@@ -59,7 +59,7 @@ public class EclipseApplicationLaunchConfiguration extends LaunchConfigurationDe
 			fConfigDir = null;
 			monitor.beginTask("", 5); //$NON-NLS-1$
 			
-			String workspace = configuration.getAttribute(LOCATION + "0", LauncherUtils.getDefaultPath().append("runtime-workbench-workspace").toOSString()); //$NON-NLS-1$ //$NON-NLS-2$
+			String workspace = configuration.getAttribute(LOCATION + "0", ""); //$NON-NLS-1$ //$NON-NLS-2$
 			// Clear workspace and prompt, if necessary
 			if (!LauncherUtils.clearWorkspace(configuration, workspace, new SubProgressMonitor(monitor, 1))) {
 				monitor.setCanceled(true);
@@ -135,10 +135,11 @@ public class EclipseApplicationLaunchConfiguration extends LaunchConfigurationDe
 		}
 		
 		// specify the workspace location for the runtime workbench
-		String targetWorkspace =
-			configuration.getAttribute(LOCATION + "0", LauncherUtils.getDefaultPath().append("runtime-workbench-workspace").toOSString()); //$NON-NLS-1$ //$NON-NLS-2$
-		programArgs.add("-data"); //$NON-NLS-1$
-		programArgs.add(targetWorkspace);
+		String targetWorkspace = configuration.getAttribute(LOCATION + "0", ""); //$NON-NLS-1$
+		if (targetWorkspace.length() > 0) {
+			programArgs.add("-data"); //$NON-NLS-1$
+			programArgs.add(targetWorkspace);
+		}
 		
 		boolean isOSGI = PDECore.getDefault().getModelManager().isOSGiRuntime();
 		boolean showSplash = true;

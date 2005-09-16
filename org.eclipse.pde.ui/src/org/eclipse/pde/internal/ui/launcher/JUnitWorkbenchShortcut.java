@@ -65,7 +65,7 @@ public class JUnitWorkbenchShortcut extends JUnitLaunchShortcut {
 	}
 	
 	protected String getDefaultWorkspaceLocation() {
-		return LauncherUtils.getDefaultPath().append("junit-workbench-workspace").toOSString();				 //$NON-NLS-1$
+		return LauncherUtils.getDefaultPath().append("junit-workbench-workspace").toPortableString();				 //$NON-NLS-1$
 	}
 	
 }

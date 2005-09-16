@@ -114,4 +114,8 @@ public class WorkspaceDataBlock extends BaseBlock {
 			fClearWorkspaceCheck.setSelection(false);
 	}
 	
+	public String validate() {
+		return null;
+	}
+	
 }

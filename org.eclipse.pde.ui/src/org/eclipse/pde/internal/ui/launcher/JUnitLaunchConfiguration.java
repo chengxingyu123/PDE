@@ -368,8 +368,8 @@ public class JUnitLaunchConfiguration extends JUnitBaseLaunchConfiguration imple
 	
 	protected String getDefaultWorkspace(ILaunchConfiguration config) throws CoreException {
 		if (config.getAttribute(APPLICATION, UI_APPLICATION).equals(UI_APPLICATION))
-			return LauncherUtils.getDefaultPath().append("junit-workbench-workspace").toOSString(); //$NON-NLS-1$
-		return LauncherUtils.getDefaultPath().append("junit-core-workspace").toOSString();				 //$NON-NLS-1$
+			return LauncherUtils.getDefaultPath().append("junit-workbench-workspace").toPortableString(); //$NON-NLS-1$
+		return LauncherUtils.getDefaultPath().append("junit-core-workspace").toPortableString();				 //$NON-NLS-1$
 	}
 	
 	protected String getApplicationName(TreeMap pluginMap, ILaunchConfiguration configuration) {

@@ -88,11 +88,11 @@ public class LauncherUtils {
 	}
 
 	public static String getDefaultWorkspace() {
-		return getDefaultPath().append("runtime-workspace").toOSString(); //$NON-NLS-1$
+		return getDefaultPath().append("runtime-workspace").toPortableString(); //$NON-NLS-1$
 	}
 	
 	public static IPath getDefaultPath() {
-		return PDEPlugin.getWorkspace().getRoot().getLocation().removeLastSegments(1);
+		return new Path("${system:ECLIPSE_HOME}");
 	}
 	
 	public static TreeSet parseWorkspacePluginIds(ILaunchConfiguration config)
