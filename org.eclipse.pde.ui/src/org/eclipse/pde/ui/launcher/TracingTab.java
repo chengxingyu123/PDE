@@ -65,7 +65,7 @@ public class TracingTab extends AbstractLauncherTab {
 	}
 	
 	public void setDefaults(ILaunchConfigurationWorkingCopy config) {
-		fTracingBlock.performApply(config);
+		fTracingBlock.setDefaults(config);
 	}
 	
 	public String getName() {
