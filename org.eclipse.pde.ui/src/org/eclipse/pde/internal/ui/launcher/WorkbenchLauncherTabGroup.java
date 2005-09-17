@@ -62,17 +62,9 @@ public class WorkbenchLauncherTabGroup extends AbstractLaunchConfigurationTabGro
 		BusyIndicator.showWhile(Display.getCurrent(), new Runnable() {
 			public void run() {
 				try {
-					String id =
-						config.getAttribute(
-							IJavaLaunchConfigurationConstants.ATTR_SOURCE_PATH_PROVIDER,
-							(String) null);
-					if (id == null
-						&& config instanceof ILaunchConfigurationWorkingCopy) {
-						ILaunchConfigurationWorkingCopy wc =
-							(ILaunchConfigurationWorkingCopy) config;
-						wc.setAttribute(
-							IJavaLaunchConfigurationConstants.ATTR_SOURCE_PATH_PROVIDER,
-							"org.eclipse.pde.ui.workbenchClasspathProvider"); //$NON-NLS-1$
+					if (config instanceof ILaunchConfigurationWorkingCopy) {
+						checkBackwardCompatibility(
+							(ILaunchConfigurationWorkingCopy) config);
 					}
 				} catch (CoreException e) {
 				}
@@ -81,6 +73,29 @@ public class WorkbenchLauncherTabGroup extends AbstractLaunchConfigurationTabGro
 				}
 			}
 		});
+	}
+	
+	private void checkBackwardCompatibility(ILaunchConfigurationWorkingCopy wc) throws CoreException {
+		String id = wc.getAttribute(
+						IJavaLaunchConfigurationConstants.ATTR_SOURCE_PATH_PROVIDER,
+						(String) null);
+		if (id == null) {
+			wc.setAttribute(
+				IJavaLaunchConfigurationConstants.ATTR_SOURCE_PATH_PROVIDER,
+				"org.eclipse.pde.ui.workbenchClasspathProvider"); //$NON-NLS-1$
+		}
+		
+		String args = wc.getAttribute("vmargs", (String)null);
+		if (args != null) {
+			wc.setAttribute("vmargs", (String)null);
+			wc.setAttribute(IJavaLaunchConfigurationConstants.ATTR_VM_ARGUMENTS, args);
+		}
+		
+		args = wc.getAttribute("progargs", (String)null);
+		if (args != null) {
+			wc.setAttribute("progargs", (String)null);
+			wc.setAttribute(IJavaLaunchConfigurationConstants.ATTR_PROGRAM_ARGUMENTS, args);
+		}		
 	}
 
 	/**
