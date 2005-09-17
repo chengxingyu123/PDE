@@ -91,14 +91,11 @@ public class LaunchPluginValidator {
 			final Display display = getDisplay();
 			display.syncExec(new Runnable() {
 				public void run() {
-					MessageDialog
-							.openError(
+					MessageDialog.openError(
 									display.getActiveShell(),
 									PDEUIMessages.WorkbenchLauncherConfigurationDelegate_title,
-									NLS
-											.bind(
-													PDEUIMessages.WorkbenchLauncherConfigurationDelegate_missingRequired,
-													requiredPlugin));
+									NLS.bind(PDEUIMessages.WorkbenchLauncherConfigurationDelegate_missingRequired,
+											requiredPlugin));
 				}
 			});
 			return null;
