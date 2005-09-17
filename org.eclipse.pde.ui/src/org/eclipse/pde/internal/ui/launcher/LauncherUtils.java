@@ -373,8 +373,7 @@ public class LauncherUtils {
 			null);
 	}
 
-	public static void setDefaultSourceLocator(
-			ILaunchConfiguration configuration, ILaunch launch)
+	public static void setDefaultSourceLocator(ILaunchConfiguration configuration)
 			throws CoreException {
 		ILaunchConfigurationWorkingCopy wc = null;
 		if (configuration.isWorkingCopy()) {
@@ -398,6 +397,9 @@ public class LauncherUtils {
 	}
 	
 	public static boolean clearWorkspace(ILaunchConfiguration configuration, String workspace, IProgressMonitor monitor) throws CoreException {
+		if (workspace.length() == 0)
+			return false;
+		
 		File workspaceFile = new Path(workspace).toFile();
 		if (configuration.getAttribute(IPDELauncherConstants.DOCLEAR, false) && workspaceFile.exists()) {
 			boolean doClear = !configuration.getAttribute(IPDELauncherConstants.ASKCLEAR, true);

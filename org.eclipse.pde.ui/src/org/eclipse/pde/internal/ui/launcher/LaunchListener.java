@@ -200,7 +200,7 @@ public class LaunchListener implements ILaunchListener, IDebugEventSetListener {
     private File getMostRecentLogFile(ILaunch launch) throws CoreException {
         File latest = null;
         String workspace = launch.getLaunchConfiguration().getAttribute(
-                IPDELauncherConstants.LOCATION + "0", ""); //$NON-NLS-1$ //$NON-NLS-2$
+                IPDELauncherConstants.LOCATION, ""); //$NON-NLS-1$ //$NON-NLS-2$
         if (workspace.length() > 0) {
             latest = new File(workspace, ".metadata/.log"); //$NON-NLS-1$
             if (!latest.exists())

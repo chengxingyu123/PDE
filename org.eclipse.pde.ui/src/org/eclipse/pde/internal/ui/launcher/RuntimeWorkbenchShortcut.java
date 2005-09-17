@@ -211,7 +211,7 @@ public class RuntimeWorkbenchShortcut implements ILaunchShortcut {
 			ILaunchConfigurationType configType = getWorkbenchLaunchConfigType();
 			String computedName = getComputedName(configType.getName());
 			ILaunchConfigurationWorkingCopy wc = configType.newInstance(null, computedName);  
-			wc.setAttribute(IPDELauncherConstants.LOCATION + "0", getDefaultWorkspaceLocation(computedName)); //$NON-NLS-1$
+			wc.setAttribute(IPDELauncherConstants.LOCATION, getDefaultWorkspaceLocation(computedName)); //$NON-NLS-1$
 			wc.setAttribute(IPDELauncherConstants.VMARGS, ""); //$NON-NLS-1$
 			wc.setAttribute(IPDELauncherConstants.PROGARGS, ""); //$NON-NLS-1$
 			wc.setAttribute(IPDELauncherConstants.USEFEATURES, false);

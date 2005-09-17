@@ -39,7 +39,7 @@ public class JUnitWorkbenchShortcut extends JUnitLaunchShortcut {
 		try {
 			ILaunchConfigurationType configType= getJUnitLaunchConfigType();
 			ILaunchConfigurationWorkingCopy wc = configType.newInstance(null, DebugPlugin.getDefault().getLaunchManager().generateUniqueLaunchConfigurationNameFrom(name));
-			wc.setAttribute(IPDELauncherConstants.LOCATION + "0", getDefaultWorkspaceLocation()); //$NON-NLS-1$
+			wc.setAttribute(IPDELauncherConstants.LOCATION, getDefaultWorkspaceLocation()); //$NON-NLS-1$
 			wc.setAttribute(IPDELauncherConstants.VMARGS, ""); //$NON-NLS-1$
 			wc.setAttribute(IPDELauncherConstants.PROGARGS, ""); //$NON-NLS-1$
 			wc.setAttribute(IPDELauncherConstants.USE_DEFAULT, true);

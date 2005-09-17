@@ -74,7 +74,7 @@ public class JUnitLaunchConfiguration extends JUnitBaseLaunchConfiguration imple
 			IType[] testTypes = getTestTypes(configuration, monitor);
 			monitor.worked(1);
 			
-			String workspace = configuration.getAttribute(LOCATION + "0", getDefaultWorkspace(configuration)); //$NON-NLS-1$
+			String workspace = LaunchConfigurationHelper.getWorkspaceLocation(configuration);
 			if (!LauncherUtils.clearWorkspace(configuration, workspace, new SubProgressMonitor(monitor, 1))) {
 				monitor.setCanceled(true);
 				return;
@@ -201,10 +201,11 @@ public class JUnitLaunchConfiguration extends JUnitBaseLaunchConfiguration imple
 		}
 		
 		// Specify the location of the runtime workbench
-		String targetWorkspace =
-			configuration.getAttribute(LOCATION + "0", getDefaultWorkspace(configuration)); //$NON-NLS-1$
-		programArgs.add("-data"); //$NON-NLS-1$
-		programArgs.add(targetWorkspace);
+		String targetWorkspace = LaunchConfigurationHelper.getWorkspaceLocation(configuration);
+		if (targetWorkspace.length() > 0) {
+			programArgs.add("-data"); //$NON-NLS-1$
+			programArgs.add(targetWorkspace);
+		}
 		
 		// Create the platform configuration for the runtime workbench
 		if (PDECore.getDefault().getModelManager().isOSGiRuntime()) {
@@ -363,7 +364,7 @@ public class JUnitLaunchConfiguration extends JUnitBaseLaunchConfiguration imple
 	}
 
 	protected void setDefaultSourceLocator(ILaunch launch, ILaunchConfiguration configuration) throws CoreException {
-		LauncherUtils.setDefaultSourceLocator(configuration, launch);
+		LauncherUtils.setDefaultSourceLocator(configuration);
 	}
 	
 	protected String getDefaultWorkspace(ILaunchConfiguration config) throws CoreException {

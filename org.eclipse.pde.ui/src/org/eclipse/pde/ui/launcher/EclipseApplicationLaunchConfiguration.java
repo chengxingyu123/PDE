@@ -11,12 +11,8 @@
 package org.eclipse.pde.ui.launcher;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Properties;
-import java.util.StringTokenizer;
 import java.util.TreeMap;
 
 import org.eclipse.core.resources.IProject;
@@ -25,11 +21,13 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.SubProgressMonitor;
+import org.eclipse.core.variables.VariablesPlugin;
 import org.eclipse.debug.core.DebugPlugin;
 import org.eclipse.debug.core.ILaunch;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.model.LaunchConfigurationDelegate;
 import org.eclipse.jdt.launching.ExecutionArguments;
+import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants;
 import org.eclipse.jdt.launching.IVMInstall;
 import org.eclipse.jdt.launching.VMRunnerConfiguration;
 import org.eclipse.pde.core.plugin.IPluginModelBase;
@@ -38,8 +36,10 @@ import org.eclipse.pde.internal.core.ExternalModelManager;
 import org.eclipse.pde.internal.core.ICoreConstants;
 import org.eclipse.pde.internal.core.PDECore;
 import org.eclipse.pde.internal.core.TargetPlatform;
+import org.eclipse.pde.internal.core.util.CoreUtility;
 import org.eclipse.pde.internal.ui.PDEPlugin;
 import org.eclipse.pde.internal.ui.PDEUIMessages;
+import org.eclipse.pde.internal.ui.launcher.LaunchConfigurationHelper;
 import org.eclipse.pde.internal.ui.launcher.LauncherUtils;
 
 public class EclipseApplicationLaunchConfiguration extends LaunchConfigurationDelegate 
@@ -59,7 +59,7 @@ public class EclipseApplicationLaunchConfiguration extends LaunchConfigurationDe
 			fConfigDir = null;
 			monitor.beginTask("", 5); //$NON-NLS-1$
 			
-			String workspace = configuration.getAttribute(LOCATION + "0", ""); //$NON-NLS-1$ //$NON-NLS-2$
+			String workspace = LaunchConfigurationHelper.getWorkspaceLocation(configuration);
 			// Clear workspace and prompt, if necessary
 			if (!LauncherUtils.clearWorkspace(configuration, workspace, new SubProgressMonitor(monitor, 1))) {
 				monitor.setCanceled(true);
@@ -76,15 +76,24 @@ public class EclipseApplicationLaunchConfiguration extends LaunchConfigurationDe
 			IVMInstall launcher = LauncherUtils.createLauncher(configuration);
 			monitor.worked(1);
 			
-			// load the arguments on the launcher
-			VMRunnerConfiguration runnerConfig = createVMRunner(configuration);
-			if (runnerConfig == null) {
+			// Program arguments
+			String[] programArgs = getProgramArguments(configuration);
+			if (programArgs == null) {
 				monitor.setCanceled(true);
 				return;
-			} 
+			}
+	
+			VMRunnerConfiguration runnerConfig = new VMRunnerConfiguration(
+														"org.eclipse.core.launcher.Main", 
+														getClasspath(configuration)); 
+			runnerConfig.setVMArguments(getVMArguments(configuration));
+			runnerConfig.setProgramArguments(programArgs);
+			runnerConfig.setEnvironment(getEnvironment(configuration));
+			runnerConfig.setVMSpecificAttributesMap(LauncherUtils.getVMSpecificAttributes(configuration));
+
 			monitor.worked(1);
-						
-			LauncherUtils.setDefaultSourceLocator(configuration, launch);
+					
+			setDefaultSourceLocator(configuration);
 			LauncherUtils.synchronizeManifests(configuration, getConfigDir(configuration));
 			PDEPlugin.getDefault().getLaunchListener().manage(launch);
 			launcher.getVMRunner(mode).run(runnerConfig, launch, monitor);		
@@ -94,34 +103,31 @@ public class EclipseApplicationLaunchConfiguration extends LaunchConfigurationDe
 			throw e;
 		}
 	}
-
-	protected VMRunnerConfiguration createVMRunner(ILaunchConfiguration configuration)
-		throws CoreException {
+	
+	protected void setDefaultSourceLocator(ILaunchConfiguration configuration) throws CoreException {
+		LauncherUtils.setDefaultSourceLocator(configuration);		
+	}
+	
+	public String[] getClasspath(ILaunchConfiguration configuration) throws CoreException {
 		String[] classpath = LauncherUtils.constructClasspath(configuration);
 		if (classpath == null) {
 			String message = PDEUIMessages.WorkbenchLauncherConfigurationDelegate_noStartup;
 			throw new CoreException(LauncherUtils.createErrorStatus(message));
 		}
-		
-		// Program arguments
-		String[] programArgs = getProgramArguments(configuration);
-		if (programArgs == null)
-			return null;
-
-		// Environment variables
-		String[] envp =
-			DebugPlugin.getDefault().getLaunchManager().getEnvironment(configuration);
-
-		VMRunnerConfiguration runnerConfig =
-			new VMRunnerConfiguration("org.eclipse.core.launcher.Main", classpath); //$NON-NLS-1$
-		runnerConfig.setVMArguments(getVMArguments(configuration));
-		runnerConfig.setProgramArguments(programArgs);
-		runnerConfig.setEnvironment(envp);
-		runnerConfig.setVMSpecificAttributesMap(LauncherUtils.getVMSpecificAttributes(configuration));
-		return runnerConfig;
+		return classpath;
 	}
 	
-	protected String[] getProgramArguments(ILaunchConfiguration configuration) throws CoreException {
+	public String[] getEnvironment(ILaunchConfiguration configuration) throws CoreException {
+		return DebugPlugin.getDefault().getLaunchManager().getEnvironment(configuration);
+	}
+	
+	public String[] getVMArguments(ILaunchConfiguration configuration) throws CoreException {
+		String arguments = configuration.getAttribute(IJavaLaunchConfigurationConstants.ATTR_VM_ARGUMENTS, ""); //$NON-NLS-1$
+		String args = VariablesPlugin.getDefault().getStringVariableManager().performStringSubstitution(arguments);
+		return new ExecutionArguments(args, "").getVMArgumentsArray();
+	}
+
+	public String[] getProgramArguments(ILaunchConfiguration configuration) throws CoreException {
 		ArrayList programArgs = new ArrayList();
 		
 		// If a product is specified, then add it to the program args
@@ -135,7 +141,7 @@ public class EclipseApplicationLaunchConfiguration extends LaunchConfigurationDe
 		}
 		
 		// specify the workspace location for the runtime workbench
-		String targetWorkspace = configuration.getAttribute(LOCATION + "0", ""); //$NON-NLS-1$
+		String targetWorkspace = LaunchConfigurationHelper.getWorkspaceLocation(configuration);
 		if (targetWorkspace.length() > 0) {
 			programArgs.add("-data"); //$NON-NLS-1$
 			programArgs.add(targetWorkspace);
@@ -221,15 +227,11 @@ public class EclipseApplicationLaunchConfiguration extends LaunchConfigurationDe
 		}
 
 		// add the program args specified by the user
-		StringTokenizer tokenizer =
-			new StringTokenizer(configuration.getAttribute(PROGARGS, "")); //$NON-NLS-1$
-		while (tokenizer.hasMoreTokens()) {
-			String token = tokenizer.nextToken();
-			// be forgiving if people have tracing turned on and forgot
-			// to remove the -debug from the program args field.
-			if (token.equals("-debug") && programArgs.contains("-debug")) //$NON-NLS-1$ //$NON-NLS-2$
+		String[] userArgs = LaunchConfigurationHelper.getUserProgramArguments(configuration);
+		for (int i = 0; i < userArgs.length; i++) {
+			if (userArgs[i].equals("-debug") && programArgs.contains("-debug")) //$NON-NLS-1$ //$NON-NLS-2$
 				continue;
-			programArgs.add(token);
+			programArgs.add(userArgs[i]);
 		}
 
 		if (!programArgs.contains("-nosplash") && showSplash) { //$NON-NLS-1$
@@ -261,10 +263,6 @@ public class EclipseApplicationLaunchConfiguration extends LaunchConfigurationDe
 		return (String[])programArgs.toArray(new String[programArgs.size()]);
 	}
 	
-	protected String[] getVMArguments(ILaunchConfiguration configuration) throws CoreException {
-		return new ExecutionArguments(configuration.getAttribute(VMARGS,""),"").getVMArgumentsArray(); //$NON-NLS-1$ //$NON-NLS-2$
-	}
-			
 	protected void validateFeatures() throws CoreException {
 		IPath installPath = PDEPlugin.getWorkspace().getRoot().getLocation();
 		String lastSegment = installPath.lastSegment();
@@ -281,12 +279,8 @@ public class EclipseApplicationLaunchConfiguration extends LaunchConfigurationDe
 		ensureProductFilesExist(getProductPath());		
 	}
 	
-	protected IPath getInstallPath() {
-		return PDEPlugin.getWorkspace().getRoot().getLocation();
-	}
-	
 	protected IPath getProductPath() {
-		return getInstallPath().removeLastSegments(1);
+		return PDEPlugin.getWorkspace().getRoot().getLocation().removeLastSegments(1);
 	}
 
 	protected String computeShowsplashArgument() {
@@ -300,7 +294,7 @@ public class EclipseApplicationLaunchConfiguration extends LaunchConfigurationDe
 		File marker = new File(productDir, ".eclipseproduct"); //$NON-NLS-1$
 		IPath eclipsePath = ExternalModelManager.getEclipseHome();
 		if (!marker.exists()) 
-			copyFile(eclipsePath, ".eclipseproduct", marker); //$NON-NLS-1$
+			CoreUtility.copyFile(eclipsePath, ".eclipseproduct", marker); //$NON-NLS-1$
 		
 		if (PDECore.getDefault().getModelManager().isOSGiRuntime()) {
 			File configDir = new File(productDir, "configuration"); //$NON-NLS-1$
@@ -308,42 +302,14 @@ public class EclipseApplicationLaunchConfiguration extends LaunchConfigurationDe
 				configDir.mkdirs();		
 			File ini = new File(configDir, "config.ini");			 //$NON-NLS-1$
 			if (!ini.exists())
-				copyFile(eclipsePath.append("configuration"), "config.ini", ini); //$NON-NLS-1$ //$NON-NLS-2$
+				CoreUtility.copyFile(eclipsePath.append("configuration"), "config.ini", ini); //$NON-NLS-1$ //$NON-NLS-2$
 		} else {
 			File ini = new File(productDir, "install.ini"); //$NON-NLS-1$
 			if (!ini.exists()) 
-				copyFile(eclipsePath, "install.ini", ini);		 //$NON-NLS-1$
+				CoreUtility.copyFile(eclipsePath, "install.ini", ini);		 //$NON-NLS-1$
 		}
 	}
 
-	protected void copyFile(IPath eclipsePath, String name, File target) {
-		File source = new File(eclipsePath.toFile(), name);
-		if (source.exists() == false)
-			return;
-		FileInputStream is = null;
-		FileOutputStream os = null;
-		try {
-			is = new FileInputStream(source);
-			os = new FileOutputStream(target);
-			byte[] buf = new byte[1024];
-			long currentLen = 0;
-			int len = is.read(buf);
-			while (len != -1) {
-				currentLen += len;
-				os.write(buf, 0, len);
-				len = is.read(buf);
-			}
-		} catch (IOException e) {
-		} finally {
-			try {
-				if (is != null)
-					is.close();
-				if (os != null)
-					os.close();
-			} catch (IOException e) {
-			}
-		}
-	}
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.debug.core.model.LaunchConfigurationDelegate#getBuildOrder(org.eclipse.debug.core.ILaunchConfiguration, java.lang.String)
