@@ -444,6 +444,8 @@ public abstract class AbstractPluginBlock {
 		for (int i = 0; i < entries.length; i++) {
 			ModelEntry entry = entries[i];
 			IPluginModelBase model = entry.getActiveModel();
+			if ("org.eclipse.ui.workbench.compatibility".equals(model.getPluginBase().getId()))
+				continue;
 			if (model instanceof IFragmentModel) {
 				String id = ((IFragmentModel) model).getFragment().getPluginId();
 				if (id.equals(plugin.getId())) {
