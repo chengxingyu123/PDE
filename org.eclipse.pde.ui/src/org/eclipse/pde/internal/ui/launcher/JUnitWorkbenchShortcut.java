@@ -45,6 +45,7 @@ public class JUnitWorkbenchShortcut extends JUnitLaunchShortcut {
 			wc.setAttribute(IPDELauncherConstants.USE_DEFAULT, true);
 			wc.setAttribute(IPDELauncherConstants.DOCLEAR, true);
 			wc.setAttribute(IPDELauncherConstants.ASKCLEAR, false);
+			wc.setAttribute(IPDELauncherConstants.TRACING_CHECKED, IPDELauncherConstants.TRACING_NONE);
 			wc.setAttribute(IPDELauncherConstants.CONFIG_CLEAR_AREA, true);
 			wc.setAttribute(
 				IJavaLaunchConfigurationConstants.ATTR_SOURCE_PATH_PROVIDER,

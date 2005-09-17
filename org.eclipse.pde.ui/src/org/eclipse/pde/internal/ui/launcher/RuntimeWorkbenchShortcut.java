@@ -217,6 +217,7 @@ public class RuntimeWorkbenchShortcut implements ILaunchShortcut {
 			wc.setAttribute(IPDELauncherConstants.USEFEATURES, false);
 			wc.setAttribute(IPDELauncherConstants.DOCLEAR, false);
 			wc.setAttribute(IPDELauncherConstants.ASKCLEAR, true);
+			wc.setAttribute(IPDELauncherConstants.TRACING_CHECKED, IPDELauncherConstants.TRACING_NONE);
 			wc.setAttribute(IPDELauncherConstants.USE_DEFAULT, applicationName == null);
 			if (applicationName != null) {
 				String product = getProduct(applicationName);
