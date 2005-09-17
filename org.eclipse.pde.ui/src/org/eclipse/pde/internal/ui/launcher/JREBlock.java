@@ -93,10 +93,10 @@ public class JREBlock {
 				String currentVM = fJreCombo.getText();
 				IPreferenceNode node = new InstalledJREsPreferenceNode();
 				if (showPreferencePage(node)) {
-					fJreCombo.setItems(LauncherUtils.getVMInstallNames());
+					fJreCombo.setItems(LaunchVMHelper.getVMInstallNames());
 					fJreCombo.setText(currentVM);
 					if (fJreCombo.getSelectionIndex() == -1)
-						fJreCombo.setText(LauncherUtils.getDefaultVMInstallName());
+						fJreCombo.setText(LaunchVMHelper.getDefaultVMInstallName());
 				}
 			}
 			private boolean showPreferencePage(final IPreferenceNode targetNode) {
@@ -162,12 +162,12 @@ public class JREBlock {
 		fJavawButton.setSelection(javaCommand.equals("javaw")); //$NON-NLS-1$
 		fJavaButton.setSelection(!fJavawButton.getSelection());
 		
-		fJreCombo.setItems(LauncherUtils.getVMInstallNames());
+		fJreCombo.setItems(LaunchVMHelper.getVMInstallNames());
 		String vmInstallName =
-			config.getAttribute(IPDELauncherConstants.VMINSTALL, LauncherUtils.getDefaultVMInstallName());
+			config.getAttribute(IPDELauncherConstants.VMINSTALL, LaunchVMHelper.getDefaultVMInstallName());
 		fJreCombo.setText(vmInstallName);
 		if (fJreCombo.getSelectionIndex() == -1)
-			fJreCombo.setText(LauncherUtils.getDefaultVMInstallName());
+			fJreCombo.setText(LaunchVMHelper.getDefaultVMInstallName());
 	}
 	
 	private void initializeBootstrapEntriesSection(ILaunchConfiguration config) throws CoreException {
@@ -193,7 +193,7 @@ public class JREBlock {
 			} else {
 				config.setAttribute(
 						IPDELauncherConstants.VMINSTALL,
-					jre.equals(LauncherUtils.getDefaultVMInstallName()) ? null : jre);
+					jre.equals(LaunchVMHelper.getDefaultVMInstallName()) ? null : jre);
 			}
 		} catch (CoreException e) {
 		}

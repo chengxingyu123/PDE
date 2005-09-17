@@ -75,7 +75,7 @@ public class JUnitLaunchConfiguration extends JUnitBaseLaunchConfiguration imple
 			IType[] testTypes = getTestTypes(configuration, monitor);
 			monitor.worked(1);
 			
-			String workspace = LaunchConfigurationHelper.getWorkspaceLocation(configuration);
+			String workspace = LaunchArgumentsHelper.getWorkspaceLocation(configuration);
 			if (!LauncherUtils.clearWorkspace(configuration, workspace, new SubProgressMonitor(monitor, 1))) {
 				monitor.setCanceled(true);
 				return;
@@ -85,7 +85,7 @@ public class JUnitLaunchConfiguration extends JUnitBaseLaunchConfiguration imple
 				CoreUtility.deleteContent(getConfigDir(configuration));
 			launch.setAttribute(IPDELauncherConstants.CONFIG_LOCATION, getConfigDir(configuration).toString());
 			
-			IVMInstall launcher = LauncherUtils.createLauncher(configuration);
+			IVMInstall launcher = LaunchVMHelper.createLauncher(configuration);
 			monitor.worked(1);
 
 			int port = SocketUtil.findFreePort();
@@ -98,7 +98,7 @@ public class JUnitLaunchConfiguration extends JUnitBaseLaunchConfiguration imple
 			monitor.worked(1);
 			
 			setDefaultSourceLocator(launch, configuration);
-			LauncherUtils.synchronizeManifests(configuration, getConfigDir(configuration));
+			LaunchConfigurationHelper.synchronizeManifests(configuration, getConfigDir(configuration));
 			launch.setAttribute(PORT_ATTR, Integer.toString(port));
 			launch.setAttribute(TESTTYPE_ATTR, testTypes[0].getHandleIdentifier());
 			PDEPlugin.getDefault().getLaunchListener().manage(launch);
@@ -119,7 +119,7 @@ public class JUnitLaunchConfiguration extends JUnitBaseLaunchConfiguration imple
 		int port,
 		String runMode)
 		throws CoreException {
-		String[] classpath = LauncherUtils.constructClasspath(configuration);
+		String[] classpath = LaunchArgumentsHelper.constructClasspath(configuration);
 		if (classpath == null) {
 			abort(PDEUIMessages.WorkbenchLauncherConfigurationDelegate_noStartup, null, IStatus.OK);
 		}
@@ -139,7 +139,7 @@ public class JUnitLaunchConfiguration extends JUnitBaseLaunchConfiguration imple
 		runnerConfig.setVMArguments(computeVMArguments(configuration));
 		runnerConfig.setProgramArguments(programArgs);
 		runnerConfig.setEnvironment(envp);
-		runnerConfig.setVMSpecificAttributesMap(LauncherUtils.getVMSpecificAttributes(configuration));
+		runnerConfig.setVMSpecificAttributesMap(LaunchArgumentsHelper.getVMSpecificAttributes(configuration));
 		return runnerConfig;
 	}
 
@@ -176,7 +176,7 @@ public class JUnitLaunchConfiguration extends JUnitBaseLaunchConfiguration imple
 		ArrayList programArgs = new ArrayList();
 		
 		// Get the list of plug-ins to run
-		TreeMap pluginMap = LauncherUtils.getPluginsToRun(configuration);
+		TreeMap pluginMap = LaunchPluginValidator.getPluginsToRun(configuration);
 		if (pluginMap == null)
 			return null;		
 		addRequiredPlugins(pluginMap);
@@ -202,7 +202,7 @@ public class JUnitLaunchConfiguration extends JUnitBaseLaunchConfiguration imple
 		}
 		
 		// Specify the location of the runtime workbench
-		String targetWorkspace = LaunchConfigurationHelper.getWorkspaceLocation(configuration);
+		String targetWorkspace = LaunchArgumentsHelper.getWorkspaceLocation(configuration);
 		if (targetWorkspace.length() > 0) {
 			programArgs.add("-data"); //$NON-NLS-1$
 			programArgs.add(targetWorkspace);
@@ -210,21 +210,21 @@ public class JUnitLaunchConfiguration extends JUnitBaseLaunchConfiguration imple
 		
 		// Create the platform configuration for the runtime workbench
 		if (PDECore.getDefault().getModelManager().isOSGiRuntime()) {
-			String productID = LauncherUtils.getProductID(configuration);
-			LauncherUtils.createConfigIniFile(configuration,
+			String productID = LaunchConfigurationHelper.getProductID(configuration);
+			LaunchConfigurationHelper.createConfigIniFile(configuration,
 					productID, pluginMap, getConfigDir(configuration));
 			TargetPlatform.createPlatformConfigurationArea(
 					pluginMap,
 					getConfigDir(configuration),
-					LauncherUtils.getContributingPlugin(productID));
+					LaunchConfigurationHelper.getContributingPlugin(productID));
 		} else {
 			TargetPlatform.createPlatformConfigurationArea(
 					pluginMap,
 					getConfigDir(configuration),
-					LauncherUtils.getPrimaryPlugin());
+					LaunchConfigurationHelper.getPrimaryPlugin());
 			// Pre-OSGi platforms need the location of org.eclipse.core.boot specified
 			IPluginModelBase bootModel = (IPluginModelBase)pluginMap.get("org.eclipse.core.boot"); //$NON-NLS-1$
-			String bootPath = LauncherUtils.getBootPath(bootModel);
+			String bootPath = LaunchConfigurationHelper.getBootPath(bootModel);
 			if (bootPath != null && !bootPath.endsWith(".jar")) { //$NON-NLS-1$
 				programArgs.add("-boot"); //$NON-NLS-1$
 				programArgs.add("file:" + bootPath); //$NON-NLS-1$
@@ -254,7 +254,7 @@ public class JUnitLaunchConfiguration extends JUnitBaseLaunchConfiguration imple
 						TRACING_CHECKED, (String) null))) {
 			programArgs.add("-debug"); //$NON-NLS-1$
 			String path = getConfigDir(configuration).getPath() + Path.SEPARATOR + ".options"; //$NON-NLS-1$
-			programArgs.add(LauncherUtils.getTracingFileArgument(configuration, path));
+			programArgs.add(LaunchArgumentsHelper.getTracingFileArgument(configuration, path));
 		}
 		
 		// Add the program args entered by the user
@@ -481,7 +481,7 @@ public class JUnitLaunchConfiguration extends JUnitBaseLaunchConfiguration imple
 	 */
 	protected IProject[] getBuildOrder(ILaunchConfiguration configuration,
 			String mode) throws CoreException {
-		return computeBuildOrder(LauncherUtils.getAffectedProjects(configuration));
+		return computeBuildOrder(LaunchPluginValidator.getAffectedProjects(configuration));
 	}
 	
 	/* (non-Javadoc)
@@ -490,7 +490,7 @@ public class JUnitLaunchConfiguration extends JUnitBaseLaunchConfiguration imple
 	protected IProject[] getProjectsForProblemSearch(
 			ILaunchConfiguration configuration, String mode)
 			throws CoreException {
-		return LauncherUtils.getAffectedProjects(configuration);
+		return LaunchPluginValidator.getAffectedProjects(configuration);
 	}
 
 

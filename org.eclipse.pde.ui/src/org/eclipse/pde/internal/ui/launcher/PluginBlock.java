@@ -45,14 +45,14 @@ public class PluginBlock extends AbstractPluginBlock {
 				fProduct = config.getAttribute(IPDELauncherConstants.PRODUCT, (String)null);
 				fApplication = null;
 			} else {
-				String appToRun = config.getAttribute(IPDELauncherConstants.APPLICATION, LauncherUtils.getDefaultApplicationName());
+				String appToRun = config.getAttribute(IPDELauncherConstants.APPLICATION, LaunchConfigurationHelper.getDefaultApplicationName());
 				if (!isJUnit)
 					fApplication = appToRun;
 				else {
 					if(JUnitLaunchConfiguration.CORE_APPLICATION.equals(appToRun)){
 						fApplication = null;
 					} else {
-						fApplication = config.getAttribute(IPDELauncherConstants.APP_TO_TEST, LauncherUtils.getDefaultApplicationName());
+						fApplication = config.getAttribute(IPDELauncherConstants.APP_TO_TEST, LaunchConfigurationHelper.getDefaultApplicationName());
 					}
 				}
 				fProduct = null;
@@ -81,7 +81,7 @@ public class PluginBlock extends AbstractPluginBlock {
 		fPluginTreeViewer.setSubtreeChecked(fWorkspacePlugins, automaticAdd);
 		fNumWorkspaceChecked = automaticAdd ? fWorkspaceModels.length : 0;
 		
-		TreeSet ids = LauncherUtils.parseWorkspacePluginIds(config);
+		TreeSet ids = LaunchPluginValidator.parseWorkspacePluginIds(config);
 		for (int i = 0; i < fWorkspaceModels.length; i++) {
 			String id = fWorkspaceModels[i].getPluginBase().getId();
 			if (id == null)
@@ -106,7 +106,7 @@ public class PluginBlock extends AbstractPluginBlock {
 		fNumExternalChecked = 0;
 
 		fPluginTreeViewer.setSubtreeChecked(fExternalPlugins, false);
-		TreeSet selected = LauncherUtils.parseExternalPluginIds(config);
+		TreeSet selected = LaunchPluginValidator.parseExternalPluginIds(config);
 		for (int i = 0; i < fExternalModels.length; i++) {
 			if (selected.contains(fExternalModels[i].getPluginBase().getId())) {
 				if (fPluginTreeViewer.setChecked(fExternalModels[i], true))

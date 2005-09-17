@@ -40,7 +40,10 @@ import org.eclipse.pde.internal.core.TargetPlatform;
 import org.eclipse.pde.internal.core.util.CoreUtility;
 import org.eclipse.pde.internal.ui.PDEPlugin;
 import org.eclipse.pde.internal.ui.PDEUIMessages;
+import org.eclipse.pde.internal.ui.launcher.LaunchArgumentsHelper;
 import org.eclipse.pde.internal.ui.launcher.LaunchConfigurationHelper;
+import org.eclipse.pde.internal.ui.launcher.LaunchPluginValidator;
+import org.eclipse.pde.internal.ui.launcher.LaunchVMHelper;
 import org.eclipse.pde.internal.ui.launcher.LauncherUtils;
 
 public class EclipseApplicationLaunchConfiguration extends LaunchConfigurationDelegate 
@@ -60,7 +63,7 @@ public class EclipseApplicationLaunchConfiguration extends LaunchConfigurationDe
 			fConfigDir = null;
 			monitor.beginTask("", 4); //$NON-NLS-1$
 			
-			String workspace = LaunchConfigurationHelper.getWorkspaceLocation(configuration);
+			String workspace = LaunchArgumentsHelper.getWorkspaceLocation(configuration);
 			// Clear workspace and prompt, if necessary
 			if (!LauncherUtils.clearWorkspace(configuration, workspace, new SubProgressMonitor(monitor, 1))) {
 				monitor.setCanceled(true);
@@ -74,7 +77,7 @@ public class EclipseApplicationLaunchConfiguration extends LaunchConfigurationDe
 			
 			
 			// create launcher
-			IVMInstall launcher = LauncherUtils.createLauncher(configuration);
+			IVMInstall launcher = LaunchVMHelper.createLauncher(configuration);
 			monitor.worked(1);
 			
 			// Program arguments
@@ -96,7 +99,7 @@ public class EclipseApplicationLaunchConfiguration extends LaunchConfigurationDe
 			monitor.worked(1);
 					
 			setDefaultSourceLocator(configuration);
-			LauncherUtils.synchronizeManifests(configuration, getConfigDir(configuration));
+			LaunchConfigurationHelper.synchronizeManifests(configuration, getConfigDir(configuration));
 			PDEPlugin.getDefault().getLaunchListener().manage(launch);
 			launcher.getVMRunner(mode).run(runnerConfig, launch, monitor);		
 			monitor.worked(1);
@@ -111,10 +114,10 @@ public class EclipseApplicationLaunchConfiguration extends LaunchConfigurationDe
 	}
 	
 	public String[] getClasspath(ILaunchConfiguration configuration) throws CoreException {
-		String[] classpath = LauncherUtils.constructClasspath(configuration);
+		String[] classpath = LaunchArgumentsHelper.constructClasspath(configuration);
 		if (classpath == null) {
 			String message = PDEUIMessages.WorkbenchLauncherConfigurationDelegate_noStartup;
-			throw new CoreException(LauncherUtils.createErrorStatus(message));
+			throw new CoreException(LaunchVMHelper.createErrorStatus(message));
 		}
 		return classpath;
 	}
@@ -124,11 +127,11 @@ public class EclipseApplicationLaunchConfiguration extends LaunchConfigurationDe
 	}
 	
 	public String getWorkingDirectory(ILaunchConfiguration configuration) throws CoreException {
-		return LaunchConfigurationHelper.getWorkingDirectory(configuration);
+		return LaunchArgumentsHelper.getWorkingDirectory(configuration);
 	}
 	
 	public Map getVMSpecificAttributes(ILaunchConfiguration configuration) throws CoreException {
-		return LauncherUtils.getVMSpecificAttributes(configuration);
+		return LaunchArgumentsHelper.getVMSpecificAttributes(configuration);
 	}
 	
 	public String[] getVMArguments(ILaunchConfiguration configuration) throws CoreException {
@@ -147,11 +150,11 @@ public class EclipseApplicationLaunchConfiguration extends LaunchConfigurationDe
 		} else {
 			// specify the application to launch
 			programArgs.add("-application"); //$NON-NLS-1$
-			programArgs.add(configuration.getAttribute(APPLICATION, LauncherUtils.getDefaultApplicationName()));
+			programArgs.add(configuration.getAttribute(APPLICATION, LaunchConfigurationHelper.getDefaultApplicationName()));
 		}
 		
 		// specify the workspace location for the runtime workbench
-		String targetWorkspace = LaunchConfigurationHelper.getWorkspaceLocation(configuration);
+		String targetWorkspace = LaunchArgumentsHelper.getWorkspaceLocation(configuration);
 		if (targetWorkspace.length() > 0) {
 			programArgs.add("-data"); //$NON-NLS-1$
 			programArgs.add(targetWorkspace);
@@ -177,21 +180,21 @@ public class EclipseApplicationLaunchConfiguration extends LaunchConfigurationDe
                 programArgs.add(ClasspathHelper.getDevEntries(true));
             
 		} else {
-			TreeMap pluginMap = LauncherUtils.getPluginsToRun(configuration);
+			TreeMap pluginMap = LaunchPluginValidator.getPluginsToRun(configuration);
 			if (pluginMap == null) 
 				return null;
 				
 			if (isOSGI) {
-				String productID = LauncherUtils.getProductID(configuration);
-				Properties prop = LauncherUtils.createConfigIniFile(configuration,
+				String productID = LaunchConfigurationHelper.getProductID(configuration);
+				Properties prop = LaunchConfigurationHelper.createConfigIniFile(configuration,
 						productID, pluginMap, getConfigDir(configuration));
 				showSplash = prop.containsKey("osgi.splashPath") || prop.containsKey("splashLocation"); //$NON-NLS-1$ //$NON-NLS-2$
 				TargetPlatform.createPlatformConfigurationArea(
 						pluginMap,
 						getConfigDir(configuration),
-						LauncherUtils.getContributingPlugin(productID));
+						LaunchConfigurationHelper.getContributingPlugin(productID));
 			} else {
-				String primaryPlugin = LauncherUtils.getPrimaryPlugin();
+				String primaryPlugin = LaunchConfigurationHelper.getPrimaryPlugin();
 				TargetPlatform.createPlatformConfigurationArea(
 						pluginMap,
 						getConfigDir(configuration),
@@ -201,7 +204,7 @@ public class EclipseApplicationLaunchConfiguration extends LaunchConfigurationDe
 					programArgs.add(primaryPlugin);					
 				}
 				IPluginModelBase bootModel = (IPluginModelBase)pluginMap.get("org.eclipse.core.boot"); //$NON-NLS-1$
-				String bootPath = LauncherUtils.getBootPath(bootModel);
+				String bootPath = LaunchConfigurationHelper.getBootPath(bootModel);
 				if (bootPath != null && !bootPath.endsWith(".jar")) { //$NON-NLS-1$
 					programArgs.add("-boot"); //$NON-NLS-1$
 					programArgs.add("file:" + bootPath); //$NON-NLS-1$
@@ -231,13 +234,13 @@ public class EclipseApplicationLaunchConfiguration extends LaunchConfigurationDe
 				&& !TRACING_NONE.equals(configuration.getAttribute(TRACING_CHECKED, (String) null))) {
 			programArgs.add("-debug"); //$NON-NLS-1$
 			programArgs.add(
-				LauncherUtils.getTracingFileArgument(
+					LaunchArgumentsHelper.getTracingFileArgument(
 					configuration,
 					getConfigDir(configuration).toString() + Path.SEPARATOR + ".options")); //$NON-NLS-1$
 		}
 
 		// add the program args specified by the user
-		String[] userArgs = LaunchConfigurationHelper.getUserProgramArguments(configuration);
+		String[] userArgs = LaunchArgumentsHelper.getUserProgramArguments(configuration);
 		for (int i = 0; i < userArgs.length; i++) {
 			if (userArgs[i].equals("-debug") && programArgs.contains("-debug")) //$NON-NLS-1$ //$NON-NLS-2$
 				continue;
@@ -283,7 +286,7 @@ public class EclipseApplicationLaunchConfiguration extends LaunchConfigurationDe
 					|| !featuresPath.toFile().exists();
 		}
 		if (badStructure) {
-			throw new CoreException(LauncherUtils.createErrorStatus(PDEUIMessages.WorkbenchLauncherConfigurationDelegate_badFeatureSetup));
+			throw new CoreException(LaunchVMHelper.createErrorStatus(PDEUIMessages.WorkbenchLauncherConfigurationDelegate_badFeatureSetup));
 		}
 		// Ensure important files are present
 		ensureProductFilesExist(getProductPath());		
@@ -326,7 +329,7 @@ public class EclipseApplicationLaunchConfiguration extends LaunchConfigurationDe
 	 */
 	protected IProject[] getBuildOrder(ILaunchConfiguration configuration,
 			String mode) throws CoreException {
-		return computeBuildOrder(LauncherUtils.getAffectedProjects(configuration));
+		return computeBuildOrder(LaunchPluginValidator.getAffectedProjects(configuration));
 	}
 	
 	/* (non-Javadoc)
@@ -335,7 +338,7 @@ public class EclipseApplicationLaunchConfiguration extends LaunchConfigurationDe
 	protected IProject[] getProjectsForProblemSearch(
 			ILaunchConfiguration configuration, String mode)
 			throws CoreException {
-		return LauncherUtils.getAffectedProjects(configuration);
+		return LaunchPluginValidator.getAffectedProjects(configuration);
 	}
 	
 	private File getConfigDir(ILaunchConfiguration config) {

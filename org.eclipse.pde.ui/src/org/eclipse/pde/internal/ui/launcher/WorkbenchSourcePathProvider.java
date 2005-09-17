@@ -49,9 +49,9 @@ public class WorkbenchSourcePathProvider extends StandardSourcePathProvider {
 		// first on the source lookup path, goes the class libraries for the
 		// JRE
 		String vmInstallName = configuration.getAttribute(
-				IPDELauncherConstants.VMINSTALL, LauncherUtils
+				IPDELauncherConstants.VMINSTALL, LaunchVMHelper
 						.getDefaultVMInstallName());
-		IVMInstall[] vmInstallations = LauncherUtils.getAllVMInstances();
+		IVMInstall[] vmInstallations = LaunchVMHelper.getAllVMInstances();
 		IVMInstall jre = null;
 		for (int i = 0; i < vmInstallations.length; i++) {
 			if (vmInstallName.equals(vmInstallations[i].getName())) {
@@ -83,7 +83,7 @@ public class WorkbenchSourcePathProvider extends StandardSourcePathProvider {
 	 */
 	private IProject[] getJavaProjects(ILaunchConfiguration configuration)
 			throws CoreException {
-		IProject[] projects = LauncherUtils.getAffectedProjects(configuration);
+		IProject[] projects = LaunchPluginValidator.getAffectedProjects(configuration);
 		return PDEPlugin.getWorkspace().computeProjectOrder(projects).projects;
 	}
 	/**

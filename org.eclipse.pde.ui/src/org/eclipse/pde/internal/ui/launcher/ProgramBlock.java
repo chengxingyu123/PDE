@@ -141,7 +141,7 @@ public class ProgramBlock {
 			
 			// use default application as specified in the install.ini of the target platform
 			if (index == -1)
-				index = fApplicationCombo.indexOf(LauncherUtils.getDefaultApplicationName());
+				index = fApplicationCombo.indexOf(LaunchConfigurationHelper.getDefaultApplicationName());
 			
 			if (index != -1) {
 				fApplicationCombo.setText(fApplicationCombo.getItem(index));
@@ -166,7 +166,7 @@ public class ProgramBlock {
 	protected void saveApplicationSection(ILaunchConfigurationWorkingCopy config) {
 		String text = fApplicationCombo.getText();
 		String attribute = getApplicationAttribute();
-		if (text.length() == 0 || text.equals(LauncherUtils.getDefaultApplicationName()))
+		if (text.length() == 0 || text.equals(LaunchConfigurationHelper.getDefaultApplicationName()))
 			config.setAttribute(attribute, (String) null);
 		else
 			config.setAttribute(attribute, text);
