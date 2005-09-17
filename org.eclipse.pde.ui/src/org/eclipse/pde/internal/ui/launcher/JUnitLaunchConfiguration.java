@@ -1,14 +1,19 @@
+/*******************************************************************************
+ * Copyright (c) 2003, 2005 IBM Corporation and others.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *     IBM Corporation - initial API and implementation
+ *******************************************************************************/
 package org.eclipse.pde.internal.ui.launcher;
-
-/*
- * (c) Copyright IBM Corp. 2000, 2001.
- * All Rights Reserved.
- */
 
 import java.io.File;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.StringTokenizer;
+import java.util.Map;
 import java.util.TreeMap;
 
 import org.eclipse.core.resources.IProject;
@@ -30,6 +35,7 @@ import org.eclipse.jdt.internal.junit.launcher.JUnitBaseLaunchConfiguration;
 import org.eclipse.jdt.launching.ExecutionArguments;
 import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants;
 import org.eclipse.jdt.launching.IVMInstall;
+import org.eclipse.jdt.launching.IVMRunner;
 import org.eclipse.jdt.launching.SocketUtil;
 import org.eclipse.jdt.launching.VMRunnerConfiguration;
 import org.eclipse.osgi.util.NLS;
@@ -50,9 +56,7 @@ import org.eclipse.pde.internal.ui.PDEUIMessages;
 import org.eclipse.pde.ui.launcher.IPDELauncherConstants;
 import org.eclipse.update.configurator.ConfiguratorUtils;
 
-/**
- * Launch configuration delegate for a plain JUnit test.
- */
+
 public class JUnitLaunchConfiguration extends JUnitBaseLaunchConfiguration implements IPDELauncherConstants {
 
 	public static final String CORE_APPLICATION = "org.eclipse.pde.junit.runtime.coretestapplication"; //$NON-NLS-1$
@@ -85,16 +89,8 @@ public class JUnitLaunchConfiguration extends JUnitBaseLaunchConfiguration imple
 				CoreUtility.deleteContent(getConfigDir(configuration));
 			launch.setAttribute(IPDELauncherConstants.CONFIG_LOCATION, getConfigDir(configuration).toString());
 			
-			IVMInstall launcher = LaunchVMHelper.createLauncher(configuration);
-			monitor.worked(1);
-
 			int port = SocketUtil.findFreePort();
-			VMRunnerConfiguration runnerConfig =
-				createVMRunner(configuration, testTypes, port, mode);
-			if (runnerConfig == null) {
-				monitor.setCanceled(true);
-				return;
-			} 
+			VMRunnerConfiguration runnerConfig = createVMRunner(configuration, testTypes, port, mode);
 			monitor.worked(1);
 			
 			setDefaultSourceLocator(launch, configuration);
@@ -102,7 +98,11 @@ public class JUnitLaunchConfiguration extends JUnitBaseLaunchConfiguration imple
 			launch.setAttribute(PORT_ATTR, Integer.toString(port));
 			launch.setAttribute(TESTTYPE_ATTR, testTypes[0].getHandleIdentifier());
 			PDEPlugin.getDefault().getLaunchListener().manage(launch);
-			launcher.getVMRunner(mode).run(runnerConfig, launch, monitor);
+			IVMRunner runner = getVMRunner(configuration, mode);
+			if (runner != null)
+				runner.run(runnerConfig, launch, monitor);
+			else
+				monitor.setCanceled(true);
 			monitor.worked(1);
 		} catch (CoreException e) {
 			monitor.setCanceled(true);
@@ -110,6 +110,10 @@ public class JUnitLaunchConfiguration extends JUnitBaseLaunchConfiguration imple
 		}
 	}
 	
+	public IVMRunner getVMRunner(ILaunchConfiguration configuration, String mode) throws CoreException {
+		IVMInstall launcher = LaunchVMHelper.createLauncher(configuration);
+		return launcher.getVMRunner(mode);
+	}
 	/*
 	 * @see JUnitBaseLauncherDelegate#configureVM(IType[], int, String)
 	 */
@@ -119,27 +123,19 @@ public class JUnitLaunchConfiguration extends JUnitBaseLaunchConfiguration imple
 		int port,
 		String runMode)
 		throws CoreException {
-		String[] classpath = LaunchArgumentsHelper.constructClasspath(configuration);
-		if (classpath == null) {
-			abort(PDEUIMessages.WorkbenchLauncherConfigurationDelegate_noStartup, null, IStatus.OK);
-		}
 
 		// Program arguments
-		String[] programArgs =
-			computeProgramArguments(configuration, testTypes, port, runMode);
+		String[] programArgs = getProgramArgumentsArray(configuration, testTypes, port, runMode);
 		if (programArgs == null)
 			return null;
 
-		// Environment variables
-		String[] envp =
-			DebugPlugin.getDefault().getLaunchManager().getEnvironment(configuration);
-
 		VMRunnerConfiguration runnerConfig =
-			new VMRunnerConfiguration("org.eclipse.core.launcher.Main", classpath); //$NON-NLS-1$
-		runnerConfig.setVMArguments(computeVMArguments(configuration));
+			new VMRunnerConfiguration("org.eclipse.core.launcher.Main", getClasspath(configuration)); //$NON-NLS-1$
+		runnerConfig.setVMArguments(getVMArgumentsArray(configuration));
 		runnerConfig.setProgramArguments(programArgs);
-		runnerConfig.setEnvironment(envp);
-		runnerConfig.setVMSpecificAttributesMap(LaunchArgumentsHelper.getVMSpecificAttributes(configuration));
+		runnerConfig.setEnvironment(getEnvironment(configuration));
+		runnerConfig.setWorkingDirectory(getWorkingDirectory(configuration).getAbsolutePath());
+		runnerConfig.setVMSpecificAttributesMap(getVMSpecificAttributesMap(configuration));
 		return runnerConfig;
 	}
 
@@ -167,7 +163,7 @@ public class JUnitLaunchConfiguration extends JUnitBaseLaunchConfiguration imple
 		throw new CoreException(new Status(IStatus.ERROR, PDEPlugin.PLUGIN_ID, code, message, exception));
 	}
 	
-	protected String[] computeProgramArguments(
+	public String[] getProgramArgumentsArray(
 		ILaunchConfiguration configuration,
 		IType[] testTypes,
 		int port,
@@ -246,7 +242,8 @@ public class JUnitLaunchConfiguration extends JUnitBaseLaunchConfiguration imple
 		
 		// necessary for PDE to know how to load plugins when target platform = host platform
 		// see PluginPathFinder.getPluginPaths()
-		programArgs.add("-pdelaunch"); //$NON-NLS-1$
+		if (pluginMap.containsKey(PDECore.getPluginId()))
+			programArgs.add("-pdelaunch"); //$NON-NLS-1$	
 
 		// Create the .options file if tracing is turned on
 		if (configuration.getAttribute(TRACING, false)
@@ -257,16 +254,14 @@ public class JUnitLaunchConfiguration extends JUnitBaseLaunchConfiguration imple
 			programArgs.add(LaunchArgumentsHelper.getTracingFileArgument(configuration, path));
 		}
 		
-		// Add the program args entered by the user
-		StringTokenizer tokenizer =
-			new StringTokenizer(configuration.getAttribute(PROGARGS, "")); //$NON-NLS-1$
-		while (tokenizer.hasMoreTokens()) {
-			String token = tokenizer.nextToken();
+		// add the program args specified by the user
+		String[] userArgs = LaunchArgumentsHelper.getUserProgramArgumentArray(configuration);
+		for (int i = 0; i < userArgs.length; i++) {
 			// be forgiving if people have tracing turned on and forgot
 			// to remove the -debug from the program args field.
-			if (token.equals("-debug") && programArgs.contains("-debug")) //$NON-NLS-1$ //$NON-NLS-2$
+			if (userArgs[i].equals("-debug") && programArgs.contains("-debug")) //$NON-NLS-1$ //$NON-NLS-2$
 				continue;
-			programArgs.add(token);
+			programArgs.add(userArgs[i]);
 		}
 		
 		if (!programArgs.contains("-os")) { //$NON-NLS-1$
@@ -350,18 +345,38 @@ public class JUnitLaunchConfiguration extends JUnitBaseLaunchConfiguration imple
 		return null;
 	}
 	
-	protected String[] computeVMArguments(ILaunchConfiguration configuration) throws CoreException {
+	public String[] getVMArgumentsArray(ILaunchConfiguration configuration) throws CoreException {
 		return new ExecutionArguments(getVMArguments(configuration),"").getVMArgumentsArray();		 //$NON-NLS-1$
 	}
 	
 	public String getProgramArguments(ILaunchConfiguration configuration)
 		throws CoreException {
-		return configuration.getAttribute(IPDELauncherConstants.PROGARGS, ""); //$NON-NLS-1$
+		return LaunchArgumentsHelper.getUserProgramArguments(configuration);
 	}
 	
 	public String getVMArguments(ILaunchConfiguration configuration)
 		throws CoreException {
-		return configuration.getAttribute(IPDELauncherConstants.VMARGS, ""); //$NON-NLS-1$
+		return LaunchArgumentsHelper.getUserVMArguments(configuration);
+	}
+	
+	public String[] getEnvironment(ILaunchConfiguration configuration) throws CoreException {
+		return DebugPlugin.getDefault().getLaunchManager().getEnvironment(configuration);
+	}
+	
+	public String[] getClasspath(ILaunchConfiguration configuration) throws CoreException {
+		String[] classpath = LaunchArgumentsHelper.constructClasspath(configuration);
+		if (classpath == null) {
+			abort(PDEUIMessages.WorkbenchLauncherConfigurationDelegate_noStartup, null, IStatus.OK);
+		}
+		return classpath;
+	}
+	
+	public File getWorkingDirectory(ILaunchConfiguration configuration) throws CoreException {
+		return LaunchArgumentsHelper.getWorkingDirectory(configuration);
+	}
+	
+	public Map getVMSpecificAttributesMap(ILaunchConfiguration configuration) throws CoreException {
+		return LaunchArgumentsHelper.getVMSpecificAttributesMap(configuration);
 	}
 
 	protected void setDefaultSourceLocator(ILaunch launch, ILaunchConfiguration configuration) throws CoreException {
