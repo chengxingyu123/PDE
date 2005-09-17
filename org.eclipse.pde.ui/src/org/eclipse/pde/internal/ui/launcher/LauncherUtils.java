@@ -23,6 +23,7 @@ import org.eclipse.osgi.service.resolver.BundleDescription;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.pde.core.plugin.*;
 import org.eclipse.pde.internal.core.*;
+import org.eclipse.pde.internal.core.util.CoreUtility;
 import org.eclipse.pde.internal.ui.*;
 import org.eclipse.pde.ui.launcher.IPDELauncherConstants;
 import org.eclipse.swt.widgets.*;
@@ -92,7 +93,7 @@ public class LauncherUtils {
 	}
 	
 	public static IPath getDefaultPath() {
-		return new Path("${system:ECLIPSE_HOME}");
+		return new Path("${system_property:user.dir}");
 	}
 	
 	public static TreeSet parseWorkspacePluginIds(ILaunchConfiguration config)
@@ -253,7 +254,7 @@ public class LauncherUtils {
 			String id = models[i].getPluginBase().getId();
 			if (id == null)
 				continue;
-			// see the documentation of AdvancedLauncherUtils.initWorkspacePluginsState
+			// see the documentation of PluginBlock.initWorkspacePluginsState
 			if (useDefault || useFeatures || doAdd != wsPlugins.contains(id)) {
 				IProject project = models[i].getUnderlyingResource().getProject();
 				if (project.hasNature(JavaCore.NATURE_ID))
@@ -412,11 +413,7 @@ public class LauncherUtils {
 				doClear = result == 0;
 			}
 			if (doClear) {
-				try {
-					deleteContent(workspaceFile, monitor);
-				} catch (IOException e) {
-					PDEPlugin.logErrorMessage("Error occurred while deleting the workspace data upon launching"); //$NON-NLS-1$
-				}
+				CoreUtility.deleteContent(workspaceFile);
 			}
 		}
 		monitor.done();
@@ -439,43 +436,7 @@ public class LauncherUtils {
 		return result[0];
 	}
 	
-	public static File createConfigArea(ILaunchConfiguration config) {
-		File dir = new File(PDECore.getDefault().getStateLocation().toOSString(), config.getName());
-		try {
-			if (!config.getAttribute(IPDELauncherConstants.CONFIG_USE_DEFAULT_AREA, true)) {
-				String userPath = config.getAttribute(IPDELauncherConstants.CONFIG_LOCATION, (String)null);
-				if (userPath != null)
-					dir = new File(userPath);
-			}
-		} catch (CoreException e) {
-		}		
-		if (!dir.exists()) 
-			dir.mkdirs();		
-		return dir;		
-	}
 
-	public static void clearConfigArea(File configDir, IProgressMonitor monitor) {
-		try {
-			deleteContent(configDir, monitor);
-		} catch (IOException e) {
-			PDEPlugin.logErrorMessage("Error occurred while deleting the configuration area upon launching"); //$NON-NLS-1$
-		}
-	}
-	
-	private static void deleteContent(File curr, IProgressMonitor monitor) throws IOException {
-		if (curr.isDirectory()) {
-			File[] children = curr.listFiles();
-			if (children != null) {
-				monitor.beginTask("", children.length); //$NON-NLS-1$
-				for (int i = 0; i < children.length; i++) {
-					deleteContent(children[i], new SubProgressMonitor(monitor, 1));
-				}
-			}
-		}
-		curr.delete();
-		monitor.done();
-	}
-	
 	public static String getTracingFileArgument(
 		ILaunchConfiguration config,
 		String optionsFileName)

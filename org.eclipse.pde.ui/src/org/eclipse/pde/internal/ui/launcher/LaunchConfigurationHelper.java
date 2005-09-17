@@ -10,6 +10,8 @@
  *******************************************************************************/
 package org.eclipse.pde.internal.ui.launcher;
 
+import java.io.File;
+
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.variables.IStringVariableManager;
 import org.eclipse.core.variables.VariablesPlugin;
@@ -17,6 +19,7 @@ import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
 import org.eclipse.jdt.launching.ExecutionArguments;
 import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants;
+import org.eclipse.pde.internal.core.PDECore;
 import org.eclipse.pde.ui.launcher.IPDELauncherConstants;
 
 public class LaunchConfigurationHelper {
@@ -85,6 +88,34 @@ public class LaunchConfigurationHelper {
 		}
 		return new ExecutionArguments(getSubstitutedString(args), "").getVMArgumentsArray();
 	}
+	
+	public static String getWorkingDirectory(ILaunchConfiguration configuration) throws CoreException {
+		String working = configuration.getAttribute(
+				IJavaLaunchConfigurationConstants.ATTR_WORKING_DIRECTORY, 
+				LauncherUtils.getDefaultPath().toString());
+		File dir = new File(getSubstitutedString(working));
+		if (!dir.exists())
+			dir.mkdirs();
+		return dir.getAbsolutePath();			
+	}
+	
+	public static File getConfigurationArea(ILaunchConfiguration config) {
+		File dir = new File(PDECore.getDefault().getStateLocation().toOSString(), config.getName());
+		try {
+			if (!config.getAttribute(IPDELauncherConstants.CONFIG_USE_DEFAULT_AREA, true)) {
+				String userPath = config.getAttribute(IPDELauncherConstants.CONFIG_LOCATION, (String)null);
+				if (userPath != null) {
+					userPath = getSubstitutedString(userPath);
+					dir = new File(userPath);
+				}
+			}
+		} catch (CoreException e) {
+		}		
+		if (!dir.exists()) 
+			dir.mkdirs();		
+		return dir;		
+	}
+
 	
 	private static String getSubstitutedString(String text) throws CoreException {
 		if (text == null)

@@ -44,6 +44,7 @@ import org.eclipse.pde.internal.core.PDECore;
 import org.eclipse.pde.internal.core.PDEState;
 import org.eclipse.pde.internal.core.PluginModelManager;
 import org.eclipse.pde.internal.core.TargetPlatform;
+import org.eclipse.pde.internal.core.util.CoreUtility;
 import org.eclipse.pde.internal.ui.PDEPlugin;
 import org.eclipse.pde.internal.ui.PDEUIMessages;
 import org.eclipse.pde.ui.launcher.IPDELauncherConstants;
@@ -81,7 +82,7 @@ public class JUnitLaunchConfiguration extends JUnitBaseLaunchConfiguration imple
 			}
 
 			if (configuration.getAttribute(CONFIG_CLEAR_AREA, false))
-				LauncherUtils.clearConfigArea(getConfigDir(configuration), new SubProgressMonitor(monitor, 1));
+				CoreUtility.deleteContent(getConfigDir(configuration));
 			launch.setAttribute(IPDELauncherConstants.CONFIG_LOCATION, getConfigDir(configuration).toString());
 			
 			IVMInstall launcher = LauncherUtils.createLauncher(configuration);
@@ -470,10 +471,8 @@ public class JUnitLaunchConfiguration extends JUnitBaseLaunchConfiguration imple
 	
 	protected File getConfigDir(ILaunchConfiguration config) {
 		if (fConfigDir == null)
-			fConfigDir = LauncherUtils.createConfigArea(config);
+			fConfigDir = LaunchConfigurationHelper.getConfigurationArea(config);
 	
-		if (!fConfigDir.exists())
-			fConfigDir.mkdirs();
 		return fConfigDir;
 	}
 	

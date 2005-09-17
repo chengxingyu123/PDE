@@ -12,6 +12,7 @@ package org.eclipse.pde.ui.launcher;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.Properties;
 import java.util.TreeMap;
 
@@ -44,7 +45,7 @@ import org.eclipse.pde.internal.ui.launcher.LauncherUtils;
 
 public class EclipseApplicationLaunchConfiguration extends LaunchConfigurationDelegate 
 			implements IPDELauncherConstants {
-	protected File fConfigDir = null;
+	private File fConfigDir = null;
 	
 	/*
 	 * @see ILaunchConfigurationDelegate#launch(ILaunchConfiguration, String)
@@ -57,7 +58,7 @@ public class EclipseApplicationLaunchConfiguration extends LaunchConfigurationDe
 		throws CoreException {
 		try {
 			fConfigDir = null;
-			monitor.beginTask("", 5); //$NON-NLS-1$
+			monitor.beginTask("", 4); //$NON-NLS-1$
 			
 			String workspace = LaunchConfigurationHelper.getWorkspaceLocation(configuration);
 			// Clear workspace and prompt, if necessary
@@ -68,7 +69,7 @@ public class EclipseApplicationLaunchConfiguration extends LaunchConfigurationDe
 
 			// clear config area, if necessary
 			if (configuration.getAttribute(CONFIG_CLEAR_AREA, false))
-				LauncherUtils.clearConfigArea(getConfigDir(configuration), new SubProgressMonitor(monitor, 1));
+				CoreUtility.deleteContent(getConfigDir(configuration));
 			launch.setAttribute(IPDELauncherConstants.CONFIG_LOCATION, getConfigDir(configuration).toString());
 			
 			
@@ -88,8 +89,9 @@ public class EclipseApplicationLaunchConfiguration extends LaunchConfigurationDe
 														getClasspath(configuration)); 
 			runnerConfig.setVMArguments(getVMArguments(configuration));
 			runnerConfig.setProgramArguments(programArgs);
+			runnerConfig.setWorkingDirectory(getWorkingDirectory(configuration));
 			runnerConfig.setEnvironment(getEnvironment(configuration));
-			runnerConfig.setVMSpecificAttributesMap(LauncherUtils.getVMSpecificAttributes(configuration));
+			runnerConfig.setVMSpecificAttributesMap(getVMSpecificAttributes(configuration));
 
 			monitor.worked(1);
 					
@@ -119,6 +121,14 @@ public class EclipseApplicationLaunchConfiguration extends LaunchConfigurationDe
 	
 	public String[] getEnvironment(ILaunchConfiguration configuration) throws CoreException {
 		return DebugPlugin.getDefault().getLaunchManager().getEnvironment(configuration);
+	}
+	
+	public String getWorkingDirectory(ILaunchConfiguration configuration) throws CoreException {
+		return LaunchConfigurationHelper.getWorkingDirectory(configuration);
+	}
+	
+	public Map getVMSpecificAttributes(ILaunchConfiguration configuration) throws CoreException {
+		return LauncherUtils.getVMSpecificAttributes(configuration);
 	}
 	
 	public String[] getVMArguments(ILaunchConfiguration configuration) throws CoreException {
@@ -263,7 +273,7 @@ public class EclipseApplicationLaunchConfiguration extends LaunchConfigurationDe
 		return (String[])programArgs.toArray(new String[programArgs.size()]);
 	}
 	
-	protected void validateFeatures() throws CoreException {
+	private void validateFeatures() throws CoreException {
 		IPath installPath = PDEPlugin.getWorkspace().getRoot().getLocation();
 		String lastSegment = installPath.lastSegment();
 		boolean badStructure = lastSegment == null;
@@ -279,17 +289,17 @@ public class EclipseApplicationLaunchConfiguration extends LaunchConfigurationDe
 		ensureProductFilesExist(getProductPath());		
 	}
 	
-	protected IPath getProductPath() {
+	private IPath getProductPath() {
 		return PDEPlugin.getWorkspace().getRoot().getLocation().removeLastSegments(1);
 	}
 
-	protected String computeShowsplashArgument() {
+	private String computeShowsplashArgument() {
 		IPath eclipseHome = ExternalModelManager.getEclipseHome();
 		IPath fullPath = eclipseHome.append("eclipse"); //$NON-NLS-1$
 		return fullPath.toOSString() + " -showsplash 600"; //$NON-NLS-1$
 	}
 
-	protected void ensureProductFilesExist(IPath productArea) {
+	private void ensureProductFilesExist(IPath productArea) {
 		File productDir = productArea.toFile();		
 		File marker = new File(productDir, ".eclipseproduct"); //$NON-NLS-1$
 		IPath eclipsePath = ExternalModelManager.getEclipseHome();
@@ -328,7 +338,7 @@ public class EclipseApplicationLaunchConfiguration extends LaunchConfigurationDe
 		return LauncherUtils.getAffectedProjects(configuration);
 	}
 	
-	protected File getConfigDir(ILaunchConfiguration config) {
+	private File getConfigDir(ILaunchConfiguration config) {
 		if (fConfigDir == null) {
 			try {
 				if (config.getAttribute(USEFEATURES, false) && config.getAttribute(CONFIG_USE_DEFAULT_AREA, true)) {
@@ -336,15 +346,15 @@ public class EclipseApplicationLaunchConfiguration extends LaunchConfigurationDe
 					if (PDECore.getDefault().getModelManager().isOSGiRuntime())
 						root += "/configuration"; //$NON-NLS-1$
 					fConfigDir = new File(root);
+					if (!fConfigDir.exists())
+						fConfigDir.mkdirs();
 				} else {
-					fConfigDir = LauncherUtils.createConfigArea(config);
+					fConfigDir = LaunchConfigurationHelper.getConfigurationArea(config);
 				}
 			} catch (CoreException e) {
-				fConfigDir = LauncherUtils.createConfigArea(config);
+				fConfigDir = LaunchConfigurationHelper.getConfigurationArea(config);
 			}
 		}
-		if (!fConfigDir.exists())
-			fConfigDir.mkdirs();
 		return fConfigDir;
 	}
 }
