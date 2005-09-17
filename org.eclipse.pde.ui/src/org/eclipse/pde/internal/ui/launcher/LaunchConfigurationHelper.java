@@ -83,64 +83,78 @@ public class LaunchConfigurationHelper {
 	}
 	
 	public static Properties createConfigIniFile(ILaunchConfiguration configuration, String productID, Map map, File directory) throws CoreException {
-		Properties properties = new Properties();
+		Properties properties = null;
 		if (configuration.getAttribute(IPDELauncherConstants.CONFIG_GENERATE_DEFAULT, true)) {
-			properties.setProperty("osgi.install.area", "file:" + ExternalModelManager.getEclipseHome().toOSString()); //$NON-NLS-1$ //$NON-NLS-2$
-			properties.setProperty("osgi.configuration.cascaded", "false"); //$NON-NLS-1$ //$NON-NLS-2$
-			properties.setProperty("osgi.framework", "org.eclipse.osgi"); //$NON-NLS-1$ //$NON-NLS-2$
-			if (productID != null)
-				addSplashLocation(properties, productID, map);
-			if (map.containsKey("org.eclipse.update.configurator")) { //$NON-NLS-1$
-				properties.setProperty("osgi.bundles", "org.eclipse.core.runtime@2:start,org.eclipse.update.configurator@3:start"); //$NON-NLS-1$ //$NON-NLS-2$
-			} else {
-				StringBuffer buffer = new StringBuffer();
-				Iterator iter = map.keySet().iterator();
-				while (iter.hasNext()) {
-					String id = iter.next().toString();
-					if ("org.eclipse.osgi".equals(id)) //$NON-NLS-1$
-						continue;
-					buffer.append(id);
-					if ("org.eclipse.core.runtime".equals(id)) { //$NON-NLS-1$
-						buffer.append("@2:start"); //$NON-NLS-1$
-					}
-					if (iter.hasNext())
-						buffer.append(","); //$NON-NLS-1$
-				}
-				properties.setProperty("osgi.bundles", buffer.toString()); //$NON-NLS-1$
-			}
-			properties.setProperty("osgi.bundles.defaultStartLevel", "4"); //$NON-NLS-1$ //$NON-NLS-2$
+			properties = createNewPropertiesFile(productID, map);
 		} else {
 			String templateLoc = configuration.getAttribute(IPDELauncherConstants.CONFIG_TEMPLATE_LOCATION, (String)null);
 			if (templateLoc != null) {
-				File templateFile = new File(templateLoc);
-				if (templateFile.exists() && templateFile.isFile()) {
-					FileInputStream stream = null;
+				properties = loadFromTemplate(getSubstitutedString(templateLoc));
+			}
+		}
+		if (properties == null)
+			properties = new Properties();
+		setBundleLocations(map, properties);
+		save(new File(directory, "config.ini"), properties); //$NON-NLS-1$
+		return properties;
+	}
+	
+	private static Properties createNewPropertiesFile(String productID, Map map) {
+		Properties properties = new Properties();
+		properties.setProperty("osgi.install.area", "file:" + ExternalModelManager.getEclipseHome().toOSString()); //$NON-NLS-1$ //$NON-NLS-2$
+		properties.setProperty("osgi.configuration.cascaded", "false"); //$NON-NLS-1$ //$NON-NLS-2$
+		properties.setProperty("osgi.framework", "org.eclipse.osgi"); //$NON-NLS-1$ //$NON-NLS-2$
+		if (productID != null)
+			addSplashLocation(properties, productID, map);
+		if (map.containsKey("org.eclipse.update.configurator")) { //$NON-NLS-1$
+			properties.setProperty("osgi.bundles", "org.eclipse.core.runtime@2:start,org.eclipse.update.configurator@3:start"); //$NON-NLS-1$ //$NON-NLS-2$
+		} else {
+			StringBuffer buffer = new StringBuffer();
+			Iterator iter = map.keySet().iterator();
+			while (iter.hasNext()) {
+				String id = iter.next().toString();
+				if ("org.eclipse.osgi".equals(id)) //$NON-NLS-1$
+					continue;
+				buffer.append(id);
+				if ("org.eclipse.core.runtime".equals(id)) { //$NON-NLS-1$
+					buffer.append("@2:start"); //$NON-NLS-1$
+				}
+				if (iter.hasNext())
+					buffer.append(","); //$NON-NLS-1$
+			}
+			properties.setProperty("osgi.bundles", buffer.toString()); //$NON-NLS-1$
+		}
+		properties.setProperty("osgi.bundles.defaultStartLevel", "4"); //$NON-NLS-1$ //$NON-NLS-2$
+		return properties;
+	}
+	
+	private static Properties loadFromTemplate(String templateLoc) throws CoreException {
+		Properties properties = new Properties();
+		File templateFile = new File(templateLoc);
+		if (templateFile.exists() && templateFile.isFile()) {
+			FileInputStream stream = null;
+			try {
+				stream = new FileInputStream(templateFile);
+				properties.load(stream);
+			} catch (Exception e) {
+				String message = e.getMessage();
+				if (message != null)
+					throw new CoreException(
+						new Status(
+							IStatus.ERROR,
+							PDEPlugin.getPluginId(),
+							IStatus.ERROR,
+							message,
+							e));
+			} finally {
+				if (stream != null) {
 					try {
-						stream = new FileInputStream(templateFile);
-						properties.load(stream);
-					} catch (Exception e) {
-						String message = e.getMessage();
-						if (message != null)
-							throw new CoreException(
-								new Status(
-									IStatus.ERROR,
-									PDEPlugin.getPluginId(),
-									IStatus.ERROR,
-									message,
-									e));
-					} finally {
-						if (stream != null) {
-							try {
-								stream.close();
-							} catch (IOException e) {
-							}
-						}
+						stream.close();
+					} catch (IOException e) {
 					}
 				}
 			}
 		}
-		setBundleLocations(map, properties);
-		save(new File(directory, "config.ini"), properties); //$NON-NLS-1$
 		return properties;
 	}
 
@@ -321,7 +335,5 @@ public class LaunchConfigurationHelper {
 		String appName = (properties != null) ? properties.getProperty("eclipse.application") : null; //$NON-NLS-1$
 		return (appName != null) ? appName : "org.eclipse.ui.ide.workbench"; //$NON-NLS-1$
 	}
-
-
 
 }
