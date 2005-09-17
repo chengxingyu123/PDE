@@ -22,13 +22,10 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.SubProgressMonitor;
-import org.eclipse.core.variables.VariablesPlugin;
 import org.eclipse.debug.core.DebugPlugin;
 import org.eclipse.debug.core.ILaunch;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.model.LaunchConfigurationDelegate;
-import org.eclipse.jdt.launching.ExecutionArguments;
-import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants;
 import org.eclipse.jdt.launching.IVMInstall;
 import org.eclipse.jdt.launching.VMRunnerConfiguration;
 import org.eclipse.pde.core.plugin.IPluginModelBase;
@@ -135,9 +132,7 @@ public class EclipseApplicationLaunchConfiguration extends LaunchConfigurationDe
 	}
 	
 	public String[] getVMArguments(ILaunchConfiguration configuration) throws CoreException {
-		String arguments = configuration.getAttribute(IJavaLaunchConfigurationConstants.ATTR_VM_ARGUMENTS, ""); //$NON-NLS-1$
-		String args = VariablesPlugin.getDefault().getStringVariableManager().performStringSubstitution(arguments);
-		return new ExecutionArguments(args, "").getVMArgumentsArray();
+		return LaunchArgumentsHelper.getUserVMArguments(configuration);
 	}
 
 	public String[] getProgramArguments(ILaunchConfiguration configuration) throws CoreException {
