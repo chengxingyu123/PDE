@@ -42,6 +42,12 @@ public class ProgramBlock {
 
 	class Listener extends SelectionAdapter {		
 		public void widgetSelected(SelectionEvent e) {
+			Object source = e.getSource();
+			if (source == fProductButton) {
+				boolean enabled = fProductButton.getSelection();
+				fProductCombo.setEnabled(enabled);
+				fApplicationCombo.setEnabled(!enabled);
+			}			
 			fTab.updateLaunchConfigurationDialog();
 		}
 	}
