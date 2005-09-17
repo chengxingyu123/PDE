@@ -27,6 +27,7 @@ import org.eclipse.debug.core.ILaunch;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.model.LaunchConfigurationDelegate;
 import org.eclipse.jdt.launching.IVMInstall;
+import org.eclipse.jdt.launching.IVMRunner;
 import org.eclipse.jdt.launching.VMRunnerConfiguration;
 import org.eclipse.pde.core.plugin.IPluginModelBase;
 import org.eclipse.pde.internal.core.ClasspathHelper;
@@ -43,8 +44,7 @@ import org.eclipse.pde.internal.ui.launcher.LaunchPluginValidator;
 import org.eclipse.pde.internal.ui.launcher.LaunchVMHelper;
 import org.eclipse.pde.internal.ui.launcher.LauncherUtils;
 
-public class EclipseApplicationLaunchConfiguration extends LaunchConfigurationDelegate 
-			implements IPDELauncherConstants {
+public class EclipseApplicationLaunchConfiguration extends LaunchConfigurationDelegate {
 	private File fConfigDir = null;
 	
 	/*
@@ -68,13 +68,10 @@ public class EclipseApplicationLaunchConfiguration extends LaunchConfigurationDe
 			}
 
 			// clear config area, if necessary
-			if (configuration.getAttribute(CONFIG_CLEAR_AREA, false))
+			if (configuration.getAttribute(IPDELauncherConstants.CONFIG_CLEAR_AREA, false))
 				CoreUtility.deleteContent(getConfigDir(configuration));
 			launch.setAttribute(IPDELauncherConstants.CONFIG_LOCATION, getConfigDir(configuration).toString());
-			
-			
-			// create launcher
-			IVMInstall launcher = LaunchVMHelper.createLauncher(configuration);
+				
 			monitor.worked(1);
 			
 			// Program arguments
@@ -98,12 +95,17 @@ public class EclipseApplicationLaunchConfiguration extends LaunchConfigurationDe
 			setDefaultSourceLocator(configuration);
 			LaunchConfigurationHelper.synchronizeManifests(configuration, getConfigDir(configuration));
 			PDEPlugin.getDefault().getLaunchListener().manage(launch);
-			launcher.getVMRunner(mode).run(runnerConfig, launch, monitor);		
+			getVMRunner(configuration, mode).run(runnerConfig, launch, monitor);		
 			monitor.worked(1);
 		} catch (CoreException e) {
 			monitor.setCanceled(true);
 			throw e;
 		}
+	}
+	
+	public IVMRunner getVMRunner(ILaunchConfiguration configuration, String mode) throws CoreException {
+		IVMInstall launcher = LaunchVMHelper.createLauncher(configuration);
+		return launcher.getVMRunner(mode);
 	}
 	
 	protected void setDefaultSourceLocator(ILaunchConfiguration configuration) throws CoreException {
@@ -139,13 +141,13 @@ public class EclipseApplicationLaunchConfiguration extends LaunchConfigurationDe
 		ArrayList programArgs = new ArrayList();
 		
 		// If a product is specified, then add it to the program args
-		if (configuration.getAttribute(USE_PRODUCT, false)) {
+		if (configuration.getAttribute(IPDELauncherConstants.USE_PRODUCT, false)) {
 			programArgs.add("-product"); //$NON-NLS-1$
-			programArgs.add(configuration.getAttribute(PRODUCT, "")); //$NON-NLS-1$
+			programArgs.add(configuration.getAttribute(IPDELauncherConstants.PRODUCT, "")); //$NON-NLS-1$
 		} else {
 			// specify the application to launch
 			programArgs.add("-application"); //$NON-NLS-1$
-			programArgs.add(configuration.getAttribute(APPLICATION, LaunchConfigurationHelper.getDefaultApplicationName()));
+			programArgs.add(configuration.getAttribute(IPDELauncherConstants.APPLICATION, LaunchConfigurationHelper.getDefaultApplicationName()));
 		}
 		
 		// specify the workspace location for the runtime workbench
@@ -157,12 +159,12 @@ public class EclipseApplicationLaunchConfiguration extends LaunchConfigurationDe
 		
 		boolean isOSGI = PDECore.getDefault().getModelManager().isOSGiRuntime();
 		boolean showSplash = true;
-		if (configuration.getAttribute(USEFEATURES, false)) {
+		if (configuration.getAttribute(IPDELauncherConstants.USEFEATURES, false)) {
 			validateFeatures();
 			IPath installPath = PDEPlugin.getWorkspace().getRoot().getLocation();
 			programArgs.add("-install"); //$NON-NLS-1$
 			programArgs.add("file:" + installPath.removeLastSegments(1).addTrailingSeparator().toString()); //$NON-NLS-1$
-			if (isOSGI && !configuration.getAttribute(CONFIG_USE_DEFAULT_AREA, true)) {
+			if (isOSGI && !configuration.getAttribute(IPDELauncherConstants.CONFIG_USE_DEFAULT_AREA, true)) {
 				programArgs.add("-configuration"); //$NON-NLS-1$
 				programArgs.add("file:" + new Path(getConfigDir(configuration).getPath()).addTrailingSeparator().toString()); //$NON-NLS-1$
 			}
@@ -225,8 +227,8 @@ public class EclipseApplicationLaunchConfiguration extends LaunchConfigurationDe
 		programArgs.add("-pdelaunch"); //$NON-NLS-1$
 
 		// add tracing, if turned on
-		if (configuration.getAttribute(TRACING, false)
-				&& !TRACING_NONE.equals(configuration.getAttribute(TRACING_CHECKED, (String) null))) {
+		if (configuration.getAttribute(IPDELauncherConstants.TRACING, false)
+				&& !IPDELauncherConstants.TRACING_NONE.equals(configuration.getAttribute(IPDELauncherConstants.TRACING_CHECKED, (String) null))) {
 			programArgs.add("-debug"); //$NON-NLS-1$
 			programArgs.add(
 					LaunchArgumentsHelper.getTracingFileArgument(
@@ -339,7 +341,8 @@ public class EclipseApplicationLaunchConfiguration extends LaunchConfigurationDe
 	private File getConfigDir(ILaunchConfiguration config) {
 		if (fConfigDir == null) {
 			try {
-				if (config.getAttribute(USEFEATURES, false) && config.getAttribute(CONFIG_USE_DEFAULT_AREA, true)) {
+				if (config.getAttribute(IPDELauncherConstants.USEFEATURES, false) 
+						&& config.getAttribute(IPDELauncherConstants.CONFIG_USE_DEFAULT_AREA, true)) {
 					String root = getProductPath().toString();
 					if (PDECore.getDefault().getModelManager().isOSGiRuntime())
 						root += "/configuration"; //$NON-NLS-1$
