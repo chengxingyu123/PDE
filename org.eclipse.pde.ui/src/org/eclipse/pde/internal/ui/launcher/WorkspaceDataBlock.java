@@ -79,14 +79,8 @@ public class WorkspaceDataBlock extends BaseBlock {
 	}
 	
 	public void initializeFrom(ILaunchConfiguration configuration) throws CoreException {
-		String location = configuration.getAttribute(IPDELauncherConstants.LOCATION, (String)null);
-
-		// backward compatibility
-		if (location == null)	
-			location = configuration.getAttribute(IPDELauncherConstants.LOCATION + "0",  //$NON-NLS-1$
-									    LauncherUtils.getDefaultWorkspace());
-		
-		fLocationText.setText(location);
+		fLocationText.setText(configuration.getAttribute(IPDELauncherConstants.LOCATION, 
+														LauncherUtils.getDefaultWorkspace()));
 		fClearWorkspaceCheck.setSelection(configuration.getAttribute(IPDELauncherConstants.DOCLEAR, false));
 		fAskClearCheck.setSelection(configuration.getAttribute(IPDELauncherConstants.ASKCLEAR, true));
 		fAskClearCheck.setEnabled(fClearWorkspaceCheck.getSelection());
