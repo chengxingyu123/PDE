@@ -61,8 +61,13 @@ public class LaunchArgumentsHelper {
 		}
 		return getSubstitutedString(location);
 	}
+
+	public static String[] getUserProgramArgumentArray(ILaunchConfiguration configuration) throws CoreException {
+		String args = getUserProgramArguments(configuration);
+		return new ExecutionArguments("", getSubstitutedString(args)).getProgramArgumentsArray();
+	}
 	
-	public static String[] getUserProgramArguments(ILaunchConfiguration configuration) throws CoreException {
+	public static String getUserProgramArguments(ILaunchConfiguration configuration) throws CoreException {
 		String args = configuration.getAttribute(
 				IJavaLaunchConfigurationConstants.ATTR_PROGRAM_ARGUMENTS, 
 				(String)null);
@@ -81,10 +86,15 @@ public class LaunchArgumentsHelper {
 				wc.doSave();			
 			}
 		}
-		return new ExecutionArguments("", getSubstitutedString(args)).getProgramArgumentsArray();
+		return args;
 	}
 	
-	public static String[] getUserVMArguments(ILaunchConfiguration configuration) throws CoreException {
+	public static String[] getUserVMArgumentArray(ILaunchConfiguration configuration) throws CoreException {
+		String args = getUserVMArguments(configuration);
+		return new ExecutionArguments(getSubstitutedString(args), "").getVMArgumentsArray();
+	}
+	
+	public static String getUserVMArguments(ILaunchConfiguration configuration) throws CoreException {
 		String args = configuration.getAttribute(
 				IJavaLaunchConfigurationConstants.ATTR_VM_ARGUMENTS, 
 				(String)null);
@@ -103,20 +113,20 @@ public class LaunchArgumentsHelper {
 				wc.doSave();			
 			}
 		}
-		return new ExecutionArguments(getSubstitutedString(args), "").getVMArgumentsArray();
+		return args;
 	}
 	
-	public static String getWorkingDirectory(ILaunchConfiguration configuration) throws CoreException {
+	public static File getWorkingDirectory(ILaunchConfiguration configuration) throws CoreException {
 		String working = configuration.getAttribute(
 				IJavaLaunchConfigurationConstants.ATTR_WORKING_DIRECTORY, 
 				LauncherUtils.getDefaultPath().toString());
 		File dir = new File(getSubstitutedString(working));
 		if (!dir.exists())
 			dir.mkdirs();
-		return dir.getAbsolutePath();			
+		return dir;			
 	}
 	
-	public static Map getVMSpecificAttributes(ILaunchConfiguration config) throws CoreException {
+	public static Map getVMSpecificAttributesMap(ILaunchConfiguration config) throws CoreException {
 		Map map = new HashMap(2);
 		String javaCommand = config.getAttribute(IJavaLaunchConfigurationConstants.ATTR_JAVA_COMMAND, (String)null); 
 		map.put(IJavaLaunchConfigurationConstants.ATTR_JAVA_COMMAND, javaCommand);

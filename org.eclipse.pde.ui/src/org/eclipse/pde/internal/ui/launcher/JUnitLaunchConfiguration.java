@@ -478,7 +478,8 @@ public class JUnitLaunchConfiguration extends JUnitBaseLaunchConfiguration imple
 		} else {
 			IFragment[] fragments = PDECore.getDefault().findFragmentsFor(id, model.getPluginBase().getVersion());
 			for (int i = 0; i < fragments.length; i++) {
-				addPluginAndPrereqs(fragments[i].getId(), map);
+				if (!"org.eclipse.ui.workbench.compatibility".equals(fragments[i].getId()))
+					addPluginAndPrereqs(fragments[i].getId(), map);
 			}
 		}
 	}

@@ -86,16 +86,20 @@ public class EclipseApplicationLaunchConfiguration extends LaunchConfigurationDe
 														getClasspath(configuration)); 
 			runnerConfig.setVMArguments(getVMArguments(configuration));
 			runnerConfig.setProgramArguments(programArgs);
-			runnerConfig.setWorkingDirectory(getWorkingDirectory(configuration));
+			runnerConfig.setWorkingDirectory(getWorkingDirectory(configuration).getAbsolutePath());
 			runnerConfig.setEnvironment(getEnvironment(configuration));
-			runnerConfig.setVMSpecificAttributesMap(getVMSpecificAttributes(configuration));
+			runnerConfig.setVMSpecificAttributesMap(getVMSpecificAttributesMap(configuration));
 
 			monitor.worked(1);
 					
 			setDefaultSourceLocator(configuration);
 			LaunchConfigurationHelper.synchronizeManifests(configuration, getConfigDir(configuration));
 			PDEPlugin.getDefault().getLaunchListener().manage(launch);
-			getVMRunner(configuration, mode).run(runnerConfig, launch, monitor);		
+			IVMRunner runner = getVMRunner(configuration, mode);
+			if (runner != null)
+				runner.run(runnerConfig, launch, monitor);
+			else
+				monitor.setCanceled(true);
 			monitor.worked(1);
 		} catch (CoreException e) {
 			monitor.setCanceled(true);
@@ -125,16 +129,16 @@ public class EclipseApplicationLaunchConfiguration extends LaunchConfigurationDe
 		return DebugPlugin.getDefault().getLaunchManager().getEnvironment(configuration);
 	}
 	
-	public String getWorkingDirectory(ILaunchConfiguration configuration) throws CoreException {
+	public File getWorkingDirectory(ILaunchConfiguration configuration) throws CoreException {
 		return LaunchArgumentsHelper.getWorkingDirectory(configuration);
 	}
 	
-	public Map getVMSpecificAttributes(ILaunchConfiguration configuration) throws CoreException {
-		return LaunchArgumentsHelper.getVMSpecificAttributes(configuration);
+	public Map getVMSpecificAttributesMap(ILaunchConfiguration configuration) throws CoreException {
+		return LaunchArgumentsHelper.getVMSpecificAttributesMap(configuration);
 	}
 	
 	public String[] getVMArguments(ILaunchConfiguration configuration) throws CoreException {
-		return LaunchArgumentsHelper.getUserVMArguments(configuration);
+		return LaunchArgumentsHelper.getUserVMArgumentArray(configuration);
 	}
 
 	public String[] getProgramArguments(ILaunchConfiguration configuration) throws CoreException {
@@ -175,7 +179,9 @@ public class EclipseApplicationLaunchConfiguration extends LaunchConfigurationDe
                 programArgs.add(ClasspathHelper.getDevEntriesProperties(getConfigDir(configuration).toString() + "/dev.properties", true)); //$NON-NLS-1$
             else
                 programArgs.add(ClasspathHelper.getDevEntries(true));
-            
+    		// necessary for PDE to know how to load plugins when target platform = host platform
+    		// see PluginPathFinder.getPluginPaths()
+     		programArgs.add("-pdelaunch"); //$NON-NLS-1$           
 		} else {
 			TreeMap pluginMap = LaunchPluginValidator.getPluginsToRun(configuration);
 			if (pluginMap == null) 
@@ -220,11 +226,13 @@ public class EclipseApplicationLaunchConfiguration extends LaunchConfigurationDe
                 programArgs.add(ClasspathHelper.getDevEntriesProperties(getConfigDir(configuration).toString() + "/dev.properties", pluginMap)); //$NON-NLS-1$
             else
                 programArgs.add(ClasspathHelper.getDevEntries(true));            
+
+    		// necessary for PDE to know how to load plugins when target platform = host platform
+    		// see PluginPathFinder.getPluginPaths()
+    		if (pluginMap.containsKey(PDECore.getPluginId()))
+    			programArgs.add("-pdelaunch"); //$NON-NLS-1$	
 		}
 		
-		// necessary for PDE to know how to load plugins when target platform = host platform
-		// see PluginPathFinder.getPluginPaths()
-		programArgs.add("-pdelaunch"); //$NON-NLS-1$
 
 		// add tracing, if turned on
 		if (configuration.getAttribute(IPDELauncherConstants.TRACING, false)
@@ -237,8 +245,10 @@ public class EclipseApplicationLaunchConfiguration extends LaunchConfigurationDe
 		}
 
 		// add the program args specified by the user
-		String[] userArgs = LaunchArgumentsHelper.getUserProgramArguments(configuration);
+		String[] userArgs = LaunchArgumentsHelper.getUserProgramArgumentArray(configuration);
 		for (int i = 0; i < userArgs.length; i++) {
+			// be forgiving if people have tracing turned on and forgot
+			// to remove the -debug from the program args field.
 			if (userArgs[i].equals("-debug") && programArgs.contains("-debug")) //$NON-NLS-1$ //$NON-NLS-2$
 				continue;
 			programArgs.add(userArgs[i]);
