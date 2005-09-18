@@ -74,7 +74,7 @@ public abstract class AbstractPDELaunchConfigurationTabGroup extends
 		}
 		
 		LaunchPluginValidator.checkBackwardCompatibility(wc, false);	
-		
+		wc.doSave();
 	}
 
 	/**

@@ -56,8 +56,8 @@ public class LaunchPluginValidator {
 				
 			boolean automatic = configuration.getAttribute(IPDELauncherConstants.AUTOMATIC_ADD, true);
 			String attr = automatic 
-							? IPDELauncherConstants.SELECTED_WORKSPACE_PLUGINS
-							: IPDELauncherConstants.DESELECTED_WORKSPACE_PLUGINS;
+							? IPDELauncherConstants.DESELECTED_WORKSPACE_PLUGINS
+							: IPDELauncherConstants.SELECTED_WORKSPACE_PLUGINS;
 			wc.setAttribute(attr, value);
 		}
 
