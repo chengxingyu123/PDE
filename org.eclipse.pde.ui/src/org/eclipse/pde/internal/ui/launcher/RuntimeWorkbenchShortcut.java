@@ -212,8 +212,8 @@ public class RuntimeWorkbenchShortcut implements ILaunchShortcut {
 			String computedName = getComputedName(configType.getName());
 			ILaunchConfigurationWorkingCopy wc = configType.newInstance(null, computedName);  
 			wc.setAttribute(IPDELauncherConstants.LOCATION, getDefaultWorkspaceLocation(computedName)); //$NON-NLS-1$
-			wc.setAttribute(IPDELauncherConstants.VMARGS, ""); //$NON-NLS-1$
-			wc.setAttribute(IPDELauncherConstants.PROGARGS, ""); //$NON-NLS-1$
+			wc.setAttribute(IJavaLaunchConfigurationConstants.ATTR_VM_ARGUMENTS, ""); //$NON-NLS-1$
+			wc.setAttribute(IJavaLaunchConfigurationConstants.ATTR_PROGRAM_ARGUMENTS, ""); //$NON-NLS-1$
 			wc.setAttribute(IPDELauncherConstants.USEFEATURES, false);
 			wc.setAttribute(IPDELauncherConstants.DOCLEAR, false);
 			wc.setAttribute(IPDELauncherConstants.ASKCLEAR, true);
@@ -242,8 +242,8 @@ public class RuntimeWorkbenchShortcut implements ILaunchShortcut {
 						wsplugins.append(id + File.pathSeparatorChar);
 					}
 				}
-				wc.setAttribute(IPDELauncherConstants.WSPROJECT, wsplugins.toString());
-				wc.setAttribute(IPDELauncherConstants.EXTPLUGINS, explugins.toString());
+				wc.setAttribute(IPDELauncherConstants.SELECTED_WORKSPACE_PLUGINS, wsplugins.toString());
+				wc.setAttribute(IPDELauncherConstants.SELECTED_TARGET_PLUGINS, explugins.toString());
 			} else {
 				String defaultProduct = TargetPlatform.getDefaultProduct();
 				if (defaultProduct != null) {

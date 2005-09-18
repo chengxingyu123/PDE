@@ -76,12 +76,15 @@ public class PluginBlock extends AbstractPluginBlock {
 	 * When we initialize the tree, we first set the workspace plugins subtree to 'unchecked',
 	 * then we check the plugins that had been selected and saved in the config.
 	 */
-	protected void initWorkspacePluginsState(ILaunchConfiguration config) throws CoreException {
-		boolean automaticAdd = config.getAttribute(IPDELauncherConstants.AUTOMATIC_ADD, true);		
+	protected void initWorkspacePluginsState(ILaunchConfiguration configuration) throws CoreException {
+		boolean automaticAdd = configuration.getAttribute(IPDELauncherConstants.AUTOMATIC_ADD, true);		
 		fPluginTreeViewer.setSubtreeChecked(fWorkspacePlugins, automaticAdd);
 		fNumWorkspaceChecked = automaticAdd ? fWorkspaceModels.length : 0;
 		
-		TreeSet ids = LaunchPluginValidator.parseWorkspacePluginIds(config);
+		String attribute = automaticAdd
+							? IPDELauncherConstants.DESELECTED_WORKSPACE_PLUGINS
+							: IPDELauncherConstants.SELECTED_WORKSPACE_PLUGINS;
+		TreeSet ids = LaunchPluginValidator.parsePlugins(configuration, attribute);
 		for (int i = 0; i < fWorkspaceModels.length; i++) {
 			String id = fWorkspaceModels[i].getPluginBase().getId();
 			if (id == null)
@@ -106,7 +109,8 @@ public class PluginBlock extends AbstractPluginBlock {
 		fNumExternalChecked = 0;
 
 		fPluginTreeViewer.setSubtreeChecked(fExternalPlugins, false);
-		TreeSet selected = LaunchPluginValidator.parseExternalPluginIds(config);
+		TreeSet selected = LaunchPluginValidator.parsePlugins(config,
+								IPDELauncherConstants.SELECTED_TARGET_PLUGINS);
 		for (int i = 0; i < fExternalModels.length; i++) {
 			if (selected.contains(fExternalModels[i].getPluginBase().getId())) {
 				if (fPluginTreeViewer.setChecked(fExternalModels[i], true))
@@ -130,7 +134,11 @@ public class PluginBlock extends AbstractPluginBlock {
 				if (fPluginTreeViewer.getChecked(model) != fAddWorkspaceButton.getSelection())
 					wbuf.append(model.getPluginBase().getId() + File.pathSeparatorChar);
 			}
-			config.setAttribute(IPDELauncherConstants.WSPROJECT, wbuf.toString());
+			
+			if (fAddWorkspaceButton.getSelection())
+				config.setAttribute(IPDELauncherConstants.DESELECTED_WORKSPACE_PLUGINS, wbuf.toString());
+			else
+				config.setAttribute(IPDELauncherConstants.SELECTED_WORKSPACE_PLUGINS, wbuf.toString());
 
 			// Store selected external models
 			StringBuffer exbuf = new StringBuffer();
@@ -141,10 +149,11 @@ public class PluginBlock extends AbstractPluginBlock {
 					exbuf.append(model.getPluginBase().getId() + File.pathSeparatorChar);
 				}
 			}
-			config.setAttribute(IPDELauncherConstants.EXTPLUGINS, exbuf.toString());
+			config.setAttribute(IPDELauncherConstants.SELECTED_TARGET_PLUGINS, exbuf.toString());
 		} else {
-			config.setAttribute(IPDELauncherConstants.WSPROJECT, (String) null);
-			config.setAttribute(IPDELauncherConstants.EXTPLUGINS, (String) null);
+			config.setAttribute(IPDELauncherConstants.SELECTED_TARGET_PLUGINS, (String) null);
+			config.setAttribute(IPDELauncherConstants.SELECTED_WORKSPACE_PLUGINS, (String) null);
+			config.setAttribute(IPDELauncherConstants.DESELECTED_WORKSPACE_PLUGINS, (String)null);
 		}
 	}
 

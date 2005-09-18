@@ -10,8 +10,8 @@
  *******************************************************************************/
 package org.eclipse.pde.internal.ui.launcher;
 
-import java.io.File;
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.TreeMap;
@@ -23,6 +23,7 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.MultiStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.debug.core.ILaunchConfiguration;
+import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jface.dialogs.MessageDialog;
@@ -36,36 +37,88 @@ import org.eclipse.pde.ui.launcher.IPDELauncherConstants;
 import org.eclipse.swt.widgets.Display;
 
 public class LaunchPluginValidator {
+	
+	public static void checkBackwardCompatibility(ILaunchConfiguration configuration, boolean save) throws CoreException {		
+		ILaunchConfigurationWorkingCopy wc = null;
+		if (configuration.isWorkingCopy()) {
+			wc = (ILaunchConfigurationWorkingCopy) configuration;
+		} else {
+			wc = configuration.getWorkingCopy();
+		}
+		
+		String value = configuration.getAttribute("wsproject", (String)null);
+		if (value != null) {
+			wc.setAttribute("wsproject", (String)null);
+			if (value.indexOf(';') != -1)
+				value = value.replace(';', ',');	
+			else if (value.indexOf(':') != -1)
+				value = value.replace(':', ',');
+				
+			boolean automatic = configuration.getAttribute(IPDELauncherConstants.AUTOMATIC_ADD, true);
+			String attr = automatic 
+							? IPDELauncherConstants.SELECTED_WORKSPACE_PLUGINS
+							: IPDELauncherConstants.DESELECTED_WORKSPACE_PLUGINS;
+			wc.setAttribute(attr, value);
+		}
 
-	public static TreeSet parseWorkspacePluginIds(ILaunchConfiguration config)
+		String value2 = configuration.getAttribute("extplugins", (String)null);
+		if (value2 != null) {
+			wc.setAttribute("extplugins", (String)null);
+			if (value2.indexOf(';') != -1)
+				value2 = value2.replace(';', ',');	
+			else if (value2.indexOf(':') != -1)
+				value2 = value2.replace(':', ',');
+			wc.setAttribute(IPDELauncherConstants.SELECTED_TARGET_PLUGINS, value2);
+		}
+		
+		if (save && (value != null || value2 != null))
+			wc.doSave();
+	}
+	
+	public static IPluginModelBase[] getSelectedWorkspacePlugins(ILaunchConfiguration configuration)
+			throws CoreException {
+		
+		boolean usedefault = configuration.getAttribute(IPDELauncherConstants.USE_DEFAULT, true);
+		boolean useFeatures = configuration.getAttribute(IPDELauncherConstants.USEFEATURES, false);
+		
+		IPluginModelBase[] models = PDECore.getDefault().getModelManager().getWorkspaceModels();
+		
+		if (usedefault || useFeatures || models.length == 0)
+			return models;
+		
+		ArrayList list = new ArrayList();
+		if (configuration.getAttribute(IPDELauncherConstants.AUTOMATIC_ADD, true)) {
+			TreeSet deselected = parsePlugins(configuration,
+									IPDELauncherConstants.DESELECTED_WORKSPACE_PLUGINS);
+			if (deselected.size() == 0)
+				return models;
+			for (int i = 0; i < models.length; i++) {
+				String id = models[i].getPluginBase().getId();
+				if (id != null && !deselected.contains(id)) 
+					list.add(models[i]);
+			}		
+		} else {
+			TreeSet selected = parsePlugins(configuration, 
+									IPDELauncherConstants.SELECTED_WORKSPACE_PLUGINS);
+			for (int i = 0; i < models.length; i++) {
+				String id = models[i].getPluginBase().getId();
+				if (id != null && selected.contains(id)) 
+					list.add(models[i]);
+			}
+		}
+		return (IPluginModelBase[])list.toArray(new IPluginModelBase[list.size()]);
+	}
+
+	public static TreeSet parsePlugins(ILaunchConfiguration configuration, String attribute)
 			throws CoreException {
 		TreeSet set = new TreeSet();
-		String ids = config.getAttribute(IPDELauncherConstants.WSPROJECT, (String) null);
+		String ids = configuration.getAttribute(attribute, (String) null);
 		if (ids != null) {
-			StringTokenizer tok = new StringTokenizer(ids, File.pathSeparator);
+			StringTokenizer tok = new StringTokenizer(ids, ",");
 			while (tok.hasMoreTokens())
 				set.add(tok.nextToken());
 		}
 		return set;
-	}
-
-	public static TreeSet parseExternalPluginIds(ILaunchConfiguration config)
-			throws CoreException {
-		TreeSet selected = new TreeSet();
-		String ids = config.getAttribute(IPDELauncherConstants.EXTPLUGINS, (String) null);
-		if (ids != null) {
-			StringTokenizer tok = new StringTokenizer(ids, File.pathSeparator);
-			while (tok.hasMoreTokens()) {
-				String token = tok.nextToken();
-				int loc = token.lastIndexOf(',');
-				if (loc == -1) {
-					selected.add(token);
-				} else if (token.charAt(loc + 1) == 't') {
-					selected.add(token.substring(0, loc));
-				}
-			}
-		}
-		return selected;
 	}
 
 	public static TreeMap getPluginsToRun(ILaunchConfiguration config)
@@ -73,13 +126,12 @@ public class LaunchPluginValidator {
 		TreeMap map = null;
 		ArrayList statusEntries = new ArrayList();
 
-		if (!config.getAttribute(IPDELauncherConstants.USE_DEFAULT, true)) {
-			map = validatePlugins(getSelectedPlugins(config), statusEntries);
-		}
-
-		if (map == null)
+		if (config.getAttribute(IPDELauncherConstants.USE_DEFAULT, true)) {
 			map = validatePlugins(PDECore.getDefault().getModelManager().getPlugins(),
 					statusEntries);
+		} else {
+			map = validatePlugins(getSelectedPlugins(config), statusEntries);
+		}
 
 		final String requiredPlugin;
 		if (PDECore.getDefault().getModelManager().isOSGiRuntime())
@@ -112,60 +164,44 @@ public class LaunchPluginValidator {
 				return null;
 			}
 		}
-
 		return map;
 	}
 
 	public static IPluginModelBase[] getSelectedPlugins(ILaunchConfiguration config)
 			throws CoreException {
+		Map map = getSelectedPluginMap(config);
+		return (IPluginModelBase[]) map.values().toArray(new IPluginModelBase[map.size()]);
+	}
+	
+	public static Map getSelectedPluginMap(ILaunchConfiguration config)
+			throws CoreException {
+
+		checkBackwardCompatibility(config, true);
+				
 		TreeMap map = new TreeMap();
-		boolean automaticAdd = config.getAttribute(IPDELauncherConstants.AUTOMATIC_ADD,
-				true);
-		IPluginModelBase[] wsmodels = PDECore.getDefault().getModelManager()
-				.getWorkspaceModels();
-		Set wsPlugins = parseWorkspacePluginIds(config);
+		IPluginModelBase[] wsmodels = getSelectedWorkspacePlugins(config);
 		for (int i = 0; i < wsmodels.length; i++) {
-			String id = wsmodels[i].getPluginBase().getId();
-			// see the documentation of
-			// AdvancedLauncherUtils.initWorkspacePluginsState
-			if (id != null && automaticAdd != wsPlugins.contains(id))
-				map.put(id, wsmodels[i]);
+			map.put(wsmodels[i].getPluginBase().getId(), wsmodels[i]);
 		}
 
-		Set exModels = parseExternalPluginIds(config);
-		IPluginModelBase[] exmodels = PDECore.getDefault().getModelManager()
-				.getExternalModels();
+		Set exModels = parsePlugins(config, IPDELauncherConstants.SELECTED_TARGET_PLUGINS);
+		IPluginModelBase[] exmodels = PDECore.getDefault().getModelManager().getExternalModels();
 		for (int i = 0; i < exmodels.length; i++) {
 			String id = exmodels[i].getPluginBase().getId();
 			if (id != null && exModels.contains(id) && !map.containsKey(id))
 				map.put(id, exmodels[i]);
 		}
-
-		return (IPluginModelBase[]) map.values()
-				.toArray(new IPluginModelBase[map.size()]);
+		return map;
 	}
 
 	public static IProject[] getAffectedProjects(ILaunchConfiguration config)
 			throws CoreException {
-		boolean doAdd = config.getAttribute(IPDELauncherConstants.AUTOMATIC_ADD, true);
-		boolean useFeatures = config.getAttribute(IPDELauncherConstants.USEFEATURES,
-				false);
-		boolean useDefault = config.getAttribute(IPDELauncherConstants.USE_DEFAULT, true);
-
 		ArrayList projects = new ArrayList();
-		IPluginModelBase[] models = PDECore.getDefault().getModelManager()
-				.getWorkspaceModels();
-		Set wsPlugins = parseWorkspacePluginIds(config);
+		IPluginModelBase[] models = getSelectedWorkspacePlugins(config);
 		for (int i = 0; i < models.length; i++) {
-			String id = models[i].getPluginBase().getId();
-			if (id == null)
-				continue;
-			// see the documentation of PluginBlock.initWorkspacePluginsState
-			if (useDefault || useFeatures || doAdd != wsPlugins.contains(id)) {
-				IProject project = models[i].getUnderlyingResource().getProject();
-				if (project.hasNature(JavaCore.NATURE_ID))
-					projects.add(project);
-			}
+			IProject project = models[i].getUnderlyingResource().getProject();
+			if (project.hasNature(JavaCore.NATURE_ID))
+				projects.add(project);			
 		}
 
 		// add fake "Java Search" project
@@ -184,22 +220,17 @@ public class LaunchPluginValidator {
 			ArrayList statusEntries) {
 		TreeMap map = new TreeMap();
 		for (int i = 0; i < models.length; i++) {
-			IStatus status = validateModel(models[i]);
-			if (status == null) {
-				String id = models[i].getPluginBase().getId();
-				if (id != null) {
-					map.put(id, models[i]);
-				}
+			if (models[i].isLoaded()) {
+				map.put(models[i].getPluginBase().getId(), models[i]);								
 			} else {
-				statusEntries.add(status);
+				statusEntries.add(new Status(IStatus.WARNING, 
+						PDEPlugin.getPluginId(), 
+						IStatus.OK, 
+						models[i].getPluginBase().getId(), 
+						null));
 			}
 		}
 		return map;
-	}
-
-	private static IStatus validateModel(IPluginModelBase model) {
-		return model.isLoaded() ? null : new Status(IStatus.WARNING, PDEPlugin
-				.getPluginId(), IStatus.OK, model.getPluginBase().getId(), null);
 	}
 
 	private static boolean ignoreValidationErrors(final MultiStatus status) {

@@ -73,8 +73,8 @@ public class LaunchAction extends Action {
 
 	private ILaunchConfiguration refreshConfiguration(ILaunchConfigurationWorkingCopy wc) throws CoreException {
 		wc.setAttribute(IPDELauncherConstants.PRODUCT, fProduct.getId());
-		wc.setAttribute(IPDELauncherConstants.VMARGS, getVMArguments()); 
-		wc.setAttribute(IPDELauncherConstants.PROGARGS, getProgramArguments());
+		wc.setAttribute(IJavaLaunchConfigurationConstants.ATTR_VM_ARGUMENTS, getVMArguments()); 
+		wc.setAttribute(IJavaLaunchConfigurationConstants.ATTR_PROGRAM_ARGUMENTS, getProgramArguments());
 		StringBuffer wsplugins = new StringBuffer();
 		StringBuffer explugins = new StringBuffer();
 		IPluginModelBase[] models = getModels();
@@ -82,13 +82,15 @@ public class LaunchAction extends Action {
 			IPluginModelBase model = models[i];
 			String id = model.getPluginBase().getId();
 			if (model.getUnderlyingResource() == null) {
-				explugins.append(id + File.pathSeparatorChar);
+				explugins.append(id);
+				explugins.append(",");
 			} else {
-				wsplugins.append(id + File.pathSeparatorChar);
-			}
+				wsplugins.append(id);
+				wsplugins.append(",");
+			}	
 		}
-		wc.setAttribute(IPDELauncherConstants.WSPROJECT, wsplugins.toString());
-		wc.setAttribute(IPDELauncherConstants.EXTPLUGINS, explugins.toString());
+		wc.setAttribute(IPDELauncherConstants.SELECTED_WORKSPACE_PLUGINS, wsplugins.toString());
+		wc.setAttribute(IPDELauncherConstants.SELECTED_TARGET_PLUGINS, explugins.toString());
 		String configIni = getTemplateConfigIni();
 		wc.setAttribute(IPDELauncherConstants.CONFIG_GENERATE_DEFAULT, configIni == null);
 		if (configIni != null)

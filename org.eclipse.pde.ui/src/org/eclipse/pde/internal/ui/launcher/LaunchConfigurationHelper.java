@@ -30,6 +30,7 @@ import org.eclipse.core.variables.IStringVariableManager;
 import org.eclipse.core.variables.VariablesPlugin;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants;
 import org.eclipse.osgi.service.resolver.BundleDescription;
 import org.eclipse.pde.core.plugin.IPluginElement;
 import org.eclipse.pde.core.plugin.IPluginExtension;
@@ -47,7 +48,8 @@ public class LaunchConfigurationHelper {
 		if (!PDECore.getDefault().getModelManager().isOSGiRuntime())
 			return;
 		try {
-			String programArgs = config.getAttribute(IPDELauncherConstants.PROGARGS, ""); //$NON-NLS-1$
+			String programArgs = config.getAttribute(IJavaLaunchConfigurationConstants.ATTR_PROGRAM_ARGUMENTS, 
+														""); //$NON-NLS-1$
 			if (programArgs.indexOf("-clean") != -1) //$NON-NLS-1$
 				return;
 		} catch (CoreException e) {

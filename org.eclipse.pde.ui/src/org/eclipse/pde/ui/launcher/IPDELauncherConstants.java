@@ -24,15 +24,14 @@ public interface IPDELauncherConstants {
 	
 	// Command line settings
 	String VMINSTALL = "vminstall"; //$NON-NLS-1$
-	String VMARGS = "vmargs"; //$NON-NLS-1$
-	String PROGARGS = "progargs"; //$NON-NLS-1$
 	String BOOTSTRAP_ENTRIES = "bootstrap"; //$NON-NLS-1$
 	
 	// Plug-ins and Fragments settings
 	String USE_DEFAULT = "default"; //$NON-NLS-1$
 	String USEFEATURES = "usefeatures"; //$NON-NLS-1$
-	String WSPROJECT = "wsproject"; //$NON-NLS-1$
-	String EXTPLUGINS = "extplugins"; //$NON-NLS-1$
+	String SELECTED_WORKSPACE_PLUGINS = "selected_workspace_plugins";
+	String DESELECTED_WORKSPACE_PLUGINS = "deselected_workspace_plugins";
+	String SELECTED_TARGET_PLUGINS = "selected_target_plugins";
 	String INCLUDE_OPTIONAL = "includeOptional"; //$NON-NLS-1$
 	String AUTOMATIC_ADD = "automaticAdd"; //$NON-NLS-1$
 	

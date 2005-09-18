@@ -71,7 +71,10 @@ public abstract class AbstractPDELaunchConfigurationTabGroup extends
 		if (value != null) {
 			wc.setAttribute(IPDELauncherConstants.LOCATION + "0", (String)null);
 			wc.setAttribute(IPDELauncherConstants.LOCATION, value);			
-		}	
+		}
+		
+		LaunchPluginValidator.checkBackwardCompatibility(wc, false);	
+		
 	}
 
 	/**
