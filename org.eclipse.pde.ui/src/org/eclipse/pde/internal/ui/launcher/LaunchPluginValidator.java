@@ -49,11 +49,14 @@ public class LaunchPluginValidator {
 		String value = configuration.getAttribute("wsproject", (String)null);
 		if (value != null) {
 			wc.setAttribute("wsproject", (String)null);
-			if (value.indexOf(';') != -1)
+			if (";".equals(value) || ":".equals(value)) {
+				value = null;
+			} else if (value.indexOf(';') != -1) {
 				value = value.replace(';', ',');	
-			else if (value.indexOf(':') != -1)
+			} else if (value.indexOf(':') != -1) {
 				value = value.replace(':', ',');
-				
+			}
+			
 			boolean automatic = configuration.getAttribute(IPDELauncherConstants.AUTOMATIC_ADD, true);
 			String attr = automatic 
 							? IPDELauncherConstants.DESELECTED_WORKSPACE_PLUGINS
