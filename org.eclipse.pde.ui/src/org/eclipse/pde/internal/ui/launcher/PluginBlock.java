@@ -129,10 +129,11 @@ public class PluginBlock extends AbstractPluginBlock {
 				IPluginModelBase model = fWorkspaceModels[i];
 				// if "automatic add" option is selected, save "deselected" workspace plugins
 				// Otherwise, save "selected" workspace plugins
-				if (fPluginTreeViewer.getChecked(model) != fAddWorkspaceButton.getSelection())
+				if (fPluginTreeViewer.getChecked(model) != fAddWorkspaceButton.getSelection()) {
 					if (wbuf.length() > 0)
 						wbuf.append(",");
 					wbuf.append(model.getPluginBase().getId());
+				}
 			}
 			
 			String value = wbuf.length() > 0 ? wbuf.toString() : null;
