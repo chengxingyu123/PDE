@@ -10,14 +10,12 @@
  *******************************************************************************/
 package org.eclipse.pde.internal.ui.launcher;
 
-import java.io.File;
 import java.util.TreeSet;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
 import org.eclipse.pde.core.plugin.IPluginModelBase;
-import org.eclipse.pde.internal.core.plugin.ExternalPluginModelBase;
 import org.eclipse.pde.ui.launcher.AbstractLauncherTab;
 import org.eclipse.pde.ui.launcher.IPDELauncherConstants;
 
@@ -132,24 +130,33 @@ public class PluginBlock extends AbstractPluginBlock {
 				// if "automatic add" option is selected, save "deselected" workspace plugins
 				// Otherwise, save "selected" workspace plugins
 				if (fPluginTreeViewer.getChecked(model) != fAddWorkspaceButton.getSelection())
-					wbuf.append(model.getPluginBase().getId() + File.pathSeparatorChar);
+					if (wbuf.length() > 0)
+						wbuf.append(",");
+					wbuf.append(model.getPluginBase().getId());
 			}
 			
-			if (fAddWorkspaceButton.getSelection())
-				config.setAttribute(IPDELauncherConstants.DESELECTED_WORKSPACE_PLUGINS, wbuf.toString());
-			else
-				config.setAttribute(IPDELauncherConstants.SELECTED_WORKSPACE_PLUGINS, wbuf.toString());
-
+			String value = wbuf.length() > 0 ? wbuf.toString() : null;
+			if (fAddWorkspaceButton.getSelection()) {
+				config.setAttribute(IPDELauncherConstants.DESELECTED_WORKSPACE_PLUGINS, value);
+				config.setAttribute(IPDELauncherConstants.SELECTED_WORKSPACE_PLUGINS, (String)null);
+			} else {
+				config.setAttribute(IPDELauncherConstants.SELECTED_WORKSPACE_PLUGINS, value);
+			}
 			// Store selected external models
 			StringBuffer exbuf = new StringBuffer();
 			Object[] checked = fPluginTreeViewer.getCheckedElements();
 			for (int i = 0; i < checked.length; i++) {
-				if (checked[i] instanceof ExternalPluginModelBase) {
+				if (checked[i] instanceof IPluginModelBase) {
 					IPluginModelBase model = (IPluginModelBase) checked[i];
-					exbuf.append(model.getPluginBase().getId() + File.pathSeparatorChar);
+					if (model.getUnderlyingResource() == null) {
+						if (exbuf.length() > 0)
+							exbuf.append(",");
+						exbuf.append(model.getPluginBase().getId());
+					}
 				}
 			}
-			config.setAttribute(IPDELauncherConstants.SELECTED_TARGET_PLUGINS, exbuf.toString());
+			value = exbuf.length() > 0 ? exbuf.toString() : null;
+			config.setAttribute(IPDELauncherConstants.SELECTED_TARGET_PLUGINS, value);
 		} else {
 			config.setAttribute(IPDELauncherConstants.SELECTED_TARGET_PLUGINS, (String) null);
 			config.setAttribute(IPDELauncherConstants.SELECTED_WORKSPACE_PLUGINS, (String) null);
