@@ -49,13 +49,13 @@ public class LaunchPluginValidator {
 		String value = configuration.getAttribute("wsproject", (String)null);
 		if (value != null) {
 			wc.setAttribute("wsproject", (String)null);
-			if (";".equals(value) || ":".equals(value)) {
-				value = null;
-			} else if (value.indexOf(';') != -1) {
-				value = value.replace(';', ',');	
+			if (value.indexOf(';') != -1) {
+				value = value.replace(';', ',');
 			} else if (value.indexOf(':') != -1) {
 				value = value.replace(':', ',');
 			}
+			value = (value.length() == 0 || value.equals(","))
+						? null : value.substring(0, value.length() - 1);
 			
 			boolean automatic = configuration.getAttribute(IPDELauncherConstants.AUTOMATIC_ADD, true);
 			String attr = automatic 
@@ -71,6 +71,8 @@ public class LaunchPluginValidator {
 				value2 = value2.replace(';', ',');	
 			else if (value2.indexOf(':') != -1)
 				value2 = value2.replace(':', ',');
+			value2 = (value2.length() == 0 || value2.equals(","))
+						? null : value2.substring(0, value2.length() - 1);
 			wc.setAttribute(IPDELauncherConstants.SELECTED_TARGET_PLUGINS, value2);
 		}
 		
