@@ -35,6 +35,12 @@ public interface IPDELauncherConstants {
 	String INCLUDE_OPTIONAL = "includeOptional"; //$NON-NLS-1$
 	String AUTOMATIC_ADD = "automaticAdd"; //$NON-NLS-1$
 	
+	// Equinox Plugin tab
+	String DEFAULT_AUTO_START = "default_auto_start";
+	String DEFAULT_START_LEVEL = "default_start_level";
+	String WORKSPACE_BUNDLES = "workspace_bundles";
+	String TARGET_BUNDLES = "target_bundles";
+	
 	// Tracing settings
 	String TRACING = "tracing"; //$NON-NLS-1$
 	String TRACING_OPTIONS = "tracingOptions"; //$NON-NLS-1$

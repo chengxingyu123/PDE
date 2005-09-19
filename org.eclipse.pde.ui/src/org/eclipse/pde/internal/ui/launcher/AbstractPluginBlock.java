@@ -28,6 +28,7 @@ import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.CheckStateChangedEvent;
 import org.eclipse.jface.viewers.CheckboxTreeViewer;
 import org.eclipse.jface.viewers.ICheckStateListener;
+import org.eclipse.jface.viewers.ILabelProvider;
 import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.window.Window;
 import org.eclipse.osgi.util.NLS;
@@ -64,7 +65,7 @@ import org.eclipse.ui.dialogs.IWorkingSetSelectionDialog;
 
 public abstract class AbstractPluginBlock {
 
-	private AbstractLauncherTab fTab;
+	protected AbstractLauncherTab fTab;
 	
 	protected CheckboxTreeViewer fPluginTreeViewer;
 	protected NamedElement fWorkspacePlugins;
@@ -99,7 +100,7 @@ public abstract class AbstractPluginBlock {
 			} else if (source == fAddRequiredButton) {
 				computeSubset();
 			} else if (source == fDefaultsButton) {
-				computeInitialCheckState();
+				handleRestoreDefaults();
 			}
 			fTab.updateLaunchConfigurationDialog();
 		}
@@ -135,7 +136,7 @@ public abstract class AbstractPluginBlock {
 		fWorkspaceModels = PDECore.getDefault().getModelManager().getWorkspaceModels();
 	}
 	
-	private void updateCounter() {
+	protected void updateCounter() {
 		if (fCounter != null) {
 			int checked = fNumExternalChecked + fNumWorkspaceChecked;
 			int total = fWorkspaceModels.length + fExternalModels.length;
@@ -176,10 +177,14 @@ public abstract class AbstractPluginBlock {
 		SWTUtil.setButtonDimensionHint(button);
 	}
 	
-	private void createPluginViewer(Composite composite) {
-		fPluginTreeViewer = new CheckboxTreeViewer(composite, SWT.BORDER);
+	protected ILabelProvider getLabelProvider() {
+		return PDEPlugin.getDefault().getLabelProvider();
+	}
+	
+	protected void createPluginViewer(Composite composite) {
+		fPluginTreeViewer = new CheckboxTreeViewer(composite, SWT.BORDER|SWT.VIRTUAL| SWT.FULL_SELECTION);
 		fPluginTreeViewer.setContentProvider(new PluginContentProvider());
-		fPluginTreeViewer.setLabelProvider(PDEPlugin.getDefault().getLabelProvider());
+		fPluginTreeViewer.setLabelProvider(getLabelProvider());
 		fPluginTreeViewer.setAutoExpandLevel(2);
 		fPluginTreeViewer.addCheckStateListener(new ICheckStateListener() {
 			public void checkStateChanged(final CheckStateChangedEvent event) {
@@ -362,7 +367,7 @@ public abstract class AbstractPluginBlock {
 		return (String[])set.toArray(new String[set.size()]);
 	}
 	
-	public void initializeFrom(ILaunchConfiguration config, boolean defaultSelection) throws CoreException {
+	public void initializeFrom(ILaunchConfiguration config) throws CoreException {
 		fIncludeOptionalButton.setSelection(config.getAttribute(IPDELauncherConstants.INCLUDE_OPTIONAL, true));
 		fAddWorkspaceButton.setSelection(config.getAttribute(IPDELauncherConstants.AUTOMATIC_ADD, true));
 
@@ -371,16 +376,6 @@ public abstract class AbstractPluginBlock {
 			fPluginTreeViewer.setInput(PDEPlugin.getDefault());
 			fPluginTreeViewer.reveal(fWorkspacePlugins);
 		}
-
-		if (defaultSelection) {
-			computeInitialCheckState();
-		} else {
-			initWorkspacePluginsState(config);
-			initExternalPluginsState(config);
-		}
-		enableViewer(!defaultSelection);
-		updateCounter();
-		fTab.updateLaunchConfigurationDialog();
 	}
 	
 	private void computeSubset() {
@@ -518,7 +513,9 @@ public abstract class AbstractPluginBlock {
 		fDeselectButton.setEnabled(enable);
 		fIncludeOptionalButton.setEnabled(enable);
 		fAddWorkspaceButton.setEnabled(enable);
+		fCounter.setEnabled(enable);
 	}
+	
 	public void dispose() {
 		PDEPlugin.getDefault().getLabelProvider().disconnect(this);
 	}
@@ -527,7 +524,7 @@ public abstract class AbstractPluginBlock {
 		return fPluginTreeViewer.getTree().isEnabled();
 	}
 	
-	protected void computeInitialCheckState() {
+	protected void handleRestoreDefaults() {
 		TreeSet wtable = new TreeSet();
 		fNumWorkspaceChecked = 0;
 		fNumExternalChecked = 0;
@@ -553,9 +550,4 @@ public abstract class AbstractPluginBlock {
 		adjustGroupState();
 	}
 	
-	protected abstract void initExternalPluginsState(ILaunchConfiguration config)
-			throws CoreException;
-
-	protected abstract void initWorkspacePluginsState(ILaunchConfiguration config)
-			throws CoreException;
 }
