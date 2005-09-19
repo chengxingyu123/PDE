@@ -16,7 +16,6 @@ import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.pde.internal.ui.IHelpContextIds;
 import org.eclipse.pde.internal.ui.PDEPluginImages;
-import org.eclipse.pde.internal.ui.launcher.ConfigurationAreaBlock;
 import org.eclipse.pde.internal.ui.launcher.JREBlock;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
@@ -27,20 +26,12 @@ import org.eclipse.ui.PlatformUI;
 
 public class EquinoxJRETab extends AbstractLauncherTab implements IPDELauncherConstants {
 	
-	private ConfigurationAreaBlock fConfigurationArea;
 	private JREBlock fJREBlock;
 	private Image fImage;
-	private boolean fJUnitConfig;
 	
 	public EquinoxJRETab() {
-		this(false);
-	}
-	
-	public EquinoxJRETab(boolean isJUnitConfig) {
 		fImage = PDEPluginImages.DESC_JAVA_LIB_OBJ.createImage();
-		fConfigurationArea = new ConfigurationAreaBlock(this);
 		fJREBlock = new JREBlock(this);
-		fJUnitConfig = isJUnitConfig;
 	}
 	/*
 	/* (non-Javadoc)
@@ -53,8 +44,6 @@ public class EquinoxJRETab extends AbstractLauncherTab implements IPDELauncherCo
 		
 		createStartingSpace(container, 1);
 		fJREBlock.createControl(container);
-		createStartingSpace(container, 1);
-		fConfigurationArea.createControl(container);
 		
 		Dialog.applyDialogFont(container);
 		setControl(container);
@@ -65,7 +54,6 @@ public class EquinoxJRETab extends AbstractLauncherTab implements IPDELauncherCo
 	 * @see org.eclipse.debug.ui.ILaunchConfigurationTab#setDefaults(org.eclipse.debug.core.ILaunchConfigurationWorkingCopy)
 	 */
 	public void setDefaults(ILaunchConfigurationWorkingCopy configuration) {
-		fConfigurationArea.setDefaults(configuration, fJUnitConfig);
 		fJREBlock.setDefaults(configuration);
 	}
 	/* (non-Javadoc)
@@ -73,7 +61,6 @@ public class EquinoxJRETab extends AbstractLauncherTab implements IPDELauncherCo
 	 */
 	public void initializeFrom(ILaunchConfiguration configuration) {
 		try {
-			fConfigurationArea.initializeFrom(configuration);
 			fJREBlock.initializeFrom(configuration);
 		} catch (CoreException e) {
 		}
@@ -83,7 +70,6 @@ public class EquinoxJRETab extends AbstractLauncherTab implements IPDELauncherCo
 	 * @see org.eclipse.debug.ui.ILaunchConfigurationTab#performApply(org.eclipse.debug.core.ILaunchConfigurationWorkingCopy)
 	 */
 	public void performApply(ILaunchConfigurationWorkingCopy configuration) {
-		fConfigurationArea.performApply(configuration);
 		fJREBlock.performApply(configuration);
 	}
 	/* (non-Javadoc)
@@ -109,6 +95,5 @@ public class EquinoxJRETab extends AbstractLauncherTab implements IPDELauncherCo
 	}
 
 	public void validatePage() {
-		setErrorMessage(fConfigurationArea.validate());
 	}
 }
