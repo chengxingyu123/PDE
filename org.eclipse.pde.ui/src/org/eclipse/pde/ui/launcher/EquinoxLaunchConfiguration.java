@@ -14,15 +14,15 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.debug.core.ILaunch;
 import org.eclipse.debug.core.ILaunchConfiguration;
-import org.eclipse.debug.core.model.LaunchConfigurationDelegate;
 
-public class EquinoxLaunchConfiguration extends LaunchConfigurationDelegate {
-
-	public EquinoxLaunchConfiguration() {
-		super();
+public class EquinoxLaunchConfiguration extends AbstractPDELaunchConfiguration {
+	
+	public String[] getProgramArguments(ILaunchConfiguration configuration) throws CoreException {
+		return super.getProgramArguments(configuration);
 	}
 
-	public void launch(ILaunchConfiguration configuration, String mode, ILaunch launch, IProgressMonitor monitor) throws CoreException {
+	protected void preLaunchCheck(ILaunchConfiguration configuration, ILaunch launch, IProgressMonitor monitor) throws CoreException {
 	}
+
 
 }
