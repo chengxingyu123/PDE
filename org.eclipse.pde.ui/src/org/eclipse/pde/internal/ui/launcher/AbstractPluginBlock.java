@@ -241,6 +241,7 @@ public abstract class AbstractPluginBlock {
 		
 		fCounter = new Label(composite, SWT.NONE);
 		fCounter.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_CENTER));
+		updateCounter();
 	}
 	
 	private Button createButton(Composite composite, String text) {

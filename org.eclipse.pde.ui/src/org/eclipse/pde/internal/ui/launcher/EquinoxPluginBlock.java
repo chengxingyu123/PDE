@@ -102,6 +102,7 @@ public class EquinoxPluginBlock extends AbstractPluginBlock {
 		super.initializeFrom(config);
 		fWorkspaceMap = config.getAttribute(IPDELauncherConstants.WORKSPACE_BUNDLES, new Properties());
 		fTargetMap = config.getAttribute(IPDELauncherConstants.TARGET_BUNDLES, new Properties());
+		updateCounter();
 	}
 		
 	private void createEditors() {
