@@ -60,7 +60,7 @@ public class EquinoxPluginBlock extends AbstractPluginBlock {
 		if (obj instanceof IPluginModelBase) {
 			IPluginModelBase model = (IPluginModelBase)obj;
 			if (!"org.eclipse.osgi".equals(model.getPluginBase().getId())) 
-				return "default";
+				return fPluginTreeViewer.getChecked(model) ? "default" : "";
 		}
 		return "";
 	}
@@ -69,7 +69,7 @@ public class EquinoxPluginBlock extends AbstractPluginBlock {
 		if (obj instanceof IPluginModelBase) {
 			IPluginModelBase model = (IPluginModelBase)obj;
 			if (!"org.eclipse.osgi".equals(model.getPluginBase().getId())) 
-				return "default";
+				return fPluginTreeViewer.getChecked(model) ? "default" : "";
 		}
 		return "";
 	}
@@ -150,7 +150,7 @@ public class EquinoxPluginBlock extends AbstractPluginBlock {
 		if (obj instanceof IPluginModelBase) {
 			IPluginModelBase model = (IPluginModelBase)obj;
 			if (!"org.eclipse.osgi".equals(model.getPluginBase().getId()))
-				return true;
+				return fPluginTreeViewer.getChecked(model);
 		}
 		return false;
 	}
@@ -179,6 +179,26 @@ public class EquinoxPluginBlock extends AbstractPluginBlock {
 
 	protected void initWorkspacePluginsState(ILaunchConfiguration config)
 			throws CoreException {
+	}
+	
+	protected void handleCheckStateChanged(IPluginModelBase model, boolean checked) {
+		super.handleCheckStateChanged(model, checked);
+	}
+	
+	protected void handleGroupStateChanged(Object group, boolean checked) {
+		super.handleGroupStateChanged(group, checked);
+	}
+	
+	protected void setChecked(IPluginModelBase model, boolean checked) {
+		super.setChecked(model, checked);
+	}
+	
+	protected void setCheckedElements(Object[] checked) {
+		super.setCheckedElements(checked);
+	}
+	
+	protected void handleRestoreDefaults() {
+		super.handleRestoreDefaults();
 	}
 
 }

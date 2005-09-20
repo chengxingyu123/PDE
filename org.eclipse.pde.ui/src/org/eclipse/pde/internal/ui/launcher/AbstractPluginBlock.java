@@ -236,11 +236,8 @@ public abstract class AbstractPluginBlock {
 		fAddRequiredButton = createButton(composite, PDEUIMessages.AdvancedLauncherTab_subset); 
 		fDefaultsButton = createButton(composite, PDEUIMessages.AdvancedLauncherTab_defaults); 
 		
-		Label label = new Label(composite, SWT.NONE);
-		label.setLayoutData(new GridData(GridData.FILL_VERTICAL));
-		
 		fCounter = new Label(composite, SWT.NONE);
-		fCounter.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_CENTER));
+		fCounter.setLayoutData(new GridData(GridData.FILL_BOTH|GridData.VERTICAL_ALIGN_END));
 		updateCounter();
 	}
 	
@@ -253,7 +250,7 @@ public abstract class AbstractPluginBlock {
 		return button;
 	}
 	
-	private void handleCheckStateChanged(IPluginModelBase model, boolean checked) {
+	protected void handleCheckStateChanged(IPluginModelBase model, boolean checked) {
 		if (model.getUnderlyingResource() == null) {
 			if (checked) {
 				fNumExternalChecked += 1;
@@ -334,7 +331,7 @@ public abstract class AbstractPluginBlock {
 				if (entry != null) {
 					IPluginModelBase model = entry.getActiveModel();
 					if (!fPluginTreeViewer.getChecked(model)) {
-						fPluginTreeViewer.setChecked(model, true);
+						setChecked(model, true);
 						if (model.getUnderlyingResource() == null)
 							fNumExternalChecked += 1;
 						else
@@ -344,6 +341,10 @@ public abstract class AbstractPluginBlock {
 			}
 			adjustGroupState();
 		}
+	}
+	
+	protected void setChecked(IPluginModelBase model, boolean checked) {
+		fPluginTreeViewer.setChecked(model, checked);
 	}
 	
 	private String[] getPluginIDs(IWorkingSet[] workingSets) {
@@ -394,7 +395,7 @@ public abstract class AbstractPluginBlock {
 
 		checked = map.values().toArray();
 
-		fPluginTreeViewer.setCheckedElements(map.values().toArray());
+		setCheckedElements(checked);
 		fNumExternalChecked = 0;
 		fNumWorkspaceChecked = 0;
 		for (int i = 0; i < checked.length; i++) {
@@ -404,6 +405,10 @@ public abstract class AbstractPluginBlock {
 				fNumExternalChecked += 1;
 		}
 		adjustGroupState();
+	}
+	
+	protected void setCheckedElements(Object[] checked) {
+		fPluginTreeViewer.setCheckedElements(checked);
 	}
 
 	private void addPluginAndDependencies(IPluginModelBase model, TreeMap map) {
