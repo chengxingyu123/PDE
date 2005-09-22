@@ -22,7 +22,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 
-import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Path;
@@ -170,11 +169,7 @@ public class PluginImportWizardFirstPage extends WizardPage {
 		}
 
 		
-		int importType =
-			ResourcesPlugin.getPlugin().getPluginPreferences().getBoolean(
-				ResourcesPlugin.PREF_DISABLE_LINKING)
-				? PluginImportOperation.IMPORT_BINARY
-				: PluginImportOperation.IMPORT_BINARY_WITH_LINKS;
+		int importType = PluginImportOperation.IMPORT_BINARY;
 		try {
 			importType = settings.getInt(SETTINGS_IMPORTTYPE);
 		} catch (NumberFormatException e) {
@@ -469,9 +464,5 @@ public class PluginImportWizardFirstPage extends WizardPage {
 			resolveArbitraryLocation(dropLocation);
 		}
 		return models;
-	}
-	
-	public boolean isCurrentPage() {
-		return super.isCurrentPage();
 	}
 }
