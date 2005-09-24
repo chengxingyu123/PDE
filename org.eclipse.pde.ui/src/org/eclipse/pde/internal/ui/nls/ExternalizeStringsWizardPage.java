@@ -41,6 +41,7 @@ import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.TreeItem;
 import org.eclipse.text.edits.MalformedTreeException;
+import org.eclipse.ui.dialogs.ContainerCheckedTreeViewer;
 
 public class ExternalizeStringsWizardPage extends WizardPage {
 
@@ -232,7 +233,7 @@ public class ExternalizeStringsWizardPage extends WizardPage {
 
 		Label label = new Label(fileComposite, SWT.NONE);
 		label.setText("Resources with un-externalized strings:");
-		fInputViewer = new CheckboxTreeViewer(fileComposite, SWT.V_SCROLL | SWT.H_SCROLL | SWT.SINGLE | SWT.BORDER);
+		fInputViewer = new ContainerCheckedTreeViewer(fileComposite, SWT.V_SCROLL | SWT.H_SCROLL | SWT.SINGLE | SWT.BORDER);
 		fInputViewer.setContentProvider(new ModelChangeContentProvider());
 		fInputViewer.setLabelProvider(fLabelProvider);
 		fInputViewer.getTree().setLayoutData(new GridData(GridData.FILL_BOTH));
