@@ -181,10 +181,6 @@ public class EquinoxPluginBlock extends AbstractPluginBlock {
 			throws CoreException {
 	}
 	
-	protected void handleCheckStateChanged(IPluginModelBase model, boolean checked) {
-		super.handleCheckStateChanged(model, checked);
-	}
-	
 	protected void handleGroupStateChanged(Object group, boolean checked) {
 		super.handleGroupStateChanged(group, checked);
 	}
