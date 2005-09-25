@@ -86,6 +86,7 @@ public class PluginBlock extends AbstractPluginBlock {
 	protected void initWorkspacePluginsState(ILaunchConfiguration configuration) throws CoreException {
 		boolean automaticAdd = configuration.getAttribute(IPDELauncherConstants.AUTOMATIC_ADD, true);		
 		fPluginTreeViewer.setSubtreeChecked(fWorkspacePlugins, automaticAdd);
+		fNumWorkspaceChecked = automaticAdd ? fWorkspaceModels.length : 0;
 		
 		String attribute = automaticAdd
 							? IPDELauncherConstants.DESELECTED_WORKSPACE_PLUGINS
@@ -96,23 +97,37 @@ public class PluginBlock extends AbstractPluginBlock {
 			if (id == null)
 				continue;
 			if (automaticAdd && ids.contains(id)) {
-				fPluginTreeViewer.setChecked(fWorkspaceModels[i], false);
+				if (fPluginTreeViewer.setChecked(fWorkspaceModels[i], false))
+					fNumWorkspaceChecked -= 1;
 			} else if (!automaticAdd && ids.contains(id)) {
-				fPluginTreeViewer.setChecked(fWorkspaceModels[i], true);
+				if (fPluginTreeViewer.setChecked(fWorkspaceModels[i], true))
+					fNumWorkspaceChecked += 1;
 			} 
 		}			
+
+		fPluginTreeViewer.setChecked(fWorkspacePlugins, fNumWorkspaceChecked > 0);
+		fPluginTreeViewer.setGrayed(
+			fWorkspacePlugins,
+			fNumWorkspaceChecked > 0 && fNumWorkspaceChecked < fWorkspaceModels.length);
 	}
 	
 	protected void initExternalPluginsState(ILaunchConfiguration config)
 			throws CoreException {
+		fNumExternalChecked = 0;
+
 		fPluginTreeViewer.setSubtreeChecked(fExternalPlugins, false);
 		TreeSet selected = LaunchPluginValidator.parsePlugins(config,
 								IPDELauncherConstants.SELECTED_TARGET_PLUGINS);
 		for (int i = 0; i < fExternalModels.length; i++) {
 			if (selected.contains(fExternalModels[i].getPluginBase().getId())) {
-				fPluginTreeViewer.setChecked(fExternalModels[i], true);
+				if (fPluginTreeViewer.setChecked(fExternalModels[i], true))
+					fNumExternalChecked += 1;
 			}
 		}
+
+		fPluginTreeViewer.setChecked(fExternalPlugins, fNumExternalChecked > 0);
+		fPluginTreeViewer.setGrayed(fExternalPlugins, fNumExternalChecked > 0
+				&& fNumExternalChecked < fExternalModels.length);
 	}
 
 	protected void savePluginState(ILaunchConfigurationWorkingCopy config) {

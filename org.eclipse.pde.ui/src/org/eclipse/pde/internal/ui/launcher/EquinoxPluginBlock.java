@@ -309,9 +309,9 @@ public class EquinoxPluginBlock extends AbstractPluginBlock {
 	}
 	
 	protected void handleCheckStateChanged(IPluginModelBase model, boolean checked) {
+		super.handleCheckStateChanged(model, checked);
 		adjustState(model, checked);
 		fPluginTreeViewer.refresh(model);
-		super.handleCheckStateChanged(model, checked);
 	}
 	
 	protected void setChecked(IPluginModelBase model, boolean checked) {
