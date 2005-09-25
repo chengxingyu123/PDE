@@ -83,29 +83,22 @@ public class PluginBlock extends AbstractPluginBlock {
 	 * When we initialize the tree, we first set the workspace plugins subtree to 'unchecked',
 	 * then we check the plugins that had been selected and saved in the config.
 	 */
-	protected void initWorkspacePluginsState(ILaunchConfiguration configuration) throws CoreException {
+	private void initWorkspacePluginsState(ILaunchConfiguration configuration) throws CoreException {
 		boolean automaticAdd = configuration.getAttribute(IPDELauncherConstants.AUTOMATIC_ADD, true);		
-		fPluginTreeViewer.setSubtreeChecked(fWorkspacePlugins, automaticAdd);
-		
 		String attribute = automaticAdd
 							? IPDELauncherConstants.DESELECTED_WORKSPACE_PLUGINS
 							: IPDELauncherConstants.SELECTED_WORKSPACE_PLUGINS;
 		TreeSet ids = LaunchPluginValidator.parsePlugins(configuration, attribute);
 		for (int i = 0; i < fWorkspaceModels.length; i++) {
 			String id = fWorkspaceModels[i].getPluginBase().getId();
-			if (id == null)
-				continue;
-			if (automaticAdd && ids.contains(id)) {
-				fPluginTreeViewer.setChecked(fWorkspaceModels[i], false);
-			} else if (!automaticAdd && ids.contains(id)) {
+			if (id != null && automaticAdd != ids.contains(id)) {
 				fPluginTreeViewer.setChecked(fWorkspaceModels[i], true);
 			} 
 		}			
 	}
 	
-	protected void initExternalPluginsState(ILaunchConfiguration config)
+	private void initExternalPluginsState(ILaunchConfiguration config)
 			throws CoreException {
-		fPluginTreeViewer.setSubtreeChecked(fExternalPlugins, false);
 		TreeSet selected = LaunchPluginValidator.parsePlugins(config,
 								IPDELauncherConstants.SELECTED_TARGET_PLUGINS);
 		for (int i = 0; i < fExternalModels.length; i++) {

@@ -10,14 +10,20 @@
  *******************************************************************************/
 package org.eclipse.pde.internal.ui.launcher;
 
+import java.util.Iterator;
 import java.util.Map;
-import java.util.Properties;
+import java.util.StringTokenizer;
+import java.util.TreeMap;
+import java.util.TreeSet;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
+import org.eclipse.jface.viewers.CheckStateChangedEvent;
 import org.eclipse.jface.viewers.ILabelProvider;
 import org.eclipse.pde.core.plugin.IPluginModelBase;
+import org.eclipse.pde.internal.core.PDECore;
+import org.eclipse.pde.internal.core.PluginModelManager;
 import org.eclipse.pde.internal.ui.PDELabelProvider;
 import org.eclipse.pde.ui.launcher.AbstractLauncherTab;
 import org.eclipse.pde.ui.launcher.IPDELauncherConstants;
@@ -46,9 +52,9 @@ public class EquinoxPluginBlock extends AbstractPluginBlock {
 			case 0:
 				return super.getColumnText(obj, index);
 			case 1:
-				return getAutoStart(obj);
-			default:
 				return getStartLevel(obj);
+			default:
+				return getAutoStart(obj);
 			}
 		}
 	}
@@ -56,22 +62,46 @@ public class EquinoxPluginBlock extends AbstractPluginBlock {
 	private Map fWorkspaceMap;
 	private Map fTargetMap;
 	
-	private String getAutoStart(Object obj) {
+	private String getStartLevel(Object obj) {
+		if (fTargetMap == null || fWorkspaceMap == null)
+			return "";
+		String value = null;
 		if (obj instanceof IPluginModelBase) {
 			IPluginModelBase model = (IPluginModelBase)obj;
-			if (!"org.eclipse.osgi".equals(model.getPluginBase().getId())) 
-				return fPluginTreeViewer.getChecked(model) ? "default" : "";
+			String id = model.getPluginBase().getId();
+			if ("org.eclipse.osgi".equals(id))
+				return "";
+			
+			if (model.getUnderlyingResource() != null) {
+				if (fWorkspaceMap.containsKey(id)) {
+					value = (String)fWorkspaceMap.get(id);
+				}
+			} else if (fTargetMap.containsKey(id)) {
+				value = (String)fTargetMap.get(id);
+			}
 		}
-		return "";
+		return value == null ? "" : value.substring(0, value.indexOf(':'));
 	}
 
-	private String getStartLevel(Object obj) {
+	private String getAutoStart(Object obj) {
+		if (fTargetMap == null || fWorkspaceMap == null)
+			return "";
+		String value = null;
 		if (obj instanceof IPluginModelBase) {
 			IPluginModelBase model = (IPluginModelBase)obj;
-			if (!"org.eclipse.osgi".equals(model.getPluginBase().getId())) 
-				return fPluginTreeViewer.getChecked(model) ? "default" : "";
+			String id = model.getPluginBase().getId();
+			if ("org.eclipse.osgi".equals(id))
+				return "";
+			
+			if (model.getUnderlyingResource() != null) {
+				if (fWorkspaceMap.containsKey(id)) {
+					value = (String)fWorkspaceMap.get(id);
+				}
+			} else if (fTargetMap.containsKey(id)) {
+				value = (String)fTargetMap.get(id);
+			}
 		}
-		return "";
+		return value == null ? "" : value.substring(value.indexOf(':') + 1);
 	}
 
 	public EquinoxPluginBlock(AbstractLauncherTab tab) {
@@ -98,13 +128,6 @@ public class EquinoxPluginBlock extends AbstractPluginBlock {
 		createEditors();
 	}
 	
-	public void initializeFrom(ILaunchConfiguration config) throws CoreException {
-		super.initializeFrom(config);
-		fWorkspaceMap = config.getAttribute(IPDELauncherConstants.WORKSPACE_BUNDLES, new Properties());
-		fTargetMap = config.getAttribute(IPDELauncherConstants.TARGET_BUNDLES, new Properties());
-		updateCounter();
-	}
-		
 	private void createEditors() {
 		final Tree tree = fPluginTreeViewer.getTree();
 		final TreeEditor editor1 = new TreeEditor(tree);
@@ -159,34 +182,162 @@ public class EquinoxPluginBlock extends AbstractPluginBlock {
 		return new EquinoxLabelProvider();
 	}
 	
-	protected void savePluginState(ILaunchConfigurationWorkingCopy config) {
-		if (fWorkspaceMap != null && fWorkspaceMap.size() > 0) {
-			config.setAttribute(IPDELauncherConstants.WORKSPACE_BUNDLES, fWorkspaceMap);
-		} else {
-			config.setAttribute(IPDELauncherConstants.WORKSPACE_BUNDLES, (Map)null);
-		}
+	protected void savePluginState(ILaunchConfigurationWorkingCopy config) {		
+		config.setAttribute(IPDELauncherConstants.WORKSPACE_BUNDLES, 
+							saveMap(fWorkspaceMap));
 		
-		if (fTargetMap != null && fTargetMap.size() > 0) {
-			config.setAttribute(IPDELauncherConstants.TARGET_BUNDLES, fTargetMap);
-		} else {
-			config.setAttribute(IPDELauncherConstants.TARGET_BUNDLES, (Map)null);
+		config.setAttribute(IPDELauncherConstants.TARGET_BUNDLES, 
+							saveMap(fTargetMap));
+		
+		StringBuffer buffer = new StringBuffer();
+		if (fAddWorkspaceButton.getSelection()) {
+			for (int i = 0; i < fWorkspaceModels.length; i++) {
+				if (!fPluginTreeViewer.getChecked(fWorkspaceModels[i])) {
+					if (buffer.length() > 0)
+						buffer.append(",");
+					buffer.append(fWorkspaceModels[i].getPluginBase().getId());
+				}
+			}
+		} 		
+		config.setAttribute(IPDELauncherConstants.DESELECTED_WORKSPACE_PLUGINS, 
+							buffer.length() > 0 ? buffer.toString() : (String)null);
+	}
+	
+	private String saveMap(Map map) {
+		StringBuffer buffer = new StringBuffer();
+		if (map.size() > 0) {
+			Iterator iter = map.keySet().iterator();
+			while (iter.hasNext()) {
+				if (buffer.length() > 0)
+					buffer.append(",");
+				String key = iter.next().toString();
+				buffer.append(key);
+				buffer.append("@");
+				buffer.append(map.get(key));
+			}		
+		}
+		return buffer.length() > 0 ? buffer.toString() : null;
+	}
+	
+	public static Map retrieveMap(ILaunchConfiguration configuration, String attribute) {
+		Map map = new TreeMap();
+		try {
+			String value = configuration.getAttribute(attribute, "");
+			StringTokenizer tok = new StringTokenizer(value, ",");
+			while (tok.hasMoreTokens()) {
+				String token = tok.nextToken();
+				int index = token.indexOf('@');
+				map.put(token.substring(0, index), token.substring(index + 1));
+			}
+		} catch (CoreException e) {
+		}	
+		return map;
+	}
+
+	public void initializeFrom(ILaunchConfiguration configuration) throws CoreException {
+		super.initializeFrom(configuration);
+		initWorkspacePluginsState(configuration);
+		initExternalPluginsState(configuration);
+		updateCounter();
+	}
+		
+	private void initExternalPluginsState(ILaunchConfiguration configuration)
+			throws CoreException {
+		fTargetMap = retrieveMap(configuration, IPDELauncherConstants.TARGET_BUNDLES);
+		Iterator iter = fTargetMap.keySet().iterator();
+		PluginModelManager manager = PDECore.getDefault().getModelManager();
+		while (iter.hasNext()) {
+			String key = iter.next().toString();
+			IPluginModelBase model = manager.findModel(key);
+			if (model.getUnderlyingResource() == null) {
+				fPluginTreeViewer.setChecked(model, true);
+				fPluginTreeViewer.refresh(model);
+			} else {
+				fTargetMap.remove(key);
+			}
 		}
 	}
 
-	protected void initExternalPluginsState(ILaunchConfiguration config)
+	private void initWorkspacePluginsState(ILaunchConfiguration configuration)
 			throws CoreException {
-	}
+		fWorkspaceMap = retrieveMap(configuration, IPDELauncherConstants.WORKSPACE_BUNDLES);
+		if (configuration.getAttribute(IPDELauncherConstants.AUTOMATIC_ADD, true)) {
+			TreeSet deselectedPlugins = LaunchPluginValidator.parsePlugins(configuration, IPDELauncherConstants.DESELECTED_WORKSPACE_PLUGINS);
+			for (int i = 0; i < fWorkspaceModels.length; i++) {
+				String id = fWorkspaceModels[i].getPluginBase().getId();
+				if (!fWorkspaceMap.containsKey(id) && deselectedPlugins.contains(id)) {
+					fWorkspaceMap.put(id, "default:default");
+				}
+			}
+		}
 
-	protected void initWorkspacePluginsState(ILaunchConfiguration config)
-			throws CoreException {
+		Iterator iter = fWorkspaceMap.keySet().iterator();
+		PluginModelManager manager = PDECore.getDefault().getModelManager();
+		while (iter.hasNext()) {
+			String key = iter.next().toString();
+			IPluginModelBase model = manager.findModel(key);
+			if (model.getUnderlyingResource() != null) {
+				fPluginTreeViewer.setChecked(model, true);
+				fPluginTreeViewer.refresh(model);
+			} else {
+				fWorkspaceMap.remove(key);
+			}
+		}
 	}
 	
 	protected void handleGroupStateChanged(Object group, boolean checked) {
+		if (!checked) {
+			if (group == fWorkspacePlugins) {
+				fWorkspaceMap.clear();
+			} else if (group == fExternalPlugins) {
+				fTargetMap.clear();
+			}
+		} else {
+			if (group == fWorkspacePlugins) {
+				for (int i = 0; i < fWorkspaceModels.length; i++) {
+					String id = fWorkspaceModels[i].getPluginBase().getId();
+					fWorkspaceMap.put(id, "default:default");
+				}
+			} else if (group == fExternalPlugins) {
+				for (int i = 0; i < fExternalModels.length; i++) {
+					String id = fExternalModels[i].getPluginBase().getId();
+					fTargetMap.put(id, "default:default");
+				}
+			}
+		}
 		super.handleGroupStateChanged(group, checked);
 	}
 	
+	protected void handleCheckStateChanged(CheckStateChangedEvent event) {
+		Object element = event.getElement();
+		if (element instanceof IPluginModelBase) {
+			adjustState((IPluginModelBase)element, event.getChecked());
+		} else {
+			handleGroupStateChanged(element, event.getChecked());
+		}
+		fPluginTreeViewer.refresh(element);
+		super.handleCheckStateChanged(event);
+	}
+	
 	protected void setChecked(IPluginModelBase model, boolean checked) {
+		adjustState(model, checked);
+		fPluginTreeViewer.refresh(model);
 		super.setChecked(model, checked);
+	}
+	
+	private void adjustState(IPluginModelBase model, boolean checked) {
+		String id = model.getPluginBase().getId();
+		if (checked) {
+			if (model.getUnderlyingResource() != null)
+				fWorkspaceMap.put(id, "default:default");
+			else
+				fTargetMap.put(id, "default:default");
+		} else {
+			if (model.getUnderlyingResource() != null)
+				fWorkspaceMap.remove(id);
+			else
+				fTargetMap.remove(id);			
+		}		
 	}
 	
 	protected void setCheckedElements(Object[] checked) {
@@ -194,7 +345,25 @@ public class EquinoxPluginBlock extends AbstractPluginBlock {
 	}
 	
 	protected void handleRestoreDefaults() {
-		super.handleRestoreDefaults();
+		Object[] selected = fPluginTreeViewer.getCheckedElements();
+		for (int i = 0; i < selected.length; i++) {
+			if (selected[i] instanceof IPluginModelBase) {
+				IPluginModelBase model = (IPluginModelBase)selected[i];
+				String id = model.getPluginBase().getId();
+				if (model.getUnderlyingResource() == null) {
+					String value = (String)fTargetMap.get(id);
+					if (!"default:default".equals(value)) {
+						fTargetMap.put(id, "default:default");
+					}
+				} else {
+					String value = (String)fWorkspaceMap.get(id);
+					if (!"default:default".equals(value)) {
+						fWorkspaceMap.put(id, "default:default");
+					}					
+				}
+				fPluginTreeViewer.refresh(model);
+			}
+		}
 	}
 
 }

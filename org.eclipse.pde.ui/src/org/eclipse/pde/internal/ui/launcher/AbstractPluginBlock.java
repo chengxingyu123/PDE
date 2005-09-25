@@ -184,13 +184,13 @@ public abstract class AbstractPluginBlock {
 	}
 	
 	protected void createPluginViewer(Composite composite) {
-		fPluginTreeViewer = new ContainerCheckedTreeViewer(composite, SWT.BORDER|SWT.VIRTUAL);
+		fPluginTreeViewer = new ContainerCheckedTreeViewer(composite, SWT.BORDER|SWT.VIRTUAL|SWT.FULL_SELECTION);
 		fPluginTreeViewer.setContentProvider(new PluginContentProvider());
 		fPluginTreeViewer.setLabelProvider(getLabelProvider());
 		fPluginTreeViewer.setAutoExpandLevel(2);
 		fPluginTreeViewer.addCheckStateListener(new ICheckStateListener() {
 			public void checkStateChanged(CheckStateChangedEvent event) {
-				fTab.updateLaunchConfigurationDialog();
+				handleCheckStateChanged(event);
 			}
 		});
 		fPluginTreeViewer.setSorter(new ListUtil.PluginSorter() {
@@ -473,6 +473,10 @@ public abstract class AbstractPluginBlock {
 	
 	protected boolean isEnabled() {
 		return fPluginTreeViewer.getTree().isEnabled();
+	}
+	
+	protected void handleCheckStateChanged(CheckStateChangedEvent event) {
+		fTab.updateLaunchConfigurationDialog();
 	}
 	
 	protected void handleRestoreDefaults() {

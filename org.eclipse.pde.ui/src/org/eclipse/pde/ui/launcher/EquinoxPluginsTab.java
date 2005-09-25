@@ -80,6 +80,18 @@ public class EquinoxPluginsTab extends AbstractLauncherTab {
 		defaults.setLayout(layout);
 		defaults.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_BEGINNING));
 		
+		Label startLevelLabel = new Label(defaults, SWT.NONE);
+		startLevelLabel.setText("Default Start Level:");
+		
+		fDefaultStartLevel = new Spinner(defaults, SWT.BORDER);
+		fDefaultStartLevel.setMinimum(1);
+		fDefaultStartLevel.addModifyListener(fListener);
+		
+		Label label = new Label(defaults, SWT.NONE);
+		GridData gd = new GridData(GridData.FILL_HORIZONTAL);
+		gd.minimumWidth = 50;
+		label.setLayoutData(gd);
+		
 		Label autoStartLabel = new Label(defaults, SWT.NONE);
 		autoStartLabel.setText("Default Auto-Start:");
 		
@@ -87,18 +99,6 @@ public class EquinoxPluginsTab extends AbstractLauncherTab {
 		fDefaultAutoStart.setItems(new String[] {Boolean.toString(true), Boolean.toString(false)});
 		fDefaultAutoStart.select(0);
 		fDefaultAutoStart.addSelectionListener(fListener);
-		
-		Label label = new Label(defaults, SWT.NONE);
-		GridData gd = new GridData(GridData.FILL_HORIZONTAL);
-		gd.minimumWidth = 50;
-		label.setLayoutData(gd);
-		
-		Label startLevelLabel = new Label(defaults, SWT.NONE);
-		startLevelLabel.setText("Default Start Level:");
-		
-		fDefaultStartLevel = new Spinner(defaults, SWT.BORDER);
-		fDefaultStartLevel.setMinimum(1);
-		fDefaultStartLevel.addModifyListener(fListener);
 	}
 
 	
