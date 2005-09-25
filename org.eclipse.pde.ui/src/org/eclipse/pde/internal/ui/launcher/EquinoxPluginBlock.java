@@ -62,29 +62,20 @@ public class EquinoxPluginBlock extends AbstractPluginBlock {
 	private Map fTargetMap;
 	
 	private String getStartLevel(Object obj) {
-		if (fTargetMap == null || fWorkspaceMap == null)
-			return "";
-		String value = null;
-		if (obj instanceof IPluginModelBase) {
-			IPluginModelBase model = (IPluginModelBase)obj;
-			String id = model.getPluginBase().getId();
-			if ("org.eclipse.osgi".equals(id))
-				return "";
-			
-			if (model.getUnderlyingResource() != null) {
-				if (fWorkspaceMap.containsKey(id)) {
-					value = (String)fWorkspaceMap.get(id);
-				}
-			} else if (fTargetMap.containsKey(id)) {
-				value = (String)fTargetMap.get(id);
-			}
-		}
-		return value == null ? "" : value.substring(0, value.indexOf(':'));
+		String value = getValue(obj);
+		return (value == null || value.indexOf(':') == -1)
+					? ""
+					: value.substring(0, value.indexOf(':'));
 	}
 
 	private String getAutoStart(Object obj) {
-		if (fTargetMap == null || fWorkspaceMap == null)
-			return "";
+		String value = getValue(obj);
+		return (value == null || value.indexOf(':') == -1)
+					? ""
+		            : value.substring(value.indexOf(':') + 1);
+	}
+	
+	private String getValue(Object obj) {
 		String value = null;
 		if (obj instanceof IPluginModelBase) {
 			IPluginModelBase model = (IPluginModelBase)obj;
@@ -93,14 +84,14 @@ public class EquinoxPluginBlock extends AbstractPluginBlock {
 				return "";
 			
 			if (model.getUnderlyingResource() != null) {
-				if (fWorkspaceMap.containsKey(id)) {
+				if (fWorkspaceMap != null && fWorkspaceMap.containsKey(id)) {
 					value = (String)fWorkspaceMap.get(id);
 				}
-			} else if (fTargetMap.containsKey(id)) {
+			} else if (fTargetMap != null && fTargetMap.containsKey(id)) {
 				value = (String)fTargetMap.get(id);
 			}
 		}
-		return value == null ? "" : value.substring(value.indexOf(':') + 1);
+		return value;
 	}
 
 	public EquinoxPluginBlock(AbstractLauncherTab tab) {
@@ -116,11 +107,11 @@ public class EquinoxPluginBlock extends AbstractPluginBlock {
     	column1.setWidth(300);
 
     	TreeColumn column2 = new TreeColumn(tree, SWT.CENTER);
-    	column2.setText("Auto-Start"); 
+    	column2.setText("Start Level"); 
     	column2.setWidth(80);
          
         TreeColumn column3 = new TreeColumn(tree, SWT.CENTER);
-        column3.setText("Start Level");
+        column3.setText("Auto-Start");
         column3.setWidth(80);      
         tree.setHeaderVisible(true);
 
@@ -129,13 +120,14 @@ public class EquinoxPluginBlock extends AbstractPluginBlock {
 	
 	private void createEditors() {
 		final Tree tree = fPluginTreeViewer.getTree();
+
 		final TreeEditor editor1 = new TreeEditor(tree);
 		editor1.horizontalAlignment = SWT.CENTER;
-		editor1.grabHorizontal = true;
 		editor1.minimumWidth = 60;
 
 		final TreeEditor editor2 = new TreeEditor(tree);
 		editor2.horizontalAlignment = SWT.CENTER;
+		editor2.grabHorizontal = true;
 		editor2.minimumWidth = 60;
 
 		tree.addSelectionListener(new SelectionAdapter() {
@@ -154,15 +146,16 @@ public class EquinoxPluginBlock extends AbstractPluginBlock {
 				if (!isEditable(item))
 					return;
 
+				Spinner spinner = new Spinner(tree, SWT.BORDER);
+				spinner.setMinimum(1);
+				editor1.setEditor(spinner, item, 1);
+
 				CCombo combo = new CCombo(tree, SWT.BORDER | SWT.READ_ONLY);
 				combo.setItems(new String[] { "default", Boolean.toString(true), Boolean.toString(false) });
 				combo.select(0);
 				combo.pack();
-				editor1.setEditor(combo, item, 1);
+				editor2.setEditor(combo, item, 2);
 
-				Spinner spinner = new Spinner(tree, SWT.BORDER);
-				spinner.setMinimum(1);
-				editor2.setEditor(spinner, item, 2);
 			}
 		});			
 	}
@@ -272,7 +265,7 @@ public class EquinoxPluginBlock extends AbstractPluginBlock {
 			TreeSet deselectedPlugins = LaunchPluginValidator.parsePlugins(configuration, IPDELauncherConstants.DESELECTED_WORKSPACE_PLUGINS);
 			for (int i = 0; i < fWorkspaceModels.length; i++) {
 				String id = fWorkspaceModels[i].getPluginBase().getId();
-				if (!fWorkspaceMap.containsKey(id) && deselectedPlugins.contains(id)) {
+				if (!fWorkspaceMap.containsKey(id) && !deselectedPlugins.contains(id)) {
 					fWorkspaceMap.put(id, "default:default");
 				}
 			}
