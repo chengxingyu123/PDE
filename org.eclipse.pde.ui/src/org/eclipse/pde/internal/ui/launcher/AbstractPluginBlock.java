@@ -184,7 +184,7 @@ public abstract class AbstractPluginBlock {
 	}
 	
 	protected void createPluginViewer(Composite composite) {
-		fPluginTreeViewer = new ContainerCheckedTreeViewer(composite, SWT.BORDER|SWT.VIRTUAL| SWT.FULL_SELECTION);
+		fPluginTreeViewer = new ContainerCheckedTreeViewer(composite, SWT.BORDER|SWT.VIRTUAL);
 		fPluginTreeViewer.setContentProvider(new PluginContentProvider());
 		fPluginTreeViewer.setLabelProvider(getLabelProvider());
 		fPluginTreeViewer.setAutoExpandLevel(2);
