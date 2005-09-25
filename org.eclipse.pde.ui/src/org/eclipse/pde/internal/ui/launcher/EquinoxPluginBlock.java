@@ -249,11 +249,11 @@ public class EquinoxPluginBlock extends AbstractPluginBlock {
 		while (iter.hasNext()) {
 			String key = iter.next().toString();
 			IPluginModelBase model = manager.findModel(key);
-			if (model.getUnderlyingResource() == null) {
+			if (model != null && model.getUnderlyingResource() == null) {
 				fPluginTreeViewer.setChecked(model, true);
 				fPluginTreeViewer.refresh(model);
 			} else {
-				fTargetMap.remove(key);
+				//fTargetMap.remove(key);
 			}
 		}
 	}
@@ -276,7 +276,7 @@ public class EquinoxPluginBlock extends AbstractPluginBlock {
 		while (iter.hasNext()) {
 			String key = iter.next().toString();
 			IPluginModelBase model = manager.findModel(key);
-			if (model.getUnderlyingResource() != null) {
+			if (model != null && model.getUnderlyingResource() != null) {
 				fPluginTreeViewer.setChecked(model, true);
 				fPluginTreeViewer.refresh(model);
 			} else {
@@ -305,6 +305,7 @@ public class EquinoxPluginBlock extends AbstractPluginBlock {
 				}
 			}
 		}
+		fPluginTreeViewer.refresh(group);
 		super.handleGroupStateChanged(group, checked);
 	}
 	
@@ -342,6 +343,30 @@ public class EquinoxPluginBlock extends AbstractPluginBlock {
 	
 	protected void setCheckedElements(Object[] checked) {
 		super.setCheckedElements(checked);
+		for (int i = 0; i < fWorkspaceModels.length; i++) {
+			String id = fWorkspaceModels[i].getPluginBase().getId();
+			if (fPluginTreeViewer.getChecked(fWorkspaceModels[i])) {
+				if (!fWorkspaceMap.containsKey(id)) {
+					fWorkspaceMap.put(id, "default:default");
+					fPluginTreeViewer.refresh(fWorkspaceModels[i]);
+				}			
+			} else if (fWorkspaceMap.containsKey(id)){
+				fWorkspaceMap.remove(id);
+				fPluginTreeViewer.refresh(fWorkspaceModels[i]);
+			}
+		}
+		for (int i = 0; i < fExternalModels.length; i++) {
+			String id = fExternalModels[i].getPluginBase().getId();
+			if (fPluginTreeViewer.getChecked(fExternalModels[i])) {
+				if (!fTargetMap.containsKey(id)) {
+					fTargetMap.put(id, "default:default");
+					fPluginTreeViewer.refresh(fExternalModels[i]);
+				} 
+			} else if (fTargetMap.containsKey(id)) {
+				fTargetMap.remove(id);
+				fPluginTreeViewer.refresh(fExternalModels[i]);
+			}
+		}
 	}
 	
 	protected void handleRestoreDefaults() {
