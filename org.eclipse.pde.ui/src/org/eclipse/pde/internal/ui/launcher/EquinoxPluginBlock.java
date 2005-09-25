@@ -19,7 +19,6 @@ import java.util.TreeSet;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
-import org.eclipse.jface.viewers.CheckStateChangedEvent;
 import org.eclipse.jface.viewers.ILabelProvider;
 import org.eclipse.pde.core.plugin.IPluginModelBase;
 import org.eclipse.pde.internal.core.PDECore;
@@ -309,15 +308,10 @@ public class EquinoxPluginBlock extends AbstractPluginBlock {
 		super.handleGroupStateChanged(group, checked);
 	}
 	
-	protected void handleCheckStateChanged(CheckStateChangedEvent event) {
-		Object element = event.getElement();
-		if (element instanceof IPluginModelBase) {
-			adjustState((IPluginModelBase)element, event.getChecked());
-		} else {
-			handleGroupStateChanged(element, event.getChecked());
-		}
-		fPluginTreeViewer.refresh(element);
-		super.handleCheckStateChanged(event);
+	protected void handleCheckStateChanged(IPluginModelBase model, boolean checked) {
+		adjustState(model, checked);
+		fPluginTreeViewer.refresh(model);
+		super.handleCheckStateChanged(model, checked);
 	}
 	
 	protected void setChecked(IPluginModelBase model, boolean checked) {
