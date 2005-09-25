@@ -29,6 +29,8 @@ import org.eclipse.pde.ui.launcher.IPDELauncherConstants;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CCombo;
 import org.eclipse.swt.custom.TreeEditor;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Image;
@@ -142,18 +144,29 @@ public class EquinoxPluginBlock extends AbstractPluginBlock {
 					oldEditor.dispose();
 
 				// Identify the selected row
-				TreeItem item = (TreeItem) e.item;
+				final TreeItem item = (TreeItem) e.item;
 				if (!isEditable(item))
 					return;
 
-				Spinner spinner = new Spinner(tree, SWT.BORDER);
+				final Spinner spinner = new Spinner(tree, SWT.BORDER);
 				spinner.setMinimum(1);
+				spinner.setSelection("default".equals(item.getText(1)) ? 4 : Integer.parseInt(item.getText(1)));
+				spinner.addModifyListener(new ModifyListener() {
+					public void modifyText(ModifyEvent e) {
+						item.setText(1, Integer.toString(spinner.getSelection()));
+					}
+				});
 				editor1.setEditor(spinner, item, 1);
 
-				CCombo combo = new CCombo(tree, SWT.BORDER | SWT.READ_ONLY);
+				final CCombo combo = new CCombo(tree, SWT.BORDER | SWT.READ_ONLY);
 				combo.setItems(new String[] { "default", Boolean.toString(true), Boolean.toString(false) });
-				combo.select(0);
+				combo.setText(item.getText(2));
 				combo.pack();
+				combo.addSelectionListener(new SelectionAdapter() {
+					public void widgetSelected(SelectionEvent e) {
+						item.setText(2, combo.getText());
+					}
+				});
 				editor2.setEditor(combo, item, 2);
 
 			}
