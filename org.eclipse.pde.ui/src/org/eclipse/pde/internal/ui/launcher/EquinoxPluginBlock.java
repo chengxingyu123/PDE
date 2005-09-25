@@ -242,6 +242,9 @@ public class EquinoxPluginBlock extends AbstractPluginBlock {
 		
 	private void initExternalPluginsState(ILaunchConfiguration configuration)
 			throws CoreException {
+		fNumExternalChecked = 0;
+		fPluginTreeViewer.setSubtreeChecked(fExternalPlugins, false);
+		
 		fTargetMap = retrieveMap(configuration, IPDELauncherConstants.TARGET_BUNDLES);
 		Iterator iter = fTargetMap.keySet().iterator();
 		PluginModelManager manager = PDECore.getDefault().getModelManager();
@@ -250,16 +253,21 @@ public class EquinoxPluginBlock extends AbstractPluginBlock {
 			IPluginModelBase model = manager.findModel(key);
 			if (model != null && model.getUnderlyingResource() == null) {
 				fPluginTreeViewer.setChecked(model, true);
+				fNumExternalChecked += 1;
 				fPluginTreeViewer.refresh(model);
 			} else {
-				//fTargetMap.remove(key);
+				fTargetMap.remove(key);
 			}
 		}
+		fPluginTreeViewer.setChecked(fExternalPlugins, fNumExternalChecked > 0);
+		fPluginTreeViewer.setGrayed(fExternalPlugins, fNumExternalChecked > 0
+				&& fNumExternalChecked < fExternalModels.length);
 	}
 
 	private void initWorkspacePluginsState(ILaunchConfiguration configuration)
 			throws CoreException {
 		fWorkspaceMap = retrieveMap(configuration, IPDELauncherConstants.WORKSPACE_BUNDLES);
+		fNumWorkspaceChecked = 0;
 		if (configuration.getAttribute(IPDELauncherConstants.AUTOMATIC_ADD, true)) {
 			TreeSet deselectedPlugins = LaunchPluginValidator.parsePlugins(configuration, IPDELauncherConstants.DESELECTED_WORKSPACE_PLUGINS);
 			for (int i = 0; i < fWorkspaceModels.length; i++) {
@@ -277,11 +285,16 @@ public class EquinoxPluginBlock extends AbstractPluginBlock {
 			IPluginModelBase model = manager.findModel(key);
 			if (model != null && model.getUnderlyingResource() != null) {
 				fPluginTreeViewer.setChecked(model, true);
+				fNumWorkspaceChecked += 1;
 				fPluginTreeViewer.refresh(model);
 			} else {
 				fWorkspaceMap.remove(key);
 			}
 		}
+		fPluginTreeViewer.setChecked(fWorkspacePlugins, fNumWorkspaceChecked > 0);
+		fPluginTreeViewer.setGrayed(
+			fWorkspacePlugins,
+			fNumWorkspaceChecked > 0 && fNumWorkspaceChecked < fWorkspaceModels.length);
 	}
 	
 	protected void handleGroupStateChanged(Object group, boolean checked) {
