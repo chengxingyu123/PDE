@@ -140,6 +140,10 @@ public class EquinoxPluginsTab extends AbstractLauncherTab {
 		return fImage;
 	}
 	
+	public int getDefaultStartLevel() {
+		return fDefaultStartLevel.getSelection();
+	}
+	
 	/* (non-Javadoc)
 	 * @see org.eclipse.debug.ui.ILaunchConfigurationTab#activated(org.eclipse.debug.core.ILaunchConfigurationWorkingCopy)
 	 */

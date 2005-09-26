@@ -190,9 +190,7 @@ public abstract class AbstractPluginBlock {
 			public void checkStateChanged(final CheckStateChangedEvent event) {
 				Object element = event.getElement();
 				if (element instanceof IPluginModelBase) {
-					handleCheckStateChanged(
-						(IPluginModelBase) element,
-						event.getChecked());
+					handleCheckStateChanged(event);
 				} else {
 					handleGroupStateChanged(element, event.getChecked());
 				}
@@ -250,15 +248,16 @@ public abstract class AbstractPluginBlock {
 		return button;
 	}
 	
-	protected void handleCheckStateChanged(IPluginModelBase model, boolean checked) {
+	protected void handleCheckStateChanged(CheckStateChangedEvent event) {
+		IPluginModelBase model = (IPluginModelBase)event.getElement();
 		if (model.getUnderlyingResource() == null) {
-			if (checked) {
+			if (event.getChecked()) {
 				fNumExternalChecked += 1;
 			} else {
 				fNumExternalChecked -= 1;
 			}
 		} else {
-			if (checked) {
+			if (event.getChecked()) {
 				fNumWorkspaceChecked += 1;
 			} else {
 				fNumWorkspaceChecked -= 1;

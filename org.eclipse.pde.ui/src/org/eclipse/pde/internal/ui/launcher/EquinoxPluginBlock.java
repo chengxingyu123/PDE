@@ -10,7 +10,6 @@
  *******************************************************************************/
 package org.eclipse.pde.internal.ui.launcher;
 
-import java.util.Iterator;
 import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.TreeMap;
@@ -19,12 +18,11 @@ import java.util.TreeSet;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
+import org.eclipse.jface.viewers.CheckStateChangedEvent;
 import org.eclipse.jface.viewers.ILabelProvider;
 import org.eclipse.pde.core.plugin.IPluginModelBase;
-import org.eclipse.pde.internal.core.PDECore;
-import org.eclipse.pde.internal.core.PluginModelManager;
 import org.eclipse.pde.internal.ui.PDELabelProvider;
-import org.eclipse.pde.ui.launcher.AbstractLauncherTab;
+import org.eclipse.pde.ui.launcher.EquinoxPluginsTab;
 import org.eclipse.pde.ui.launcher.IPDELauncherConstants;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CCombo;
@@ -40,6 +38,7 @@ import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeColumn;
 import org.eclipse.swt.widgets.TreeItem;
+import org.eclipse.swt.widgets.Widget;
 
 public class EquinoxPluginBlock extends AbstractPluginBlock {
 	
@@ -52,51 +51,13 @@ public class EquinoxPluginBlock extends AbstractPluginBlock {
 			switch (index) {
 			case 0:
 				return super.getColumnText(obj, index);
-			case 1:
-				return getStartLevel(obj);
 			default:
-				return getAutoStart(obj);
-			}
-		}
-	}
-
-	private Map fWorkspaceMap;
-	private Map fTargetMap;
-	
-	private String getStartLevel(Object obj) {
-		String value = getValue(obj);
-		return (value == null || value.indexOf(':') == -1)
-					? ""
-					: value.substring(0, value.indexOf(':'));
-	}
-
-	private String getAutoStart(Object obj) {
-		String value = getValue(obj);
-		return (value == null || value.indexOf(':') == -1)
-					? ""
-		            : value.substring(value.indexOf(':') + 1);
-	}
-	
-	private String getValue(Object obj) {
-		String value = null;
-		if (obj instanceof IPluginModelBase) {
-			IPluginModelBase model = (IPluginModelBase)obj;
-			String id = model.getPluginBase().getId();
-			if ("org.eclipse.osgi".equals(id))
 				return "";
-			
-			if (model.getUnderlyingResource() != null) {
-				if (fWorkspaceMap != null && fWorkspaceMap.containsKey(id)) {
-					value = (String)fWorkspaceMap.get(id);
-				}
-			} else if (fTargetMap != null && fTargetMap.containsKey(id)) {
-				value = (String)fTargetMap.get(id);
 			}
 		}
-		return value;
 	}
 
-	public EquinoxPluginBlock(AbstractLauncherTab tab) {
+	public EquinoxPluginBlock(EquinoxPluginsTab tab) {
 		super(tab);
 	}
 	
@@ -150,10 +111,18 @@ public class EquinoxPluginBlock extends AbstractPluginBlock {
 
 				final Spinner spinner = new Spinner(tree, SWT.BORDER);
 				spinner.setMinimum(1);
-				spinner.setSelection("default".equals(item.getText(1)) ? 4 : Integer.parseInt(item.getText(1)));
+				final int defaultLevel = ((EquinoxPluginsTab)fTab).getDefaultStartLevel();
+				int level = "default".equals(item.getText(1))
+							? defaultLevel
+							: Integer.parseInt(item.getText(1));
+				spinner.setSelection(level);
 				spinner.addModifyListener(new ModifyListener() {
 					public void modifyText(ModifyEvent e) {
-						item.setText(1, Integer.toString(spinner.getSelection()));
+						int selection = spinner.getSelection();
+						item.setText(1, defaultLevel == selection 
+											? "default" 
+											: Integer.toString(selection));
+						fTab.updateLaunchConfigurationDialog();
 					}
 				});
 				editor1.setEditor(spinner, item, 1);
@@ -165,6 +134,7 @@ public class EquinoxPluginBlock extends AbstractPluginBlock {
 				combo.addSelectionListener(new SelectionAdapter() {
 					public void widgetSelected(SelectionEvent e) {
 						item.setText(2, combo.getText());
+						fTab.updateLaunchConfigurationDialog();
 					}
 				});
 				editor2.setEditor(combo, item, 2);
@@ -188,11 +158,25 @@ public class EquinoxPluginBlock extends AbstractPluginBlock {
 	}
 	
 	protected void savePluginState(ILaunchConfigurationWorkingCopy config) {		
+		Object[] selected = fPluginTreeViewer.getCheckedElements();
+		StringBuffer wBuffer = new StringBuffer();
+		StringBuffer tBuffer = new StringBuffer();
+		for (int i = 0; i < selected.length; i++) {
+			if (selected[i] instanceof IPluginModelBase) {
+				IPluginModelBase model = (IPluginModelBase)selected[i];
+				String id = model.getPluginBase().getId();
+				TreeItem item = (TreeItem)fPluginTreeViewer.testFindItem(model);
+				if (model.getUnderlyingResource() == null) {
+					appendToBuffer(tBuffer, id, item);
+				} else {
+					appendToBuffer(wBuffer, id, item);
+				}
+			}
+		}		
 		config.setAttribute(IPDELauncherConstants.WORKSPACE_BUNDLES, 
-							saveMap(fWorkspaceMap));
-		
+							wBuffer.length() == 0 ? (String)null : wBuffer.toString());		
 		config.setAttribute(IPDELauncherConstants.TARGET_BUNDLES, 
-							saveMap(fTargetMap));
+							tBuffer.length() == 0 ? (String)null : tBuffer.toString());
 		
 		StringBuffer buffer = new StringBuffer();
 		if (fAddWorkspaceButton.getSelection()) {
@@ -208,20 +192,14 @@ public class EquinoxPluginBlock extends AbstractPluginBlock {
 							buffer.length() > 0 ? buffer.toString() : (String)null);
 	}
 	
-	private String saveMap(Map map) {
-		StringBuffer buffer = new StringBuffer();
-		if (map.size() > 0) {
-			Iterator iter = map.keySet().iterator();
-			while (iter.hasNext()) {
-				if (buffer.length() > 0)
-					buffer.append(",");
-				String key = iter.next().toString();
-				buffer.append(key);
-				buffer.append("@");
-				buffer.append(map.get(key));
-			}		
-		}
-		return buffer.length() > 0 ? buffer.toString() : null;
+	private void appendToBuffer(StringBuffer buffer, String id, TreeItem item) {
+		if (buffer.length() > 0)
+			buffer.append(",");
+		buffer.append(id);
+		buffer.append("@");
+		buffer.append(item.getText(1));
+		buffer.append(":");
+		buffer.append(item.getText(2));
 	}
 	
 	public static Map retrieveMap(ILaunchConfiguration configuration, String attribute) {
@@ -251,18 +229,14 @@ public class EquinoxPluginBlock extends AbstractPluginBlock {
 		fNumExternalChecked = 0;
 		fPluginTreeViewer.setSubtreeChecked(fExternalPlugins, false);
 		
-		fTargetMap = retrieveMap(configuration, IPDELauncherConstants.TARGET_BUNDLES);
-		Iterator iter = fTargetMap.keySet().iterator();
-		PluginModelManager manager = PDECore.getDefault().getModelManager();
-		while (iter.hasNext()) {
-			String key = iter.next().toString();
-			IPluginModelBase model = manager.findModel(key);
-			if (model != null && model.getUnderlyingResource() == null) {
-				fPluginTreeViewer.setChecked(model, true);
-				fNumExternalChecked += 1;
-				fPluginTreeViewer.refresh(model);
-			} else {
-				fTargetMap.remove(key);
+		Map map = retrieveMap(configuration, IPDELauncherConstants.TARGET_BUNDLES);
+		for (int i = 0; i < fExternalModels.length; i++) {
+			IPluginModelBase model = fExternalModels[i];
+			if (map.containsKey(model.getPluginBase().getId())) {
+				if (fPluginTreeViewer.setChecked(model, true)) {
+					fNumExternalChecked += 1;
+					setText(model, (String)map.get(model.getPluginBase().getId()));
+				}
 			}
 		}
 		fPluginTreeViewer.setChecked(fExternalPlugins, fNumExternalChecked > 0);
@@ -272,31 +246,30 @@ public class EquinoxPluginBlock extends AbstractPluginBlock {
 
 	private void initWorkspacePluginsState(ILaunchConfiguration configuration)
 			throws CoreException {
-		fWorkspaceMap = retrieveMap(configuration, IPDELauncherConstants.WORKSPACE_BUNDLES);
 		fNumWorkspaceChecked = 0;
+		fPluginTreeViewer.setSubtreeChecked(fWorkspacePlugins, false);
+		
+		Map map = retrieveMap(configuration, IPDELauncherConstants.WORKSPACE_BUNDLES);
 		if (configuration.getAttribute(IPDELauncherConstants.AUTOMATIC_ADD, true)) {
 			TreeSet deselectedPlugins = LaunchPluginValidator.parsePlugins(configuration, IPDELauncherConstants.DESELECTED_WORKSPACE_PLUGINS);
 			for (int i = 0; i < fWorkspaceModels.length; i++) {
 				String id = fWorkspaceModels[i].getPluginBase().getId();
-				if (!fWorkspaceMap.containsKey(id) && !deselectedPlugins.contains(id)) {
-					fWorkspaceMap.put(id, "default:default");
+				if (!map.containsKey(id) && !deselectedPlugins.contains(id)) {
+					map.put(id, "default:default");
+				}
+			}
+		}
+		
+		for (int i = 0; i < fWorkspaceModels.length; i++) {
+			IPluginModelBase model = fWorkspaceModels[i];
+			if (map.containsKey(model.getPluginBase().getId())) {
+				if (fPluginTreeViewer.setChecked(model, true)) {
+					fNumWorkspaceChecked += 1;
+					setText(model, (String)map.get(model.getPluginBase().getId()));
 				}
 			}
 		}
 
-		Iterator iter = fWorkspaceMap.keySet().iterator();
-		PluginModelManager manager = PDECore.getDefault().getModelManager();
-		while (iter.hasNext()) {
-			String key = iter.next().toString();
-			IPluginModelBase model = manager.findModel(key);
-			if (model != null && model.getUnderlyingResource() != null) {
-				fPluginTreeViewer.setChecked(model, true);
-				fNumWorkspaceChecked += 1;
-				fPluginTreeViewer.refresh(model);
-			} else {
-				fWorkspaceMap.remove(key);
-			}
-		}
 		fPluginTreeViewer.setChecked(fWorkspacePlugins, fNumWorkspaceChecked > 0);
 		fPluginTreeViewer.setGrayed(
 			fWorkspacePlugins,
@@ -304,102 +277,72 @@ public class EquinoxPluginBlock extends AbstractPluginBlock {
 	}
 	
 	protected void handleGroupStateChanged(Object group, boolean checked) {
-		if (!checked) {
-			if (group == fWorkspacePlugins) {
-				fWorkspaceMap.clear();
-			} else if (group == fExternalPlugins) {
-				fTargetMap.clear();
-			}
-		} else {
-			if (group == fWorkspacePlugins) {
-				for (int i = 0; i < fWorkspaceModels.length; i++) {
-					String id = fWorkspaceModels[i].getPluginBase().getId();
-					fWorkspaceMap.put(id, "default:default");
-				}
-			} else if (group == fExternalPlugins) {
-				for (int i = 0; i < fExternalModels.length; i++) {
-					String id = fExternalModels[i].getPluginBase().getId();
-					fTargetMap.put(id, "default:default");
-				}
+		super.handleGroupStateChanged(group, checked);
+		Widget item = fPluginTreeViewer.testFindItem(group);
+		if (item instanceof TreeItem) {
+			TreeItem[] items = ((TreeItem)item).getItems();
+			for (int i = 0; i < items.length; i++) {
+				resetText(items[i]);
 			}
 		}
-		fPluginTreeViewer.refresh(group);
-		super.handleGroupStateChanged(group, checked);
 	}
 	
-	protected void handleCheckStateChanged(IPluginModelBase model, boolean checked) {
-		super.handleCheckStateChanged(model, checked);
-		adjustState(model, checked);
-		fPluginTreeViewer.refresh(model);
+	protected void handleCheckStateChanged(CheckStateChangedEvent event) {
+		super.handleCheckStateChanged(event);
+		resetText((IPluginModelBase)event.getElement());
 	}
 	
 	protected void setChecked(IPluginModelBase model, boolean checked) {
-		adjustState(model, checked);
-		fPluginTreeViewer.refresh(model);
 		super.setChecked(model, checked);
-	}
-	
-	private void adjustState(IPluginModelBase model, boolean checked) {
-		String id = model.getPluginBase().getId();
-		if (checked) {
-			if (model.getUnderlyingResource() != null)
-				fWorkspaceMap.put(id, "default:default");
-			else
-				fTargetMap.put(id, "default:default");
-		} else {
-			if (model.getUnderlyingResource() != null)
-				fWorkspaceMap.remove(id);
-			else
-				fTargetMap.remove(id);			
-		}		
+		resetText(model);
 	}
 	
 	protected void setCheckedElements(Object[] checked) {
 		super.setCheckedElements(checked);
-		for (int i = 0; i < fWorkspaceModels.length; i++) {
-			String id = fWorkspaceModels[i].getPluginBase().getId();
-			if (fPluginTreeViewer.getChecked(fWorkspaceModels[i])) {
-				if (!fWorkspaceMap.containsKey(id)) {
-					fWorkspaceMap.put(id, "default:default");
-					fPluginTreeViewer.refresh(fWorkspaceModels[i]);
-				}			
-			} else if (fWorkspaceMap.containsKey(id)){
-				fWorkspaceMap.remove(id);
-				fPluginTreeViewer.refresh(fWorkspaceModels[i]);
-			}
+		TreeItem[] items = fPluginTreeViewer.getTree().getItems();
+		for (int i = 0; i < items.length; i++) {
+			resetText(items[i]);
 		}
-		for (int i = 0; i < fExternalModels.length; i++) {
-			String id = fExternalModels[i].getPluginBase().getId();
-			if (fPluginTreeViewer.getChecked(fExternalModels[i])) {
-				if (!fTargetMap.containsKey(id)) {
-					fTargetMap.put(id, "default:default");
-					fPluginTreeViewer.refresh(fExternalModels[i]);
-				} 
-			} else if (fTargetMap.containsKey(id)) {
-				fTargetMap.remove(id);
-				fPluginTreeViewer.refresh(fExternalModels[i]);
-			}
+	}
+	
+	private void setText(IPluginModelBase model, String value) {
+		Widget widget = fPluginTreeViewer.testFindItem(model);
+		if (widget instanceof TreeItem) {
+			TreeItem item = (TreeItem)widget;
+			int index = value == null ? -1 : value.indexOf(':');
+			item.setText(1, index == -1 ? "" : value.substring(0, index));
+			item.setText(2, index == -1 ? "" : value.substring(index + 1));
 		}
+	}
+	
+	private void resetText(IPluginModelBase model) {
+		Widget widget = fPluginTreeViewer.testFindItem(model);
+		if (widget instanceof TreeItem) {
+			resetText((TreeItem)widget);
+		}
+	}
+	
+	private void resetText(TreeItem item) {
+		if (item.getChecked()) {
+			IPluginModelBase model = (IPluginModelBase)item.getData();
+			boolean isSystemBundle = "org.eclipse.osgi".equals(model.getPluginBase().getId());
+			if (!"default".equals(item.getText(1)))
+				item.setText(1, isSystemBundle ? "" : "default");
+			if (!"default".equals(item.getText(2)))
+				item.setText(2, isSystemBundle ? "" : "default");
+		} else {
+			if (item.getText(1).length() > 0)
+				item.setText(1, "");
+			if (item.getText(2).length() > 0)
+				item.setText(2, "");
+		}		
 	}
 	
 	protected void handleRestoreDefaults() {
 		Object[] selected = fPluginTreeViewer.getCheckedElements();
 		for (int i = 0; i < selected.length; i++) {
 			if (selected[i] instanceof IPluginModelBase) {
-				IPluginModelBase model = (IPluginModelBase)selected[i];
-				String id = model.getPluginBase().getId();
-				if (model.getUnderlyingResource() == null) {
-					String value = (String)fTargetMap.get(id);
-					if (!"default:default".equals(value)) {
-						fTargetMap.put(id, "default:default");
-					}
-				} else {
-					String value = (String)fWorkspaceMap.get(id);
-					if (!"default:default".equals(value)) {
-						fWorkspaceMap.put(id, "default:default");
-					}					
-				}
-				fPluginTreeViewer.refresh(model);
+				resetText((IPluginModelBase)selected[i]);
 			}
 		}
 	}
