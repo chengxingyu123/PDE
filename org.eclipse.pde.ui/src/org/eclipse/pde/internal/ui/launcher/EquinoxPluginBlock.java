@@ -22,6 +22,7 @@ import org.eclipse.jface.viewers.CheckStateChangedEvent;
 import org.eclipse.jface.viewers.ILabelProvider;
 import org.eclipse.pde.core.plugin.IPluginModelBase;
 import org.eclipse.pde.internal.ui.PDELabelProvider;
+import org.eclipse.pde.internal.ui.elements.NamedElement;
 import org.eclipse.pde.ui.launcher.EquinoxPluginsTab;
 import org.eclipse.pde.ui.launcher.IPDELauncherConstants;
 import org.eclipse.swt.SWT;
@@ -118,11 +119,13 @@ public class EquinoxPluginBlock extends AbstractPluginBlock {
 				spinner.setSelection(level);
 				spinner.addModifyListener(new ModifyListener() {
 					public void modifyText(ModifyEvent e) {
-						int selection = spinner.getSelection();
-						item.setText(1, defaultLevel == selection 
-											? "default" 
-											: Integer.toString(selection));
-						fTab.updateLaunchConfigurationDialog();
+						if (item.getChecked()) {
+							int selection = spinner.getSelection();
+							item.setText(1, defaultLevel == selection 
+												? "default" 
+												: Integer.toString(selection));
+							fTab.updateLaunchConfigurationDialog();
+						}
 					}
 				});
 				editor1.setEditor(spinner, item, 1);
@@ -133,8 +136,10 @@ public class EquinoxPluginBlock extends AbstractPluginBlock {
 				combo.pack();
 				combo.addSelectionListener(new SelectionAdapter() {
 					public void widgetSelected(SelectionEvent e) {
-						item.setText(2, combo.getText());
-						fTab.updateLaunchConfigurationDialog();
+						if (item.getChecked()) {
+							item.setText(2, combo.getText());
+							fTab.updateLaunchConfigurationDialog();
+						}
 					}
 				});
 				editor2.setEditor(combo, item, 2);
@@ -239,9 +244,23 @@ public class EquinoxPluginBlock extends AbstractPluginBlock {
 				}
 			}
 		}
+		
+		resetGroup(fExternalPlugins);
 		fPluginTreeViewer.setChecked(fExternalPlugins, fNumExternalChecked > 0);
 		fPluginTreeViewer.setGrayed(fExternalPlugins, fNumExternalChecked > 0
 				&& fNumExternalChecked < fExternalModels.length);
+	}
+
+	private void resetGroup(NamedElement group) {
+		Widget widget = fPluginTreeViewer.testFindItem(group);
+		if (widget instanceof TreeItem) {
+			TreeItem[] items = ((TreeItem)widget).getItems();
+			for (int i = 0; i < items.length; i++) {
+				if (!items[i].getChecked()) {
+					resetText(items[i]);
+				}
+			}
+		}
 	}
 
 	private void initWorkspacePluginsState(ILaunchConfiguration configuration)
@@ -269,6 +288,8 @@ public class EquinoxPluginBlock extends AbstractPluginBlock {
 				}
 			}
 		}
+		
+		resetGroup(fWorkspacePlugins);
 
 		fPluginTreeViewer.setChecked(fWorkspacePlugins, fNumWorkspaceChecked > 0);
 		fPluginTreeViewer.setGrayed(
@@ -284,7 +305,7 @@ public class EquinoxPluginBlock extends AbstractPluginBlock {
 			for (int i = 0; i < items.length; i++) {
 				resetText(items[i]);
 			}
-		}
+		}		
 	}
 	
 	protected void handleCheckStateChanged(CheckStateChangedEvent event) {
