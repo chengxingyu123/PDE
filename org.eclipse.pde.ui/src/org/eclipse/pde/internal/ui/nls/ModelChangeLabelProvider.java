@@ -10,39 +10,26 @@
  *******************************************************************************/
 package org.eclipse.pde.internal.ui.nls;
 
-import org.eclipse.core.resources.IProject;
-import org.eclipse.core.resources.IResource;
-import org.eclipse.core.runtime.CoreException;
-import org.eclipse.jface.resource.ImageDescriptor;
-import org.eclipse.pde.core.plugin.IFragment;
 import org.eclipse.pde.core.plugin.IFragmentModel;
-import org.eclipse.pde.core.plugin.IPlugin;
-import org.eclipse.pde.core.plugin.IPluginBase;
 import org.eclipse.pde.core.plugin.IPluginModel;
 import org.eclipse.pde.core.plugin.IPluginModelBase;
-import org.eclipse.pde.internal.core.PDECore;
-import org.eclipse.pde.internal.core.WorkspaceModelManager;
-import org.eclipse.pde.internal.ui.PDEPlugin;
+import org.eclipse.pde.internal.ui.PDELabelProvider;
 import org.eclipse.pde.internal.ui.PDEPluginImages;
-import org.eclipse.pde.internal.ui.PDEUIMessages;
-import org.eclipse.pde.internal.ui.util.SharedLabelProvider;
 import org.eclipse.swt.graphics.Image;
 
-public class ModelChangeLabelProvider extends SharedLabelProvider {
+public class ModelChangeLabelProvider extends PDELabelProvider {
 	
-	private ModelChangeTable fModelChangeTable;
 	private Image manifestImage;
 	private Image xmlImage;
 	
-	public ModelChangeLabelProvider(ModelChangeTable changeTable) {
-		fModelChangeTable = changeTable;
+	public ModelChangeLabelProvider() {
 		xmlImage = PDEPluginImages.DESC_PLUGIN_MF_OBJ.createImage();
 		manifestImage = PDEPluginImages.DESC_PAGE_OBJ.createImage();
 	}
 	
 	public String getText(Object obj) {
 		if (obj instanceof ModelChange)
-			return getObjectText(((ModelChange) obj));
+			return getObjectText(((ModelChange) obj).getParentModel().getPluginBase());
 		if (obj instanceof ModelChangeFile)
 			return getObjectText((ModelChangeFile)obj);
 		return super.getText(obj);
@@ -54,36 +41,10 @@ public class ModelChangeLabelProvider extends SharedLabelProvider {
 		text.append(" [");
 		text.append(count);
 		text.append(" instance");
-		if (count != 1) text.append("s");
-			text.append("]");
+		if (count != 1)
+			text.append("s");
+		text.append("]");
 
-		return text.toString();
-	}
-	
-	private String getObjectText(ModelChange model) {
-		IPluginBase pluginBase = model.getParentModel().getPluginBase();
-		String name =
-			PDEPlugin.isFullNameModeEnabled()
-				? pluginBase.getTranslatedName()
-				: pluginBase.getId();
-		name = name != null ? name : "";
-		if (name == null) name = pluginBase.getName();
-		String version = pluginBase.getVersion();
-
-		StringBuffer text = new StringBuffer();
-		text.append(fModelChangeTable.getNumberOfChangesInModel(model.getParentModel()));
-		text.append(" in ");
-		text.append(name);
-		
-		if (version != null && version.length() > 0) {
-			text.append(" (");
-			text.append(pluginBase.getVersion());
-			text.append(")");
-		}
-		if (pluginBase.getModel() != null && !pluginBase.getModel().isInSync()) {
-			text.append(" ");
-			text.append(PDEUIMessages.PluginModelManager_outOfSync);
-		}
 		return text.toString();
 	}
 
@@ -91,9 +52,9 @@ public class ModelChangeLabelProvider extends SharedLabelProvider {
 		if (obj instanceof ModelChange) {
 			IPluginModelBase model = ((ModelChange)obj).getParentModel();
 			if (model instanceof IPluginModel)
-				return getObjectImage(((IPluginModel) model).getPlugin());
+				return getObjectImage(((IPluginModel) model).getPlugin(), false, false);
 			if (model instanceof IFragmentModel)
-				return getObjectImage(((IFragmentModel) model).getFragment());
+				return getObjectImage(((IFragmentModel) model).getFragment(), false, false);
 		}
 		if (obj instanceof ModelChangeFile)
 			return getObjectImage((ModelChangeFile)obj);
@@ -107,45 +68,6 @@ public class ModelChangeLabelProvider extends SharedLabelProvider {
 		if ("MF".equalsIgnoreCase(type))
 			return manifestImage;
 		return null;
-	}
-
-	private Image getObjectImage(IPlugin plugin) {
-		IPluginModelBase model = plugin.getPluginModel();
-		int flags = getModelFlags(model);
-		ImageDescriptor desc = PDEPluginImages.DESC_PLUGIN_OBJ;
-		return get(desc, flags);
-	}
-
-	private Image getObjectImage(IFragment fragment) {
-		IPluginModelBase model = fragment.getPluginModel();
-		int flags = getModelFlags(model);
-		ImageDescriptor desc = PDEPluginImages.DESC_FRAGMENT_OBJ;
-		return get(desc, flags);
-	}
-	
-	private int getModelFlags(IPluginModelBase model) {
-		int flags = 0;
-		if (!(model.isLoaded() && model.isInSync()))
-			flags = F_ERROR;
-		IResource resource = model.getUnderlyingResource();
-		if (resource == null) {
-			flags |= F_EXTERNAL;
-		} else {
-			IProject project = resource.getProject();
-			try {
-				if (WorkspaceModelManager.isBinaryPluginProject(project)) {
-					String property = project.getPersistentProperty(PDECore.EXTERNAL_PROJECT_PROPERTY);
-					if (property != null)
-						flags |= F_BINARY;
-				}
-			} catch (CoreException e) {
-			}
-		}
-		return flags;
-	}
-	
-	public void setChangeSet(ModelChangeTable changeSet) {
-		fModelChangeTable = changeSet;
 	}
 	
 	public void dispose() {

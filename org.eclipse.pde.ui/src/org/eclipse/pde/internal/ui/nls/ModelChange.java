@@ -1,10 +1,8 @@
 package org.eclipse.pde.internal.ui.nls;
 
 import java.io.IOException;
-import java.util.HashSet;
-import java.util.Hashtable;
+import java.util.ArrayList;
 import java.util.Properties;
-import java.util.Set;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
@@ -23,37 +21,68 @@ public class ModelChange extends DefaultElement {
 	private static final String DEFAULT_LOCALIZATION_VALUE = "plugin";
 	private static final String LOCALIZATION_FILE_SUFFIX = ".properties";
 	
-	private Hashtable fileChanges = new Hashtable();
-	private int fTotalChanges = 0;
+	private ModelChangeFile fXMLCoupling;
+	private ModelChangeFile fMFCoupling;
+	
 	private IPluginModelBase fParent;
-	private boolean fSelected;
+	private boolean fPreSelected;
+	
 	private IFile fPropertiesFile;
 	private Properties fProperties;
 	
-	public ModelChange(IPluginModelBase parent, boolean selected) {
+	protected static boolean modelLoaded(IModel model) {
+		try {
+			model.load();
+		} catch (CoreException e) {
+		}
+		return (model.isLoaded());
+	}
+	
+	public ModelChange(IPluginModelBase parent, boolean preSelected) {
 		fParent = parent;
-		fSelected = selected;
+		fPreSelected = preSelected;
 	}
 	
 	public void addChange(IFile file, ModelChangeElement change) {
-		if (change == null) return;
-		HashSet changes;
-		if (fileChanges.containsKey(file))
-			changes = (HashSet)fileChanges.get(file);
-		else {
-			changes = new HashSet();
-			fileChanges.put(file, changes);
+		if (change == null || file == null)
+			return;
+		String ext = file.getFileExtension();
+		if (ext.equalsIgnoreCase("xml"))
+			addXMLChange(file, change);
+		else if (ext.equalsIgnoreCase("MF"))
+			addMFChange(file, change);
+		else
+			return;
+	}
+	
+	private void addXMLChange(IFile file, ModelChangeElement change) {
+		if (fXMLCoupling == null) {
+			fXMLCoupling = new ModelChangeFile(file, this);
 		}
-		changes.add(change);
-		fTotalChanges++;
+		if (!fXMLCoupling.getFile().equals(file)) {
+//			TODO throw exception if two diff xml files are found
+			return;
+		}
+		fXMLCoupling.add(change);
 	}
 	
-	public Hashtable getChanges() {
-		return fileChanges;
+	private void addMFChange(IFile file, ModelChangeElement change) {
+		if (fMFCoupling == null) {
+			fMFCoupling = new ModelChangeFile(file, this);
+		}
+		fMFCoupling.add(change);
 	}
 	
-	public Set getChangeFiles() {
-		return fileChanges.keySet();
+	public IFile[] getChangeFiles() {
+		IFile xmlFile = fXMLCoupling != null ? fXMLCoupling.getFile() : null;
+		IFile mfFile = fMFCoupling != null ? fMFCoupling.getFile() : null;
+		if (xmlFile != null && mfFile != null)
+			return new IFile[] {xmlFile, mfFile};
+		if (xmlFile != null)
+			return new IFile[] {xmlFile};
+		if (mfFile != null)
+			return new IFile[] {mfFile};
+		return new IFile[0];
 	}
 	
 	public IFile getPropertiesFile() {
@@ -92,30 +121,37 @@ public class ModelChange extends DefaultElement {
 		return fProperties;
 	}
 	
-	public HashSet getChangesInFile(IFile file) {
-		Object changes = (HashSet)fileChanges.get(file);
-		return (changes != null) ? (HashSet)changes : null;
+	public ArrayList getChangesInFile(IFile file) {
+		if (fXMLCoupling != null && file == fXMLCoupling.getFile())
+			return fXMLCoupling.getChanges();
+		if (fMFCoupling != null && file == fMFCoupling.getFile())
+			return fMFCoupling.getChanges();
+		return null;
 	}
+	
 	public int getNumberOfChangesInFile(IFile file) {
-		HashSet changes = getChangesInFile(file);
-		return (changes != null) ? changes.size() : 0;
+		if (fXMLCoupling != null && file == fXMLCoupling.getFile())
+			return fXMLCoupling.getNumChanges();
+		if (fMFCoupling != null && file == fMFCoupling.getFile())
+			return fMFCoupling.getNumChanges();
+		return 0;
 	}
 	
-	public int getTotalNumberOfChanges() {
-		return fTotalChanges;
-	}
-	public boolean isSelected() {
-		return fSelected;
+	public boolean wasPreSelected() {
+		return fPreSelected;
 	}
 	
-	protected static boolean modelLoaded(IModel model) {
-		try {
-			model.load();
-		} catch (CoreException e) {
-		}
-		return (model.isLoaded());
-	}
 	public IPluginModelBase getParentModel() {
 		return fParent;
+	}
+
+	public ModelChangeFile[] getChangeFileCoupling() {
+		if (fXMLCoupling != null && fMFCoupling != null)
+			return new ModelChangeFile[] {fXMLCoupling, fMFCoupling};
+		if (fXMLCoupling != null)
+			return new ModelChangeFile[] {fXMLCoupling};
+		if (fMFCoupling != null)
+			return new ModelChangeFile[] {fMFCoupling};
+		return new ModelChangeFile[0];
 	}
 }

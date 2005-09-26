@@ -11,7 +11,6 @@ import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.source.SourceViewer;
 import org.eclipse.jface.viewers.CellEditor;
 import org.eclipse.jface.viewers.CheckboxCellEditor;
-import org.eclipse.jface.viewers.CheckboxTreeViewer;
 import org.eclipse.jface.viewers.ICellModifier;
 import org.eclipse.jface.viewers.IContentProvider;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
@@ -22,6 +21,7 @@ import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.TextCellEditor;
 import org.eclipse.jface.viewers.Viewer;
+import org.eclipse.jface.viewers.ViewerFilter;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.ltk.core.refactoring.RefactoringStatus;
 import org.eclipse.pde.core.plugin.IPluginModelBase;
@@ -66,21 +66,13 @@ public class ExternalizeStringsWizardPage extends WizardPage {
 	public class ModelChangeContentProvider implements ITreeContentProvider, IContentProvider {
 		
 		public Object[] getElements(Object parent) {
-			if (fHideUnselectedButton.getSelection() && fModelChangeTable.selectedNotEmpty())
-				return fModelChangeTable.getSelectedModelChanges().toArray();
 			return fModelChangeTable.getAllModelChanges().toArray();
 		}
 
 		public Object[] getChildren(Object parentElement) {
 			if (!(parentElement instanceof ModelChange))
 				return new Object[0];
-			ModelChange modelChange = (ModelChange)parentElement;
-			Object[] changeFiles = modelChange.getChangeFiles().toArray();
-			Object[] files = new Object[changeFiles.length];
-			for (int i = 0; i < files.length; i++) {
-				files[i] = new ModelChangeFile((IFile)changeFiles[i], modelChange);
-			}
-			return files;
+			return ((ModelChange)parentElement).getChangeFileCoupling();
 		}
 
 		public Object getParent(Object element) {
@@ -138,8 +130,7 @@ public class ExternalizeStringsWizardPage extends WizardPage {
 					return new Boolean(changeElement.getExternalized());
 				}
 				if (res != null) {
-					return res;
-//					return StringWinder.unwindEscapeChars(res);
+					return StringWinder.unwindEscapeChars(res);
 				}
 			}
 			return ""; //$NON-NLS-1$
@@ -153,38 +144,35 @@ public class ExternalizeStringsWizardPage extends WizardPage {
 				Object data = ((TableItem) element).getData();
 				if (data instanceof ModelChangeElement) {
 					ModelChangeElement changeElement = (ModelChangeElement) data;
+					if (TABLE_PROPERTIES[EXTERN].equals(property)) {
+						changeElement.setExternalized(((Boolean) value).booleanValue());
+					}
+					if (TABLE_PROPERTIES[VALUE].equals(property)) {
+						changeElement.setValue(StringWinder.windEscapeChars((String)value));
+					}
 					if (TABLE_PROPERTIES[KEY].equals(property)) {
 						String string = (String)value;
 						string = StringWinder.windEscapeChars(string);
 						changeElement.setKey(string);
 					}
-					if (TABLE_PROPERTIES[VALUE].equals(property)) {
-						String string = (String)value;
-						string = StringWinder.windEscapeChars(string);
-						changeElement.setValue(string);
-					}
-					if (TABLE_PROPERTIES[EXTERN].equals(property)) {
-						changeElement.setExternalized(((Boolean) value).booleanValue());
-					}
+//					validateKeys(false);
 				}
-				validateKeys(false);
 				fPropertiesViewer.update(data, null);
 			}
 		}
 	}
 	
 	private ModelChangeTable fModelChangeTable;
-	private ModelChangeLabelProvider fLabelProvider;
 	
-	private SourceViewer fSourceViewer;
+	private ContainerCheckedTreeViewer fInputViewer;
+	private Button fHideUnselectedButton;
 	private Label fPropertiesLabel;
-	private CheckboxTreeViewer fInputViewer;
 	private TableViewer fPropertiesViewer;
 	private Table fTable;
-	private Button fHideUnselectedButton;
-
+	private SourceViewer fSourceViewer;
+	private ViewerFilter fViewerFilter;
+	
 	private ColorManager fColorManager;
-
 	private Object fCurrSelection;
 	
 	protected ExternalizeStringsWizardPage(ModelChangeTable changeTable) {
@@ -192,7 +180,16 @@ public class ExternalizeStringsWizardPage extends WizardPage {
 		setTitle("Externalize Strings");
 		setDescription("Externalize strings in manifest files.");
 		fModelChangeTable = changeTable;
-		fLabelProvider = new ModelChangeLabelProvider(fModelChangeTable);
+		fViewerFilter = new ViewerFilter() {
+			public boolean select(Viewer viewer, Object parentElement, Object element) {
+				if (!(element instanceof ModelChange) && !(parentElement instanceof ModelChange))
+					return false;
+				ModelChange change = (element instanceof ModelChange) ? 
+						(ModelChange) element :
+						(ModelChange) parentElement;
+				return change.wasPreSelected();
+			}
+		};
 	}
 	
 	public void dispose() {
@@ -235,13 +232,16 @@ public class ExternalizeStringsWizardPage extends WizardPage {
 		label.setText("Resources with un-externalized strings:");
 		fInputViewer = new ContainerCheckedTreeViewer(fileComposite, SWT.V_SCROLL | SWT.H_SCROLL | SWT.SINGLE | SWT.BORDER);
 		fInputViewer.setContentProvider(new ModelChangeContentProvider());
-		fInputViewer.setLabelProvider(fLabelProvider);
-		fInputViewer.getTree().setLayoutData(new GridData(GridData.FILL_BOTH));
+		fInputViewer.setLabelProvider(new ModelChangeLabelProvider());
+		GridData gd = new GridData(GridData.FILL_BOTH);
+		gd.heightHint = 250;
+		fInputViewer.getTree().setLayoutData(gd);
 		fInputViewer.addSelectionChangedListener(new ISelectionChangedListener() {
 			public void selectionChanged(SelectionChangedEvent event) {
 				handleSelectionChanged(event);
 			}
 		});
+		fInputViewer.addFilter(fViewerFilter);
 		
 		Composite buttonComposite = new Composite(fileComposite, SWT.NONE);
 		buttonComposite.setLayout(new GridLayout());
@@ -250,14 +250,16 @@ public class ExternalizeStringsWizardPage extends WizardPage {
 		fHideUnselectedButton = new Button(buttonComposite, SWT.CHECK);
 		fHideUnselectedButton.setText("Hide unselected projects");
 		fHideUnselectedButton.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-		fHideUnselectedButton.setEnabled(true);
+		fHideUnselectedButton.setSelection(true);
 		fHideUnselectedButton.addSelectionListener(new SelectionAdapter() {
 			public void widgetSelected(SelectionEvent e) {
-				fInputViewer.refresh(true);
-				fInputViewer.expandAll();
+				if (fHideUnselectedButton.getSelection())
+					fInputViewer.addFilter(fViewerFilter);
+				else
+					fInputViewer.removeFilter(fViewerFilter);
 			}
 		});
-		fHideUnselectedButton.setSelection(fHideUnselectedButton.getEnabled());
+		
 		
 		Composite infoComposite = new Composite(fileComposite, SWT.NONE);
 		infoComposite.setLayout(new GridLayout());
@@ -266,13 +268,12 @@ public class ExternalizeStringsWizardPage extends WizardPage {
 		Label properties = new Label(infoComposite, SWT.NONE);
 		properties.setText("Properties file:");
 		fPropertiesLabel = new Label(infoComposite, SWT.NONE);
-		GridData gd = new GridData(GridData.FILL_HORIZONTAL);
+		gd = new GridData(GridData.FILL_HORIZONTAL);
 		gd.horizontalIndent = 10;
 		fPropertiesLabel.setLayoutData(gd);
 		fPropertiesLabel.setText("No underlying resource selected");
 		
 		fInputViewer.setInput(PDEPlugin.getDefault());
-		fInputViewer.expandAll();
 	}
 
 	private void createTableViewer(Composite parent) {
@@ -378,7 +379,7 @@ public class ExternalizeStringsWizardPage extends WizardPage {
 			IPluginModelBase model = ((ModelChange)fCurrSelection).getParentModel();
 			updatePropertiesLabel(fModelChangeTable.getModelChange(model).getPropertiesFile(), model);
 		} 
-		fPropertiesViewer.refresh(true);
+		fPropertiesViewer.refresh();
 	}
 	
 	private void updateSourceViewer(ITextFileBufferManager manager, IFile sourceFile) {
@@ -425,28 +426,47 @@ public class ExternalizeStringsWizardPage extends WizardPage {
 		editors[VALUE] = new TextCellEditor(fTable);
 		return editors;
 	}
-	
-	private void validateKeys(boolean refreshTable) {
+
+	protected void validateKeys(String key, boolean refreshTable) {
 		RefactoringStatus status = new RefactoringStatus();
-		checkInvalidKeys(status);
-		checkDuplicateKeys(status);
-		checkMissingKeys(status);
+		checkInvalidKey(key, status);
+		checkDuplicateKey(key, status);
+		checkMissingKey(key, status);
+		if (!status.isOK())
+			setErrorMessage(status.getEntryWithHighestSeverity().getMessage());
+		else
+			setErrorMessage(null);
 		setPageComplete(status.isOK());
 		if (refreshTable)
 			fPropertiesViewer.refresh(true);
 	}
-
-	private void checkInvalidKeys(RefactoringStatus status) {
+	
+	private void checkInvalidKey(String key, RefactoringStatus status) {
+		if (key.length() < 1) {
+			status.addError("Key is too short");
+			return;
+		}
+		char first = key.charAt(0);
+		if (first == '#' || first == '!') {
+			status.addError("Keys may not begin with # or !");
+			return;
+		}
+		if ( (key.indexOf(":") != -1 && key.indexOf("\\:") == -1) ||
+				(key.indexOf("=") != -1 && key.indexOf("\\=") == -1) ) {
+			status.addError("Keys may not contain : or =");
+			return;
+		}
+		
 	}
 	
-	private void checkDuplicateKeys(RefactoringStatus status) {
+	private void checkDuplicateKey(String key, RefactoringStatus status) {
 		
 	}
 
-	private void checkMissingKeys(RefactoringStatus status) {
+	private void checkMissingKey(String key, RefactoringStatus status) {
 	}
-
-	public ModelChangeTable getModelChangeTable() {
-		return fModelChangeTable;
+	
+	public Object[] getChangeFiles() {
+		return fInputViewer.getCheckedElements();
 	}
 }
