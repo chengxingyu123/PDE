@@ -196,7 +196,7 @@ public abstract class BundlePluginModelBase extends AbstractModel
 		String localization = getBundleLocalization();
 		return localization == null
 				? null
-				: new NLResourceHelper(localization, new URL[] {getNLLookupLocation()}); 
+				: new NLResourceHelper(localization, PDEManager.getNLLookupLocations(this)); 
 	}
 
 	public URL getNLLookupLocation() {
