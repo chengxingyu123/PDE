@@ -1042,9 +1042,17 @@
             sourceLocatorId="org.eclipse.jdt.launching.sourceLocator.JavaSourceLookupDirector"
             name="%launchConfigurationType.name"
             sourcePathComputerId="org.eclipse.jdt.launching.sourceLookup.javaSourcePathComputer"
-            delegate="org.eclipse.pde.internal.ui.launcher.WorkbenchLaunchConfigurationDelegate"
+            delegate="org.eclipse.pde.ui.launcher.EclipseApplicationLaunchConfiguration"
             modes="run, debug"
             id="org.eclipse.pde.ui.RuntimeWorkbench">
+      </launchConfigurationType>
+      <launchConfigurationType
+            sourceLocatorId="org.eclipse.jdt.launching.sourceLocator.JavaSourceLookupDirector"
+            name="%launcher.framework.name"
+            sourcePathComputerId="org.eclipse.jdt.launching.sourceLookup.javaSourcePathComputer"
+            delegate="org.eclipse.pde.ui.launcher.EquinoxLaunchConfiguration"
+            modes="run, debug"
+            id="org.eclipse.pde.ui.EquinoxLauncher">
       </launchConfigurationType>
       <launchConfigurationType
             sourceLocatorId="org.eclipse.jdt.launching.sourceLocator.JavaSourceLookupDirector"
@@ -1079,6 +1087,11 @@
             id="org.eclipse.pde.ui.runtimeWorkbenchLaunchImage">
       </launchConfigurationTypeImage>
       <launchConfigurationTypeImage
+            icon="$nl$/icons/obj16/bundle_obj.gif"
+            configTypeID="org.eclipse.pde.ui.EquinoxLauncher"
+            id="org.eclipse.pde.ui.equinoxFrameworkImage">
+      </launchConfigurationTypeImage>
+      <launchConfigurationTypeImage
             icon="$nl$/icons/obj16/swt_launcher.gif"
             configTypeID="org.eclipse.pde.ui.swtLaunchConfig"
             id="org.eclipse.pde.ui.swtLaunchImage">
@@ -1093,7 +1106,7 @@
          point="org.eclipse.debug.ui.launchConfigurationTabGroups">
       <launchConfigurationTabGroup
             type="org.eclipse.pde.ui.RuntimeWorkbench"
-            class="org.eclipse.pde.internal.ui.launcher.WorkbenchLauncherTabGroup"
+            class="org.eclipse.pde.internal.ui.launcher.EclipseApplicationLauncherTabGroup"
             id="org.eclipse.pde.ui.launcher.WorkbenchLauncherTabGroup">
          <launchMode
                description="%workbenchLauncherTabGroup.description.debug"
@@ -1102,6 +1115,20 @@
          </launchMode>
          <launchMode
                description="%workbenchLauncherTabGroup.description.run"
+               mode="run">
+         </launchMode>
+      </launchConfigurationTabGroup>
+      <launchConfigurationTabGroup
+            type="org.eclipse.pde.ui.EquinoxLauncher"
+            class="org.eclipse.pde.internal.ui.launcher.EquinoxLauncherTabGroup"
+            id="org.eclipse.pde.ui.launcher.EquinoxLauncherTabGroup">
+         <launchMode
+               description="%equinoxLauncherTabGroup.description.debug"
+               perspective="org.eclipse.debug.ui.DebugPerspective"
+               mode="debug">
+         </launchMode>
+         <launchMode
+               description="%equinoxLauncherTabGroup.description.run"
                mode="run">
          </launchMode>
       </launchConfigurationTabGroup>

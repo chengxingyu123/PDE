@@ -6,14 +6,11 @@ import java.util.Properties;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.pde.core.IModel;
 import org.eclipse.pde.core.plugin.IPluginModelBase;
-import org.eclipse.pde.internal.core.bundle.Bundle;
-import org.eclipse.pde.internal.core.ibundle.IBundlePluginModelBase;
+import org.eclipse.pde.internal.core.PDEManager;
 import org.eclipse.pde.internal.ui.elements.DefaultElement;
-import org.osgi.framework.Constants;
 
 
 public class ModelChange extends DefaultElement {
@@ -88,21 +85,10 @@ public class ModelChange extends DefaultElement {
 	public IFile getPropertiesFile() {
 		if (fPropertiesFile == null) {
 			IProject project = fParent.getUnderlyingResource().getProject();
-			if (fParent instanceof IBundlePluginModelBase && modelLoaded(fParent)) {
-				IBundlePluginModelBase bundleModel = (IBundlePluginModelBase)fParent;
-				Bundle bundle = (Bundle)bundleModel.getBundleModel().getBundle();
-				if (bundle != null) {
-					String localization = bundle.getHeader(Constants.BUNDLE_LOCALIZATION);
-					if (localization == null)
-						localization = DEFAULT_LOCALIZATION_VALUE;
-					IResource propertiesFile = project.findMember(localization + LOCALIZATION_FILE_SUFFIX);
-					if (propertiesFile != null && propertiesFile instanceof IFile)
-						fPropertiesFile = (IFile)propertiesFile;
-					else
-						fPropertiesFile = project.getFile(DEFAULT_LOCALIZATION_VALUE + LOCALIZATION_FILE_SUFFIX);
-				}
-			} else
-				fPropertiesFile = project.getFile(DEFAULT_LOCALIZATION_VALUE + LOCALIZATION_FILE_SUFFIX);
+			String localization = PDEManager.getBundleLocalization(fParent);
+			if (localization == null)
+				localization = DEFAULT_LOCALIZATION_VALUE;
+			fPropertiesFile = project.getFile(localization + LOCALIZATION_FILE_SUFFIX);
 		}
 		return fPropertiesFile;
 	}
@@ -145,7 +131,7 @@ public class ModelChange extends DefaultElement {
 		return fParent;
 	}
 
-	public ModelChangeFile[] getChangeFileCoupling() {
+	public ModelChangeFile[] getModelChangeFiles() {
 		if (fXMLCoupling != null && fMFCoupling != null)
 			return new ModelChangeFile[] {fXMLCoupling, fMFCoupling};
 		if (fXMLCoupling != null)

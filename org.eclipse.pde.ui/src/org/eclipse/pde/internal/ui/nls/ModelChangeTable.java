@@ -9,6 +9,8 @@ import org.eclipse.pde.core.plugin.IPluginModelBase;
 public class ModelChangeTable {
 
 	private Hashtable fChangeTable = new Hashtable();
+	private int fSelectedCount = 0;
+	private int fTotalModelChanges = 0;
 	
 	public void addToChangeTable(IPluginModelBase model, IFile file, Object change, boolean selected) {
 		if (change == null) return;
@@ -18,6 +20,9 @@ public class ModelChangeTable {
 		else {
 			modelChange = new ModelChange(model, selected);
 			fChangeTable.put(model, modelChange);
+			fTotalModelChanges += 1;
+			if (selected)
+				fSelectedCount += 1;
 		}
 		modelChange.addChange(file, new ModelChangeElement(modelChange, change));
 	}
@@ -30,5 +35,12 @@ public class ModelChangeTable {
 		if (fChangeTable.containsKey(modelKey))
 			return (ModelChange)fChangeTable.get(modelKey);
 		return null;
+	}
+	
+	public boolean enableFilter() {
+		return !(fTotalModelChanges == fSelectedCount) && !(fSelectedCount == 0);
+	}
+	public boolean hasPreSelected() {
+		return fSelectedCount > 0;
 	}
 }

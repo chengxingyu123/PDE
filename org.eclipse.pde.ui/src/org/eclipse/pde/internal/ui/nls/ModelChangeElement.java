@@ -2,6 +2,7 @@ package org.eclipse.pde.internal.ui.nls;
 
 import java.util.Properties;
 
+import org.eclipse.pde.internal.core.util.CoreUtility;
 import org.eclipse.pde.internal.ui.model.IDocumentAttribute;
 import org.eclipse.pde.internal.ui.model.IDocumentTextNode;
 import org.eclipse.pde.internal.ui.model.bundle.ManifestHeader;
@@ -31,7 +32,7 @@ public class ModelChangeElement {
 			fLength = text.getLength();
 		} else if (incoming instanceof PluginAttribute) {
 			PluginAttribute attr = (PluginAttribute)incoming;
-			fValue = attr.getValue();
+			fValue = CoreUtility.getWritableString(attr.getValue());
 			generateValidKey(attr.getEnclosingElement().getXMLTagName(), attr.getName());
 			fOffset = attr.getValueOffset();
 			fLength = attr.getValueLength();
@@ -63,7 +64,7 @@ public class ModelChangeElement {
 	public void setValue(String value) {
 		fValue = value;
 	}
-	public boolean getExternalized() {
+	public boolean getExtern() {
 		return fExternalized;
 	}
 	public void setExternalized(boolean externalzied) {
@@ -84,10 +85,10 @@ public class ModelChangeElement {
 	}
 	private int getValidSuffix(String key) {
 		int suffix = 0;
-		Properties properties = fParent.getProperties();		
+		Properties properties = fParent.getProperties();
 		while (properties.containsKey(key + DELIM + suffix))
-			suffix += 1;		
-		properties.put(key + DELIM + suffix, fValue);
+			suffix += 1;
+		properties.setProperty(key + DELIM + suffix, fValue);
 		return suffix;
 	}
 }
