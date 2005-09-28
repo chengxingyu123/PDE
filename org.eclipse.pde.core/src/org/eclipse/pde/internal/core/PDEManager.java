@@ -19,6 +19,8 @@ import org.eclipse.osgi.service.resolver.HostSpecification;
 import org.eclipse.pde.core.plugin.IFragmentModel;
 import org.eclipse.pde.core.plugin.IPluginModel;
 import org.eclipse.pde.core.plugin.IPluginModelBase;
+import org.eclipse.pde.internal.core.ibundle.IBundlePluginModelBase;
+import org.eclipse.pde.internal.core.plugin.ExternalPluginModelBase;
 
 public class PDEManager {
 
@@ -85,6 +87,16 @@ public class PDEManager {
 		URL location = model.getNLLookupLocation();
 		if (location != null)
 			urls.add(location);		
+	}
+	
+	public static String getBundleLocalization(IPluginModelBase model) {
+		if (model.getUnderlyingResource() != null && model instanceof IBundlePluginModelBase)
+				return((IBundlePluginModelBase)model).getBundleLocalization();
+		
+		if (model instanceof ExternalPluginModelBase)
+			return ((ExternalPluginModelBase)model).getLocalization();
+		
+		return "plugin"; //$NON-NLS-1$
 	}
 
 }

@@ -26,14 +26,15 @@ public abstract class ExternalPluginModelBase extends AbstractPluginModelBase {
 
 	private String fInstallLocation;
 	
-	private String fLocalization = null;
+	private String fLocalization;
 
 	public ExternalPluginModelBase() {
 		super();
 	}
 	
 	protected NLResourceHelper createNLResourceHelper() {
-		return new NLResourceHelper(fLocalization == null ? "plugin" : fLocalization, PDEManager.getNLLookupLocations(this)); //$NON-NLS-1$
+		return (fLocalization == null)
+			    ? null : new NLResourceHelper(fLocalization, PDEManager.getNLLookupLocations(this)); //$NON-NLS-1$
 	}
 	
 	public URL getNLLookupLocation() {
@@ -65,6 +66,7 @@ public abstract class ExternalPluginModelBase extends AbstractPluginModelBase {
 		if (device != null)
 			path = path.setDevice(device.toUpperCase());
 		setInstallLocation(path.toOSString());
+		fLocalization = state.getBundleLocalization(description.getBundleId());
 		super.load(description, state, ignoreExtensions);
 	}
 		
@@ -94,5 +96,9 @@ public abstract class ExternalPluginModelBase extends AbstractPluginModelBase {
 		File file = new File(newInstallLocation);
 		if (file.isDirectory())
 			fInstallLocation += File.separator;
+	}
+	
+	public String getLocalization() {
+		return fLocalization;
 	}
 }

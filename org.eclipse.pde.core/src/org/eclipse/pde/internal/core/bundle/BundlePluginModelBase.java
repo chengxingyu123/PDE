@@ -186,14 +186,14 @@ public abstract class BundlePluginModelBase extends AbstractModel
 		return null;
 	}
 	
-	private String getLocalization() {
+	public String getBundleLocalization() {
 		IBundle bundle = fBundleModel != null ? fBundleModel.getBundle() : null;
 		return bundle != null ? bundle.getLocalization() : null;
 		
 	}
 	
 	protected NLResourceHelper createNLResourceHelper() {
-		String localization = getLocalization();
+		String localization = getBundleLocalization();
 		return localization == null
 				? null
 				: new NLResourceHelper(localization, new URL[] {getNLLookupLocation()}); 
