@@ -186,24 +186,25 @@ public abstract class BundlePluginModelBase extends AbstractModel
 		return null;
 	}
 	
+	private String getLocalization() {
+		IBundle bundle = fBundleModel != null ? fBundleModel.getBundle() : null;
+		return bundle != null ? bundle.getLocalization() : null;
+		
+	}
+	
 	protected NLResourceHelper createNLResourceHelper() {
-		return new NLResourceHelper("plugin", new URL[] {getNLLookupLocation()}); //$NON-NLS-1$
+		String localization = getLocalization();
+		return localization == null
+				? null
+				: new NLResourceHelper(localization, new URL[] {getNLLookupLocation()}); 
 	}
 
 	public URL getNLLookupLocation() {
 		try {
-			return new URL("file:" + getInstallLocation() + "/"); //$NON-NLS-1$ //$NON-NLS-2$
+			return new URL("file:" + getInstallLocation()); //$NON-NLS-1$ //$NON-NLS-2$
 		} catch (MalformedURLException e) {
 			return null;
 		}
-	}
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.eclipse.pde.core.IModel#getResourceString(java.lang.String)
-	 */
-	public String getResourceString(String key) {
-		return key;
 	}
 	/*
 	 * (non-Javadoc)

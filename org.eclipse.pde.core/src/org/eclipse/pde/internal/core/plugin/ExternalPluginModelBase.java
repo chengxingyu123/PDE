@@ -19,6 +19,7 @@ import org.eclipse.core.runtime.Path;
 import org.eclipse.osgi.service.resolver.BundleDescription;
 import org.eclipse.pde.core.build.IBuildModel;
 import org.eclipse.pde.internal.core.NLResourceHelper;
+import org.eclipse.pde.internal.core.PDEManager;
 import org.eclipse.pde.internal.core.PDEState;
 
 public abstract class ExternalPluginModelBase extends AbstractPluginModelBase {
@@ -32,12 +33,12 @@ public abstract class ExternalPluginModelBase extends AbstractPluginModelBase {
 	}
 	
 	protected NLResourceHelper createNLResourceHelper() {
-		return new NLResourceHelper(fLocalization == null ? "plugin" : fLocalization, getNLLookupLocations()); //$NON-NLS-1$
+		return new NLResourceHelper(fLocalization == null ? "plugin" : fLocalization, PDEManager.getNLLookupLocations(this)); //$NON-NLS-1$
 	}
 	
 	public URL getNLLookupLocation() {
 		try {
-			return new URL("file:" + getInstallLocation()); //$NON-NLS-1$
+			return new URL("file:" + fInstallLocation); //$NON-NLS-1$
 		} catch (MalformedURLException e) {
 			return null;
 		}
@@ -73,7 +74,7 @@ public abstract class ExternalPluginModelBase extends AbstractPluginModelBase {
 
 	private File getLocalFile() {
 		File file = new File(getInstallLocation());
-		if (file.isFile() && new Path(file.getAbsolutePath()).getFileExtension().equals("jar")) //$NON-NLS-1$
+		if (file.isFile())
 			return file;
 
 		file = new File(file, "META-INF/MANIFEST.MF"); //$NON-NLS-1$
