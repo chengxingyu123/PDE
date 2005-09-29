@@ -13,6 +13,7 @@ import org.eclipse.pde.internal.ui.model.plugin.PluginExtensionPointNode;
 public class ModelChangeElement {
 	
 	private static final String DELIM = ".";
+	private static final String KEY_PREFIX = "%";
 	
 	private String fValue = "";
 	private String fKey = "";
@@ -64,7 +65,7 @@ public class ModelChangeElement {
 	public void setValue(String value) {
 		fValue = value;
 	}
-	public boolean getExtern() {
+	public boolean isExternalized() {
 		return fExternalized;
 	}
 	public void setExternalized(boolean externalzied) {
@@ -90,5 +91,8 @@ public class ModelChangeElement {
 			suffix += 1;
 		properties.setProperty(key + DELIM + suffix, fValue);
 		return suffix;
+	}
+	public String getExternKey() {
+		return KEY_PREFIX + fKey;
 	}
 }

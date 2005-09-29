@@ -1,10 +1,34 @@
 package org.eclipse.pde.internal.ui.nls;
 
 public class StringWinder {
+	
+	protected static String preparePropertiesString(String s, char[] newLine) {
+		if (s != null) {
+			int length = s.length();
+			StringBuffer sb = new StringBuffer(length);
+			for (int i = 0; i < length; i++) {
+				char c = s.charAt(i);
+				int nlLength = newLine.length;
+				if (i + nlLength < length) {
+					boolean notNewLine = false;
+					for (int j = 0; j < nlLength; j++) {
+						if (s.charAt(i + j) != newLine[j])
+							notNewLine = true;
+					}
+					if (!notNewLine)
+						sb.append("\\");
+				}
+				sb.append(c);
+			}
+			return sb.toString();
+		}
+		return null;
+	}
+	
 	protected static String unwindEscapeChars(String s) {
 		if (s != null) {
-			StringBuffer sb = new StringBuffer(s.length());
 			int length = s.length();
+			StringBuffer sb = new StringBuffer(length);
 			for (int i = 0; i < length; i++) {
 				char c = s.charAt(i);
 				sb.append(getUnwoundString(c));

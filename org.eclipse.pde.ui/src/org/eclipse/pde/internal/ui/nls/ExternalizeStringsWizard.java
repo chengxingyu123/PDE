@@ -28,7 +28,8 @@ public class ExternalizeStringsWizard extends Wizard {
 	
 	public boolean performFinish() {
 		try {
-			getContainer().run(false, false, new ExternalizeStringsOperation());
+			getContainer().run(false, false,
+					new ExternalizeStringsOperation(page1.getChangeFiles()));
 		} catch (InvocationTargetException e) {
 			return false;
 		} catch (InterruptedException e) {

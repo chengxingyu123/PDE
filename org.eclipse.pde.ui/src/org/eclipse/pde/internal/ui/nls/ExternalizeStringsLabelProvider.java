@@ -35,7 +35,7 @@ public class ExternalizeStringsLabelProvider  extends LabelProvider implements I
 	public Font getFont(Object element) {
 		if (element instanceof ModelChangeElement) {
 			ModelChangeElement changeElement = (ModelChangeElement) element;
-			if (changeElement.getExtern()) {
+			if (changeElement.isExternalized()) {
 				return fFontRegistry.getBold(JFaceResources.DIALOG_FONT);
 			}
 		}

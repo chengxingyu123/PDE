@@ -677,7 +677,7 @@
          <action
                label="%ExternalizeStrings.label"
                helpContextId="org.eclipse.pde.doc.user.externalize_strings"
-               class="org.eclipse.pde.internal.ui.nls.ExternalizeStringsAction"
+               class="org.eclipse.pde.internal.ui.nls.GetNonExternalizedStringsAction"
                menubarPath="org.eclipse.pde.ui.feature.tools/group0"
                enablesFor="+"
                id="org.eclipse.pde.ui.ExternalizeStrings">
@@ -727,7 +727,7 @@
          <action
                label="%ExternalizeStrings.label"
                helpContextId="org.eclipse.pde.doc.user.externalize_strings"
-               class="org.eclipse.pde.internal.ui.nls.ExternalizeStringsAction"
+               class="org.eclipse.pde.internal.ui.nls.GetNonExternalizedStringsAction"
                menubarPath="org.eclipse.pde.ui.plugin.tools/group0"
                enablesFor="+"
                id="org.eclipse.pde.ui.ExternalizeStrings">
@@ -798,7 +798,7 @@
          <action
                label="%ExternalizeStrings.label"
                helpContextId="org.eclipse.pde.doc.user.externalize_strings"
-               class="org.eclipse.pde.internal.ui.nls.ExternalizeStringsAction"
+               class="org.eclipse.pde.internal.ui.nls.GetNonExternalizedStringsAction"
                menubarPath="org.eclipse.pde.ui.manifest.tools/group0"
                enablesFor="+"
                id="org.eclipse.pde.ui.ExternalizeStrings">
@@ -856,7 +856,7 @@
          <action
                label="%ExternalizeStrings.label"
                helpContextId="org.eclipse.pde.doc.user.externalize_strings"
-               class="org.eclipse.pde.internal.ui.nls.ExternalizeStringsAction"
+               class="org.eclipse.pde.internal.ui.nls.GetNonExternalizedStringsAction"
                menubarPath="org.eclipse.pde.ui.fragment.tools/group0"
                enablesFor="+"
                id="org.eclipse.pde.ui.ExternalizeStrings">
@@ -981,7 +981,7 @@
          <action
                label="%ExternalizeStrings.label"
                helpContextId="org.eclipse.pde.doc.user.externalize_strings"
-               class="org.eclipse.pde.internal.ui.nls.ExternalizeStringsAction"
+               class="org.eclipse.pde.internal.ui.nls.GetNonExternalizedStringsAction"
                menubarPath="org.eclipse.pde.ui.project.tools/group0"
                enablesFor="+"
                id="org.eclipse.pde.ui.ExternalizeStrings">

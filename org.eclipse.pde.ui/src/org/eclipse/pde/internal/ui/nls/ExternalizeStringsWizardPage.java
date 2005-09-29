@@ -104,7 +104,7 @@ public class ExternalizeStringsWizardPage extends WizardPage {
 					(element instanceof ModelChangeElement) &&
 					!TABLE_PROPERTIES[VALUE].equals(property) &&
 					(isPageComplete() || element.equals(fErrorElement)) &&
-					(TABLE_PROPERTIES[KEY].equals(property) && ((ModelChangeElement)element).getExtern()));
+					(TABLE_PROPERTIES[KEY].equals(property) && ((ModelChangeElement)element).isExternalized()));
 
 		}
 
@@ -140,15 +140,16 @@ public class ExternalizeStringsWizardPage extends WizardPage {
 		}
 	}
 	
+	
+	
 	private ModelChangeTable fModelChangeTable;
 	
 	private ContainerCheckedTreeViewer fInputViewer;
-	private Button fUnselectedFilterButton;
 	private Label fPropertiesLabel;
 	private CheckboxTableViewer fPropertiesViewer;
 	private Table fTable;
 	private SourceViewer fSourceViewer;
-	private ViewerFilter fPreSelectFilter;
+	
 	private ViewerFilter fErrorElementFilter;
 	
 	private Object fCurrSelection;
@@ -161,16 +162,6 @@ public class ExternalizeStringsWizardPage extends WizardPage {
 		setTitle("Externalize Strings");
 		setDescription("Externalize strings in manifest files.");
 		fModelChangeTable = changeTable;
-		fPreSelectFilter = new ViewerFilter() {
-			public boolean select(Viewer viewer, Object parentElement, Object element) {
-				if (!(element instanceof ModelChange) && !(parentElement instanceof ModelChange))
-					return false;
-				ModelChange change = (element instanceof ModelChange) ? 
-						(ModelChange) element :
-						(ModelChange) parentElement;
-				return change.wasPreSelected();
-			}
-		};
 		fErrorElementFilter = new ViewerFilter() {
 			public boolean select(Viewer viewer, Object parentElement, Object element) {
 				if (!(element instanceof ModelChangeElement))
@@ -235,32 +226,19 @@ public class ExternalizeStringsWizardPage extends WizardPage {
 		Button selectAll = new Button(buttonComposite, SWT.PUSH);
 		selectAll.setText("Select All");
 		selectAll.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-		Button selectNone = new Button(buttonComposite, SWT.PUSH);
-		selectNone.setText("Select None");
-		selectNone.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-		
-		Composite checkButtonComp = new Composite(buttonComposite, SWT.NONE);
-		layout = new GridLayout();
-		layout.marginHeight = layout.marginWidth = 0;
-		checkButtonComp.setLayout(layout);
-		gd = new GridData(GridData.FILL_HORIZONTAL);
-		gd.horizontalSpan = 2;
-		checkButtonComp.setLayoutData(gd);
-		fUnselectedFilterButton = new Button(checkButtonComp, SWT.CHECK);
-		fUnselectedFilterButton.setText("Show selected resources only");
-		fUnselectedFilterButton.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-		fUnselectedFilterButton.setSelection(fModelChangeTable.hasPreSelected());
-		fUnselectedFilterButton.setEnabled(fModelChangeTable.enableFilter());
-		fUnselectedFilterButton.addSelectionListener(new SelectionAdapter() {
+		selectAll.addSelectionListener(new SelectionAdapter() {
 			public void widgetSelected(SelectionEvent e) {
-				if (fUnselectedFilterButton.getSelection())
-					fInputViewer.addFilter(fPreSelectFilter);
-				else
-					fInputViewer.removeFilter(fPreSelectFilter);
+				fInputViewer.setCheckedElements(fModelChangeTable.getAllModelChanges().toArray());
 			}
 		});
-		if (fModelChangeTable.hasPreSelected())
-			fInputViewer.addFilter(fPreSelectFilter);
+		Button deselectAll = new Button(buttonComposite, SWT.PUSH);
+		deselectAll.setText("Select None");
+		deselectAll.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+		deselectAll.addSelectionListener(new SelectionAdapter() {
+			public void widgetSelected(SelectionEvent e) {
+				fInputViewer.setCheckedElements(new Object[0]);
+			}
+		});
 		
 		Composite infoComposite = new Composite(fileComposite, SWT.NONE);
 		infoComposite.setLayout(new GridLayout());
@@ -275,6 +253,7 @@ public class ExternalizeStringsWizardPage extends WizardPage {
 		fPropertiesLabel.setText("No underlying resource selected");
 		
 		fInputViewer.setInput(PDEPlugin.getDefault());
+		fInputViewer.setCheckedElements(fModelChangeTable.getAllModelChanges().toArray());
 	}
 
 	private void createTableViewer(Composite parent) {
@@ -398,7 +377,7 @@ public class ExternalizeStringsWizardPage extends WizardPage {
 		for (int i = 0; i < items.length; i++) {
 			if (!(items[i].getData() instanceof ModelChangeElement)) continue;
 			ModelChangeElement element = (ModelChangeElement)items[i].getData();
-			fPropertiesViewer.setChecked(element, element.getExtern());
+			fPropertiesViewer.setChecked(element, element.isExternalized());
 		}
 	}
 	
@@ -407,15 +386,6 @@ public class ExternalizeStringsWizardPage extends WizardPage {
 		TreeItem item = fInputViewer.getTree().getSelection()[0];
 		IPluginModelBase model = ((ModelChange)item.getParentItem().getData()).getParentModel();
 		
-//		if (fSourceViewer.getDocument() != null)
-//			fSourceViewer.unconfigure();
-//		
-//		if (sourceFile.getFileExtension().equalsIgnoreCase("xml")) {
-//			if (fColorManager != null)
-//				fColorManager.dispose();
-//			fColorManager = ColorManager.getDefault();
-//			fSourceViewer.configure(new XMLConfiguration(fColorManager));
-//		}
 		fSourceViewer.setDocument(document);
 		updatePropertiesLabel(model);
 	}
@@ -455,15 +425,16 @@ public class ExternalizeStringsWizardPage extends WizardPage {
 		if (key.equals(fPreErrorKey)) {
 			error = null;
 		} else if (key.trim().length() < 1) {
-			error = getErrorMessage("New key is too short", oldKey);
+			error = getErrorMessage("New key may not be empty", oldKey);
 		} else if (key.charAt(0) == '#' || key.charAt(0) == '!' || key.charAt(0) == '%') {
-			error = getErrorMessage("New key may not begin with #, ! or %", oldKey);
+			error = getErrorMessage("New key may not begin with #, ! or % characters", oldKey);
 		} else if ((key.indexOf(":") != -1 && key.indexOf("\\:") == -1) ||
-				   (key.indexOf("=") != -1 && key.indexOf("\\=") == -1) ) {
-			error = getErrorMessage("New key may not contain : or =", oldKey);
-		} else if ((!key.equals(oldKey) || !isPageComplete()) &&
+				   (key.indexOf("=") != -1 && key.indexOf("\\=") == -1) ||
+				    key.indexOf(" ") != -1) {
+			error = getErrorMessage("New key may not contain : or = \" \" (space) characters", oldKey);
+		} else if ((!key.equals(oldKey) || fPreErrorKey != null) &&
 				properties.containsKey(key)) {
-			error = getErrorMessage("Duplicate key found", oldKey);
+			error = getErrorMessage("New key may not be a duplicate of another key", oldKey);
 		}
 
 		setErrorMessage(error);
