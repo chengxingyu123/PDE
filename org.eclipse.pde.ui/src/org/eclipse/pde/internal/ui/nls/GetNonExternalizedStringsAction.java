@@ -60,7 +60,7 @@ public class GetNonExternalizedStringsAction
 			} else
 				MessageDialog.openInformation(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(), 
 						"Externalize Strings", 
-						"No non-extrenalized strings found.");
+						"All strings in manifest files have been externalized");
 		}
 	}
 

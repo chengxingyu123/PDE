@@ -9,6 +9,7 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.resource.JFaceResources;
+import org.eclipse.jface.text.Document;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.source.SourceViewer;
 import org.eclipse.jface.viewers.CellEditor;
@@ -28,6 +29,8 @@ import org.eclipse.jface.viewers.ViewerFilter;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.pde.core.plugin.IPluginModelBase;
 import org.eclipse.pde.internal.ui.PDEPlugin;
+import org.eclipse.pde.internal.ui.editor.XMLConfiguration;
+import org.eclipse.pde.internal.ui.editor.text.ColorManager;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.events.ModifyEvent;
@@ -38,6 +41,7 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
@@ -67,7 +71,7 @@ public class ExternalizeStringsWizardPage extends WizardPage {
 		TABLE_COLUMNS[KEY] = "Substitution Key"; //$NON-NLS-1$
 	}
 
-	public class ModelChangeContentProvider implements ITreeContentProvider, IContentProvider {
+	private class ModelChangeContentProvider implements ITreeContentProvider, IContentProvider {
 		
 		public Object[] getElements(Object parent) {
 			return fModelChangeTable.getAllModelChanges().toArray();
@@ -148,8 +152,10 @@ public class ExternalizeStringsWizardPage extends WizardPage {
 	private ModelChangeTable fModelChangeTable;
 	
 	private ContainerCheckedTreeViewer fInputViewer;
+	private Button fSelectAll;
+	private Button fDeselectAll;
 	private Label fProjectLabel;
-	private Text fPropertiesText;
+	private Text fLocalizationText;
 	private CheckboxTableViewer fPropertiesViewer;
 	private Table fTable;
 	private SourceViewer fSourceViewer;
@@ -161,12 +167,13 @@ public class ExternalizeStringsWizardPage extends WizardPage {
 	private ModelChangeElement fErrorElement;
 	private String fPreErrorKey;
 
-	
+	private IDocument fEmptyDoc;
+	private ColorManager fColorManager;
 	
 	protected ExternalizeStringsWizardPage(ModelChangeTable changeTable) {
-		super("ExternalizeTranslationPage");
+		super(PAGE_NAME);
 		setTitle("Externalize Strings");
-		setDescription("Externalize strings in manifest files.");
+		setDescription("Externalizing manifest files extracts translatable strings and stores them in a properties file for multi-language support.");
 		fModelChangeTable = changeTable;
 		fErrorElementFilter = new ViewerFilter() {
 			public boolean select(Viewer viewer, Object parentElement, Object element) {
@@ -178,23 +185,29 @@ public class ExternalizeStringsWizardPage extends WizardPage {
 		};
 		fModifyListener = new ModifyListener() {
 			public void modifyText(ModifyEvent e) {
-				String localization = fPropertiesText.getText();
-				StringBuffer buffer = new StringBuffer(localization);
-				if (buffer.length() == 0)
-					buffer.append("plugin");
-				if (buffer.indexOf(ModelChange.LOCALIZATION_FILE_SUFFIX) == -1)
-					buffer.append(ModelChange.LOCALIZATION_FILE_SUFFIX);
-				localization = buffer.toString();
-				if (fCurrSelection instanceof ModelChange) {
-					((ModelChange)fCurrSelection).setBundleLocalization(localization);
-				} else if (fCurrSelection instanceof ModelChangeFile) {
-					((ModelChangeFile)fCurrSelection).getModel().setBundleLocalization(localization);
+				String localization = fLocalizationText.getText();
+				if (isValidLocalization(localization)) {
+					setEnabled(fLocalizationText, true);
+					setPageComplete(hasCheckedElements());
+					setErrorMessage(null);
+					if (fCurrSelection instanceof ModelChange) {
+						((ModelChange)fCurrSelection).setBundleLocalization(fLocalizationText.getText());
+					} else if (fCurrSelection instanceof ModelChangeFile) {
+						((ModelChangeFile)fCurrSelection).getModel().setBundleLocalization(fLocalizationText.getText());
+					}
+				} else {
+					setEnabled(fLocalizationText, false);
+					setPageComplete(false);
+					setErrorMessage("A Bundle Localization must consist of a combination of alpha-numeric characters, _ and -.");
 				}
-				fPropertiesText.removeModifyListener(fModifyListener);
-				fPropertiesText.setText(localization);
-				fPropertiesText.addModifyListener(fModifyListener);
 			}
 		};
+	}
+	
+	public void dispose() {
+		if (fColorManager != null)
+			fColorManager.dispose();
+		super.dispose();
 	}
 	
 	public void createControl(Composite parent) {
@@ -212,17 +225,17 @@ public class ExternalizeStringsWizardPage extends WizardPage {
 		createTableViewer(sash);
 		createSourceViewer(sash);
 		
+		setPageComplete(hasCheckedElements());
+		
 		superSash.setWeights(new int[] {4,7});
 		setControl(superSash);
 		Dialog.applyDialogFont(superSash);
 
 		// TODO ADD HELP
-		// PlatformUI.getWorkbench().getHelpSystem().setHelp(container,
-		// IHelpContextIds.UPDATE_CLASSPATH);
+//		PlatformUI.getWorkbench().getHelpSystem().setHelp(superSash, IHelpContextIds.UPDATE_CLASSPATH);
 	}
 
 	private void createInputContents(Composite composite) {
-
 		Composite fileComposite = new Composite(composite, SWT.NONE);
 		fileComposite.setLayout(new GridLayout());
 		fileComposite.setLayoutData(new GridData(GridData.FILL_BOTH));
@@ -240,7 +253,11 @@ public class ExternalizeStringsWizardPage extends WizardPage {
 				handleSelectionChanged(event);
 			}
 		});
-		
+		fInputViewer.addCheckStateListener(new ICheckStateListener() {
+			public void checkStateChanged(CheckStateChangedEvent event) {
+				setPageComplete(hasCheckedElements());
+			}
+		});
 		
 		Composite buttonComposite = new Composite(fileComposite, SWT.NONE);
 		GridLayout layout = new GridLayout(2, true);
@@ -248,18 +265,18 @@ public class ExternalizeStringsWizardPage extends WizardPage {
 		buttonComposite.setLayout(layout);
 		buttonComposite.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 		
-		Button selectAll = new Button(buttonComposite, SWT.PUSH);
-		selectAll.setText("Select All");
-		selectAll.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-		selectAll.addSelectionListener(new SelectionAdapter() {
+		fSelectAll = new Button(buttonComposite, SWT.PUSH);
+		fSelectAll.setText("Select All");
+		fSelectAll.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+		fSelectAll.addSelectionListener(new SelectionAdapter() {
 			public void widgetSelected(SelectionEvent e) {
 				fInputViewer.setCheckedElements(fModelChangeTable.getAllModelChanges().toArray());
 			}
 		});
-		Button deselectAll = new Button(buttonComposite, SWT.PUSH);
-		deselectAll.setText("Select None");
-		deselectAll.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-		deselectAll.addSelectionListener(new SelectionAdapter() {
+		fDeselectAll = new Button(buttonComposite, SWT.PUSH);
+		fDeselectAll.setText("Deselect All");
+		fDeselectAll.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+		fDeselectAll.addSelectionListener(new SelectionAdapter() {
 			public void widgetSelected(SelectionEvent e) {
 				fInputViewer.setCheckedElements(new Object[0]);
 			}
@@ -280,16 +297,16 @@ public class ExternalizeStringsWizardPage extends WizardPage {
 		fProjectLabel.setText("No underlying resource selected");
 		
 		Label properties = new Label(infoComposite, SWT.NONE);
-		properties.setText("Properties file:");
-		fPropertiesText = new Text(infoComposite, SWT.BORDER);
+		properties.setText("Bundle Localization:");
+		fLocalizationText = new Text(infoComposite, SWT.BORDER);
 		gd = new GridData(GridData.FILL_HORIZONTAL);
 		gd.horizontalIndent = 10;
-		fPropertiesText.setLayoutData(gd);
-		fPropertiesText.setText("No underlying resource selected");
-		fPropertiesText.addModifyListener(fModifyListener);
+		fLocalizationText.setLayoutData(gd);
+		fLocalizationText.setText("No underlying resource selected");
+		fLocalizationText.addModifyListener(fModifyListener);
 		
 		fInputViewer.setInput(PDEPlugin.getDefault());
-		fInputViewer.setCheckedElements(fModelChangeTable.getAllModelChanges().toArray());
+		fInputViewer.setCheckedElements(fModelChangeTable.getPreSelected());
 	}
 
 	private void createTableViewer(Composite parent) {
@@ -302,9 +319,8 @@ public class ExternalizeStringsWizardPage extends WizardPage {
 		label.setText("Strings to externalize:"); 
 		label.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 		
-		
-		fPropertiesViewer = CheckboxTableViewer.newCheckList(composite, SWT.H_SCROLL | SWT.V_SCROLL | SWT.FULL_SELECTION | SWT.HIDE_SELECTION | SWT.BORDER);
-		
+		fPropertiesViewer = CheckboxTableViewer.newCheckList(composite, 
+				SWT.H_SCROLL | SWT.V_SCROLL | SWT.FULL_SELECTION | SWT.HIDE_SELECTION | SWT.BORDER);
 		fTable = fPropertiesViewer.getTable();
 		fTable.setFont(composite.getFont());
 		fTable.setLayoutData(new GridData(GridData.FILL_BOTH));
@@ -320,12 +336,9 @@ public class ExternalizeStringsWizardPage extends WizardPage {
 		}
 		
 		fPropertiesViewer.setUseHashlookup(true);
-
-		final CellEditor[] editors = createCellEditors();
-		fPropertiesViewer.setCellEditors(editors);
+		fPropertiesViewer.setCellEditors(createCellEditors());
 		fPropertiesViewer.setColumnProperties(TABLE_PROPERTIES);
 		fPropertiesViewer.setCellModifier(new CellModifier());
-
 		fPropertiesViewer.setContentProvider(new IStructuredContentProvider() {
 			public Object[] getElements(Object inputElement) {
 				if (fInputViewer.getSelection() instanceof IStructuredSelection) {
@@ -357,7 +370,6 @@ public class ExternalizeStringsWizardPage extends WizardPage {
 				}
 			}
 		});
-		
 		fPropertiesViewer.setInput(new Object());
 	}
 
@@ -374,6 +386,9 @@ public class ExternalizeStringsWizardPage extends WizardPage {
 		fSourceViewer.getControl().setFont(JFaceResources.getTextFont());
 		fSourceViewer.getControl().setLayoutData(new GridData(GridData.FILL_BOTH));
 		fSourceViewer.setEditable(false);
+		
+		fEmptyDoc = new Document();
+		fSourceViewer.setDocument(fEmptyDoc);
 	}
 	
 	private void handleSelectionChanged(SelectionChangedEvent event) {
@@ -381,8 +396,8 @@ public class ExternalizeStringsWizardPage extends WizardPage {
 			return;
 		Object selection = (((IStructuredSelection)event.getSelection()).getFirstElement());
 		if (selection == null) {
-			fSourceViewer.setDocument(null);
 			fCurrSelection = null;
+			fSourceViewer.setDocument(fEmptyDoc);
 		} else if (selection.equals(fCurrSelection)) {
 			return;
 		} else if (selection instanceof ModelChangeFile) {
@@ -402,6 +417,7 @@ public class ExternalizeStringsWizardPage extends WizardPage {
 			}
 		} else if (selection instanceof ModelChange) {
 			fCurrSelection = selection;
+			fSourceViewer.setDocument(fEmptyDoc);
 			updatePropertiesLabel(((ModelChange)fCurrSelection).getParentModel());
 		}
 		refreshPropertiesViewer(false);
@@ -422,6 +438,16 @@ public class ExternalizeStringsWizardPage extends WizardPage {
 		TreeItem item = fInputViewer.getTree().getSelection()[0];
 		IPluginModelBase model = ((ModelChange)item.getParentItem().getData()).getParentModel();
 		
+		if (fSourceViewer.getDocument() != null && !fSourceViewer.getDocument().equals(fEmptyDoc))
+			fSourceViewer.unconfigure();
+		if (sourceFile.getFileExtension().equalsIgnoreCase("xml")) {
+			if (fColorManager != null) {
+				fColorManager.dispose();
+			}
+			fColorManager = new ColorManager();
+			fSourceViewer.configure(new XMLConfiguration(fColorManager));
+		}
+		
 		fSourceViewer.setDocument(document);
 		updatePropertiesLabel(model);
 	}
@@ -430,11 +456,11 @@ public class ExternalizeStringsWizardPage extends WizardPage {
 	private void updatePropertiesLabel(IPluginModelBase model) {
 		ModelChange modelChange = fModelChangeTable.getModelChange(model);
 		fProjectLabel.setText(model.getBundleDescription().getName());
-		fPropertiesText.setEditable(!modelChange.localizationSet());
-		fPropertiesText.setText(modelChange.getBundleLocalization());
+		fLocalizationText.setEditable(!modelChange.localizationSet());
+		fLocalizationText.setText(modelChange.getBundleLocalization());
 	}
 	
-	protected void handlePropertySelection() {
+	private void handlePropertySelection() {
 		if (!(fPropertiesViewer.getSelection() instanceof IStructuredSelection)) return;
 		Object selection = (((IStructuredSelection)fPropertiesViewer.getSelection()).getFirstElement());
 		if (selection instanceof ModelChangeElement && fSourceViewer.getDocument() != null) {
@@ -454,7 +480,7 @@ public class ExternalizeStringsWizardPage extends WizardPage {
 		return editors;
 	}
 
-	protected void validateKey(String key, ModelChangeElement element) {
+	private void validateKey(String key, ModelChangeElement element) {
 		ModelChange modelChange = ((ModelChangeFile)fCurrSelection).getModel();
 		Properties properties = modelChange.getProperties();
 		String error = null;
@@ -475,20 +501,18 @@ public class ExternalizeStringsWizardPage extends WizardPage {
 		}
 
 		setErrorMessage(error);
-		setPageComplete(error == null);
+		setPageComplete(error == null && hasCheckedElements());
 		if (error == null) {
 			fErrorElement = null;
 			fPreErrorKey = null;
-			fInputViewer.getControl().setEnabled(true);
-			fPropertiesText.setEnabled(true);
+			setEnabled(fPropertiesViewer.getControl(), true);
 			fPropertiesViewer.removeFilter(fErrorElementFilter);
 			refreshPropertiesViewer(true);
 			properties.setProperty(key, element.getValue());
 		} else if (fPreErrorKey == null) {
 			fErrorElement = element;
 			fPreErrorKey = oldKey;
-			fInputViewer.getControl().setEnabled(false);
-			fPropertiesText.setEnabled(false);
+			setEnabled(fPropertiesViewer.getControl(), false);
 			fPropertiesViewer.addFilter(fErrorElementFilter);
 		}
 	}
@@ -506,7 +530,34 @@ public class ExternalizeStringsWizardPage extends WizardPage {
 		return fInputViewer.getCheckedElements();
 	}
 	
-	public boolean isPageComplete() {
-		return fInputViewer.getCheckedElements().length != 0;
-	}
+    private boolean isValidLocalization(String name) {
+        if (name.length() <= 0) {
+            return false;
+        }
+        for (int i = 0; i < name.length(); i++) {
+            char c = name.charAt(i);
+            if ((c < 'A' || 'Z' < c) && (c < 'a' || 'z' < c)
+                    && (c < '0' || '9' < c) && c != '_' && c != '-') {
+                return false;
+            }
+        }
+        return true;
+    }
+    
+    private boolean hasCheckedElements() {
+    	return fInputViewer.getCheckedElements().length > 0;
+    }
+    
+    private void setEnabled(Control exception, boolean enabled) {
+    	if (!exception.equals(fInputViewer.getControl()))
+    		fInputViewer.getControl().setEnabled(enabled);
+    	if (!exception.equals(fPropertiesViewer.getControl()))
+    		fPropertiesViewer.getControl().setEnabled(enabled);
+    	if (!exception.equals(fLocalizationText))
+    		fLocalizationText.setEnabled(enabled);
+    	if (!exception.equals(fSelectAll))
+    		fSelectAll.setEnabled(enabled);
+    	if (!exception.equals(fDeselectAll))
+    		fDeselectAll.setEnabled(enabled);
+    }
 }
