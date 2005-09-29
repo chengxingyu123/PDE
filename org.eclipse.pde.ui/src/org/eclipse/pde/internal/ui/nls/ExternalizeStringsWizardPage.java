@@ -30,6 +30,8 @@ import org.eclipse.pde.core.plugin.IPluginModelBase;
 import org.eclipse.pde.internal.ui.PDEPlugin;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.SashForm;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
@@ -40,6 +42,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
+import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.TreeItem;
 import org.eclipse.text.edits.MalformedTreeException;
 import org.eclipse.ui.dialogs.ContainerCheckedTreeViewer;
@@ -145,16 +148,19 @@ public class ExternalizeStringsWizardPage extends WizardPage {
 	private ModelChangeTable fModelChangeTable;
 	
 	private ContainerCheckedTreeViewer fInputViewer;
-	private Label fPropertiesLabel;
+	private Label fProjectLabel;
+	private Text fPropertiesText;
 	private CheckboxTableViewer fPropertiesViewer;
 	private Table fTable;
 	private SourceViewer fSourceViewer;
 	
 	private ViewerFilter fErrorElementFilter;
+	private ModifyListener fModifyListener;
 	
 	private Object fCurrSelection;
 	private ModelChangeElement fErrorElement;
 	private String fPreErrorKey;
+
 	
 	
 	protected ExternalizeStringsWizardPage(ModelChangeTable changeTable) {
@@ -168,6 +174,25 @@ public class ExternalizeStringsWizardPage extends WizardPage {
 					return false;
 				ModelChangeElement change = (ModelChangeElement) element;
 				return change.equals(fErrorElement);
+			}
+		};
+		fModifyListener = new ModifyListener() {
+			public void modifyText(ModifyEvent e) {
+				String localization = fPropertiesText.getText();
+				StringBuffer buffer = new StringBuffer(localization);
+				if (buffer.length() == 0)
+					buffer.append("plugin");
+				if (buffer.indexOf(ModelChange.LOCALIZATION_FILE_SUFFIX) == -1)
+					buffer.append(ModelChange.LOCALIZATION_FILE_SUFFIX);
+				localization = buffer.toString();
+				if (fCurrSelection instanceof ModelChange) {
+					((ModelChange)fCurrSelection).setBundleLocalization(localization);
+				} else if (fCurrSelection instanceof ModelChangeFile) {
+					((ModelChangeFile)fCurrSelection).getModel().setBundleLocalization(localization);
+				}
+				fPropertiesText.removeModifyListener(fModifyListener);
+				fPropertiesText.setText(localization);
+				fPropertiesText.addModifyListener(fModifyListener);
 			}
 		};
 	}
@@ -241,16 +266,27 @@ public class ExternalizeStringsWizardPage extends WizardPage {
 		});
 		
 		Composite infoComposite = new Composite(fileComposite, SWT.NONE);
-		infoComposite.setLayout(new GridLayout());
+		layout = new GridLayout();
+		layout.marginHeight = 0;
+		infoComposite.setLayout(layout);
 		infoComposite.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+		
+		Label project = new Label(infoComposite, SWT.NONE);
+		project.setText("Selected project:");
+		fProjectLabel = new Label(infoComposite, SWT.NONE);
+		gd = new GridData(GridData.FILL_HORIZONTAL);
+		gd.horizontalIndent = 10;
+		fProjectLabel.setLayoutData(gd);
+		fProjectLabel.setText("No underlying resource selected");
 		
 		Label properties = new Label(infoComposite, SWT.NONE);
 		properties.setText("Properties file:");
-		fPropertiesLabel = new Label(infoComposite, SWT.NONE);
+		fPropertiesText = new Text(infoComposite, SWT.BORDER);
 		gd = new GridData(GridData.FILL_HORIZONTAL);
 		gd.horizontalIndent = 10;
-		fPropertiesLabel.setLayoutData(gd);
-		fPropertiesLabel.setText("No underlying resource selected");
+		fPropertiesText.setLayoutData(gd);
+		fPropertiesText.setText("No underlying resource selected");
+		fPropertiesText.addModifyListener(fModifyListener);
 		
 		fInputViewer.setInput(PDEPlugin.getDefault());
 		fInputViewer.setCheckedElements(fModelChangeTable.getAllModelChanges().toArray());
@@ -367,12 +403,12 @@ public class ExternalizeStringsWizardPage extends WizardPage {
 		} else if (selection instanceof ModelChange) {
 			fCurrSelection = selection;
 			updatePropertiesLabel(((ModelChange)fCurrSelection).getParentModel());
-		} 
+		}
 		refreshPropertiesViewer(false);
 	}
 	
 	private void refreshPropertiesViewer(boolean updateLabels) {
-		fPropertiesViewer.refresh();
+		fPropertiesViewer.refresh(updateLabels);
 		TableItem[] items = fTable.getItems();
 		for (int i = 0; i < items.length; i++) {
 			if (!(items[i].getData() instanceof ModelChangeElement)) continue;
@@ -392,9 +428,10 @@ public class ExternalizeStringsWizardPage extends WizardPage {
 	
 	
 	private void updatePropertiesLabel(IPluginModelBase model) {
-		IFile propertiesFile = fModelChangeTable.getModelChange(model).getPropertiesFile();
-		fPropertiesLabel.setText(model.getBundleDescription().getName() + "\\"
-				+ propertiesFile.getProjectRelativePath().toOSString());
+		ModelChange modelChange = fModelChangeTable.getModelChange(model);
+		fProjectLabel.setText(model.getBundleDescription().getName());
+		fPropertiesText.setEditable(!modelChange.localizationSet());
+		fPropertiesText.setText(modelChange.getBundleLocalization());
 	}
 	
 	protected void handlePropertySelection() {
@@ -443,6 +480,7 @@ public class ExternalizeStringsWizardPage extends WizardPage {
 			fErrorElement = null;
 			fPreErrorKey = null;
 			fInputViewer.getControl().setEnabled(true);
+			fPropertiesText.setEnabled(true);
 			fPropertiesViewer.removeFilter(fErrorElementFilter);
 			refreshPropertiesViewer(true);
 			properties.setProperty(key, element.getValue());
@@ -450,6 +488,7 @@ public class ExternalizeStringsWizardPage extends WizardPage {
 			fErrorElement = element;
 			fPreErrorKey = oldKey;
 			fInputViewer.getControl().setEnabled(false);
+			fPropertiesText.setEnabled(false);
 			fPropertiesViewer.addFilter(fErrorElementFilter);
 		}
 	}
@@ -465,5 +504,9 @@ public class ExternalizeStringsWizardPage extends WizardPage {
 	
 	public Object[] getChangeFiles() {
 		return fInputViewer.getCheckedElements();
+	}
+	
+	public boolean isPageComplete() {
+		return fInputViewer.getCheckedElements().length != 0;
 	}
 }

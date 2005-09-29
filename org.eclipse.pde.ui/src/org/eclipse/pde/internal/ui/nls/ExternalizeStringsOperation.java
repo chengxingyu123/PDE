@@ -8,6 +8,7 @@ import org.eclipse.core.filebuffers.FileBuffers;
 import org.eclipse.core.filebuffers.ITextFileBuffer;
 import org.eclipse.core.filebuffers.ITextFileBufferManager;
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.text.BadLocationException;
@@ -18,7 +19,9 @@ import org.eclipse.text.edits.InsertEdit;
 import org.eclipse.text.edits.MalformedTreeException;
 import org.eclipse.text.edits.MultiTextEdit;
 import org.eclipse.text.edits.ReplaceEdit;
+import org.eclipse.text.edits.TextEdit;
 import org.eclipse.ui.actions.WorkspaceModifyOperation;
+import org.osgi.framework.Constants;
 
 public class ExternalizeStringsOperation extends WorkspaceModifyOperation {
 
@@ -28,17 +31,20 @@ public class ExternalizeStringsOperation extends WorkspaceModifyOperation {
 		fChangeFiles = changeFiles;
 	}
 	protected void execute(IProgressMonitor monitor) throws CoreException, InvocationTargetException, InterruptedException {
-		// TODO Auto-generated method stub
 		for (int i = 0; i < fChangeFiles.length; i++) {
 			if (fChangeFiles[i] instanceof ModelChangeFile) {
 				ModelChangeFile changeFile = (ModelChangeFile)fChangeFiles[i];
-				IFile pFile = changeFile.getModel().getPropertiesFile();
+				ModelChange change = changeFile.getModel();
+				IFile pFile = change.getPropertiesFile();
 				if (!pFile.exists()) {
-					IPluginModelBase model = changeFile.getModel().getParentModel();
+					IPluginModelBase model = change.getParentModel();
 					String propertiesFileComment = "# properties file for " 
 						+ model.getUnderlyingResource().getProject().getName();
 					ByteArrayInputStream pStream = new ByteArrayInputStream(propertiesFileComment.getBytes());
 					pFile.create(pStream, true, monitor);
+					if (!change.localizationSet()) {
+						addBundleLocalization(pFile.getProject(), change.getBundleLocalization(), monitor);
+					}
 				}
 				
 				ITextFileBufferManager pManager = FileBuffers.getTextFileBufferManager();
@@ -83,7 +89,7 @@ public class ExternalizeStringsOperation extends WorkspaceModifyOperation {
 							nl + changeElement.getKey() + " = " + 
 							StringWinder.preparePropertiesString(changeElement.getValue(), nl.toCharArray())));
 				}
-			}		
+			}
 			uEdit.apply(uDoc);
 			uBuffer.commit(monitor, true);
 			
@@ -93,4 +99,42 @@ public class ExternalizeStringsOperation extends WorkspaceModifyOperation {
 			uManager.disconnect(uFile.getFullPath(), monitor);
 		}
  	}
+	
+	private void addBundleLocalization(IProject project, String localization, IProgressMonitor monitor) throws CoreException {
+		IFile mFile = project.getFile("META-INF/MANIFEST.MF");
+		if (!mFile.exists()) return;
+		ITextFileBufferManager mManager = FileBuffers.getTextFileBufferManager();
+		try {
+			mManager.connect(mFile.getFullPath(), monitor);
+			ITextFileBuffer mBuffer = mManager.getTextFileBuffer(mFile.getFullPath());
+			IDocument mDoc = mBuffer.getDocument();
+			
+			String nl = TextUtilities.getDefaultLineDelimiter(mDoc);
+
+			TextEdit mEdit = checkTrailingNewline(mDoc, nl);
+			if (mEdit != null)
+				mEdit.apply(mDoc);
+			
+			mEdit = new InsertEdit(mDoc.getLength(), 
+					Constants.BUNDLE_LOCALIZATION + ": " + localization + nl);
+			mEdit.apply(mDoc);
+			mBuffer.commit(monitor, true);
+			
+		} catch (MalformedTreeException e) {
+		} catch (BadLocationException e) {
+		} finally {
+			mManager.disconnect(mFile.getFullPath(), monitor);
+		}
+	}
+	
+	private TextEdit checkTrailingNewline(IDocument document, String ld) {
+		try {
+			int len = ld.length();
+			if (!document.get(document.getLength() - len, len).equals(ld)) {
+				return new InsertEdit(document.getLength(), ld);
+			}
+		} catch (BadLocationException e) {
+		}
+		return null;
+	}
  }

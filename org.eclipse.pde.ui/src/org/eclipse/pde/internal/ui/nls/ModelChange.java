@@ -15,8 +15,8 @@ import org.eclipse.pde.internal.ui.elements.DefaultElement;
 
 public class ModelChange extends DefaultElement {
 	
-	private static final String DEFAULT_LOCALIZATION_VALUE = "plugin";
-	private static final String LOCALIZATION_FILE_SUFFIX = ".properties";
+	private static final String DEFAULT_LOCALIZATION_PREFIX = "plugin";
+	public static final String LOCALIZATION_FILE_SUFFIX = ".properties";
 	
 	private ModelChangeFile fXMLCoupling;
 	private ModelChangeFile fMFCoupling;
@@ -24,6 +24,7 @@ public class ModelChange extends DefaultElement {
 	private IPluginModelBase fParent;
 	private boolean fPreSelected;
 	
+	private String fBundleLocalization;
 	private IFile fPropertiesFile;
 	private Properties fProperties;
 	
@@ -38,6 +39,9 @@ public class ModelChange extends DefaultElement {
 	public ModelChange(IPluginModelBase parent, boolean preSelected) {
 		fParent = parent;
 		fPreSelected = preSelected;
+		fBundleLocalization = PDEManager.getBundleLocalization(fParent);
+		if (fBundleLocalization == null)
+			fBundleLocalization = DEFAULT_LOCALIZATION_PREFIX;
 	}
 	
 	public void addChange(IFile file, ModelChangeElement change) {
@@ -57,7 +61,6 @@ public class ModelChange extends DefaultElement {
 			fXMLCoupling = new ModelChangeFile(file, this);
 		}
 		if (!fXMLCoupling.getFile().equals(file)) {
-//			TODO throw exception if two diff xml files are found
 			return;
 		}
 		fXMLCoupling.add(change);
@@ -83,13 +86,11 @@ public class ModelChange extends DefaultElement {
 	}
 	
 	public IFile getPropertiesFile() {
-		if (fPropertiesFile == null) {
-			IProject project = fParent.getUnderlyingResource().getProject();
-			String localization = PDEManager.getBundleLocalization(fParent);
-			if (localization == null)
-				localization = DEFAULT_LOCALIZATION_VALUE;
-			fPropertiesFile = project.getFile(localization + LOCALIZATION_FILE_SUFFIX);
-		}
+		IProject project = fParent.getUnderlyingResource().getProject();
+		if (fBundleLocalization.indexOf(LOCALIZATION_FILE_SUFFIX) == -1)
+			fPropertiesFile = project.getFile(fBundleLocalization + LOCALIZATION_FILE_SUFFIX);
+		else
+			fPropertiesFile = project.getFile(fBundleLocalization);
 		return fPropertiesFile;
 	}
 	
@@ -99,7 +100,8 @@ public class ModelChange extends DefaultElement {
 		if (fProperties == null) {
 			try {
 				fProperties = new Properties();
-				fProperties.load(fPropertiesFile.getContents());
+				if (fPropertiesFile != null && fPropertiesFile.exists())
+					fProperties.load(fPropertiesFile.getContents());
 			} catch (CoreException e) {
 			} catch (IOException e) {
 			}
@@ -139,5 +141,16 @@ public class ModelChange extends DefaultElement {
 		if (fMFCoupling != null)
 			return new ModelChangeFile[] {fMFCoupling};
 		return new ModelChangeFile[0];
+	}
+	
+	public void setBundleLocalization(String bundleLocalization) {
+		fBundleLocalization = bundleLocalization;
+	}
+	public String getBundleLocalization() {
+		return fBundleLocalization;
+	}
+	
+	public boolean localizationSet() {
+		return PDEManager.getBundleLocalization(fParent) != null;
 	}
 }
