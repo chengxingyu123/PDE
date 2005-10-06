@@ -7,9 +7,11 @@ import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jdt.ui.search.ElementQuerySpecification;
 import org.eclipse.jdt.ui.search.IMatchPresentation;
 import org.eclipse.jdt.ui.search.IQueryParticipant;
 import org.eclipse.jdt.ui.search.ISearchRequestor;
+import org.eclipse.jdt.ui.search.PatternQuerySpecification;
 import org.eclipse.jdt.ui.search.QuerySpecification;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.pde.core.plugin.IPluginAttribute;
@@ -32,14 +34,18 @@ import org.eclipse.search.ui.text.Match;
 
 public class ClassSearchParticipant implements IQueryParticipant {
 
+	private IMatchPresentation fMatchPresentation;
+	
 	public ClassSearchParticipant() {
-		
+		fMatchPresentation = new SearchMatchPresentation();
 	}
 	
 	public void search(ISearchRequestor requestor,
 			QuerySpecification querySpecification, IProgressMonitor monitor)
 			throws CoreException {
 		
+		if (querySpecification.getLimitTo() != 2 && querySpecification.getLimitTo() != 3) 
+			return;
 		IPluginModelBase[] pluginModels = PDECore.getDefault().getModelManager().getWorkspaceModels();
 		monitor.beginTask("Searching for classes and packages in manifest files", pluginModels.length);
 		for (int i = 0; i < pluginModels.length; i++) {
@@ -65,7 +71,8 @@ public class ClassSearchParticipant implements IQueryParticipant {
 					loadModel = new FragmentModel(document, false);
 				else
 					loadModel = new PluginModel(document, false);
-		
+				loadModel.setUnderlyingResource(file);
+				
 				SchemaRegistry registry = PDECore.getDefault().getSchemaRegistry();
 				IPluginExtension[] extensions = loadModel.getPluginBase().getExtensions();
 				for (int j = 0; j < extensions.length; j++) {
@@ -91,11 +98,18 @@ public class ClassSearchParticipant implements IQueryParticipant {
 					ISchemaAttribute attInfo = schemaElement.getAttribute(attr.getName());
 					if (attInfo != null 
 							&& attInfo.getKind() == IMetaAttribute.JAVA
-							&& attr instanceof PluginAttribute
-							&& attr.getValue().equals(query.getScopeDescription())) { 
-						int offset = ((PluginAttribute)attr).getValueOffset();
-						int length = ((PluginAttribute)attr).getValueLength();
-						requestor.reportMatch(new Match(attr, offset, length, Match.UNIT_CHARACTER));
+							&& attr instanceof PluginAttribute) {
+						String search = null;
+						if (query instanceof PatternQuerySpecification) {
+							search = ((PatternQuerySpecification)query).getPattern();
+						} else if (query instanceof ElementQuerySpecification) {
+							search = ((ElementQuerySpecification)query).getElement().getElementName();
+						}
+						if (attr.getValue().indexOf(search) != -1) { 
+							int offset = ((PluginAttribute)attr).getValueOffset();
+							int length = ((PluginAttribute)attr).getValueLength();
+							requestor.reportMatch(new Match(attr, Match.UNIT_CHARACTER, offset, length));
+						}
 					}
 				}
 			}
@@ -104,11 +118,11 @@ public class ClassSearchParticipant implements IQueryParticipant {
 	}
 
 	public int estimateTicks(QuerySpecification specification) {
-		return 0;
+		return 100;
 	}
 
 	public IMatchPresentation getUIParticipant() {
-		return null;
+		return fMatchPresentation;
 	}
 
 }
