@@ -187,16 +187,16 @@ public class ClassSearchParticipant implements IQueryParticipant {
 					if (elements == null) continue;
 					int initOff = 0;
 					for (int j = 0; j < elements.length; j++) {
-						String search = elements[j].getValue();
-						if (fSearchPattern.matcher(search.subSequence(0, search.length())).matches()) { 
+						String value = elements[j].getValue();
+						if (fSearchPattern.matcher(value.subSequence(0, value.length())).matches()) { 
 							int[] offlen;
 							try {
-								offlen = getOffsetOfElement(header, search, initOff);
+								offlen = getOffsetOfElement(header, value, initOff);
 								initOff = offlen[0] - header.getOffset() - header.getLineDelimiter().length();
 							} catch (CoreException e) {
 								offlen = new int[]{header.getOffset(), header.getLength()};
 							}
-							fSearchRequestor.reportMatch(new Match(new HeaderElementHit(header), Match.UNIT_CHARACTER, offlen[0], offlen[1]));
+							fSearchRequestor.reportMatch(new Match(new HeaderElementHit(header, value), Match.UNIT_CHARACTER, offlen[0], offlen[1]));
 						}
 					}
 				} catch (BundleException e) {

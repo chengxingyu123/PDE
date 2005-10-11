@@ -4,10 +4,15 @@ import org.eclipse.pde.internal.ui.model.bundle.ManifestHeader;
 
 public class HeaderElementHit {
 	private ManifestHeader fHeader;
-	public HeaderElementHit(ManifestHeader header) {
+	private String fValue;
+	public HeaderElementHit(ManifestHeader header, String value) {
 		fHeader = header;
+		fValue = value;
 	}
 	public ManifestHeader getHeader() {
 		return fHeader;
+	}
+	public String getValue() {
+		return fValue;
 	}
 }

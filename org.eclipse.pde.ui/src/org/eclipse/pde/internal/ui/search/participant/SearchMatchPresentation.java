@@ -32,7 +32,7 @@ public class SearchMatchPresentation implements IMatchPresentation {
 			String name = null;
 			IResource resource = null;
 			if (element instanceof HeaderElementHit) {
-				name = ((HeaderElementHit)element).getHeader().getName();
+				name = ((HeaderElementHit)element).getValue();
 				resource = ((HeaderElementHit)element).getHeader().getModel().getUnderlyingResource();
 			}
 			if (element instanceof IPluginAttribute) {
