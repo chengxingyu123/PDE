@@ -28,6 +28,7 @@ import org.eclipse.pde.core.build.IBuildEntry;
 import org.eclipse.pde.core.build.IBuildModel;
 import org.eclipse.pde.core.plugin.IFragment;
 import org.eclipse.pde.core.plugin.IFragmentModel;
+import org.eclipse.pde.core.plugin.IPluginAttribute;
 import org.eclipse.pde.core.plugin.IPluginBase;
 import org.eclipse.pde.core.plugin.IPluginExtension;
 import org.eclipse.pde.core.plugin.IPluginExtensionPoint;
@@ -525,7 +526,7 @@ public class ManifestEditor extends MultiSourceEditor implements IShowEditorInpu
 		InputContext context = null;
 		if (object instanceof IBuildObject) {
 			context = inputContextManager.findContext(BuildInputContext.CONTEXT_ID);
-		} else if (object instanceof IPluginExtensionPoint || object instanceof IPluginExtension) {
+		} else if (object instanceof IPluginExtensionPoint || object instanceof IPluginExtension || object instanceof IPluginAttribute) {
 			context = inputContextManager.findContext(PluginInputContext.CONTEXT_ID);
 		} else {
 			context = inputContextManager.findContext(BundleInputContext.CONTEXT_ID);

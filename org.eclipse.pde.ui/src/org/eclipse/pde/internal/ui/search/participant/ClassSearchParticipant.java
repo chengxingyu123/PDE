@@ -7,14 +7,17 @@ import org.eclipse.core.filebuffers.ITextFileBuffer;
 import org.eclipse.core.filebuffers.ITextFileBufferManager;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jdt.ui.search.ElementQuerySpecification;
 import org.eclipse.jdt.ui.search.IMatchPresentation;
 import org.eclipse.jdt.ui.search.IQueryParticipant;
 import org.eclipse.jdt.ui.search.ISearchRequestor;
 import org.eclipse.jdt.ui.search.PatternQuerySpecification;
 import org.eclipse.jdt.ui.search.QuerySpecification;
+import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.osgi.util.ManifestElement;
 import org.eclipse.pde.core.plugin.IPluginAttribute;
@@ -41,6 +44,7 @@ import org.eclipse.pde.internal.ui.model.plugin.PluginAttribute;
 import org.eclipse.pde.internal.ui.model.plugin.PluginModel;
 import org.eclipse.pde.internal.ui.model.plugin.PluginModelBase;
 import org.eclipse.search.ui.text.Match;
+import org.eclipse.text.edits.MalformedTreeException;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
 
@@ -65,7 +69,7 @@ public class ClassSearchParticipant implements IQueryParticipant {
 		SEARCH_HEADERS[3] = ICoreConstants.PLUGIN_CLASS;
 	}
 	
-	private IMatchPresentation fMatchPresentation;
+	private SearchMatchPresentation fMatchPresentation;
 	private ISearchRequestor fSearchRequestor;
 	private Pattern fSearchPattern;
 	
@@ -84,7 +88,10 @@ public class ClassSearchParticipant implements IQueryParticipant {
 		if (querySpecification instanceof ElementQuerySpecification) {
 			search = ((ElementQuerySpecification)querySpecification).getElement().getElementName();
 		} else {
-			search = ((PatternQuerySpecification) querySpecification).getPattern();
+			int searchFor = ((PatternQuerySpecification)querySpecification).getSearchFor();
+			if (searchFor != 0 && searchFor != 2)
+				return;
+			search = ((PatternQuerySpecification)querySpecification).getPattern();
 		}
 		fSearchPattern = PatternConstructor.createPattern("*" + search + "*", true);
 		fSearchRequestor = requestor;
@@ -162,7 +169,7 @@ public class ClassSearchParticipant implements IQueryParticipant {
 						if (fSearchPattern.matcher(search.subSequence(0, search.length())).matches()) { 
 							int offset = ((PluginAttribute)attr).getValueOffset();
 							int length = ((PluginAttribute)attr).getValueLength();
-							fSearchRequestor.reportMatch(new Match(extension, Match.UNIT_CHARACTER, offset, length));
+							fSearchRequestor.reportMatch(new Match(attr, Match.UNIT_CHARACTER, offset, length));
 						}
 					}
 				}
@@ -178,12 +185,18 @@ public class ClassSearchParticipant implements IQueryParticipant {
 				try {
 					ManifestElement[] elements = ManifestElement.parseHeader(header.getName(), header.getValue());
 					if (elements == null) continue;
+					int initOff = 0;
 					for (int j = 0; j < elements.length; j++) {
 						String search = elements[j].getValue();
 						if (fSearchPattern.matcher(search.subSequence(0, search.length())).matches()) { 
-							int offset = getOffsetOfElement(header, search);
-							int length = search.length();
-							fSearchRequestor.reportMatch(new Match(bundle, Match.UNIT_CHARACTER, offset, length));
+							int[] offlen;
+							try {
+								offlen = getOffsetOfElement(header, search, initOff);
+								initOff = header.getOffset() - offlen[0];
+							} catch (CoreException e) {
+								offlen = new int[]{header.getOffset(), header.getLength()};
+							}
+							fSearchRequestor.reportMatch(new Match(header, Match.UNIT_CHARACTER, offlen[0], offlen[1]));
 						}
 					}
 				} catch (BundleException e) {
@@ -191,11 +204,37 @@ public class ClassSearchParticipant implements IQueryParticipant {
 			}
 		}
 	}
-	private int getOffsetOfElement(ManifestHeader header, String value) {
-		return header.getOffset() + header.getLength() - header.getValue().length() 
-				+ header.getValue().indexOf(value);
-	}
 	
+	private int[] getOffsetOfElement(ManifestHeader header, String value, int initOff) throws CoreException {
+		int offset = 0;
+		int length = 0;
+		IResource res = header.getModel().getUnderlyingResource();
+		if (res instanceof IFile) {
+			IFile file = (IFile)res;
+			IProgressMonitor monitor = new NullProgressMonitor();
+			ITextFileBufferManager pManager = FileBuffers.getTextFileBufferManager();
+			try {
+				pManager.connect(file.getFullPath(), monitor);
+				ITextFileBuffer pBuffer = pManager.getTextFileBuffer(file.getFullPath());
+				IDocument pDoc = pBuffer.getDocument();
+				int headerOffset = header.getOffset();
+				String headerString = pDoc.get(headerOffset, header.getLength());
+				int internalOffset = headerString.indexOf(value, initOff);
+				if (internalOffset != -1) {
+					offset = headerOffset + internalOffset;
+					length = value.length();
+				} else {
+					offset = headerOffset;
+					length = header.getLength();
+				}
+			} catch (MalformedTreeException e) {
+			} catch (BadLocationException e) {
+			} finally {
+				pManager.disconnect(file.getFullPath(), monitor);
+			}
+		}
+		return new int[]{offset, length};
+	}
 	
 	public int estimateTicks(QuerySpecification specification) {
 		return 100;

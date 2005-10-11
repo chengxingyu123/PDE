@@ -1,9 +1,10 @@
 package org.eclipse.pde.internal.ui.search.participant;
 
+import org.eclipse.core.resources.IResource;
 import org.eclipse.jdt.ui.search.IMatchPresentation;
 import org.eclipse.jface.viewers.ILabelProvider;
-import org.eclipse.pde.internal.ui.PDEPluginImages;
-import org.eclipse.pde.internal.ui.model.plugin.PluginAttribute;
+import org.eclipse.pde.core.plugin.IPluginAttribute;
+import org.eclipse.pde.internal.ui.model.bundle.ManifestHeader;
 import org.eclipse.pde.internal.ui.util.SharedLabelProvider;
 import org.eclipse.search.ui.text.Match;
 import org.eclipse.swt.graphics.Image;
@@ -14,30 +15,40 @@ public class SearchMatchPresentation implements IMatchPresentation {
 	private ILabelProvider fLabelProvider;
 	
 	private class LabelProvider extends SharedLabelProvider {
-		private Image fClassImage;
+//		private Image fImage;
 		
 		private LabelProvider() {
-			fClassImage = PDEPluginImages.DESC_ATT_CLASS_OBJ.createImage();
+//			fImage = JavaUI.getSharedImages().getImage(ISharedImages.IMG_OBJS_CLASS);
 		}
 		
 		public Image getImage(Object element) {
-			if (element instanceof PluginAttribute)
-				return fClassImage;
+//			if (element instanceof IPluginAttribute || element instanceof ManifestHeader)
+//				return fImage;
 			return super.getImage(element);
 		}
 
 		public String getText(Object element) {
-			if (element instanceof PluginAttribute)
-				return ((PluginAttribute)element).getAttributeValue()
-					+ ": "
-					+ ((PluginAttribute)element).getPluginModel().getUnderlyingResource();
+			String name = null;
+			IResource resource = null;
+			if (element instanceof ManifestHeader) {
+				name = ((ManifestHeader)element).getName();
+				resource = ((ManifestHeader)element).getModel().getUnderlyingResource();
+			}
+			if (element instanceof IPluginAttribute) {
+				name = ((IPluginAttribute)element).getValue();
+				resource = ((IPluginAttribute)element).getModel().getUnderlyingResource();
+			}
+			if (resource != null) {
+				return name + " - " + resource.getFullPath().toOSString().substring(1);
+			}
 			return super.getText(element);
 		}
-		public void dispose() {
-			if (fClassImage != null && !fClassImage.isDisposed())
-				fClassImage.dispose();
-			super.dispose();
-		}
+		
+//		public void dispose() {
+//			if (fImage != null && !fImage.isDisposed())
+//				fImage.dispose();
+//			super.dispose();
+//		}
 	}
 	
 	public ILabelProvider createLabelProvider() {
@@ -49,7 +60,6 @@ public class SearchMatchPresentation implements IMatchPresentation {
 	public void showMatch(Match match, int currentOffset, int currentLength,
 			boolean activate) throws PartInitException {
 		ClassSearchEditorOpener.open(match, activate);
-		return;
 	}
 
 }
