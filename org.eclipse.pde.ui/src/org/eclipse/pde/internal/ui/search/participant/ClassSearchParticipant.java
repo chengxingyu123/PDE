@@ -223,7 +223,7 @@ public class ClassSearchParticipant implements IQueryParticipant {
 				if (internalOffset != -1) {
 					offset = headerOffset + internalOffset;
 				} else {
-					offset = headerOffset + header.getValue().indexOf(value);
+					offset = headerOffset + header.getName().length() + header.getValue().indexOf(value);
 				}
 				length = value.length();
 			} catch (MalformedTreeException e) {
