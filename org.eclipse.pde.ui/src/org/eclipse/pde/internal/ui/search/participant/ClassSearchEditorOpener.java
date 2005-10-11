@@ -38,10 +38,10 @@ public class ClassSearchEditorOpener {
 			if (model instanceof IPluginModelBase)
 				editorPart = ManifestEditor.openPluginEditor(((IPluginModelBase)model).getPluginBase());
 			
-		} else if (element instanceof ManifestHeader) {	
+		} else if (element instanceof HeaderElementHit) {	
 			String id = null;
 			try {
-				Bundle bundle = (Bundle)((ManifestHeader)element).getBundle();
+				Bundle bundle = (Bundle)((HeaderElementHit)element).getHeader().getBundle();
 				ManifestHeader header = bundle.getManifestHeader(Constants.BUNDLE_SYMBOLICNAME);
 				ManifestElement[] elements = ManifestElement.parseHeader(header.getName(), header.getValue());
 				for (int i = 0; i < elements.length; i++) {

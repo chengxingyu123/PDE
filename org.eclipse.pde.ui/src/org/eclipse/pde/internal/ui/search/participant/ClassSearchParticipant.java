@@ -192,11 +192,11 @@ public class ClassSearchParticipant implements IQueryParticipant {
 							int[] offlen;
 							try {
 								offlen = getOffsetOfElement(header, search, initOff);
-								initOff = header.getOffset() - offlen[0];
+								initOff = offlen[0] - header.getOffset() - header.getLineDelimiter().length();
 							} catch (CoreException e) {
 								offlen = new int[]{header.getOffset(), header.getLength()};
 							}
-							fSearchRequestor.reportMatch(new Match(header, Match.UNIT_CHARACTER, offlen[0], offlen[1]));
+							fSearchRequestor.reportMatch(new Match(new HeaderElementHit(header), Match.UNIT_CHARACTER, offlen[0], offlen[1]));
 						}
 					}
 				} catch (BundleException e) {
@@ -221,12 +221,11 @@ public class ClassSearchParticipant implements IQueryParticipant {
 				String headerString = pDoc.get(headerOffset, header.getLength());
 				int internalOffset = headerString.indexOf(value, initOff);
 				if (internalOffset != -1) {
-					offset = headerOffset + internalOffset;
-					length = value.length();
+					offset = headerOffset + internalOffset + header.getLineDelimiter().length();
 				} else {
-					offset = headerOffset;
-					length = header.getLength();
+					offset = headerOffset + header.getValue().indexOf(value);
 				}
+				length = value.length();
 			} catch (MalformedTreeException e) {
 			} catch (BadLocationException e) {
 			} finally {

@@ -4,7 +4,6 @@ import org.eclipse.core.resources.IResource;
 import org.eclipse.jdt.ui.search.IMatchPresentation;
 import org.eclipse.jface.viewers.ILabelProvider;
 import org.eclipse.pde.core.plugin.IPluginAttribute;
-import org.eclipse.pde.internal.ui.model.bundle.ManifestHeader;
 import org.eclipse.pde.internal.ui.util.SharedLabelProvider;
 import org.eclipse.search.ui.text.Match;
 import org.eclipse.swt.graphics.Image;
@@ -22,7 +21,7 @@ public class SearchMatchPresentation implements IMatchPresentation {
 		}
 		
 		public Image getImage(Object element) {
-//			if (element instanceof IPluginAttribute || element instanceof ManifestHeader)
+//			if (element instanceof IPluginAttribute || element instanceof HeaderElementHit)
 //				return fImage;
 			return super.getImage(element);
 		}
@@ -30,9 +29,9 @@ public class SearchMatchPresentation implements IMatchPresentation {
 		public String getText(Object element) {
 			String name = null;
 			IResource resource = null;
-			if (element instanceof ManifestHeader) {
-				name = ((ManifestHeader)element).getName();
-				resource = ((ManifestHeader)element).getModel().getUnderlyingResource();
+			if (element instanceof HeaderElementHit) {
+				name = ((HeaderElementHit)element).getHeader().getName();
+				resource = ((HeaderElementHit)element).getHeader().getModel().getUnderlyingResource();
 			}
 			if (element instanceof IPluginAttribute) {
 				name = ((IPluginAttribute)element).getValue();
