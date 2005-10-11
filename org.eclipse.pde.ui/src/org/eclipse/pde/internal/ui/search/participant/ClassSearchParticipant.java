@@ -221,7 +221,7 @@ public class ClassSearchParticipant implements IQueryParticipant {
 				String headerString = pDoc.get(headerOffset, header.getLength());
 				int internalOffset = headerString.indexOf(value, initOff);
 				if (internalOffset != -1) {
-					offset = headerOffset + internalOffset + header.getLineDelimiter().length();
+					offset = headerOffset + internalOffset;
 				} else {
 					offset = headerOffset + header.getValue().indexOf(value);
 				}
