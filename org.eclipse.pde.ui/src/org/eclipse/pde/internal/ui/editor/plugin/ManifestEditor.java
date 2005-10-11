@@ -413,19 +413,18 @@ public class ManifestEditor extends MultiSourceEditor implements IShowEditorInpu
 		}
 		return super.getAdapter(key);
 	}
-	public static void openPluginEditor(String pluginId) {
-		openPluginEditor(pluginId, null);
+	public static IEditorPart openPluginEditor(String pluginId) {
+		return openPluginEditor(pluginId, null);
 	}
 
-	public static void openPluginEditor(
+	public static IEditorPart openPluginEditor(
 		String pluginId,
 		Object object) {
 		IPluginModelBase model = PDECore.getDefault().getModelManager().findModel(pluginId);
-		if (model != null) {
-			openPluginEditor(model.getPluginBase(), object);
-		} else {
-			Display.getCurrent().beep();
-		}
+		if (model != null)
+			return openPluginEditor(model.getPluginBase(), object);
+		Display.getCurrent().beep();
+		return null;
 	}
 
 	public static IEditorPart openPluginEditor(IPluginBase plugin) {
@@ -545,8 +544,6 @@ public class ManifestEditor extends MultiSourceEditor implements IShowEditorInpu
     		setActivePage(0);
     	} else if (name.equals("build.properties")) { //$NON-NLS-1$
     		setActivePage(BUILD_INDEX);
-    	} else if (name.equals("plugin.xml") || name.equals("fragment.xml")) {
-        	setActivePage(PluginInputContext.CONTEXT_ID);
     	} else {
     		if (inputContextManager.hasContext(BundleInputContext.CONTEXT_ID))
     			setActivePage(3);

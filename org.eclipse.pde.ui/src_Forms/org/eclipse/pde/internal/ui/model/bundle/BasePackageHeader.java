@@ -89,7 +89,7 @@ public abstract class BasePackageHeader extends ManifestHeader {
             buffer.append(((PackageObject)iter.next()).write());
             if (iter.hasNext()) {
                 buffer.append(","); //$NON-NLS-1$
-                buffer.append(getLineLimiter());
+                buffer.append(getLineDelimiter());
                 buffer.append(" ");  //$NON-NLS-1$
             }
         }

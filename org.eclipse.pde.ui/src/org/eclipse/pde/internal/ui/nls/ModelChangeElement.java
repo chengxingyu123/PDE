@@ -49,7 +49,7 @@ public class ModelChangeElement {
 			fValue = header.getValue();
 			generateValidKey(header.getName());
 			fLength = fValue.length();
-			fOffset = header.getOffset() + header.getLength() - header.getLineLimiter().length() - fLength;
+			fOffset = header.getOffset() + header.getLength() - header.getLineDelimiter().length() - fLength;
 		} 
 	}
 	
