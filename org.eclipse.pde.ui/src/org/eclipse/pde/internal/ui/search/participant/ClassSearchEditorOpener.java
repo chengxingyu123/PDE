@@ -31,19 +31,18 @@ public class ClassSearchEditorOpener {
 	public static IEditorPart open(Match match) throws PartInitException {
 		IEditorPart editorPart = null;
 		Object element = match.getElement();
-		Object hitElement = null;
 		if (element instanceof SearchHit)
-			hitElement = ((SearchHit)element).getHitElement();
-		if (hitElement instanceof IPluginObject) {
-			ISharedPluginModel model = ((IPluginObject)hitElement).getModel();
+			element = ((SearchHit)element).getHitElement();
+		if (element instanceof IPluginObject) {
+			ISharedPluginModel model = ((IPluginObject)element).getModel();
 			if (model instanceof WorkspaceExtensionsModel)
 				model = ((WorkspaceExtensionsModel)model).getBundlePluginModel();
 			if (model instanceof IPluginModelBase)
 				editorPart = ManifestEditor.openPluginEditor(((IPluginModelBase)model).getPluginBase());
-		} else if (hitElement instanceof Bundle) {	
+		} else if (element instanceof Bundle) {	
 			String id = null;
 			try {
-				Bundle bundle = (Bundle)hitElement;
+				Bundle bundle = (Bundle)element;
 				ManifestHeader header = bundle.getManifestHeader(Constants.BUNDLE_SYMBOLICNAME);
 				ManifestElement[] elements = ManifestElement.parseHeader(header.getName(), header.getValue());
 				String[] values = elements[0].getValueComponents();
@@ -57,7 +56,7 @@ public class ClassSearchEditorOpener {
 			ManifestEditor editor = (ManifestEditor)editorPart;
 			IDocument doc = editor.getDocument(match);
 			if (doc != null) {
-				editor.openToSourcePage(element, match.getOffset(), match.getLength());
+				editor.openToSourcePage(match.getElement(), match.getOffset(), match.getLength());
 			}
 		}
 		return editorPart;

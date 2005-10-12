@@ -4,33 +4,28 @@ import org.eclipse.core.resources.IResource;
 import org.eclipse.pde.core.plugin.IPluginAttribute;
 import org.eclipse.pde.internal.ui.model.bundle.ManifestHeader;
 
-public class SearchHit /*implements IAdaptable*/ {
+public class SearchHit {
 	private ManifestHeader fHeader;
 	private String fValue;
 	private IPluginAttribute fAttrib;
-	private boolean fManifest;
 	public SearchHit(ManifestHeader header, String value) {
-		fHeader = header;
 		fValue = value;
-		fManifest = true;
+		fHeader = header;
 	}
 	public SearchHit(IPluginAttribute attrib, String value) {
-		fAttrib = attrib;
 		fValue = value;
+		fAttrib = attrib;
 	}
 	public Object getHitElement() {
-		if (fManifest)
+		if (fHeader != null)
 			return fHeader.getBundle();
 		return fAttrib;
 	}
 	public String getValue() {
 		return fValue;
 	}
-//	public Object getAdapter(Class adapter) {
-//		return getResource().getAdapter(adapter);
-//	}
 	public IResource getResource() {
-		if (fManifest)
+		if (fHeader != null)
 			return fHeader.getModel().getUnderlyingResource();
 		return fAttrib.getModel().getUnderlyingResource();
 	}
