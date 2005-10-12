@@ -5,7 +5,6 @@ import org.eclipse.jdt.ui.ISharedImages;
 import org.eclipse.jdt.ui.JavaUI;
 import org.eclipse.jdt.ui.search.IMatchPresentation;
 import org.eclipse.jface.viewers.ILabelProvider;
-import org.eclipse.pde.core.plugin.IPluginAttribute;
 import org.eclipse.pde.internal.ui.util.SharedLabelProvider;
 import org.eclipse.search.ui.text.Match;
 import org.eclipse.swt.graphics.Image;
@@ -23,24 +22,20 @@ public class SearchMatchPresentation implements IMatchPresentation {
 		}
 		
 		public Image getImage(Object element) {
-			if (element instanceof IPluginAttribute || element instanceof HeaderElementHit)
+			if (element instanceof SearchHit)
 				return fImage;
 			return super.getImage(element);
 		}
 
 		public String getText(Object element) {
-			String name = null;
+			String value = null;
 			IResource resource = null;
-			if (element instanceof HeaderElementHit) {
-				name = ((HeaderElementHit)element).getValue();
-				resource = ((HeaderElementHit)element).getHeader().getModel().getUnderlyingResource();
-			}
-			if (element instanceof IPluginAttribute) {
-				name = ((IPluginAttribute)element).getValue();
-				resource = ((IPluginAttribute)element).getModel().getUnderlyingResource();
+			if (element instanceof SearchHit) {
+				value = ((SearchHit)element).getValue();
+				resource = ((SearchHit)element).getResource();
 			}
 			if (resource != null) {
-				return name + " - " + resource.getFullPath().toOSString().substring(1);
+				return value + " - " + resource.getFullPath().toOSString().substring(1);
 			}
 			return super.getText(element);
 		}
@@ -60,7 +55,7 @@ public class SearchMatchPresentation implements IMatchPresentation {
 
 	public void showMatch(Match match, int currentOffset, int currentLength,
 			boolean activate) throws PartInitException {
-		ClassSearchEditorOpener.open(match, activate);
+		ClassSearchEditorOpener.open(match);
 	}
 
 }

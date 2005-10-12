@@ -28,29 +28,26 @@ import org.osgi.framework.Constants;
 
 public class ClassSearchEditorOpener {
 
-	public static IEditorPart open(Match match, boolean activate) throws PartInitException {
+	public static IEditorPart open(Match match) throws PartInitException {
 		IEditorPart editorPart = null;
 		Object element = match.getElement();
-		if (element instanceof IPluginObject) {
-			ISharedPluginModel model = ((IPluginObject)element).getModel();
+		Object hitElement = null;
+		if (element instanceof SearchHit)
+			hitElement = ((SearchHit)element).getHitElement();
+		if (hitElement instanceof IPluginObject) {
+			ISharedPluginModel model = ((IPluginObject)hitElement).getModel();
 			if (model instanceof WorkspaceExtensionsModel)
 				model = ((WorkspaceExtensionsModel)model).getBundlePluginModel();
 			if (model instanceof IPluginModelBase)
 				editorPart = ManifestEditor.openPluginEditor(((IPluginModelBase)model).getPluginBase());
-			
-		} else if (element instanceof HeaderElementHit) {	
+		} else if (hitElement instanceof Bundle) {	
 			String id = null;
 			try {
-				Bundle bundle = (Bundle)((HeaderElementHit)element).getHeader().getBundle();
+				Bundle bundle = (Bundle)hitElement;
 				ManifestHeader header = bundle.getManifestHeader(Constants.BUNDLE_SYMBOLICNAME);
 				ManifestElement[] elements = ManifestElement.parseHeader(header.getName(), header.getValue());
-				for (int i = 0; i < elements.length; i++) {
-					String[] values = elements[i].getValueComponents();
-					for (int j = 0; j < values.length; j++) {
-						if (values[j].indexOf("=") == -1 && values[j].indexOf(":=") == -1 )
-							id = values[j];
-					}
-				}
+				String[] values = elements[0].getValueComponents();
+				id = values[0];
 			} catch (BundleException e) {
 			}
 			if (id != null)

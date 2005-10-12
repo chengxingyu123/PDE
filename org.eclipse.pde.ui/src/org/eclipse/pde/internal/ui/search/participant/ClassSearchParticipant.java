@@ -107,7 +107,7 @@ public class ClassSearchParticipant implements IQueryParticipant {
 	}
 
 	private void searchProject(IProject project, IProgressMonitor monitor) throws CoreException {
-		for (int i = 0; i < SEARCH_FILES.length; i++) {
+		for (int i = 0; i < TOTAL_FILES; i++) {
 			IFile file = project.getFile(SEARCH_FILES[i]);
 			if (!file.exists()) continue;
 			ITextFileBufferManager manager = FileBuffers.getTextFileBufferManager();
@@ -165,11 +165,13 @@ public class ClassSearchParticipant implements IQueryParticipant {
 					if (attInfo != null 
 							&& attInfo.getKind() == IMetaAttribute.JAVA
 							&& attr instanceof PluginAttribute) {
-						String search = attr.getValue();
-						if (fSearchPattern.matcher(search.subSequence(0, search.length())).matches()) { 
+						String value = attr.getValue();
+						if (fSearchPattern.matcher(value.subSequence(0, value.length())).matches()) { 
 							int offset = ((PluginAttribute)attr).getValueOffset();
 							int length = ((PluginAttribute)attr).getValueLength();
-							fSearchRequestor.reportMatch(new Match(attr, Match.UNIT_CHARACTER, offset, length));
+							fSearchRequestor.reportMatch(new Match(
+									new SearchHit(attr, value),
+									Match.UNIT_CHARACTER, offset, length));
 						}
 					}
 				}
@@ -179,7 +181,7 @@ public class ClassSearchParticipant implements IQueryParticipant {
 	}
 
 	private void inspectBundle(Bundle bundle) {
-		for (int i = 0; i < SEARCH_HEADERS.length; i++) {
+		for (int i = 0; i < TOTAL_HEADERS; i++) {
 			ManifestHeader header = bundle.getManifestHeader(SEARCH_HEADERS[i]);
 			if (header != null) {
 				try {
@@ -192,11 +194,13 @@ public class ClassSearchParticipant implements IQueryParticipant {
 							int[] offlen;
 							try {
 								offlen = getOffsetOfElement(header, value, initOff);
-								initOff = offlen[0] - header.getOffset() - header.getLineDelimiter().length();
+								initOff = offlen[0] - header.getOffset();
 							} catch (CoreException e) {
 								offlen = new int[]{header.getOffset(), header.getLength()};
 							}
-							fSearchRequestor.reportMatch(new Match(new HeaderElementHit(header, value), Match.UNIT_CHARACTER, offlen[0], offlen[1]));
+							fSearchRequestor.reportMatch(new Match(
+									new SearchHit(header, value),
+									Match.UNIT_CHARACTER, offlen[0], offlen[1]));
 						}
 					}
 				} catch (BundleException e) {

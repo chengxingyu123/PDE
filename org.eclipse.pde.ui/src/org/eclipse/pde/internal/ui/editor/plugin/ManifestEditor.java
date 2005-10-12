@@ -54,6 +54,8 @@ import org.eclipse.pde.internal.ui.editor.build.BuildPage;
 import org.eclipse.pde.internal.ui.editor.build.BuildSourcePage;
 import org.eclipse.pde.internal.ui.editor.context.InputContext;
 import org.eclipse.pde.internal.ui.editor.context.InputContextManager;
+import org.eclipse.pde.internal.ui.model.bundle.Bundle;
+import org.eclipse.pde.internal.ui.search.participant.SearchHit;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
@@ -526,8 +528,14 @@ public class ManifestEditor extends MultiSourceEditor implements IShowEditorInpu
 		InputContext context = null;
 		if (object instanceof IBuildObject) {
 			context = inputContextManager.findContext(BuildInputContext.CONTEXT_ID);
-		} else if (object instanceof IPluginExtensionPoint || object instanceof IPluginExtension || object instanceof IPluginAttribute) {
+		} else if (object instanceof IPluginExtensionPoint || object instanceof IPluginExtension) {
 			context = inputContextManager.findContext(PluginInputContext.CONTEXT_ID);
+		} else if (object instanceof SearchHit) {
+			Object element = ((SearchHit)object).getHitElement();
+			if (element instanceof Bundle)
+				context = inputContextManager.findContext(BundleInputContext.CONTEXT_ID);
+			else if (element instanceof IPluginAttribute)
+				context = inputContextManager.findContext(PluginInputContext.CONTEXT_ID);
 		} else {
 			context = inputContextManager.findContext(BundleInputContext.CONTEXT_ID);
 			if (context == null)
