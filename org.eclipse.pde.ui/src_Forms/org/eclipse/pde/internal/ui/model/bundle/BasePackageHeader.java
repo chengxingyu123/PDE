@@ -12,7 +12,6 @@ package org.eclipse.pde.internal.ui.model.bundle;
 
 import java.util.Iterator;
 import java.util.TreeMap;
-import java.util.Vector;
 
 import org.eclipse.pde.core.IModelChangedEvent;
 import org.eclipse.pde.internal.core.ICoreConstants;
@@ -51,15 +50,6 @@ public abstract class BasePackageHeader extends ManifestHeader {
         fireStructureChanged(object, IModelChangedEvent.REMOVE);
     }
     
-    public Vector getPackageNames() {
-        Vector vector = new Vector(fPackages.size());
-        Iterator iter = fPackages.keySet().iterator();
-        for (int i = 0; iter.hasNext(); i++) {
-            vector.add(iter.next().toString());
-        }
-        return vector;
-    }
-    
     public boolean hasPackage(String packageName) {
         return fPackages.containsKey(packageName);
     }
@@ -89,7 +79,7 @@ public abstract class BasePackageHeader extends ManifestHeader {
             buffer.append(((PackageObject)iter.next()).write());
             if (iter.hasNext()) {
                 buffer.append(","); //$NON-NLS-1$
-                buffer.append(getLineDelimiter());
+                buffer.append(getLineLimiter());
                 buffer.append(" ");  //$NON-NLS-1$
             }
         }

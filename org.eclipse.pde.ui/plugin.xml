@@ -1686,6 +1686,13 @@
       </moveParticipant>
    </extension>
    <extension
+         point="org.eclipse.ui.ide.markerResolution">
+      <markerResolutionGenerator
+            markerType="org.eclipse.pde.validation-marker"
+            class="org.eclipse.pde.internal.ui.correction.ResolutionGenerator">
+      </markerResolutionGenerator>
+   </extension>
+   <extension
          point="org.eclipse.jdt.ui.queryParticipants">
       <queryParticipant
             class="org.eclipse.pde.internal.ui.search.participant.ClassSearchParticipant"

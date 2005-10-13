@@ -21,7 +21,6 @@ import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.viewers.IStructuredSelection;
-import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
@@ -31,6 +30,7 @@ import org.eclipse.osgi.service.resolver.BundleDescription;
 import org.eclipse.osgi.service.resolver.BundleSpecification;
 import org.eclipse.osgi.service.resolver.ExportPackageDescription;
 import org.eclipse.osgi.service.resolver.State;
+import org.eclipse.pde.core.IModel;
 import org.eclipse.pde.core.IModelChangedEvent;
 import org.eclipse.pde.core.IModelChangedListener;
 import org.eclipse.pde.core.plugin.IPluginImport;
@@ -52,6 +52,7 @@ import org.eclipse.pde.internal.ui.model.bundle.ImportPackageHeader;
 import org.eclipse.pde.internal.ui.model.bundle.ImportPackageObject;
 import org.eclipse.pde.internal.ui.model.bundle.PackageObject;
 import org.eclipse.pde.internal.ui.parts.TablePart;
+import org.eclipse.pde.internal.ui.search.dependencies.UnusedDependenciesAction;
 import org.eclipse.pde.internal.ui.util.SWTUtil;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
@@ -82,17 +83,6 @@ public class ImportPackageSection extends TableSection implements IModelChangedL
             }
             return fHeader == null ? new Object[0] : fHeader.getPackages();
         }
-	}
-
-	class ImportPackageLabelProvider extends LabelProvider implements
-			ITableLabelProvider {
-		public String getColumnText(Object obj, int index) {
-			return obj.toString();
-		}
-
-		public Image getColumnImage(Object obj, int index) {
-			return JavaUI.getSharedImages().getImage(ISharedImages.IMG_OBJS_PACKAGE);
-		}
 	}
 
 	class ImportPackageDialogLabelProvider extends LabelProvider {
@@ -151,7 +141,7 @@ public class ImportPackageSection extends TableSection implements IModelChangedL
 		fPackageViewer = tablePart.getTableViewer();
 		fPackageViewer
 				.setContentProvider(new ImportPackageContentProvider());
-		fPackageViewer.setLabelProvider(new ImportPackageLabelProvider());
+		fPackageViewer.setLabelProvider(PDEPlugin.getDefault().getLabelProvider());
 		fPackageViewer.setSorter(new ViewerSorter() {
             public int compare(Viewer viewer, Object e1, Object e2) {
                 String s1 = e1.toString();
@@ -299,6 +289,7 @@ public class ImportPackageSection extends TableSection implements IModelChangedL
 		ArrayList result = new ArrayList();
         Set set = getForbiddenIds();
         
+        boolean allowJava = "true".equals(getBundle().getHeader(ICoreConstants.ECLIPSE_JREBUNDLE)); //$NON-NLS-1$
         ExportPackageDescription[] packages = TargetPlatform.getState().getExportedPackages();
         for (int i = 0; i < packages.length; i++) {
         	if (".".equals(packages[i].getName())) //$NON-NLS-1$
@@ -308,6 +299,9 @@ public class ImportPackageSection extends TableSection implements IModelChangedL
                 continue;
 			if (set.contains(packages[i].getExporter().getSymbolicName()))
                 continue;
+			String name = packages[i].getName();
+			if (("java".equals(name) || name.startsWith("java.")) && !allowJava) //$NON-NLS-1$ //$NON-NLS-2$
+				continue;
 			if (fHeader == null || !fHeader.hasPackage(packages[i].getName()))
 				result.add(packages[i]);			
 		}
@@ -380,6 +374,9 @@ public class ImportPackageSection extends TableSection implements IModelChangedL
         manager.add(new Separator());
         manager.add(fRemoveAction);
 		getPage().getPDEEditor().getContributor().contextMenuAboutToShow(manager);
+		manager.add(new Separator());
+		if (((IModel)getPage().getModel()).getUnderlyingResource()!=null) 
+			manager.add(new UnusedDependenciesAction((IPluginModelBase) getPage().getModel(), false));
         if (!fPackageViewer.getSelection().isEmpty()) {
             manager.add(new Separator());
             manager.add(fPropertiesAction);

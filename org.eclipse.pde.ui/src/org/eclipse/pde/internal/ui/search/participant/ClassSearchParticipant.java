@@ -99,7 +99,7 @@ public class ClassSearchParticipant implements IQueryParticipant {
 				return;
 			search = ((PatternQuerySpecification)querySpecification).getPattern();
 		}
-		fSearchPattern = PatternConstructor.createGroupedPattern("*(" + search + ")*", true);
+		fSearchPattern = PatternConstructor.createPattern(search, true);
 		fSearchRequestor = requestor;
 		
 		IPluginModelBase[] pluginModels = PDECore.getDefault().getModelManager().getWorkspaceModels();
@@ -174,11 +174,11 @@ public class ClassSearchParticipant implements IQueryParticipant {
 						String value = attr.getValue();
 						Matcher matcher = fSearchPattern.matcher(value.subSequence(0, value.length()));
 						if (matcher.matches()) {
-							String group = matcher.group(1);
+							String group = matcher.group(0);
 							int offset = ((PluginAttribute)attr).getValueOffset() + value.indexOf(group);
 							int length = group.length();
 							fSearchRequestor.reportMatch(new Match(
-									new SearchHit(attr, value),
+									new SearchHit(parent, value),
 									Match.UNIT_CHARACTER, offset, length));
 						}
 					}
@@ -202,7 +202,7 @@ public class ClassSearchParticipant implements IQueryParticipant {
 						String value = elements[j].getValue();
 						Matcher matcher = fSearchPattern.matcher(value.subSequence(0, value.length()));
 						if (matcher.matches()) {
-							String group = matcher.group(1);
+							String group = matcher.group(0);
 							int[] offlen;
 							try {
 								offlen = getOffsetOfElement(header, group, initOff);
