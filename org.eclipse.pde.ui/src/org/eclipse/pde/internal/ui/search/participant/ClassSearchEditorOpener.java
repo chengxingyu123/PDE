@@ -29,7 +29,7 @@ public class ClassSearchEditorOpener {
 			ManifestEditor editor = (ManifestEditor)editorPart;
 			IDocument doc = editor.getDocument(match);
 			if (doc != null) {
-				editor.openToSourcePage(element, match.getOffset(), match.getLength());
+				editor.openToSourcePage(match.getElement(), match.getOffset(), match.getLength());
 			}
 		}
 		return editorPart;

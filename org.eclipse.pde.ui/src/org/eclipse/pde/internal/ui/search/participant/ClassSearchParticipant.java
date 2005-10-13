@@ -75,6 +75,9 @@ public class ClassSearchParticipant implements IQueryParticipant {
 		SEARCH_HEADERS[H_BUNACT] = Constants.BUNDLE_ACTIVATOR;
 		SEARCH_HEADERS[H_PLUGCLASS] = ICoreConstants.PLUGIN_CLASS;
 	}
+	// the following are from JavaSearchPage (radio button indexes)
+	private static final int S_LIMIT_REF = 2;
+	private static final int S_LIMIT_ALL = 3;
 	private static final int S_FOR_TYPES = 0;
 	private static final int S_FOR_PACKAGES = 2;
 	
@@ -91,7 +94,8 @@ public class ClassSearchParticipant implements IQueryParticipant {
 			QuerySpecification querySpecification, IProgressMonitor monitor)
 			throws CoreException {
 		
-		if (querySpecification.getLimitTo() != 2 && querySpecification.getLimitTo() != 3) 
+		if (querySpecification.getLimitTo() != S_LIMIT_REF && 
+				querySpecification.getLimitTo() != S_LIMIT_ALL) 
 			return;
 		
 		String search;
@@ -177,9 +181,7 @@ public class ClassSearchParticipant implements IQueryParticipant {
 					if (attInfo != null 
 							&& attInfo.getKind() == IMetaAttribute.JAVA
 							&& attr instanceof PluginAttribute) {
-						String value = attr.getValue();
-						if (fSearchFor == S_FOR_TYPES) 
-							value = extractType(value);
+						String value = getProperValue(attr.getValue());
 						Matcher matcher = fSearchPattern.matcher(value.subSequence(0, value.length()));
 						if (matcher.matches()) {
 							String group = matcher.group(0);
@@ -207,9 +209,7 @@ public class ClassSearchParticipant implements IQueryParticipant {
 					if (elements == null) continue;
 					int initOff = 0;
 					for (int j = 0; j < elements.length; j++) {
-						String value = elements[j].getValue();
-						if (fSearchFor == S_FOR_TYPES) 
-							value = extractType(value);
+						String value = getProperValue(elements[j].getValue());
 						Matcher matcher = fSearchPattern.matcher(value.subSequence(0, value.length()));
 						if (matcher.matches()) {
 							String group = matcher.group(0);
@@ -261,10 +261,21 @@ public class ClassSearchParticipant implements IQueryParticipant {
 		return new int[]{offset, length};
 	}
 	
+	private String getProperValue(String value) {
+		return fSearchFor == S_FOR_TYPES ? extractType(value) : extractPackage(value);
+	}
 	private String extractType(String value) {
 		int index = value.lastIndexOf(".");
 		if (index == -1 || index == value.length() - 1) return value;
 		return value.substring(index + 1);
+	}
+	private String extractPackage(String value) {
+		int index = value.lastIndexOf(".");
+		if (index == -1 || index == value.length() - 1) return value;
+		char afterPeriod = value.charAt(index + 1);
+		if (afterPeriod >= 'A' && afterPeriod <= 'Z')
+			return value.substring(0, index);
+		return value;
 	}
 	
 	public int estimateTicks(QuerySpecification specification) {
