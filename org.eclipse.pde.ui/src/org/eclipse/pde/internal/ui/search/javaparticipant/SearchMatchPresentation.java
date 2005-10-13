@@ -1,13 +1,15 @@
 package org.eclipse.pde.internal.ui.search.javaparticipant;
 
 import org.eclipse.core.resources.IResource;
-import org.eclipse.jdt.ui.ISharedImages;
-import org.eclipse.jdt.ui.JavaUI;
+import org.eclipse.jdt.ui.JavaElementImageDescriptor;
 import org.eclipse.jdt.ui.search.IMatchPresentation;
+import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.ILabelProvider;
+import org.eclipse.pde.internal.ui.PDEPluginImages;
 import org.eclipse.pde.internal.ui.util.SharedLabelProvider;
 import org.eclipse.search.ui.text.Match;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.ui.PartInitException;
 
 public class SearchMatchPresentation implements IMatchPresentation {
@@ -16,9 +18,12 @@ public class SearchMatchPresentation implements IMatchPresentation {
 	
 	private class LabelProvider extends SharedLabelProvider {
 		private Image fImage;
+		private Point fImageSize = new Point(22, 16);
 		
 		private LabelProvider() {
-			fImage = JavaUI.getSharedImages().getImage(ISharedImages.IMG_OBJS_CLASS);
+			ImageDescriptor id = PDEPluginImages.DESC_CLASS_OBJ;
+			JavaElementImageDescriptor jid = new JavaElementImageDescriptor(id, 0, fImageSize);
+			fImage = jid.createImage();
 		}
 		
 		public Image getImage(Object element) {
