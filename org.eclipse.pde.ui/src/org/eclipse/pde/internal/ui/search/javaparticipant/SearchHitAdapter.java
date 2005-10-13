@@ -6,7 +6,7 @@ import org.eclipse.ui.model.IWorkbenchAdapter;
 public class SearchHitAdapter implements IWorkbenchAdapter {
 
 	public Object[] getChildren(Object o) {
-		return new Object[] {"asdf", "asdf2", "asdf3"};
+		return null;
 	}
 
 	public ImageDescriptor getImageDescriptor(Object object) {
@@ -14,7 +14,7 @@ public class SearchHitAdapter implements IWorkbenchAdapter {
 	}
 
 	public String getLabel(Object o) {
-		return o.toString();
+		return null;
 	}
 
 	public Object getParent(Object o) {

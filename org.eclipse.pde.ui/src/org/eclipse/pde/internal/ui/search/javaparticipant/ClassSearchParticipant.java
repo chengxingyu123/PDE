@@ -113,7 +113,7 @@ public class ClassSearchParticipant implements IQueryParticipant {
 		fSearchRequestor = requestor;
 		
 		IPluginModelBase[] pluginModels = PDECore.getDefault().getModelManager().getWorkspaceModels();
-		monitor.beginTask("Searching for classes and packages in manifest files", pluginModels.length);
+		monitor.beginTask("Searching for types and packages in manifest files", pluginModels.length);
 		for (int i = 0; i < pluginModels.length; i++) {
 			IProject project = pluginModels[i].getUnderlyingResource().getProject();
 			if (!monitor.isCanceled()) {

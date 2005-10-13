@@ -3,7 +3,6 @@ package org.eclipse.pde.internal.ui.search.javaparticipant;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.jdt.ui.JavaElementImageDescriptor;
 import org.eclipse.jdt.ui.search.IMatchPresentation;
-import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.ILabelProvider;
 import org.eclipse.pde.internal.ui.PDEPluginImages;
 import org.eclipse.pde.internal.ui.util.SharedLabelProvider;
@@ -21,9 +20,7 @@ public class SearchMatchPresentation implements IMatchPresentation {
 		private Point fImageSize = new Point(22, 16);
 		
 		private LabelProvider() {
-			ImageDescriptor id = PDEPluginImages.DESC_CLASS_OBJ;
-			JavaElementImageDescriptor jid = new JavaElementImageDescriptor(id, 0, fImageSize);
-			fImage = jid.createImage();
+			fImage = new JavaElementImageDescriptor(PDEPluginImages.DESC_CLASS_OBJ, 0, fImageSize).createImage();
 		}
 		
 		public Image getImage(Object element) {
