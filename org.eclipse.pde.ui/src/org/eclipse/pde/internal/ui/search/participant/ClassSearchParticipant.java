@@ -12,6 +12,7 @@ import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.ui.search.ElementQuerySpecification;
 import org.eclipse.jdt.ui.search.IMatchPresentation;
 import org.eclipse.jdt.ui.search.IQueryParticipant;
@@ -22,6 +23,7 @@ import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.osgi.util.ManifestElement;
 import org.eclipse.pde.core.plugin.IPluginAttribute;
+import org.eclipse.pde.core.plugin.IPluginBase;
 import org.eclipse.pde.core.plugin.IPluginElement;
 import org.eclipse.pde.core.plugin.IPluginExtension;
 import org.eclipse.pde.core.plugin.IPluginModelBase;
@@ -73,6 +75,8 @@ public class ClassSearchParticipant implements IQueryParticipant {
 		SEARCH_HEADERS[H_BUNACT] = Constants.BUNDLE_ACTIVATOR;
 		SEARCH_HEADERS[H_PLUGCLASS] = ICoreConstants.PLUGIN_CLASS;
 	}
+	private static final int S_FOR_TYPES = 0;
+	private static final int S_FOR_PACKAGES = 2;
 	
 	private SearchMatchPresentation fMatchPresentation;
 	private ISearchRequestor fSearchRequestor;
@@ -93,9 +97,11 @@ public class ClassSearchParticipant implements IQueryParticipant {
 		String search;
 		if (querySpecification instanceof ElementQuerySpecification) {
 			search = ((ElementQuerySpecification)querySpecification).getElement().getElementName();
+			if (((ElementQuerySpecification)querySpecification).getElement().getElementType() == IJavaElement.TYPE)
+				fSearchFor = S_FOR_TYPES;
 		} else {
 			fSearchFor = ((PatternQuerySpecification)querySpecification).getSearchFor();
-			if (fSearchFor != 0 && fSearchFor != 2)
+			if (fSearchFor != S_FOR_TYPES && fSearchFor != S_FOR_PACKAGES)
 				return;
 			search = ((PatternQuerySpecification)querySpecification).getPattern();
 		}
@@ -107,12 +113,12 @@ public class ClassSearchParticipant implements IQueryParticipant {
 		for (int i = 0; i < pluginModels.length; i++) {
 			IProject project = pluginModels[i].getUnderlyingResource().getProject();
 			if (!monitor.isCanceled()) {
-				searchProject(project, monitor);
+				searchProject(project, monitor, pluginModels[i].getPluginBase());
 			}
 		}
 	}
 
-	private void searchProject(IProject project, IProgressMonitor monitor) throws CoreException {
+	private void searchProject(IProject project, IProgressMonitor monitor, IPluginBase base) throws CoreException {
 		for (int i = 0; i < S_TOTAL; i++) {
 			IFile file = project.getFile(SEARCH_FILES[i]);
 			if (!file.exists()) continue;
@@ -150,7 +156,7 @@ public class ClassSearchParticipant implements IQueryParticipant {
 					loadModel.setUnderlyingResource(file);
 					Bundle bundle = (Bundle)((IBundleModel)loadModel).getBundle();
 					if (bundle != null)
-						inspectBundle(bundle);
+						inspectBundle(bundle, base);
 				}
 			} finally {
 				manager.disconnect(file.getFullPath(), monitor);
@@ -172,10 +178,12 @@ public class ClassSearchParticipant implements IQueryParticipant {
 							&& attInfo.getKind() == IMetaAttribute.JAVA
 							&& attr instanceof PluginAttribute) {
 						String value = attr.getValue();
+						if (fSearchFor == S_FOR_TYPES) 
+							value = extractType(value);
 						Matcher matcher = fSearchPattern.matcher(value.subSequence(0, value.length()));
 						if (matcher.matches()) {
 							String group = matcher.group(0);
-							int offset = ((PluginAttribute)attr).getValueOffset() + value.indexOf(group);
+							int offset = ((PluginAttribute)attr).getValueOffset() + value.indexOf(group) + attr.getValue().indexOf(value);
 							int length = group.length();
 							fSearchRequestor.reportMatch(new Match(
 									new SearchHit(parent, value),
@@ -188,9 +196,9 @@ public class ClassSearchParticipant implements IQueryParticipant {
 		}
 	}
 
-	private void inspectBundle(Bundle bundle) {
+	private void inspectBundle(Bundle bundle, IPluginBase base) {
 		for (int i = 0; i < H_TOTAL; i++) {
-			if (fSearchFor == 0 && (i == H_IMP || i == H_EXP))
+			if (fSearchFor == S_FOR_TYPES && (i == H_IMP || i == H_EXP))
 				continue;
 			ManifestHeader header = bundle.getManifestHeader(SEARCH_HEADERS[i]);
 			if (header != null) {
@@ -200,6 +208,8 @@ public class ClassSearchParticipant implements IQueryParticipant {
 					int initOff = 0;
 					for (int j = 0; j < elements.length; j++) {
 						String value = elements[j].getValue();
+						if (fSearchFor == S_FOR_TYPES) 
+							value = extractType(value);
 						Matcher matcher = fSearchPattern.matcher(value.subSequence(0, value.length()));
 						if (matcher.matches()) {
 							String group = matcher.group(0);
@@ -211,7 +221,7 @@ public class ClassSearchParticipant implements IQueryParticipant {
 								offlen = new int[]{header.getOffset(), header.getLength()};
 							}
 							fSearchRequestor.reportMatch(new Match(
-									new SearchHit(header, value),
+									new SearchHit(base, value),
 									Match.UNIT_CHARACTER, offlen[0], offlen[1]));
 						}
 					}
@@ -249,6 +259,12 @@ public class ClassSearchParticipant implements IQueryParticipant {
 			}
 		}
 		return new int[]{offset, length};
+	}
+	
+	private String extractType(String value) {
+		int index = value.lastIndexOf(".");
+		if (index == -1 || index == value.length() - 1) return value;
+		return value.substring(index + 1);
 	}
 	
 	public int estimateTicks(QuerySpecification specification) {
