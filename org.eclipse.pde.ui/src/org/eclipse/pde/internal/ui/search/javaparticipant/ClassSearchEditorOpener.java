@@ -8,7 +8,7 @@
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
-package org.eclipse.pde.internal.ui.search.participant;
+package org.eclipse.pde.internal.ui.search.javaparticipant;
 
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.pde.internal.ui.editor.plugin.ManifestEditor;

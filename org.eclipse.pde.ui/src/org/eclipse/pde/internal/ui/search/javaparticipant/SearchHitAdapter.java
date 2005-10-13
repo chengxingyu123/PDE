@@ -1,4 +1,4 @@
-package org.eclipse.pde.internal.ui.search.participant;
+package org.eclipse.pde.internal.ui.search.javaparticipant;
 
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.model.IWorkbenchAdapter;

@@ -1695,7 +1695,7 @@
    <extension
          point="org.eclipse.jdt.ui.queryParticipants">
       <queryParticipant
-            class="org.eclipse.pde.internal.ui.search.participant.ClassSearchParticipant"
+            class="org.eclipse.pde.internal.ui.search.javaparticipant.ClassSearchParticipant"
             id="org.eclipse.pde.ui.queryParticipant"
             name="PDE Java Search Participant"
             nature="org.eclipse.pde.PluginNature"/>

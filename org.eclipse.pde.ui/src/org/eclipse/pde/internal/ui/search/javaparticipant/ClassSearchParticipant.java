@@ -1,4 +1,4 @@
-package org.eclipse.pde.internal.ui.search.participant;
+package org.eclipse.pde.internal.ui.search.javaparticipant;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
