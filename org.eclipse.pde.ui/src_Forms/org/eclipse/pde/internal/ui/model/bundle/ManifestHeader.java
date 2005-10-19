@@ -88,7 +88,7 @@ public class ManifestHeader extends BundleObject implements IDocumentKey {
 	protected void removeManifestElement(ManifestElement element) {
 		if (!hasElements()) return;
 		for (int i = 0; i < fManifestElements.size(); i++) {
-			if  (fManifestElements.get(i).equals(element))
+			if (fManifestElements.get(i).equals(element))
 				fManifestElements.remove(i);
 		}
 	}

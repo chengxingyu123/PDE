@@ -163,15 +163,19 @@ public class ManifestElement {
     }
     
     public void setValue(String value) {
-    	if (value == null)
+    	if (value == null) {
     		fHeader.removeManifestElement(this);
-    	try {
-			org.eclipse.osgi.util.ManifestElement[] elements = 
-				org.eclipse.osgi.util.ManifestElement.parseHeader(fHeader.fName, value);
-			if (elements != null && elements.length > 0)
-				init(elements[0]);
-		} catch (BundleException e) {
-		}
+    		fAttributes.clear();
+    		fDirectives.clear();
+    	} else {
+    		try	{
+				org.eclipse.osgi.util.ManifestElement[] elements = 
+					org.eclipse.osgi.util.ManifestElement.parseHeader(fHeader.fName, value);
+				if (elements != null && elements.length > 0)
+					init(elements[0]);
+			} catch (BundleException e) {
+			}
+    	}
     }
     
     private void init(org.eclipse.osgi.util.ManifestElement manifestElement) {
@@ -234,5 +238,10 @@ public class ManifestElement {
 	    		if (values.size() > 0) sb.append("\""); //$NON-NLS-1$
     		}
     	}
+    }
+    
+    protected void clear() {
+		fAttributes.clear();
+		fDirectives.clear();
     }
 }

@@ -22,6 +22,8 @@ public class ManifestElementList {
 		fArrayList.add(index, element);
 	}
 	public void remove(int index) {
+		ManifestElement element = get(index);
+		element.clear();
 		fArrayList.remove(index);
 	}
 	public ManifestElement get(int index) {

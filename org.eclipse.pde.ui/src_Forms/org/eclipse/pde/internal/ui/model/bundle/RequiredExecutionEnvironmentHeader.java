@@ -60,8 +60,10 @@ public class RequiredExecutionEnvironmentHeader extends ManifestHeader {
             	for (int j = 0; j < fManifestElements.size(); j++) {
             		String value = fManifestElements.get(j).getValue();
             		if (value.equals(JRES.get(i))) {
-            			fMinJRE = fManifestElements.get(j);
-            			break;
+            			if (fMinJRE == null)
+            				fMinJRE = fManifestElements.get(j);
+            			else
+            				this.removeManifestElement(fManifestElements.get(j));
             		}
             	}
             }
@@ -69,8 +71,10 @@ public class RequiredExecutionEnvironmentHeader extends ManifestHeader {
             	for (int j = 0; j < fManifestElements.size(); j++) {
             		String value = fManifestElements.get(j).getValue();
             		if (value.equals(J2MES.get(i))) {
-            			fMinJ2ME = fManifestElements.get(j);
-            			break;
+            			if (fMinJ2ME == null)
+            				fMinJ2ME = fManifestElements.get(j);
+            			else
+            				this.removeManifestElement(fManifestElements.get(j));
             		}
             	}
             }
@@ -98,14 +102,13 @@ public class RequiredExecutionEnvironmentHeader extends ManifestHeader {
     		return;
     	String old = null;
     	if (element != null) {
-    		if (newValue == null || newValue.equals("")) {
-    			element.setValue(null);
-    			return;
-    		}
     		old = getValue();
-    	} else
+    		if (newValue == null || newValue.equals(""))
+    			element.setValue(null);
+    	} else {
 	    	element = new ManifestElement(this);
-    	element.setValue(newValue); //$NON-NLS-1$
+	    	element.setValue(newValue); //$NON-NLS-1$
+    	}
     	firePropertyChanged(this, fName, old, getValue());
     }
 }
