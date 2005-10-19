@@ -26,14 +26,14 @@ import org.eclipse.ltk.core.refactoring.TextFileChange;
 import org.eclipse.pde.internal.core.ICoreConstants;
 import org.eclipse.pde.internal.core.bundle.BundlePluginBase;
 import org.eclipse.pde.internal.core.ibundle.IBundle;
-import org.eclipse.pde.internal.ui.model.bundle.BasePackageHeader;
-import org.eclipse.pde.internal.ui.model.bundle.Bundle;
-import org.eclipse.pde.internal.ui.model.bundle.BundleModel;
-import org.eclipse.pde.internal.ui.model.bundle.ExportPackageHeader;
-import org.eclipse.pde.internal.ui.model.bundle.ExportPackageObject;
-import org.eclipse.pde.internal.ui.model.bundle.ManifestElement;
-import org.eclipse.pde.internal.ui.model.bundle.ManifestHeader;
-import org.eclipse.pde.internal.ui.model.bundle.PackageObject;
+import org.eclipse.pde.internal.core.ibundle.IManifestHeader;
+import org.eclipse.pde.internal.core.text.bundle.BasePackageHeader;
+import org.eclipse.pde.internal.core.text.bundle.Bundle;
+import org.eclipse.pde.internal.core.text.bundle.BundleModel;
+import org.eclipse.pde.internal.core.text.bundle.ExportPackageHeader;
+import org.eclipse.pde.internal.core.text.bundle.ExportPackageObject;
+import org.eclipse.pde.internal.core.text.bundle.ManifestElement;
+import org.eclipse.pde.internal.core.text.bundle.PackageObject;
 import org.eclipse.text.edits.DeleteEdit;
 import org.eclipse.text.edits.InsertEdit;
 import org.eclipse.text.edits.MalformedTreeException;
@@ -169,7 +169,7 @@ public class BundleManifestChange {
 		return null;
 	}
 	
-	private static void resetHeaderValue(ManifestHeader header, String oldText, String newText, MultiTextEdit multi) {
+	private static void resetHeaderValue(IManifestHeader header, String oldText, String newText, MultiTextEdit multi) {
 		if (header != null) {
 			String value = header.getValue();
 			if (value != null && value.startsWith(oldText) && value.lastIndexOf('.') <= oldText.length()) {
@@ -181,7 +181,7 @@ public class BundleManifestChange {
 		}
 	}
 	
-	private static void renamePackage(ManifestHeader header, String oldName, String newName, MultiTextEdit multi) {
+	private static void renamePackage(IManifestHeader header, String oldName, String newName, MultiTextEdit multi) {
 		if (header instanceof BasePackageHeader) {
 			BasePackageHeader bHeader = (BasePackageHeader)header;
 			if (bHeader.renamePackage(oldName, newName))
@@ -189,7 +189,7 @@ public class BundleManifestChange {
 		}	
 	}
 
-	private static ManifestElement removePackage(ManifestHeader header, String name, MultiTextEdit multi) {
+	private static ManifestElement removePackage(IManifestHeader header, String name, MultiTextEdit multi) {
 		ManifestElement result = null;
 		if (header instanceof BasePackageHeader) {
 			BasePackageHeader bHeader = (BasePackageHeader)header;

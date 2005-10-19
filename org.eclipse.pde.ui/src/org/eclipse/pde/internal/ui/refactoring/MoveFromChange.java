@@ -12,7 +12,7 @@ package org.eclipse.pde.internal.ui.refactoring;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.ltk.core.refactoring.TextFileChange;
-import org.eclipse.pde.internal.ui.model.bundle.ManifestElement;
+import org.eclipse.pde.internal.core.text.bundle.ManifestElement;
 
 public class MoveFromChange extends TextFileChange {
 	

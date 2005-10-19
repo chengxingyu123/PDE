@@ -28,13 +28,13 @@ import org.eclipse.osgi.util.ManifestElement;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.pde.core.plugin.*;
 import org.eclipse.pde.internal.core.*;
+import org.eclipse.pde.internal.core.ibundle.IManifestHeader;
 import org.eclipse.pde.internal.core.iproduct.*;
 import org.eclipse.pde.internal.core.plugin.*;
+import org.eclipse.pde.internal.core.text.*;
+import org.eclipse.pde.internal.core.text.bundle.Bundle;
+import org.eclipse.pde.internal.core.text.plugin.*;
 import org.eclipse.pde.internal.ui.*;
-import org.eclipse.pde.internal.ui.model.*;
-import org.eclipse.pde.internal.ui.model.bundle.Bundle;
-import org.eclipse.pde.internal.ui.model.bundle.ManifestHeader;
-import org.eclipse.pde.internal.ui.model.plugin.*;
 import org.eclipse.pde.internal.ui.refactoring.BundleManifestChange;
 import org.eclipse.swt.widgets.*;
 import org.eclipse.text.edits.*;
@@ -95,7 +95,7 @@ public class ProductDefinitionOperation implements IRunnableWithProgress {
 				IDocument document = buffer.getDocument();
 				Bundle bundle = BundleManifestChange.getBundle(file, monitor);
 				if (bundle != null) {
-					ManifestHeader header = bundle.getManifestHeader(Constants.BUNDLE_SYMBOLICNAME);
+					IManifestHeader header = bundle.getManifestHeader(Constants.BUNDLE_SYMBOLICNAME);
 					ManifestElement[] elements = new ManifestElement[0];
 					if (header != null)
 						elements = ManifestElement.parseHeader(Constants.BUNDLE_SYMBOLICNAME, header.getValue());

@@ -11,9 +11,10 @@
 package org.eclipse.pde.internal.core.ibundle;
 
 import org.eclipse.core.runtime.*;
+import org.eclipse.pde.internal.core.text.IDocumentKey;
 
 
-public interface IManifestHeader {
+public interface IManifestHeader extends IDocumentKey {
 	
 	/**
 	 * Returns the header key
@@ -24,6 +25,11 @@ public interface IManifestHeader {
 	 * Returns the header value
 	 */	
 	String getValue();
+	
+	
+	String getFirstValueComponent();
+	
+	void setFirstValueComponent(String value);
 	
 	/**
 	 * Sets the name of the header

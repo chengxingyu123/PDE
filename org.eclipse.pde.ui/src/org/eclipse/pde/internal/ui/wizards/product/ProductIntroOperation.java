@@ -45,18 +45,18 @@ import org.eclipse.pde.core.plugin.IPluginElement;
 import org.eclipse.pde.core.plugin.IPluginExtension;
 import org.eclipse.pde.core.plugin.IPluginModelBase;
 import org.eclipse.pde.internal.core.PDECore;
+import org.eclipse.pde.internal.core.ibundle.IManifestHeader;
 import org.eclipse.pde.internal.core.iproduct.IProduct;
 import org.eclipse.pde.internal.core.plugin.WorkspaceFragmentModel;
 import org.eclipse.pde.internal.core.plugin.WorkspacePluginModel;
 import org.eclipse.pde.internal.core.plugin.WorkspacePluginModelBase;
+import org.eclipse.pde.internal.core.text.IDocumentNode;
+import org.eclipse.pde.internal.core.text.bundle.Bundle;
+import org.eclipse.pde.internal.core.text.plugin.FragmentModel;
+import org.eclipse.pde.internal.core.text.plugin.PluginModel;
+import org.eclipse.pde.internal.core.text.plugin.PluginModelBase;
 import org.eclipse.pde.internal.ui.PDEPlugin;
 import org.eclipse.pde.internal.ui.PDEUIMessages;
-import org.eclipse.pde.internal.ui.model.IDocumentNode;
-import org.eclipse.pde.internal.ui.model.bundle.Bundle;
-import org.eclipse.pde.internal.ui.model.bundle.ManifestHeader;
-import org.eclipse.pde.internal.ui.model.plugin.FragmentModel;
-import org.eclipse.pde.internal.ui.model.plugin.PluginModel;
-import org.eclipse.pde.internal.ui.model.plugin.PluginModelBase;
 import org.eclipse.pde.internal.ui.refactoring.BundleManifestChange;
 import org.eclipse.pde.internal.ui.wizards.templates.ControlStack;
 import org.eclipse.pde.ui.templates.IVariableProvider;
@@ -125,7 +125,7 @@ public class ProductIntroOperation implements IRunnableWithProgress, IVariablePr
 				IDocument document = buffer.getDocument();
 				Bundle bundle = BundleManifestChange.getBundle(file, monitor);
 				if (bundle != null) {
-					ManifestHeader header = bundle.getManifestHeader(Constants.BUNDLE_SYMBOLICNAME);
+					IManifestHeader header = bundle.getManifestHeader(Constants.BUNDLE_SYMBOLICNAME);
 					ManifestElement[] elements = new ManifestElement[0];
 					if (header != null)
 						elements = ManifestElement.parseHeader(Constants.BUNDLE_SYMBOLICNAME, header.getValue());

@@ -16,10 +16,10 @@ import org.eclipse.core.resources.*;
 import org.eclipse.core.runtime.*;
 import org.eclipse.jface.text.*;
 import org.eclipse.pde.core.*;
+import org.eclipse.pde.internal.core.text.*;
+import org.eclipse.pde.internal.core.text.bundle.*;
 import org.eclipse.pde.internal.ui.editor.*;
 import org.eclipse.pde.internal.ui.editor.context.*;
-import org.eclipse.pde.internal.ui.model.*;
-import org.eclipse.pde.internal.ui.model.bundle.*;
 import org.eclipse.text.edits.*;
 import org.eclipse.ui.*;
 
@@ -91,8 +91,9 @@ public class BundleInputContext extends UTF8InputContext {
 						fOperationTable.remove(header);
 						ops.remove(op);
 					}
-					if (header.getValue() == null || header.getValue().trim().length() == 0) {
-							deleteKey(header, ops);						
+					String value = header.getValue();
+					if (value == null || value.trim().length() == 0) {
+						deleteKey(header, ops);						
 					} else {
 						modifyKey(header, ops);
 					}

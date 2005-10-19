@@ -12,11 +12,11 @@ package org.eclipse.pde.internal.ui.editor.build;
 import org.eclipse.jface.text.*;
 import org.eclipse.jface.viewers.*;
 import org.eclipse.pde.core.build.*;
+import org.eclipse.pde.internal.core.text.*;
+import org.eclipse.pde.internal.core.text.build.*;
 import org.eclipse.pde.internal.ui.*;
 import org.eclipse.pde.internal.ui.editor.*;
 import org.eclipse.pde.internal.ui.elements.*;
-import org.eclipse.pde.internal.ui.model.*;
-import org.eclipse.pde.internal.ui.model.build.*;
 import org.eclipse.swt.graphics.*;
 
 public class BuildSourcePage extends KeyValueSourcePage {
