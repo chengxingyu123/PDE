@@ -47,9 +47,9 @@ public class AddSingleonToSymbolicName extends ManifestHeaderErrorResolution {
 			if (header == null)
 				return;
 			header.setDirective(Constants.SINGLETON_DIRECTIVE, fisDirective ?
-					new String[] {Boolean.toString(true)} : null);
+					Boolean.toString(true) : null);
 			header.setAttribute(ICoreConstants.SINGLETON_ATTRIBUTE, fisDirective ?
-					null : new String[] {Boolean.toString(true)});
+					null : Boolean.toString(true));
 		}
 	}
 }

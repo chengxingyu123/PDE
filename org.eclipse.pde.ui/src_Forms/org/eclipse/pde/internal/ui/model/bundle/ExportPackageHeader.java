@@ -13,9 +13,7 @@ package org.eclipse.pde.internal.ui.model.bundle;
 import java.util.Iterator;
 import java.util.Vector;
 
-import org.eclipse.osgi.util.*;
 import org.eclipse.pde.internal.core.ibundle.IBundle;
-import org.osgi.framework.*;
 
 public class ExportPackageHeader extends BasePackageHeader {
     
@@ -27,15 +25,10 @@ public class ExportPackageHeader extends BasePackageHeader {
 	}
     
     protected void processValue() {
-        try {
-            if (fValue != null) {
-                ManifestElement[] elements = ManifestElement.parseHeader(fName, fValue);
-                for (int i = 0; i < elements.length; i++) {
-                    ExportPackageObject p = new ExportPackageObject(this, elements[i], getVersionAttribute());
-                    fPackages.put(p.getName(), p);
-                }
-            }
-        } catch (BundleException e) {
+        for (int i = 0; i < fManifestElements.size(); i++) {
+            ExportPackageObject p = 
+            	new ExportPackageObject(this, fManifestElements.get(i), getVersionAttribute());
+            fPackages.put(p.getName(), p);
         }
     }
     

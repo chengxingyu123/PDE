@@ -10,7 +10,6 @@
  *******************************************************************************/
 package org.eclipse.pde.internal.ui.model.bundle;
 
-import java.util.Iterator;
 import java.util.TreeMap;
 
 import org.eclipse.pde.core.IModelChangedEvent;
@@ -40,13 +39,11 @@ public abstract class BasePackageHeader extends ManifestHeader {
 
     public void addPackage(PackageObject object) {
         fPackages.put(object.getName(), object);
-        updateValue();
         fireStructureChanged(object, IModelChangedEvent.INSERT);
     }
     
     public Object removePackage(PackageObject object) {
         Object value = fPackages.remove(object.getName());
-        updateValue();
         fireStructureChanged(object, IModelChangedEvent.REMOVE);
         return value;
     }
@@ -57,7 +54,6 @@ public abstract class BasePackageHeader extends ManifestHeader {
     
     public Object removePackage(String name) {
     	PackageObject object = (PackageObject) fPackages.remove(name);
-    	updateValue();
     	fireStructureChanged(object, IModelChangedEvent.REMOVE);
     	return object;
     }
@@ -75,20 +71,6 @@ public abstract class BasePackageHeader extends ManifestHeader {
     	}
     	return false;
     }
-    
-    public void updateValue() {
-        StringBuffer buffer = new StringBuffer();
-        Iterator iter = fPackages.values().iterator();
-        while (iter.hasNext()) {
-            buffer.append(((PackageObject)iter.next()).write());
-            if (iter.hasNext()) {
-                buffer.append(","); //$NON-NLS-1$
-                buffer.append(getLineLimiter());
-                buffer.append(" ");  //$NON-NLS-1$
-            }
-        }
-       fValue = buffer.toString();
-    }
-
+  
 
 }

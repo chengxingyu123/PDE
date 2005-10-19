@@ -12,7 +12,6 @@ package org.eclipse.pde.internal.ui.model.bundle;
 
 import java.util.Enumeration;
 
-import org.eclipse.osgi.util.ManifestElement;
 import org.eclipse.pde.internal.core.bundle.BundleObject;
 
 public class PackageObject extends BundleObject {

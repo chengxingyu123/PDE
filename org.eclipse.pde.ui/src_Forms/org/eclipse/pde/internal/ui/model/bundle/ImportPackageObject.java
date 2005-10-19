@@ -10,9 +10,9 @@
  *******************************************************************************/
 package org.eclipse.pde.internal.ui.model.bundle;
 
-import org.eclipse.osgi.service.resolver.*;
-import org.eclipse.osgi.util.*;
-import org.osgi.framework.*;
+import org.eclipse.osgi.service.resolver.ExportPackageDescription;
+import org.osgi.framework.Constants;
+import org.osgi.framework.Version;
 
 public class ImportPackageObject extends PackageObject {
     

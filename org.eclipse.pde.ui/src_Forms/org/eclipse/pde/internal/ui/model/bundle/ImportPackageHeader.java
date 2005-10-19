@@ -10,9 +10,7 @@
  *******************************************************************************/
 package org.eclipse.pde.internal.ui.model.bundle;
 
-import org.eclipse.osgi.util.ManifestElement;
 import org.eclipse.pde.internal.core.ibundle.IBundle;
-import org.osgi.framework.BundleException;
 
 public class ImportPackageHeader extends BasePackageHeader {
 
@@ -24,16 +22,11 @@ public class ImportPackageHeader extends BasePackageHeader {
 	}
 
     protected void processValue() {
-        try {
-            if (fValue != null) {
-                ManifestElement[] elements = ManifestElement.parseHeader(fName, fValue);
-                for (int i = 0; i < elements.length; i++) {
-                    ImportPackageObject p = new ImportPackageObject(this, elements[i], getVersionAttribute());
-                    fPackages.put(p.getName(), p);
-                }
-            }
-        } catch (BundleException e) {
-        }
+       for (int i = 0; i < fManifestElements.size(); i++) {
+			ImportPackageObject p = 
+				new ImportPackageObject(this, fManifestElements.get(i), getVersionAttribute());
+			fPackages.put(p.getName(), p);
+       }
     }
     
     public ImportPackageObject[] getPackages() {

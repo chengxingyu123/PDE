@@ -12,9 +12,7 @@ package org.eclipse.pde.internal.ui.model.bundle;
 
 import java.util.ArrayList;
 
-import org.eclipse.osgi.util.ManifestElement;
 import org.eclipse.pde.internal.core.ibundle.IBundle;
-import org.osgi.framework.BundleException;
 
 public class RequiredExecutionEnvironmentHeader extends ManifestHeader {
     
@@ -43,8 +41,8 @@ public class RequiredExecutionEnvironmentHeader extends ManifestHeader {
     	return (String[])J2MES.toArray(new String[J2MES.size()]);
     }
     
-    private String fMinJRE;
-    private String fMinJ2ME;
+    private ManifestElement fMinJRE;
+    private ManifestElement fMinJ2ME;
     
     public RequiredExecutionEnvironmentHeader(String name, String value, IBundle bundle,
 			String lineDelimiter) {
@@ -52,81 +50,62 @@ public class RequiredExecutionEnvironmentHeader extends ManifestHeader {
 		processValue();
 	}
     
+    // possibly bring this behaviour down to ManifestHeader and give a subclass the ability to
+    // pass an ArrayList of valid element values to get looked at
     private void processValue() {
-		try {
-			ManifestElement[] elements = ManifestElement.parseHeader(fName, fValue);
-	        if (elements != null && elements.length > 0) {
-	            for (int i = 0; i < TOTAL_JRES; i++) {
-	            	for (int j = 0; j < elements.length; j++) {
-	            		String value = elements[j].getValue();
-	            		if (value.equals(JRES.get(i))) {
-	            			fMinJRE = value;
-	            			break;
-	            		}
-	            	}
-	            }
-	           	for (int i = 0; i < TOTAL_J2MES; i++) {
-	            	for (int j = 0; j < elements.length; j++) {
-	            		String value = elements[j].getValue();
-	            		if (value.equals(J2MES.get(i))) {
-	            			fMinJ2ME = value;
-	            			break;
-	            		}
-	            	}
-	            }
-	        }
-		} catch (BundleException e) {
-		}
+    	if (fManifestElements == null)
+    		return;
+        if (fManifestElements.size() > 0) {
+            for (int i = 0; i < TOTAL_JRES; i++) {
+            	for (int j = 0; j < fManifestElements.size(); j++) {
+            		String value = fManifestElements.get(j).getValue();
+            		if (value.equals(JRES.get(i))) {
+            			fMinJRE = fManifestElements.get(j);
+            			break;
+            		}
+            	}
+            }
+           	for (int i = 0; i < TOTAL_J2MES; i++) {
+            	for (int j = 0; j < fManifestElements.size(); j++) {
+            		String value = fManifestElements.get(j).getValue();
+            		if (value.equals(J2MES.get(i))) {
+            			fMinJ2ME = fManifestElements.get(j);
+            			break;
+            		}
+            	}
+            }
+        }
     }
     
     public String getMinimumJRE() {
-        return fMinJRE;
+        return (fMinJRE != null) ? fMinJRE.getValue() : "";
     }
     
     public String getMinimumJ2ME() {
-        return fMinJ2ME;
+        return (fMinJ2ME != null) ? fMinJ2ME.getValue() : "";
     }
     
-    
-    public String updateJRE(String newValue) {
-    	if (newValue.equals(fMinJRE))
-    		return fValue;
-    	fMinJRE = newValue.equals("") ? null : newValue; //$NON-NLS-1$
-    	return getUpdatedValue();
+    public void updateJRE(String newValue) {
+    	update(fMinJRE, newValue);
     }
     
-    public String updateJ2ME(String newValue) {
-    	if (newValue.equals(fMinJ2ME))
-    		return fValue;
-    	fMinJ2ME = newValue.equals("") ? null : newValue; //$NON-NLS-1$
-    	return getUpdatedValue();
+    public void updateJ2ME(String newValue) {
+    	update(fMinJ2ME, newValue);
     }
-
-	public String getUpdatedValue() {
-		StringBuffer sb = new StringBuffer();
-		try {
-			ManifestElement[] elements = ManifestElement.parseHeader(fName, fValue);
-			ArrayList nonStandardElements = new ArrayList();
-			for (int i = 0; i < elements.length; i++) {
-				String value = elements[i].getValue();
-				if (!J2MES.contains(value) && !JRES.contains(value))
-					nonStandardElements.add(value);
-			}
-			for (int i = 0; i < nonStandardElements.size(); i++) {
-				if (sb.length() > 0) sb.append(", "); //$NON-NLS-1$
-				sb.append((String)nonStandardElements.get(i));
-			}
-		} catch (BundleException e) {
-		}
-		if (fMinJRE != null) {
-			if (sb.length() > 0) sb.append(", "); //$NON-NLS-1$
-			sb.append(fMinJRE);
-		}
-		if (fMinJ2ME != null) {
-			if (sb.length() > 0) sb.append(", "); //$NON-NLS-1$
-			sb.append(fMinJ2ME);
-		}
-		fValue = sb.toString();
-		return fValue;
-	}
+    
+    private void update(ManifestElement element, String newValue) {
+    	if (element != null && newValue.equals(element.getValue()))
+    		return;
+    	String old = null;
+    	if (element != null) {
+    		if (newValue == null || newValue.equals("")) {
+    			element.setValue(null);
+    			return;
+    		}
+    		old = getValue();
+    	} else
+	    	element = new ManifestElement(this);
+    	element.setValue(newValue); //$NON-NLS-1$
+    	firePropertyChanged(this, fName, old, getValue());
+    }
 }

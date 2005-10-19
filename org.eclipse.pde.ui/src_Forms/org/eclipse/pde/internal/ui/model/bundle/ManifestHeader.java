@@ -11,10 +11,7 @@
 package org.eclipse.pde.internal.ui.model.bundle;
 
 import java.io.PrintWriter;
-import java.util.Enumeration;
-import java.util.Hashtable;
 
-import org.eclipse.osgi.util.ManifestElement;
 import org.eclipse.pde.internal.core.bundle.BundleObject;
 import org.eclipse.pde.internal.core.ibundle.IBundle;
 import org.eclipse.pde.internal.ui.model.IDocumentKey;
@@ -26,38 +23,16 @@ public class ManifestHeader extends BundleObject implements IDocumentKey {
 	private int fLength = -1;
     
 	protected String fName;
-	protected String fValue;
     private IBundle fBundle;
 	private String fLineDelimiter;
-	private Hashtable fAttributes = new Hashtable();
-	private Hashtable fDirectives = new Hashtable();
-	private String[] fValueComponents;
+	protected ManifestElementList fManifestElements;
     
     public ManifestHeader(String name, String value, IBundle bundle, String lineDelimiter) {
         fName = name;
-        fValue = value;
         fBundle = bundle;
         fLineDelimiter = lineDelimiter;
         setModel(fBundle.getModel());
-        try {
-        	// Attribute and Directive support 
-			// meant for headers with a single element
-        	ManifestElement[] elements = ManifestElement.parseHeader(fName, fValue);
-			if (elements == null || elements.length != 1)
-				return;
-			Enumeration keys = elements[0].getKeys();
-			while (keys != null && keys.hasMoreElements()) {
-				String key = (String)keys.nextElement();
-				fAttributes.put(key, elements[0].getAttributes(key));
-			}
-			Enumeration dkeys = elements[0].getDirectiveKeys();
-			while (dkeys != null && dkeys.hasMoreElements()) {
-				String dkey = (String)dkeys.nextElement();
-				fDirectives.put(dkey, elements[0].getDirectives(dkey));
-			}
-			fValueComponents = elements[0].getValueComponents();
-		} catch (BundleException e) {
-		}
+        setValue(value);
     }
     
     public String getLineLimiter() {
@@ -77,13 +52,47 @@ public class ManifestHeader extends BundleObject implements IDocumentKey {
 		return fName;
 	}
 	
-	public void setValue(String value) {
-		fValue = value;
+	public String getValue() {
+		if (fManifestElements == null)
+			return null;
+		StringBuffer sb = new StringBuffer();
+		for (int i = 0; i < fManifestElements.size(); i++) {	
+			if (i != 0) {
+				sb.append(","); //$NON-NLS-1$
+				sb.append(fLineDelimiter);
+				sb.append(" ");
+			}
+			sb.append(fManifestElements.get(i).write());
+		}
+		return sb.toString();
 	}
 	
-	public String getValue() {
-		return fValue;
+	public void setValue(String value) {
+        try {
+        	org.eclipse.osgi.util.ManifestElement[] elements = 
+        		org.eclipse.osgi.util.ManifestElement.parseHeader(fName, value);
+        	fManifestElements = new ManifestElementList(elements.length);
+			for (int i = 0; i < elements.length; i++) {
+				new ManifestElement(this, elements[i]);
+			}
+		} catch (BundleException e) {
+		}
 	}
+	
+	protected void addManifestElement(ManifestElement element) {
+		if (fManifestElements == null)
+			fManifestElements = new ManifestElementList(1);
+		fManifestElements.add(element);
+	}
+	
+	protected void removeManifestElement(ManifestElement element) {
+		if (!hasElements()) return;
+		for (int i = 0; i < fManifestElements.size(); i++) {
+			if  (fManifestElements.get(i).equals(element))
+				fManifestElements.remove(i);
+		}
+	}
+	
 	/* (non-Javadoc)
 	 * @see org.eclipse.pde.internal.ui.model.IDocumentKey#setOffset(int)
 	 */
@@ -112,8 +121,11 @@ public class ManifestHeader extends BundleObject implements IDocumentKey {
 	 * @see org.eclipse.pde.internal.ui.model.IDocumentKey#write()
 	 */
 	public String write() {
-        updateValue();
-		return fName + ": " + fValue + fLineDelimiter; //$NON-NLS-1$
+		StringBuffer sb = new StringBuffer(fName);
+		sb.append(": "); //$NON-NLS-1$
+		sb.append(getValue());
+		sb.append(fLineDelimiter);
+		return sb.toString(); 
 	}
 	/* (non-Javadoc)
 	 * @see org.eclipse.pde.core.IWritable#write(java.lang.String, java.io.PrintWriter)
@@ -129,54 +141,40 @@ public class ManifestHeader extends BundleObject implements IDocumentKey {
         return fBundle;
     }
     
-    public void updateValue() {
+    public void setAttribute(String key, String value) {
+    	if (hasElements())
+    		getFirstElement().setAttribute(key, new String[] {value});
+    }
+    public void setDirective(String key, String value) {
+    	if (hasElements())
+    		getFirstElement().setDirective(key, new String[] {value});
+    }
+    public String getAttribute(String key) {
+    	if (hasElements())
+    		return getFirstElement().getAttribute(key);
+    	return null;
+    }
+    public String getDirective(String key) {
+    	if (hasElements())
+    		return getFirstElement().getDirective(key);
+    	return null;
+    }
+    public String[] getAttributes(String key) {
+    	if (hasElements())
+    		return getFirstElement().getAttributes(key);
+    	return null;
+    }
+    public String[] getDirectives(String key) {
+    	if (hasElements())
+    		return getFirstElement().getDirectives(key);
+    	return null;
     }
     
-    public void setAttribute(String key, String[] value) {
-    	setHashtableValue(fAttributes, key, value);
+    private boolean hasElements() {
+    	return fManifestElements != null && fManifestElements.size() > 0;
     }
-    public void setDirective(String key, String[] value) {
-    	setHashtableValue(fDirectives, key, value);
-    }
-    
-    private void setHashtableValue(Hashtable table, String key, String[] value) {
-    	if (key == null) return;
-    	String old = fValue;
-    	if (value == null || value.length == 0)
-    		table.remove(key);
-    	else
-    		table.put(key, value);
-    	refreshValue();
-    	getModel().fireModelObjectChanged(this, fName, old, fValue);
-    }
-    private void refreshValue() {
-    	if (fValueComponents.length == 0)
-    		return;
-    	StringBuffer sb = new StringBuffer();
-    	int i = 0;
-    	for (; i < fValueComponents.length; i++) {
-    		if (i != 0) sb.append("; ");  //$NON-NLS-1$
-    		sb.append(fValueComponents[i]);
-    	}
-    	appendValuesToBuffer(sb, fAttributes);
-    	appendValuesToBuffer(sb, fDirectives);
-    	fValue = sb.toString();
-    }
-    private void appendValuesToBuffer(StringBuffer sb, Hashtable table) {
-    	Enumeration dkeys = table.keys();
-    	while (dkeys.hasMoreElements()) {
-    		String dkey = (String)dkeys.nextElement();
-    		sb.append("; "); //$NON-NLS-1$
-			sb.append(dkey);
-			sb.append(table.equals(fDirectives) ? ":=" : "="); //$NON-NLS-1$ //$NON-NLS-2$
-    		String[] values = (String[])table.get(dkey);
-    		if (values.length > 0)sb.append("\""); //$NON-NLS-1$
-    		for (int i = 0; i < values.length; i++) {
-    			if (i != 0) sb.append(", "); //$NON-NLS-1$
-    			sb.append(values[i]);
-    		}
-    		if (values.length > 0)sb.append("\""); //$NON-NLS-1$
-    	}
+    private ManifestElement getFirstElement() {
+    	return fManifestElements.get(0);
     }
 }
 

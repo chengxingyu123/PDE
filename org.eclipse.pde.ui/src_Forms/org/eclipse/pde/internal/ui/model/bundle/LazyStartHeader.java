@@ -10,49 +10,27 @@
  *******************************************************************************/
 package org.eclipse.pde.internal.ui.model.bundle;
 
-import org.eclipse.osgi.util.ManifestElement;
 import org.eclipse.pde.internal.core.ibundle.IBundle;
-import org.osgi.framework.BundleException;
 
 public class LazyStartHeader extends ManifestHeader {
 
 	private static final long serialVersionUID = 1L;
-	private boolean fLazy;
-	private String fRemaining;
 
 	public LazyStartHeader(String name, String value, IBundle bundle, String lineDelimiter) {
 		super(name, value, bundle, lineDelimiter);
-		processValue();
-	}
-	
-	private void processValue() {
-		try {
-			ManifestElement[] elements = ManifestElement.parseHeader(fName, fValue);
-			if (elements.length > 0) {
-				fLazy = "true".equals(elements[0].getValue()); //$NON-NLS-1$
-				int index = fValue.indexOf(';');
-				if (index != -1)
-					fRemaining = fValue.substring(index);
-			}
-		} catch (BundleException e) {
-		}
 	}
 
 	public boolean isLazyStart() {
-		return fLazy;
+		return fManifestElements.size() > 0
+			&& "true".equals(fManifestElements.get(0).getValue()); //$NON-NLS-1$
 	}
 	
 	public void setLazyStart(boolean lazy) {
-		fLazy = lazy;
-		String old = fValue;
-		updateValue();
-		firePropertyChanged(this, fName, old, fValue);
+		String old = getValue();
+		if (fManifestElements.size() > 0) {
+			fManifestElements.get(0).setValue(Boolean.toString(lazy));
+		}
+		firePropertyChanged(this, fName, old, getValue());
 	}
-	
-	public void updateValue() {
-		fValue = Boolean.toString(fLazy);
-		if (fRemaining != null)
-			fValue += fRemaining;
-	}
-	
+
 }

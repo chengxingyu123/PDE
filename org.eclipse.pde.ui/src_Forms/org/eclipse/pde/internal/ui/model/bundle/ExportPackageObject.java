@@ -13,8 +13,7 @@ package org.eclipse.pde.internal.ui.model.bundle;
 import java.util.Iterator;
 import java.util.TreeMap;
 
-import org.eclipse.jdt.core.*;
-import org.eclipse.osgi.util.*;
+import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.pde.core.IModelChangedEvent;
 
 public class ExportPackageObject extends PackageObject {
@@ -40,7 +39,7 @@ public class ExportPackageObject extends PackageObject {
     
     private void processFriends(String value) {
         if (value != null) {
-            String[] friends = ManifestElement.getArrayFromList(value);
+            String[] friends = org.eclipse.osgi.util.ManifestElement.getArrayFromList(value);
             for (int i = 0; i < friends.length; i++) {
                 PackageFriend friend = new PackageFriend(this, friends[i]);
                 fFriends.put(friend.getName(), friend);
