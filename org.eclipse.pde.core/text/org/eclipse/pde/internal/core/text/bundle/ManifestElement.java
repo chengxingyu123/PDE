@@ -159,6 +159,7 @@ public class ManifestElement {
     			values.add(value[i]);
     		table.put(key, values);
     	}
+    	fHeader.updateValue();
     }
     
     public void setValue(String value) {
@@ -171,6 +172,7 @@ public class ManifestElement {
 				init(elements[0]);
 		} catch (BundleException e) {
 		}
+		fHeader.updateValue();
     }
     
     private void init(org.eclipse.osgi.util.ManifestElement manifestElement) {
