@@ -11,6 +11,7 @@
 package org.eclipse.pde.internal.core.text.bundle;
 
 import org.eclipse.osgi.service.resolver.ExportPackageDescription;
+import org.eclipse.osgi.util.ManifestElement;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Version;
 
@@ -27,7 +28,7 @@ public class ImportPackageObject extends PackageObject {
         return null;
     }
     
-    public ImportPackageObject(ManifestHeader header, PDEManifestElement element, String versionAttribute) {
+    public ImportPackageObject(ManifestHeader header, ManifestElement element, String versionAttribute) {
         super(header, element, versionAttribute);
         fOptional = Constants.RESOLUTION_OPTIONAL.equals(element.getDirective(Constants.RESOLUTION_DIRECTIVE));
     }

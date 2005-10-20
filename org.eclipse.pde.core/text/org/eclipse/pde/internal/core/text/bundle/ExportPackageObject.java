@@ -28,7 +28,7 @@ public class ExportPackageObject extends PackageObject {
 
     private TreeMap fFriends = new TreeMap();
      
-    public ExportPackageObject(ManifestHeader header, String versionAttribute) {
+    public ExportPackageObject(ManifestHeader header, ManifestElement element, String versionAttribute) {
         super(header, element, versionAttribute);
         processFriends(element.getDirective(FRIENDS));
         fInternal = "true".equals(element.getDirective(INTERNAL)) || fFriends.size() > 0; //$NON-NLS-1$

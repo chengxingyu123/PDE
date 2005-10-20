@@ -22,23 +22,11 @@ public class BundleClasspathHeader extends CompositeManifestHeader {
 	}
 	
 	public void addLibrary(String name) {
-		PDEManifestElement element = new PDEManifestElement(this);
-		element.setValue(name);
-		addManifestElement(element);
+		addManifestElement(name);
 	}
 	
 	public void removeLibrary(String name) {
-		if (fManifestElements != null) {
-			for (int i = 0; i < fManifestElements.size(); i++) {
-				PDEManifestElement element = (PDEManifestElement)fManifestElements.get(i);
-				if (name.equals(element.getValue()))
-					removeManifestElement(element);
-			}
-		}	
+		removeManifestElement(name);
 	}
 	
-	public void swap(String library1, String library2) {
-		
-	}
-
 }

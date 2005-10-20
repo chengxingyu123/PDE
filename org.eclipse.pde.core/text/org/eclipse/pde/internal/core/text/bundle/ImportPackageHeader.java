@@ -10,6 +10,7 @@
  *******************************************************************************/
 package org.eclipse.pde.internal.core.text.bundle;
 
+import org.eclipse.osgi.util.ManifestElement;
 import org.eclipse.pde.internal.core.ibundle.IBundle;
 
 public class ImportPackageHeader extends BasePackageHeader {
@@ -20,16 +21,12 @@ public class ImportPackageHeader extends BasePackageHeader {
 		super(name, value, bundle, lineDelimiter);
 	}
 
-    protected void processValue(String value) {
-       for (int i = 0; i < fManifestElements.size(); i++) {
-			ImportPackageObject p = 
-				new ImportPackageObject(this, fManifestElements.get(i), getVersionAttribute());
-			fPackages.put(p.getName(), p);
-       }
+    protected PDEManifestElement createElement(ManifestElement element) {
+    	return new ImportPackageObject(this, element, getVersionAttribute());
     }
     
     public ImportPackageObject[] getPackages() {
-        return (ImportPackageObject[])fPackages.values().toArray(new ImportPackageObject[fPackages.size()]);
+        return (ImportPackageObject[])getElements();
     }
     
 

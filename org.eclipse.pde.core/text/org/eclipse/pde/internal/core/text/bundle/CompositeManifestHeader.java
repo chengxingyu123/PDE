@@ -13,6 +13,7 @@ package org.eclipse.pde.internal.core.text.bundle;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.Vector;
 
 import org.eclipse.osgi.util.ManifestElement;
 import org.eclipse.pde.internal.core.ibundle.IBundle;
@@ -72,6 +73,12 @@ public class CompositeManifestHeader extends ManifestHeader {
 		fBundle.getModel().fireModelObjectChanged(this, getName(), old, fValue);
 	}
 	
+	protected void addManifestElement(String value) {
+		PDEManifestElement element = new PDEManifestElement(this);
+		element.setValue(value);
+		addManifestElement(element);
+	}
+	
 	protected void addManifestElement(PDEManifestElement element) {
 		if (fSort) {
 			if (fElementMap == null)
@@ -105,7 +112,8 @@ public class CompositeManifestHeader extends ManifestHeader {
 		updateValue();
 		return object;
 	}
-	private PDEManifestElement[] getElements() {
+	
+	protected PDEManifestElement[] getElements() {
 		if (fSort && fElementMap != null)
 			return (PDEManifestElement[])fElementMap.values().toArray(new PDEManifestElement[fElementMap.size()]);
 				
@@ -134,6 +142,39 @@ public class CompositeManifestHeader extends ManifestHeader {
 	   }
 	   return false;
    }
+   
+   public Vector getElementNames() {
+	   PDEManifestElement[] elements = getElements();
+       Vector vector = new Vector(elements.length);
+       for (int i = 0; i < elements.length; i++) {
+           vector.add(elements[i].getValue());
+       }
+       return vector;
+   }
+   
+   public void swap(String name1, String name2) {
+	   if (fSort || fManifestElements == null)
+		   return;
+	   int index1 = -1;
+	   int index2 = -1;
+	   for (int i = 0; i < fManifestElements.size(); i++) {
+		   PDEManifestElement element = (PDEManifestElement)fManifestElements.get(i);
+		   if (name1.equals(element.getValue()))
+			   index1 = i;
+		   else if (name2.equals(element.getValue()))
+			   index2 = i;
+		   if (index1 > -1 && index2 > -1)
+			   break;
+	   }
+	   if (index1 > -1 && index2 > -1) {
+		   Object object1 = fManifestElements.get(index1);
+		   Object object2 = fManifestElements.get(index2);
+		   fManifestElements.set(index1, object2);
+		   fManifestElements.set(index2, object1);
+	   }
+	   updateValue();
+   }
+
 
 
 }

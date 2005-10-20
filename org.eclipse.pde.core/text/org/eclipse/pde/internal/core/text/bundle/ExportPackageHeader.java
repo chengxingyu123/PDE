@@ -10,7 +10,6 @@
  *******************************************************************************/
 package org.eclipse.pde.internal.core.text.bundle;
 
-import java.util.Iterator;
 import java.util.Vector;
 
 import org.eclipse.osgi.util.ManifestElement;
@@ -20,26 +19,20 @@ public class ExportPackageHeader extends BasePackageHeader {
     
     private static final long serialVersionUID = 1L;
    
-    public ExportPackageHeader(String name, String value, IBundle bundle,
-			String lineDelimiter) {
+    public ExportPackageHeader(String name, String value, IBundle bundle, String lineDelimiter) {
 		super(name, value, bundle, lineDelimiter);
 	}
     
      protected PDEManifestElement createElement(ManifestElement element) {
-    	return new ExportPackageObject(this, getVersionAttribute());
+    	return new ExportPackageObject(this, element, getVersionAttribute());
     }
     
     public Vector getPackageNames() {
-        Vector vector = new Vector(fPackages.size());
-        Iterator iter = fPackages.keySet().iterator();
-        for (int i = 0; iter.hasNext(); i++) {
-            vector.add(iter.next().toString());
-        }
-        return vector;
+        return getElementNames();
     }
     
     public ExportPackageObject[] getPackages() {
-        return (ExportPackageObject[])fPackages.values().toArray(new ExportPackageObject[fPackages.size()]);
+        return (ExportPackageObject[])getElements();
     }
     
 }

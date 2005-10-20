@@ -22,7 +22,11 @@ public class RequireBundleHeader extends CompositeManifestHeader {
 	}
 	
 	public void addBundle(IPluginImport iimport) {
-		
+		addBundle(iimport.getId(), iimport.getVersion(), iimport.isReexported(), iimport.isOptional());
+	}
+	
+	public void addBundle(String id) {
+		addBundle(id, null, false, false);
 	}
 	
 	public void addBundle(String id, String version, boolean exported, boolean optional) {
@@ -30,15 +34,10 @@ public class RequireBundleHeader extends CompositeManifestHeader {
 	}
 	
 	public void removeBundle(String id) {
-		
+		removeManifestElement(id);		
 	}
 	
 	public void updateBundle(IPluginImport iimport) {
-		
 	}
 	
-	public void swap(String bundle1, String bundle2) {
-		
-	}
-
 }
