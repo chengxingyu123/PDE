@@ -359,7 +359,7 @@ public class BundlePluginBase extends PlatformObject implements IBundlePluginBas
 			libraries.set(index2, l1);
 			Object header = getManifestHeader(Constants.BUNDLE_CLASSPATH);
 			if (header instanceof BundleClasspathHeader) {
-				((BundleClasspathHeader)header).swap(l1.getName(), l2.getName());
+				((BundleClasspathHeader)header).swap(index1, index2);
 			}
 			model.fireModelObjectChanged(this, P_IMPORT_ORDER, l1, l2);
 		}		
@@ -500,7 +500,7 @@ public class BundlePluginBase extends PlatformObject implements IBundlePluginBas
 			imports.set(index2, import1);
 			Object header = getManifestHeader(Constants.REQUIRE_BUNDLE);
 			if (header instanceof RequireBundleHeader) {
-				((RequireBundleHeader)header).swap(import1.getId(), import2.getId());
+				((RequireBundleHeader)header).swap(index1, index2);
 			}
 			model.fireModelObjectChanged(this, P_IMPORT_ORDER, import1, import2);
 		}
@@ -661,8 +661,8 @@ public class BundlePluginBase extends PlatformObject implements IBundlePluginBas
 
 	public void updateImport(IPluginImport iimport) {
 		Object header = getManifestHeader(Constants.REQUIRE_BUNDLE);
-		if (header instanceof RequireBundleHeader)
-			((RequireBundleHeader)header).updateBundle(iimport);
+		if (header instanceof RequireBundleHeader && imports != null)
+			((RequireBundleHeader)header).updateBundle(imports.indexOf(iimport), iimport);
 	}
 
 }

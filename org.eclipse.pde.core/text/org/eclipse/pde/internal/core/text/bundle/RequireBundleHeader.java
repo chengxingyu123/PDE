@@ -11,7 +11,10 @@
 package org.eclipse.pde.internal.core.text.bundle;
 
 import org.eclipse.pde.core.plugin.IPluginImport;
+import org.eclipse.pde.internal.core.ICoreConstants;
+import org.eclipse.pde.internal.core.bundle.BundlePluginBase;
 import org.eclipse.pde.internal.core.ibundle.IBundle;
+import org.osgi.framework.Constants;
 
 public class RequireBundleHeader extends CompositeManifestHeader {
 
@@ -31,16 +34,42 @@ public class RequireBundleHeader extends CompositeManifestHeader {
 	
 	public void addBundle(String id, String version, boolean exported, boolean optional) {
 		PDEManifestElement element = new PDEManifestElement(this);
-		element.setValue(id);
-		
-		
+		updateBundle(element, id, version, exported, optional);		
+		addManifestElement(element);
 	}
 	
 	public void removeBundle(String id) {
 		removeManifestElement(id);		
 	}
 	
-	public void updateBundle(IPluginImport iimport) {
+	public void updateBundle(int index, IPluginImport iimport) {
+		PDEManifestElement element = getElementAt(index);
+		if (element != null) {
+			updateBundle(element, 
+					iimport.getId(), iimport.getVersion(),
+					iimport.isReexported(), iimport.isOptional());
+		}
+		updateValue();
+	}
+	
+	public void updateBundle(PDEManifestElement element, String id, String version, boolean exported, boolean optional) {
+		element.setValue(id);
+
+		int bundleManifestVersion = BundlePluginBase.getBundleManifestVersion(getBundle());
+		if (optional)
+			if (bundleManifestVersion > 1)
+				element.addDirective(Constants.RESOLUTION_DIRECTIVE, Constants.RESOLUTION_OPTIONAL); 
+			else
+				element.addAttribute(ICoreConstants.OPTIONAL_ATTRIBUTE, "true"); 
+		
+		if (exported)
+			if (bundleManifestVersion > 1)
+				element.addDirective(Constants.VISIBILITY_DIRECTIVE, Constants.VISIBILITY_REEXPORT); 
+			else
+				element.addAttribute(ICoreConstants.REPROVIDE_ATTRIBUTE, "true");
+
+		if (version != null && version.trim().length() > 0)
+			element.addAttribute(Constants.BUNDLE_VERSION_ATTRIBUTE, version.trim()); 		
 	}
 	
 }

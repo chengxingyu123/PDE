@@ -152,27 +152,23 @@ public class CompositeManifestHeader extends ManifestHeader {
        return vector;
    }
    
-   public void swap(String name1, String name2) {
+   public void swap(int index1, int index2) {
 	   if (fSort || fManifestElements == null)
 		   return;
-	   int index1 = -1;
-	   int index2 = -1;
-	   for (int i = 0; i < fManifestElements.size(); i++) {
-		   PDEManifestElement element = (PDEManifestElement)fManifestElements.get(i);
-		   if (name1.equals(element.getValue()))
-			   index1 = i;
-		   else if (name2.equals(element.getValue()))
-			   index2 = i;
-		   if (index1 > -1 && index2 > -1)
-			   break;
-	   }
-	   if (index1 > -1 && index2 > -1) {
+	   int size = fManifestElements.size();
+	   if (index1 >= 0 && index2 >= 0 && size > Math.max(index1, index2)) {
 		   Object object1 = fManifestElements.get(index1);
 		   Object object2 = fManifestElements.get(index2);
 		   fManifestElements.set(index1, object2);
 		   fManifestElements.set(index2, object1);
+		   updateValue();
 	   }
-	   updateValue();
+   }
+   
+   protected PDEManifestElement getElementAt(int index) {
+	   if (fManifestElements != null && fManifestElements.size() > index)
+		   return (PDEManifestElement)fManifestElements.get(index);
+	   return null;
    }
 
 

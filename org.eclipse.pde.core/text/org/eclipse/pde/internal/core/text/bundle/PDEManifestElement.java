@@ -18,10 +18,6 @@ import java.util.Hashtable;
 import org.eclipse.pde.internal.core.bundle.BundleObject;
 import org.osgi.framework.BundleException;
 
-/*
- * fHeader.getModel().fireModelObjectChanged(this, fHeader.getName(), old, fValue);
- */
-
 public class PDEManifestElement extends BundleObject {
 
 	private static final long serialVersionUID = 1L;
