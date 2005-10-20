@@ -12,9 +12,10 @@ package org.eclipse.pde.internal.core.bundle;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.osgi.service.resolver.*;
+import org.eclipse.osgi.util.ManifestElement;
 import org.eclipse.pde.internal.core.ibundle.*;
 import org.eclipse.pde.internal.core.plugin.*;
-import org.eclipse.pde.internal.core.text.bundle.ManifestHeader;
+import org.eclipse.pde.internal.core.text.bundle.FragmentHostHeader;
 import org.osgi.framework.*;
 
 public class BundleFragment extends BundlePluginBase implements IBundleFragment {
@@ -57,8 +58,8 @@ public class BundleFragment extends BundlePluginBase implements IBundleFragment 
 		if (bundle != null) {
 			String oldValue = getPluginId();
 			IManifestHeader header = getManifestHeader(Constants.FRAGMENT_HOST);
-			if (header != null) {
-				header.setFirstValueComponent(id);
+			if (header instanceof FragmentHostHeader) {
+				((FragmentHostHeader)header).setHostId(id);
 			} else {
 				bundle.setHeader(Constants.FRAGMENT_HOST, writeFragmentHost(id, getPluginVersion()));
 			}
@@ -74,8 +75,8 @@ public class BundleFragment extends BundlePluginBase implements IBundleFragment 
 		if (bundle != null) {
 			String oldValue = getPluginVersion();
 			IManifestHeader header = getManifestHeader(Constants.FRAGMENT_HOST);
-			if (header instanceof ManifestHeader) {
-				((ManifestHeader)header).setAttribute(Constants.BUNDLE_VERSION_ATTRIBUTE, version);
+			if (header instanceof FragmentHostHeader) {
+				((FragmentHostHeader)header).setHostRange(version);
 			} else {
 				bundle.setHeader(Constants.FRAGMENT_HOST, writeFragmentHost(getPluginId(), version));
 			}
@@ -101,9 +102,18 @@ public class BundleFragment extends BundlePluginBase implements IBundleFragment 
 	}
 	
 	private String getAttribute(String key, String attribute) {
-		Object header = getManifestHeader(key);
-		if (header instanceof ManifestHeader)
-			return ((ManifestHeader)header).getAttribute(attribute);
-		return null;
+		IBundle bundle = getBundle();
+		if (bundle == null)
+			return null;
+		String value = bundle.getHeader(key);
+		if (value == null)
+			return null;
+		try {
+			ManifestElement[] elements = ManifestElement.parseHeader(key, value);
+			if (elements.length > 0)
+				return elements[0].getAttribute(attribute);
+		} catch (BundleException e) {
+		}
+		return null;				
 	}
 }
