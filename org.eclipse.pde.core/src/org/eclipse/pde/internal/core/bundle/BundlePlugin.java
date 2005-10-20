@@ -15,6 +15,7 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.pde.core.plugin.IPluginImport;
 import org.eclipse.pde.internal.core.ICoreConstants;
 import org.eclipse.pde.internal.core.ibundle.*;
+import org.eclipse.pde.internal.core.text.bundle.BundleActivatorHeader;
 import org.osgi.framework.*;
 
 public class BundlePlugin extends BundlePluginBase implements IBundlePlugin {
@@ -40,10 +41,10 @@ public class BundlePlugin extends BundlePluginBase implements IBundlePlugin {
 			String old = getClassName();
 			String classHeader = getClassHeader();
 			IManifestHeader header = bundle.getManifestHeader(classHeader);
-			if (header == null)
-				bundle.setHeader(getClassHeader(), className);
+			if (header instanceof BundleActivatorHeader)
+				((BundleActivatorHeader)header).setClassName(className);
 			else
-				header.setFirstValueComponent(className);
+				bundle.setHeader(getClassHeader(), className);
 			model.fireModelObjectChanged(this, P_CLASS_NAME, old, className);
 		}
 	}

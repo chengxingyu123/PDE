@@ -13,7 +13,7 @@ package org.eclipse.pde.internal.core.text.bundle;
 import org.eclipse.pde.core.plugin.IPluginImport;
 import org.eclipse.pde.internal.core.ibundle.IBundle;
 
-public class RequireBundleHeader extends ManifestHeader {
+public class RequireBundleHeader extends CompositeManifestHeader {
 
 	private static final long serialVersionUID = 1L;
 

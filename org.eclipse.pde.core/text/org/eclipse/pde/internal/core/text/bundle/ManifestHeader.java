@@ -14,30 +14,38 @@ import java.io.PrintWriter;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.pde.internal.core.bundle.BundleObject;
+import org.eclipse.pde.internal.core.bundle.BundlePluginBase;
 import org.eclipse.pde.internal.core.ibundle.IBundle;
 import org.eclipse.pde.internal.core.ibundle.IManifestHeader;
-import org.osgi.framework.BundleException;
 
 public class ManifestHeader extends BundleObject implements IManifestHeader {
     private static final long serialVersionUID = 1L;
+    
     private int fOffset = -1;
 	private int fLength = -1;
     
 	protected String fName;
-    private IBundle fBundle;
-	private String fLineDelimiter;
-	protected ManifestElementList fManifestElements;
-	private String fValue;
+	protected String fValue;
+
+	protected IBundle fBundle;
+	protected String fLineDelimiter;
+	
+	public ManifestHeader() {
+	}
     
     public ManifestHeader(String name, String value, IBundle bundle, String lineDelimiter) {
         fName = name;
         fBundle = bundle;
         fLineDelimiter = lineDelimiter;
+        processValue(value);
         setModel(fBundle.getModel());
-        setValue(value);
     }
     
-    public String getLineLimiter() {
+    protected void processValue(String value) {
+    	fValue = value;
+	}
+
+	public String getLineLimiter() {
     	return fLineDelimiter;
     }
 
@@ -54,54 +62,14 @@ public class ManifestHeader extends BundleObject implements IManifestHeader {
 		return fName;
 	}
 	
-	public void updateValue() {
-		StringBuffer sb = new StringBuffer();
-		if (fManifestElements != null) {
-			for (int i = 0; i < fManifestElements.size(); i++) {	
-				if (i != 0) {
-					sb.append(","); //$NON-NLS-1$
-					sb.append(fLineDelimiter);
-					sb.append(" ");
-				}
-				sb.append(fManifestElements.get(i).write());
-			}
-		}
-		String old = fValue;
-		fValue = (sb.toString());
-		fBundle.getModel().fireModelObjectChanged(this, getName(), old, fValue);
-	}
-	
 	public String getValue() {
 		return fValue;
 	}
 	
 	public void setValue(String value) {
-        try {
-        	String old = fValue;
-        	fValue = value;
-        	org.eclipse.osgi.util.ManifestElement[] elements = 
-        		org.eclipse.osgi.util.ManifestElement.parseHeader(fName, value);
-        	fManifestElements = new ManifestElementList(elements.length);
-			for (int i = 0; i < elements.length; i++) {
-				new ManifestElement(this, elements[i]);
-			}
-			fBundle.getModel().fireModelObjectChanged(this, getName(), old, value);
-		} catch (BundleException e) {
-		}
-	}
-	
-	protected void addManifestElement(ManifestElement element) {
-		if (fManifestElements == null)
-			fManifestElements = new ManifestElementList(1);
-		fManifestElements.add(element);
-	}
-	
-	protected void removeManifestElement(ManifestElement element) {
-		if (!hasElements()) return;
-		for (int i = 0; i < fManifestElements.size(); i++) {
-			if  (fManifestElements.get(i).equals(element))
-				fManifestElements.remove(i);
-		}
+    	String old = fValue;
+    	fValue = value;
+		fBundle.getModel().fireModelObjectChanged(this, getName(), old, value);
 	}
 	
 	/* (non-Javadoc)
@@ -152,60 +120,17 @@ public class ManifestHeader extends BundleObject implements IManifestHeader {
         return fBundle;
     }
     
-    public void setAttribute(String key, String value) {
-    	if (hasElements())
-    		getFirstElement().setAttribute(key, new String[] {value});
-    }
-    public void setDirective(String key, String value) {
-    	if (hasElements())
-    		getFirstElement().setDirective(key, new String[] {value});
-    }
-    public String getAttribute(String key) {
-    	if (hasElements())
-    		return getFirstElement().getAttribute(key);
-    	return null;
-    }
-    public String getDirective(String key) {
-    	if (hasElements())
-    		return getFirstElement().getDirective(key);
-    	return null;
-    }
-    public String[] getAttributes(String key) {
-    	if (hasElements())
-    		return getFirstElement().getAttributes(key);
-    	return null;
-    }
-    public String[] getDirectives(String key) {
-    	if (hasElements())
-    		return getFirstElement().getDirectives(key);
-    	return null;
-    }
-    
-    private boolean hasElements() {
-    	return fManifestElements != null && fManifestElements.size() > 0;
-    }
-    
-    private ManifestElement getFirstElement() {
-    	return fManifestElements.get(0);
-    }
-
-	public String getKey() {
+ 	public String getKey() {
 		return getName();
 	}
 
 	public void setKey(String key) throws CoreException {
 		setName(key);
 	}
-
-	public String getFirstValueComponent() {
-		if (hasElements())
-			return getFirstElement().getValue();
-		return null;
+	
+	protected int getManifestVersion() {
+		return BundlePluginBase.getBundleManifestVersion(fBundle);
 	}
 
-	public void setFirstValueComponent(String value) {
-		if (hasElements())
-			getFirstElement().setValue(value);			
-	}
 }
 

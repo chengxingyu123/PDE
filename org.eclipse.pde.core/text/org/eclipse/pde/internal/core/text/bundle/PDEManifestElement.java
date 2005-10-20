@@ -15,23 +15,26 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Hashtable;
 
+import org.eclipse.pde.internal.core.bundle.BundleObject;
 import org.osgi.framework.BundleException;
 
 /*
  * fHeader.getModel().fireModelObjectChanged(this, fHeader.getName(), old, fValue);
  */
 
-public class ManifestElement {
+public class PDEManifestElement extends BundleObject {
 
+	private static final long serialVersionUID = 1L;
+	
 	protected String[] fValueComponents;
 	protected Hashtable fAttributes;
 	protected Hashtable fDirectives;
 	protected ManifestHeader fHeader;
 	
-	public ManifestElement(ManifestHeader header) {
+	public PDEManifestElement(ManifestHeader header) {
 		fHeader = header;
 	}
-	protected ManifestElement(ManifestHeader header,
+	protected PDEManifestElement(ManifestHeader header,
 			org.eclipse.osgi.util.ManifestElement manifestElement)  {
 		this(header);
 		init(manifestElement);

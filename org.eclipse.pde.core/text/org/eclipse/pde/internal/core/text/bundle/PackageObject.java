@@ -12,16 +12,17 @@ package org.eclipse.pde.internal.core.text.bundle;
 
 import java.util.Enumeration;
 
+import org.eclipse.osgi.util.ManifestElement;
 import org.eclipse.pde.internal.core.bundle.BundleObject;
 
-public class PackageObject extends BundleObject {
+public class PackageObject extends PDEManifestElement {
 
     private static final long serialVersionUID = 1L;
 
     private String fVersionAttribute;
     private String fName;
     private String fVersion;
-    private transient ManifestElement fElement;
+    private transient PDEManifestElement fElement;
 
     private ManifestHeader fHeader;
     
@@ -132,7 +133,7 @@ public class PackageObject extends BundleObject {
         return fHeader;
     }
     
-    public ManifestElement getManifestElement() {
+    public PDEManifestElement getManifestElement() {
     	return fElement;
     }
 

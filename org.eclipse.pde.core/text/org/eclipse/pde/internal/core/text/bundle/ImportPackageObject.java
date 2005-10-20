@@ -27,7 +27,7 @@ public class ImportPackageObject extends PackageObject {
         return null;
     }
     
-    public ImportPackageObject(ManifestHeader header, ManifestElement element, String versionAttribute) {
+    public ImportPackageObject(ManifestHeader header, PDEManifestElement element, String versionAttribute) {
         super(header, element, versionAttribute);
         fOptional = Constants.RESOLUTION_OPTIONAL.equals(element.getDirective(Constants.RESOLUTION_DIRECTIVE));
     }

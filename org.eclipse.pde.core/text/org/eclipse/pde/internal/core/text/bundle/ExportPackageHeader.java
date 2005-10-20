@@ -13,6 +13,7 @@ package org.eclipse.pde.internal.core.text.bundle;
 import java.util.Iterator;
 import java.util.Vector;
 
+import org.eclipse.osgi.util.ManifestElement;
 import org.eclipse.pde.internal.core.ibundle.IBundle;
 
 public class ExportPackageHeader extends BasePackageHeader {
@@ -24,12 +25,8 @@ public class ExportPackageHeader extends BasePackageHeader {
 		super(name, value, bundle, lineDelimiter);
 	}
     
-    protected void processValue() {
-        for (int i = 0; i < fManifestElements.size(); i++) {
-            ExportPackageObject p = 
-            	new ExportPackageObject(this, fManifestElements.get(i), getVersionAttribute());
-            fPackages.put(p.getName(), p);
-        }
+     protected PDEManifestElement createElement(ManifestElement element) {
+    	return new ExportPackageObject(this, getVersionAttribute());
     }
     
     public Vector getPackageNames() {

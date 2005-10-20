@@ -12,20 +12,20 @@ package org.eclipse.pde.internal.core.text.bundle;
 
 import org.eclipse.pde.internal.core.ibundle.IBundle;
 
-public class LazyStartHeader extends SingleManifestHeader {
+public class BundleLocalizationHeader extends SingleManifestHeader {
 
 	private static final long serialVersionUID = 1L;
 
-	public LazyStartHeader(String name, String value, IBundle bundle, String lineDelimiter) {
+	public BundleLocalizationHeader(String name, String value, IBundle bundle, String lineDelimiter) {
 		super(name, value, bundle, lineDelimiter);
 	}
-
-	public boolean isLazyStart() {
-		return "true".equals(getMainComponent());
+	
+	public void setLocalization(String localization) {
+		setMainComponent(localization);
 	}
 	
-	public void setLazyStart(boolean lazy) {
-		setMainComponent(Boolean.toString(lazy));
+	public String getLocalization() {
+		return getMainComponent();
 	}
 
 }

@@ -14,7 +14,7 @@ import java.util.ArrayList;
 
 import org.eclipse.pde.internal.core.ibundle.IBundle;
 
-public class RequiredExecutionEnvironmentHeader extends ManifestHeader {
+public class RequiredExecutionEnvironmentHeader extends CompositeManifestHeader {
     
     private static final long serialVersionUID = 1L;
     public static final int TOTAL_JRES = 7;
@@ -41,8 +41,8 @@ public class RequiredExecutionEnvironmentHeader extends ManifestHeader {
     	return (String[])J2MES.toArray(new String[J2MES.size()]);
     }
     
-    private ManifestElement fMinJRE;
-    private ManifestElement fMinJ2ME;
+    private PDEManifestElement fMinJRE;
+    private PDEManifestElement fMinJ2ME;
     
     public RequiredExecutionEnvironmentHeader(String name, String value, IBundle bundle,
 			String lineDelimiter) {
@@ -93,7 +93,7 @@ public class RequiredExecutionEnvironmentHeader extends ManifestHeader {
     	update(fMinJ2ME, newValue);
     }
     
-    private void update(ManifestElement element, String newValue) {
+    private void update(PDEManifestElement element, String newValue) {
     	if (element != null && newValue.equals(element.getValue()))
     		return;
     	String old = null;
@@ -104,7 +104,7 @@ public class RequiredExecutionEnvironmentHeader extends ManifestHeader {
     		}
     		old = getValue();
     	} else
-	    	element = new ManifestElement(this);
+	    	element = new PDEManifestElement(this);
     	element.setValue(newValue); //$NON-NLS-1$
     	firePropertyChanged(this, fName, old, getValue());
     }

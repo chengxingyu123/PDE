@@ -10,11 +10,10 @@
  *******************************************************************************/
 package org.eclipse.pde.internal.core.text.bundle;
 
-import org.eclipse.pde.core.plugin.IPluginLibrary;
 import org.eclipse.pde.internal.core.ibundle.IBundle;
 
 
-public class BundleClasspathHeader extends ManifestHeader {
+public class BundleClasspathHeader extends CompositeManifestHeader {
 	
 	private static final long serialVersionUID = 1L;
 
@@ -23,7 +22,7 @@ public class BundleClasspathHeader extends ManifestHeader {
 	}
 	
 	public void addLibrary(String name) {
-		ManifestElement element = new ManifestElement(this);
+		PDEManifestElement element = new PDEManifestElement(this);
 		element.setValue(name);
 		addManifestElement(element);
 	}
@@ -31,7 +30,7 @@ public class BundleClasspathHeader extends ManifestHeader {
 	public void removeLibrary(String name) {
 		if (fManifestElements != null) {
 			for (int i = 0; i < fManifestElements.size(); i++) {
-				ManifestElement element = (ManifestElement)fManifestElements.get(i);
+				PDEManifestElement element = (PDEManifestElement)fManifestElements.get(i);
 				if (name.equals(element.getValue()))
 					removeManifestElement(element);
 			}
@@ -39,10 +38,6 @@ public class BundleClasspathHeader extends ManifestHeader {
 	}
 	
 	public void swap(String library1, String library2) {
-		
-	}
-	
-	public void updateLibrary(IPluginLibrary library) {
 		
 	}
 

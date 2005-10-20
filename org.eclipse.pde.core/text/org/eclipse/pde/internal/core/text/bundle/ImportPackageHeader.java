@@ -16,12 +16,11 @@ public class ImportPackageHeader extends BasePackageHeader {
 
     private static final long serialVersionUID = 1L;
 
-    public ImportPackageHeader(String name, String value, IBundle bundle,
-			String lineDelimiter) {
+    public ImportPackageHeader(String name, String value, IBundle bundle, String lineDelimiter) {
 		super(name, value, bundle, lineDelimiter);
 	}
 
-    protected void processValue() {
+    protected void processValue(String value) {
        for (int i = 0; i < fManifestElements.size(); i++) {
 			ImportPackageObject p = 
 				new ImportPackageObject(this, fManifestElements.get(i), getVersionAttribute());

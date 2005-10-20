@@ -10,22 +10,23 @@
  *******************************************************************************/
 package org.eclipse.pde.internal.core.text.bundle;
 
+import org.eclipse.osgi.service.resolver.VersionRange;
 import org.eclipse.pde.internal.core.ibundle.IBundle;
 
-public class LazyStartHeader extends SingleManifestHeader {
+public class BundleVersionHeader extends SingleManifestHeader {
 
 	private static final long serialVersionUID = 1L;
 
-	public LazyStartHeader(String name, String value, IBundle bundle, String lineDelimiter) {
+	public BundleVersionHeader(String name, String value, IBundle bundle, String lineDelimiter) {
 		super(name, value, bundle, lineDelimiter);
 	}
-
-	public boolean isLazyStart() {
-		return "true".equals(getMainComponent());
+	
+	public void setVersionRange(String range) {
+		setMainComponent(range);
 	}
 	
-	public void setLazyStart(boolean lazy) {
-		setMainComponent(Boolean.toString(lazy));
+	public VersionRange getVersionRange() {
+		return new VersionRange(getMainComponent());
 	}
 
 }

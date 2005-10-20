@@ -25,12 +25,7 @@ public interface IManifestHeader extends IDocumentKey {
 	 * Returns the header value
 	 */	
 	String getValue();
-	
-	
-	String getFirstValueComponent();
-	
-	void setFirstValueComponent(String value);
-	
+		
 	/**
 	 * Sets the name of the header
 	 * This method will throw a CoreException if the model

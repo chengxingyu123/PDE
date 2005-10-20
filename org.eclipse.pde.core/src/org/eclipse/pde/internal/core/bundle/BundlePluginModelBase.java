@@ -133,8 +133,6 @@ public abstract class BundlePluginModelBase extends AbstractModel
 		if (objects!= null && objects.length > 0) {
 			if (objects[0] instanceof IPluginImport) {
 				fBundlePluginBase.updateImport((IPluginImport)objects[0]);				
-			} else if (objects[0] instanceof IPluginLibrary) {
-				fBundlePluginBase.updateLibrary((IPluginLibrary)objects[0]);
 			}
 		}
 	}

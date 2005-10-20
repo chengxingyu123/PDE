@@ -14,6 +14,7 @@ import java.util.Iterator;
 import java.util.TreeMap;
 
 import org.eclipse.jdt.core.IPackageFragment;
+import org.eclipse.osgi.util.ManifestElement;
 import org.eclipse.pde.core.IModelChangedEvent;
 
 public class ExportPackageObject extends PackageObject {
@@ -27,7 +28,7 @@ public class ExportPackageObject extends PackageObject {
 
     private TreeMap fFriends = new TreeMap();
      
-    public ExportPackageObject(ManifestHeader header, ManifestElement element, String versionAttribute) {
+    public ExportPackageObject(ManifestHeader header, String versionAttribute) {
         super(header, element, versionAttribute);
         processFriends(element.getDirective(FRIENDS));
         fInternal = "true".equals(element.getDirective(INTERNAL)) || fFriends.size() > 0; //$NON-NLS-1$
