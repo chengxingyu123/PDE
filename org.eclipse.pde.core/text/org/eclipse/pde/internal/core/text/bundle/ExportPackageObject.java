@@ -24,61 +24,42 @@ public class ExportPackageObject extends PackageObject {
     
     private static final long serialVersionUID = 1L;
     
-    private boolean fInternal;
-
     private TreeMap fFriends = new TreeMap();
      
     public ExportPackageObject(ManifestHeader header, ManifestElement element, String versionAttribute) {
         super(header, element, versionAttribute);
-        processFriends(element.getDirective(FRIENDS));
-        fInternal = "true".equals(element.getDirective(INTERNAL)) || fFriends.size() > 0; //$NON-NLS-1$
+        processFriends();
     }
     
     public ExportPackageObject(ManifestHeader header, IPackageFragment fragment, String versionAttribute) {
         super(header, fragment.getElementName(), null, versionAttribute);
     }
     
-    private void processFriends(String value) {
-        if (value != null) {
-            String[] friends = org.eclipse.osgi.util.ManifestElement.getArrayFromList(value);
-            for (int i = 0; i < friends.length; i++) {
-                PackageFriend friend = new PackageFriend(this, friends[i]);
-                fFriends.put(friend.getName(), friend);
-            }
+    protected void processFriends() {
+    	String[] friends = getDirectives(FRIENDS);
+        for (int i = 0; i < friends.length; i++) {
+            fFriends.put(friends[i], new PackageFriend(this, friends[i]));
         }
     }
 
-    protected void appendSupportedAttributes(StringBuffer buffer) {
-       super.appendSupportedAttributes(buffer);
-       if (!fInternal)
-    	   return;
-       
-       if (fInternal && fFriends.size() == 0) {
-           buffer.append(";"); //$NON-NLS-1$
-           buffer.append(INTERNAL);
-           buffer.append(":=true"); //$NON-NLS-1$
-       }
-       if (fFriends.size() > 0) {
-           buffer.append(";"); //$NON-NLS-1$
-           buffer.append(FRIENDS);
-           buffer.append(":=\""); //$NON-NLS-1$
-           Iterator iter = fFriends.keySet().iterator();
-           while (iter.hasNext()) {
-               buffer.append(iter.next().toString());
-               if (iter.hasNext())
-                   buffer.append(","); //$NON-NLS-1$
-           }
-           buffer.append("\""); //$NON-NLS-1$
-       }
-    }
-
     public boolean isInternal() {
-        return fInternal;
+        return "true".equals(getDirective(INTERNAL)) || fFriends.size() == 0;
     }
 
     public void setInternal(boolean internal) {
-        boolean old = fInternal;
-        fInternal = internal;
+    	boolean old = isInternal();
+    	if (!internal) {
+    		setDirective(INTERNAL, null);
+    		setDirective(FRIENDS, null);
+    	} else {
+    		if (fFriends.size() == 0)
+    			setDirective(INTERNAL, "true");
+    		else {
+    			Iterator iter = fFriends.keySet().iterator();
+    			while (iter.hasNext())
+    				addDirective(FRIENDS, iter.next().toString());
+    		}
+    	}
         firePropertyChanged(this, INTERNAL, Boolean.valueOf(old), Boolean.valueOf(internal));
     }
     
@@ -88,11 +69,20 @@ public class ExportPackageObject extends PackageObject {
     
     public void addFriend(PackageFriend friend) {
         fFriends.put(friend.getName(), friend);
+        addDirective(FRIENDS, friend.getName());
         fireStructureChanged(friend, IModelChangedEvent.INSERT);        
     }
     
     public void removeFriend(PackageFriend friend) {
         fFriends.remove(friend.getName());
+        setDirective(FRIENDS, null);
+        if (fFriends.size() == 0)
+        	setDirective(INTERNAL, "true");
+        else {
+	        Iterator iter = fFriends.keySet().iterator();
+	        while (iter.hasNext())
+	        	addDirective(FRIENDS, iter.next().toString());
+        }
         fireStructureChanged(friend, IModelChangedEvent.REMOVE);       
     }
     
@@ -100,12 +90,8 @@ public class ExportPackageObject extends PackageObject {
         return fFriends.containsKey(name);
     }
     
-    protected boolean skipDirective(String directive) {
-        return INTERNAL.equals(directive) || FRIENDS.equals(directive);
-    }
-    
     public boolean hasSameVisibility(ExportPackageObject object) {
-    	if (object.fInternal != fInternal)
+    	if (object.isInternal() != isInternal())
     		return false;
     	
     	if (fFriends.size() != object.fFriends.size())

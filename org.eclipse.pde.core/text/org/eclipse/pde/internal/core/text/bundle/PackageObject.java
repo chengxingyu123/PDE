@@ -10,10 +10,7 @@
  *******************************************************************************/
 package org.eclipse.pde.internal.core.text.bundle;
 
-import java.util.Enumeration;
-
 import org.eclipse.osgi.util.ManifestElement;
-import org.eclipse.pde.internal.core.bundle.BundleObject;
 
 public class PackageObject extends PDEManifestElement {
 
@@ -22,21 +19,17 @@ public class PackageObject extends PDEManifestElement {
     private String fVersionAttribute;
     private String fName;
     private String fVersion;
-    private transient PDEManifestElement fElement;
-
-    private ManifestHeader fHeader;
     
     public PackageObject(ManifestHeader header, ManifestElement element, String versionAttribute) {
-        fHeader = header;
-        fVersionAttribute = versionAttribute;
+    	super(header, element);
+    	fVersionAttribute = versionAttribute;
         fName = element.getValue();
         fVersion = element.getAttribute(fVersionAttribute);
-        fElement = element;
         setModel(fHeader.getBundle().getModel());
     }
     
     public PackageObject(ManifestHeader header, String name, String version, String versionAttribute) {
-        fHeader = header;
+        super(header);
         fVersion = version;
         fVersionAttribute = versionAttribute;
         fName = name.length() > 0 ? name : "."; //$NON-NLS-1$
@@ -57,60 +50,6 @@ public class PackageObject extends PDEManifestElement {
         return buffer.toString();
     }
     
-    public String write() {
-        StringBuffer buffer = new StringBuffer();
-        buffer.append(fName);
-        
-        appendSupportedAttributes(buffer);
-
-        if (fElement == null)
-            return buffer.toString();
-        
-        Enumeration attrs = fElement.getKeys();
-        if (attrs != null) {
-            while (attrs.hasMoreElements()) {
-                String attr = attrs.nextElement().toString();
-                if (attr.equals(fVersionAttribute))
-                    continue;
-                buffer.append(";"); //$NON-NLS-1$
-                buffer.append(attr);
-                buffer.append("=\""); //$NON-NLS-1$
-                buffer.append(fElement.getAttribute(attr));
-                buffer.append("\""); //$NON-NLS-1$
-            }
-        }
-        
-        Enumeration directives = fElement.getDirectiveKeys();
-        if (directives != null) {
-            while (directives.hasMoreElements()) {
-                String directive = directives.nextElement().toString();
-                if (skipDirective(directive))
-                    continue;
-                buffer.append(";"); //$NON-NLS-1$
-                buffer.append(directive);
-                buffer.append(":="); //$NON-NLS-1$
-                buffer.append("\""); //$NON-NLS-1$
-                buffer.append(fElement.getDirective(directive));
-                buffer.append("\""); //$NON-NLS-1$
-            }
-        }
-        return buffer.toString();
-    }
-    
-    protected void appendSupportedAttributes(StringBuffer buffer) {
-        if (fVersion != null && fVersion.length() > 0) {
-            buffer.append(";"); //$NON-NLS-1$
-            buffer.append(fVersionAttribute);
-            buffer.append("=\""); //$NON-NLS-1$
-            buffer.append(fVersion.trim());
-            buffer.append("\""); //$NON-NLS-1$
-        }
-    }
-    
-    protected boolean skipDirective(String directive) {
-        return false;
-    }
-
     public String getVersion() {
         return fVersion;
     }
@@ -127,14 +66,6 @@ public class PackageObject extends PDEManifestElement {
         String old = fVersion;
         fVersion = version;
         firePropertyChanged(this, fVersionAttribute, old, version);
-    }
-
-    public ManifestHeader getHeader() {
-        return fHeader;
-    }
-    
-    public PDEManifestElement getManifestElement() {
-    	return fElement;
     }
 
 }

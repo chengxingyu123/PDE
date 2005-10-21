@@ -162,8 +162,10 @@ public class PDEManifestElement extends BundleObject {
     }
     
     public void setValue(String value) {
-    	if (value == null)
-    		fHeader.removeElement(this);
+    	if (value == null) {
+    		setValueComponents(new String[0]);
+    		return;
+    	}
     	try {
 			ManifestElement[] elements = ManifestElement.parseHeader(fHeader.fName, value);
 			if (elements != null && elements.length > 0)
@@ -233,4 +235,9 @@ public class PDEManifestElement extends BundleObject {
     		}
     	}
     }
+    
+    public ManifestHeader getHeader() {
+        return fHeader;
+    }
+   
 }
