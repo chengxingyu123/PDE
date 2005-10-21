@@ -31,8 +31,7 @@ public class PDEManifestElement extends BundleObject {
 	public PDEManifestElement(ManifestHeader header) {
 		fHeader = header;
 	}
-	protected PDEManifestElement(ManifestHeader header,
-			org.eclipse.osgi.util.ManifestElement manifestElement)  {
+	protected PDEManifestElement(ManifestHeader header, ManifestElement manifestElement) {
 		this(header);
 		init(manifestElement);
 	}
@@ -160,23 +159,20 @@ public class PDEManifestElement extends BundleObject {
     			values.add(tokens[i]);
     		table.put(key, values);
     	}
-    	fHeader.updateValue();
     }
     
     public void setValue(String value) {
     	if (value == null)
-    		fHeader.removeManifestElement(this);
+    		fHeader.removeElement(this);
     	try {
-			org.eclipse.osgi.util.ManifestElement[] elements = 
-				org.eclipse.osgi.util.ManifestElement.parseHeader(fHeader.fName, value);
+			ManifestElement[] elements = ManifestElement.parseHeader(fHeader.fName, value);
 			if (elements != null && elements.length > 0)
 				init(elements[0]);
 		} catch (BundleException e) {
 		}
-		fHeader.updateValue();
     }
     
-    private void init(org.eclipse.osgi.util.ManifestElement manifestElement) {
+    private void init(ManifestElement manifestElement) {
 		setValueComponents(manifestElement.getValueComponents());
 		Hashtable attributes = new Hashtable();
 		Enumeration attKeys = manifestElement.getKeys();

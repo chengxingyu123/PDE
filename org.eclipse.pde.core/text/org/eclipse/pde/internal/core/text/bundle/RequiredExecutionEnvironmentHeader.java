@@ -12,7 +12,9 @@ package org.eclipse.pde.internal.core.text.bundle;
 
 import java.util.ArrayList;
 
+import org.eclipse.osgi.util.ManifestElement;
 import org.eclipse.pde.internal.core.ibundle.IBundle;
+import org.osgi.framework.BundleException;
 
 public class RequiredExecutionEnvironmentHeader extends CompositeManifestHeader {
     
@@ -49,29 +51,32 @@ public class RequiredExecutionEnvironmentHeader extends CompositeManifestHeader 
 	}
     
     protected void processValue(String value) {
-    	PDEManifestElement[] elements = getElements();
-    	int minJRE = -1;
-    	int minJ2ME = -1;
-    	for (int i = 0; i < elements.length; i++) {
-    		String current = elements[i].getValue();
-    		if (current == null)
-    			continue;
-    		int index = JRES.indexOf(current);
-    		if (index > -1) {
-    			if (minJRE == -1)
-    				minJRE = index;
-    			else if (minJRE > index)
-    				minJRE = index;
-    		} else {
-    			index = J2MES.indexOf(current);
-    			if (minJ2ME == -1)
-    				minJ2ME = index;
-    			else if (minJ2ME > index)
-    				minJ2ME = index;
-    		}
-    	}
-    	if (minJRE > -1)
-    		fMinJRE = getElementAt(minJRE);
+		try {
+			ManifestElement[] elements = ManifestElement.parseHeader(fName, value);
+			ArrayList extra = new ArrayList();
+			for (int i = 0; i < elements.length; i++) {
+				String name = elements[i].getValue();
+				int index = JRES.indexOf(name);
+				if (index == -1) {
+					index = J2MES.indexOf(name);
+					if (index > -1) {
+						if (fMinJ2ME == null || index < J2MES.indexOf(fMinJ2ME.getValue()))
+							fMinJ2ME = createElement(elements[i]);
+					}
+				} else if (fMinJRE == null || index < JRES.indexOf(fMinJRE.getValue())) {
+					fMinJRE = createElement(elements[i]);
+				}			
+				if (index == -1)
+					extra.add(createElement(elements[i]));
+			}
+			if (fMinJRE != null)
+				addManifestElement(fMinJRE);
+			if (fMinJ2ME != null)
+				addManifestElement(fMinJ2ME);
+			for (int i = 0; i < extra.size(); i++)
+				addManifestElement((PDEManifestElement)extra.get(i));
+		} catch (BundleException e) {
+		}
     }
     
     public String getMinimumJRE() {
@@ -93,16 +98,19 @@ public class RequiredExecutionEnvironmentHeader extends CompositeManifestHeader 
     private void update(PDEManifestElement element, String newValue) {
     	if (element != null && newValue.equals(element.getValue()))
     		return;
-    	String old = null;
-    	if (element != null) {
-    		if (newValue == null || newValue.equals("")) {
-    			element.setValue(null);
-    			return;
+    	
+    	if (newValue == null || newValue.length() == 0) {
+    		if (element != null) {
+    			removeManifestElement(element);
+    			element = null;
     		}
-    		old = getValue();
-    	} else
-	    	element = new PDEManifestElement(this);
-    	element.setValue(newValue); //$NON-NLS-1$
-    	firePropertyChanged(this, fName, old, getValue());
-    }
+    	} else {
+    		if (element == null) {
+    			element = new PDEManifestElement(this);
+    			addManifestElement(element);
+    		}
+    		element.setValue(newValue);
+    	}
+    	updateValue();
+     }
 }

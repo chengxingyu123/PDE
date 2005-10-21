@@ -40,14 +40,32 @@ public class BundleModelFactory implements IBundleModelFactory {
         else
         	newLine = System.getProperty("line.separator");
         
-        if (key.equals(Constants.EXPORT_PACKAGE) || key.equals(ICoreConstants.PROVIDE_PACKAGE)) {
- 			header = new ExportPackageHeader(key, value, bundle, newLine);
-        } else if (key.equals(Constants.IMPORT_PACKAGE)){
- 			header = new ImportPackageHeader(key, value, bundle, newLine);
+        if (key.equals(Constants.BUNDLE_ACTIVATOR)) {
+ 			header = new BundleActivatorHeader(key, value, bundle, newLine);
+        } else if (key.equals(Constants.BUNDLE_LOCALIZATION)){
+ 			header = new BundleLocalizationHeader(key, value, bundle, newLine);
+        } else if (key.equals(Constants.BUNDLE_NAME)) {
+        	header = new BundleNameHeader(key, value, bundle, newLine);
         } else if (key.equals(Constants.BUNDLE_REQUIREDEXECUTIONENVIRONMENT)) {
         	header = new RequiredExecutionEnvironmentHeader(key, value, bundle, newLine);
+        } else if (key.equals(Constants.BUNDLE_SYMBOLICNAME)) {
+        	header = new BundleSymbolicNameHeader(key, value, bundle, newLine);
+        } else if (key.equals(Constants.BUNDLE_VENDOR)) {
+        	header = new BundleVendorHeader(key, value, bundle, newLine);
+        } else if (key.equals(Constants.BUNDLE_VERSION)) {
+        	header = new BundleVersionHeader(key, value, bundle, newLine);
+        } else if (key.equals(Constants.BUNDLE_CLASSPATH)) {
+        	header = new BundleClasspathHeader(key, value, bundle, newLine);
         } else if (key.equals(ICoreConstants.ECLIPSE_LAZYSTART) || key.equals(ICoreConstants.ECLIPSE_AUTOSTART)) {
         	header = new LazyStartHeader(key, value, bundle, newLine);
+        } else if (key.equals(Constants.EXPORT_PACKAGE) || key.equals(ICoreConstants.PROVIDE_PACKAGE)) {
+ 			header = new ExportPackageHeader(key, value, bundle, newLine);
+        } else if (key.equals(Constants.FRAGMENT_HOST)) {
+        	header = new FragmentHostHeader(key, value, bundle, newLine);
+        } else if (key.equals(Constants.IMPORT_PACKAGE)){
+ 			header = new ImportPackageHeader(key, value, bundle, newLine);
+        } else if (key.equals(Constants.REQUIRE_BUNDLE)) {
+        	header = new RequireBundleHeader(key, value, bundle, newLine);
         } else {
             header = new ManifestHeader(key, value, bundle, newLine);
         }
