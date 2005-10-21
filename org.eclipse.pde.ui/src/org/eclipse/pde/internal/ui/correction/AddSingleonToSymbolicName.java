@@ -12,8 +12,10 @@ package org.eclipse.pde.internal.ui.correction;
 
 import org.eclipse.pde.internal.core.ICoreConstants;
 import org.eclipse.pde.internal.core.ibundle.IBundle;
+import org.eclipse.pde.internal.core.ibundle.IManifestHeader;
 import org.eclipse.pde.internal.core.text.bundle.Bundle;
 import org.eclipse.pde.internal.core.text.bundle.BundleModel;
+import org.eclipse.pde.internal.core.text.bundle.BundleSymbolicNameHeader;
 import org.eclipse.pde.internal.core.text.bundle.ManifestHeader;
 import org.eclipse.pde.internal.ui.PDEUIMessages;
 import org.osgi.framework.Constants;
@@ -43,13 +45,10 @@ public class AddSingleonToSymbolicName extends ManifestHeaderErrorResolution {
 		IBundle bundle = model.getBundle();
 		if (bundle instanceof Bundle) {
 			Bundle bun = (Bundle)bundle;
-			ManifestHeader header = (ManifestHeader)bun.getManifestHeader(Constants.BUNDLE_SYMBOLICNAME);
-			if (header == null)
-				return;
-			header.setDirective(Constants.SINGLETON_DIRECTIVE, fisDirective ?
-					Boolean.toString(true) : null);
-			header.setAttribute(ICoreConstants.SINGLETON_ATTRIBUTE, fisDirective ?
-					null : Boolean.toString(true));
+			IManifestHeader header = (ManifestHeader)bun.getManifestHeader(Constants.BUNDLE_SYMBOLICNAME);
+			if (header instanceof BundleSymbolicNameHeader) {
+				((BundleSymbolicNameHeader)header).setSingleton(true);
+			}
 		}
 	}
 }
