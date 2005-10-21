@@ -13,7 +13,9 @@ package org.eclipse.pde.internal.core.text.bundle;
 
 import java.util.ArrayList;
 import java.util.Enumeration;
-import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.Set;
+import java.util.TreeMap;
 
 import org.eclipse.osgi.util.ManifestElement;
 import org.eclipse.pde.internal.core.bundle.BundleObject;
@@ -24,8 +26,8 @@ public class PDEManifestElement extends BundleObject {
 	private static final long serialVersionUID = 1L;
 	
 	protected String[] fValueComponents;
-	protected Hashtable fAttributes;
-	protected Hashtable fDirectives;
+	protected TreeMap fAttributes;
+	protected TreeMap fDirectives;
 	protected ManifestHeader fHeader;
 	
 	public PDEManifestElement(ManifestHeader header) {
@@ -52,7 +54,7 @@ public class PDEManifestElement extends BundleObject {
 		return getTableValue(fAttributes, key);
 	}
 	
-	public Enumeration getKeys() {
+	public Set getKeys() {
 		return getTableKeys(fAttributes);
 	}
 
@@ -64,7 +66,7 @@ public class PDEManifestElement extends BundleObject {
 		setTableValue(fAttributes, key, value);
 	}
 	
-	protected void setAttributes(Hashtable attributes) {
+	protected void setAttributes(TreeMap attributes) {
 		fAttributes = attributes;
 	}
 	
@@ -76,7 +78,7 @@ public class PDEManifestElement extends BundleObject {
 		return getTableValues(fDirectives, key);
 	}
 
-	public Enumeration getDirectiveKeys() {
+	public Set getDirectiveKeys() {
 		return getTableKeys(fDirectives);
 	}
 
@@ -88,11 +90,11 @@ public class PDEManifestElement extends BundleObject {
 		setTableValue(fDirectives, key, value);
 	}
 	
-	protected void setDirectives(Hashtable directives) {
+	protected void setDirectives(TreeMap directives) {
 		fDirectives = directives;
 	}
 
-	private String getTableValue(Hashtable table, String key) {
+	private String getTableValue(TreeMap table, String key) {
 		if (table == null)
 			return null;
 		Object result = table.get(key);
@@ -106,7 +108,7 @@ public class PDEManifestElement extends BundleObject {
 		return (String) valueList.get(valueList.size() - 1);
 	}
 	
-	private String[] getTableValues(Hashtable table, String key) {
+	private String[] getTableValues(TreeMap table, String key) {
 		if (table == null)
 			return null;
 		Object result = table.get(key);
@@ -118,15 +120,15 @@ public class PDEManifestElement extends BundleObject {
 		return (String[]) valueList.toArray(new String[valueList.size()]);
 	}
 
-	private Enumeration getTableKeys(Hashtable table) {
+	private Set getTableKeys(TreeMap table) {
 		if (table == null)
 			return null;
-		return table.keys();
+		return table.keySet();
 	}
 
-	private Hashtable addTableValue(Hashtable table, String key, String value) {
+	private TreeMap addTableValue(TreeMap table, String key, String value) {
 		if (table == null) {
-			table = new Hashtable(7);
+			table = new TreeMap();
 		}
 		Object curValue = table.get(key);
 		if (curValue != null) {
@@ -146,9 +148,9 @@ public class PDEManifestElement extends BundleObject {
 		return table;
 	}
 	
-    private void setTableValue(Hashtable table, String key, String value) {
+    private void setTableValue(TreeMap table, String key, String value) {
     	if (table == null) {
-			table = new Hashtable(7);
+			table = new TreeMap();
 		}
     	if (value == null || value.trim().length() == 0)
     		table.remove(key);
@@ -176,13 +178,13 @@ public class PDEManifestElement extends BundleObject {
     
     private void init(ManifestElement manifestElement) {
 		setValueComponents(manifestElement.getValueComponents());
-		Hashtable attributes = new Hashtable();
+		TreeMap attributes = new TreeMap();
 		Enumeration attKeys = manifestElement.getKeys();
 		while (attKeys != null && attKeys.hasMoreElements()) {
 			String attKey = (String)attKeys.nextElement();
 			attributes.put(attKey, manifestElement.getAttributes(attKey));
 		}
-		Hashtable directives = new Hashtable();
+		TreeMap directives = new TreeMap();
 		Enumeration dirKeys = manifestElement.getDirectiveKeys();
 		while (dirKeys != null && dirKeys.hasMoreElements()) {
 			String dirKey = (String)dirKeys.nextElement();
@@ -210,28 +212,28 @@ public class PDEManifestElement extends BundleObject {
     	return sb.toString();
     }
     
-    private void appendValuesToBuffer(StringBuffer sb, Hashtable table) {
+    private void appendValuesToBuffer(StringBuffer sb, TreeMap table) {
     	if (table == null)
     		return;
-    	Enumeration dkeys = table.keys();
-    	while (dkeys.hasMoreElements()) {
-    		String dkey = (String)dkeys.nextElement();
+    	Iterator dkeys = table.keySet().iterator();
+    	while (dkeys.hasNext()) {
+    		String dkey = (String)dkeys.next();
     		Object value = table.get(dkey);
     		if (value == null)
     			continue;
-    		sb.append("; "); //$NON-NLS-1$
+    		sb.append(";"); //$NON-NLS-1$
 			sb.append(dkey);
 			sb.append(table.equals(fDirectives) ? ":=" : "="); //$NON-NLS-1$ //$NON-NLS-2$
     		if (value instanceof String) {
     			sb.append(value);
     		} else if (value instanceof ArrayList) {
     			ArrayList values = (ArrayList)value;
-	    		if (values.size() > 0) sb.append("\""); //$NON-NLS-1$
+    			if (values.size() > 1) sb.append("\"");
 	    		for (int i = 0; i < values.size(); i++) {
-	    			if (i != 0) sb.append(", "); //$NON-NLS-1$
+	    			if (i != 0) sb.append(","); //$NON-NLS-1$
 	    			sb.append(values.get(i));
 	    		}
-	    		if (values.size() > 0) sb.append("\""); //$NON-NLS-1$
+	    		if (values.size() > 1) sb.append("\""); //$NON-NLS-1$
     		}
     	}
     }

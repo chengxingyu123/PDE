@@ -112,12 +112,15 @@ public class Bundle implements IBundle {
 	 */
 	public void setHeader(String key, String value) {
 		IManifestHeader header = (ManifestHeader)fDocumentHeaders.get(key);
+		String old = null;
  		if (header == null) {
 			header = getModel().getFactory().createHeader(key, value);
 		} else {
+			old = header.getValue();
             header.setValue(value);
         }
-		fDocumentHeaders.put(key, header);		
+		fDocumentHeaders.put(key, header);
+		fModel.fireModelObjectChanged(header, key, old, value);
 	}
     
 	/* (non-Javadoc)

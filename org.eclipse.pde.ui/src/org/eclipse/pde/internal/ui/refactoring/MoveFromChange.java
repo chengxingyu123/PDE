@@ -12,21 +12,21 @@ package org.eclipse.pde.internal.ui.refactoring;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.ltk.core.refactoring.TextFileChange;
-import org.eclipse.pde.internal.core.text.bundle.ManifestElement;
+import org.eclipse.pde.internal.core.text.bundle.PDEManifestElement;
 
 public class MoveFromChange extends TextFileChange {
 	
-	ManifestElement fElement;
+	PDEManifestElement fElement;
 
 	public MoveFromChange(String name, IFile file) {
 		super(name, file);
 	}
 	
-	public ManifestElement getMovedElement() {
+	public PDEManifestElement getMovedElement() {
 		return fElement;
 	}
 	
-	public void setMovedElement(ManifestElement element) {
+	public void setMovedElement(PDEManifestElement element) {
 		fElement = element;
 	}
 
