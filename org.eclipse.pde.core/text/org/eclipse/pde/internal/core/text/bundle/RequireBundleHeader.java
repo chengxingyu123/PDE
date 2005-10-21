@@ -34,7 +34,24 @@ public class RequireBundleHeader extends CompositeManifestHeader {
 	
 	public void addBundle(String id, String version, boolean exported, boolean optional) {
 		PDEManifestElement element = new PDEManifestElement(this);
-		updateBundle(element, id, version, exported, optional);		
+		element.setValue(id);
+
+		int bundleManifestVersion = BundlePluginBase.getBundleManifestVersion(getBundle());
+		if (optional)
+			if (bundleManifestVersion > 1)
+				element.setDirective(Constants.RESOLUTION_DIRECTIVE, Constants.RESOLUTION_OPTIONAL); 
+			else
+				element.setAttribute(ICoreConstants.OPTIONAL_ATTRIBUTE, "true"); 
+		
+		if (exported)
+			if (bundleManifestVersion > 1)
+				element.setDirective(Constants.VISIBILITY_DIRECTIVE, Constants.VISIBILITY_REEXPORT); 
+			else
+				element.setAttribute(ICoreConstants.REPROVIDE_ATTRIBUTE, "true");
+
+		if (version != null && version.trim().length() > 0)
+			element.addAttribute(Constants.BUNDLE_VERSION_ATTRIBUTE, version.trim()); 		
+
 		addManifestElement(element);
 	}
 	
@@ -45,31 +62,35 @@ public class RequireBundleHeader extends CompositeManifestHeader {
 	public void updateBundle(int index, IPluginImport iimport) {
 		PDEManifestElement element = getElementAt(index);
 		if (element != null) {
-			updateBundle(element, 
-					iimport.getId(), iimport.getVersion(),
-					iimport.isReexported(), iimport.isOptional());
+			element.setValue(iimport.getId());
+
+			int bundleManifestVersion = BundlePluginBase.getBundleManifestVersion(getBundle());
+			if (iimport.isOptional()) {
+				if (bundleManifestVersion > 1)
+					element.setDirective(Constants.RESOLUTION_DIRECTIVE, Constants.RESOLUTION_OPTIONAL); 
+				else
+					element.setAttribute(ICoreConstants.OPTIONAL_ATTRIBUTE, "true");
+			} else {
+				if (bundleManifestVersion > 1)
+					element.setDirective(Constants.RESOLUTION_DIRECTIVE, null); 
+				else
+					element.setAttribute(ICoreConstants.OPTIONAL_ATTRIBUTE, null);				
+			}
+			
+			if (iimport.isReexported()) {
+				if (bundleManifestVersion > 1)
+					element.setDirective(Constants.VISIBILITY_DIRECTIVE, Constants.VISIBILITY_REEXPORT); 
+				else
+					element.setAttribute(ICoreConstants.REPROVIDE_ATTRIBUTE, "true");
+			} else {
+				if (bundleManifestVersion > 1)
+					element.setDirective(Constants.VISIBILITY_DIRECTIVE, null); 
+				else
+					element.setAttribute(ICoreConstants.REPROVIDE_ATTRIBUTE, null);				
+			}
+			element.setAttribute(Constants.BUNDLE_VERSION_ATTRIBUTE, iimport.getVersion());
 		}
 		updateValue();
-	}
-	
-	public void updateBundle(PDEManifestElement element, String id, String version, boolean exported, boolean optional) {
-		element.setValue(id);
-
-		int bundleManifestVersion = BundlePluginBase.getBundleManifestVersion(getBundle());
-		if (optional)
-			if (bundleManifestVersion > 1)
-				element.addDirective(Constants.RESOLUTION_DIRECTIVE, Constants.RESOLUTION_OPTIONAL); 
-			else
-				element.addAttribute(ICoreConstants.OPTIONAL_ATTRIBUTE, "true"); 
-		
-		if (exported)
-			if (bundleManifestVersion > 1)
-				element.addDirective(Constants.VISIBILITY_DIRECTIVE, Constants.VISIBILITY_REEXPORT); 
-			else
-				element.addAttribute(ICoreConstants.REPROVIDE_ATTRIBUTE, "true");
-
-		if (version != null && version.trim().length() > 0)
-			element.addAttribute(Constants.BUNDLE_VERSION_ATTRIBUTE, version.trim()); 		
 	}
 	
 }

@@ -44,37 +44,34 @@ public class RequiredExecutionEnvironmentHeader extends CompositeManifestHeader 
     private PDEManifestElement fMinJRE;
     private PDEManifestElement fMinJ2ME;
     
-    public RequiredExecutionEnvironmentHeader(String name, String value, IBundle bundle,
-			String lineDelimiter) {
+    public RequiredExecutionEnvironmentHeader(String name, String value, IBundle bundle, String lineDelimiter) {
 		super(name, value, bundle, lineDelimiter);
-		processValue();
 	}
     
-    // possibly bring this behaviour down to ManifestHeader and give a subclass the ability to
-    // pass an ArrayList of valid element values to get looked at
-    private void processValue() {
-    	if (fManifestElements == null)
-    		return;
-        if (fManifestElements.size() > 0) {
-            for (int i = 0; i < TOTAL_JRES; i++) {
-            	for (int j = 0; j < fManifestElements.size(); j++) {
-            		String value = fManifestElements.get(j).getValue();
-            		if (value.equals(JRES.get(i))) {
-            			fMinJRE = fManifestElements.get(j);
-            			break;
-            		}
-            	}
-            }
-           	for (int i = 0; i < TOTAL_J2MES; i++) {
-            	for (int j = 0; j < fManifestElements.size(); j++) {
-            		String value = fManifestElements.get(j).getValue();
-            		if (value.equals(J2MES.get(i))) {
-            			fMinJ2ME = fManifestElements.get(j);
-            			break;
-            		}
-            	}
-            }
-        }
+    protected void processValue(String value) {
+    	PDEManifestElement[] elements = getElements();
+    	int minJRE = -1;
+    	int minJ2ME = -1;
+    	for (int i = 0; i < elements.length; i++) {
+    		String current = elements[i].getValue();
+    		if (current == null)
+    			continue;
+    		int index = JRES.indexOf(current);
+    		if (index > -1) {
+    			if (minJRE == -1)
+    				minJRE = index;
+    			else if (minJRE > index)
+    				minJRE = index;
+    		} else {
+    			index = J2MES.indexOf(current);
+    			if (minJ2ME == -1)
+    				minJ2ME = index;
+    			else if (minJ2ME > index)
+    				minJ2ME = index;
+    		}
+    	}
+    	if (minJRE > -1)
+    		fMinJRE = getElementAt(minJRE);
     }
     
     public String getMinimumJRE() {

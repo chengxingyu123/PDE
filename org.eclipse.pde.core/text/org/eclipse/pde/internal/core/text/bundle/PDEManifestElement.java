@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Hashtable;
 
+import org.eclipse.osgi.util.ManifestElement;
 import org.eclipse.pde.internal.core.bundle.BundleObject;
 import org.osgi.framework.BundleException;
 
@@ -60,7 +61,7 @@ public class PDEManifestElement extends BundleObject {
 		fAttributes = addTableValue(fAttributes, key, value);
 	}
 	
-	protected void setAttribute(String key, String[] value) {
+	protected void setAttribute(String key, String value) {
 		setTableValue(fAttributes, key, value);
 	}
 	
@@ -84,7 +85,7 @@ public class PDEManifestElement extends BundleObject {
 		fDirectives = addTableValue(fDirectives, key, value);
 	}
 	
-	protected void setDirective(String key, String[] value) {
+	protected void setDirective(String key, String value) {
 		setTableValue(fDirectives, key, value);
 	}
 	
@@ -146,16 +147,17 @@ public class PDEManifestElement extends BundleObject {
 		return table;
 	}
 	
-    private void setTableValue(Hashtable table, String key, String[] value) {
+    private void setTableValue(Hashtable table, String key, String value) {
     	if (table == null) {
 			table = new Hashtable(7);
 		}
-    	if (value == null || value.length == 0)
+    	if (value == null || value.trim().length() == 0)
     		table.remove(key);
     	else {
-    		ArrayList values = new ArrayList(value.length);
-    		for (int i = 0; i < value.length; i++)
-    			values.add(value[i]);
+    		String[] tokens = ManifestElement.getArrayFromList(value);
+    		ArrayList values = new ArrayList(tokens.length);
+    		for (int i = 0; i < tokens.length; i++)
+    			values.add(tokens[i]);
     		table.put(key, values);
     	}
     	fHeader.updateValue();
