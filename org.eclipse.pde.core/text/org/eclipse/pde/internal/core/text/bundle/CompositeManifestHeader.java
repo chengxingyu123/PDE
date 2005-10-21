@@ -48,7 +48,7 @@ public class CompositeManifestHeader extends ManifestHeader {
 		try {
 			ManifestElement[] elements = ManifestElement.parseHeader(fName, value);
 			for (int i = 0; i < elements.length; i++)
-				addManifestElement(createElement(elements[i]));
+				addManifestElement(createElement(elements[i]), false);
 		} catch (BundleException e) {
 		}
 	}
@@ -80,6 +80,10 @@ public class CompositeManifestHeader extends ManifestHeader {
 	}
 	
 	protected void addManifestElement(PDEManifestElement element) {
+		addManifestElement(element, true);
+	}	
+	
+	protected void addManifestElement(PDEManifestElement element, boolean update) {
 		if (fSort) {
 			if (fElementMap == null)
 				fElementMap = new TreeMap();
@@ -89,7 +93,8 @@ public class CompositeManifestHeader extends ManifestHeader {
 				fManifestElements = new ArrayList(1);
 			fManifestElements.add(element);
 		}
-		updateValue();
+		if (update)
+			updateValue();
 	}
 	
 	protected Object removeManifestElement(PDEManifestElement element) {

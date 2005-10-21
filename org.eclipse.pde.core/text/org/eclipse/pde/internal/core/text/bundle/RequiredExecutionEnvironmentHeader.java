@@ -74,7 +74,7 @@ public class RequiredExecutionEnvironmentHeader extends CompositeManifestHeader 
 			if (fMinJ2ME != null)
 				addManifestElement(fMinJ2ME, false);
 			for (int i = 0; i < extra.size(); i++)
-				addManifestElement((PDEManifestElement)extra.get(i));
+				addManifestElement((PDEManifestElement)extra.get(i), false);
 		} catch (BundleException e) {
 		}
     }
