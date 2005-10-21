@@ -32,7 +32,10 @@ public class ExportPackageHeader extends BasePackageHeader {
     }
     
     public ExportPackageObject[] getPackages() {
-        return (ExportPackageObject[])getElements();
+    	PDEManifestElement[] elements = getElements();
+    	ExportPackageObject[] result = new ExportPackageObject[elements.length];
+    	System.arraycopy(elements, 0, result, 0, elements.length);
+        return result;
     }
     
 }
