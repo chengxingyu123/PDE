@@ -60,6 +60,9 @@ public class RequireBundleHeader extends CompositeManifestHeader {
 	}
 	
 	public void updateBundle(int index, IPluginImport iimport) {
+		if (index == -1)
+			return;
+		
 		PDEManifestElement element = getElementAt(index);
 		if (element != null) {
 			element.setValue(iimport.getId());

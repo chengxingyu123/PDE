@@ -41,6 +41,7 @@ public class CompositeManifestHeader extends ManifestHeader {
         fLineDelimiter = lineDelimiter;
         setModel(fBundle.getModel());
 		fSort = sort;
+		fValue = value;
         processValue(value);
 	}
 	
