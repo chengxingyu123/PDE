@@ -44,6 +44,7 @@ public class ImportPackageObject extends PackageObject {
     }
 
     public void setOptional(boolean optional) {
+    	boolean old = isOptional();
     	int manifestVersion = BundlePluginBase.getBundleManifestVersion(getHeader().getBundle());
     	if (optional) {
     		if (manifestVersion > 1)
@@ -54,6 +55,7 @@ public class ImportPackageObject extends PackageObject {
     		setDirective(Constants.RESOLUTION_DIRECTIVE, null);
     		setAttribute(ICoreConstants.OPTIONAL_ATTRIBUTE, null);
     	}
+    	firePropertyChanged(this, Constants.RESOLUTION_DIRECTIVE, Boolean.toString(old), Boolean.toString(optional));
     }
 
 }
