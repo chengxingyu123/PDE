@@ -63,7 +63,6 @@ public abstract class XMLEditingModel extends AbstractEditingModel {
 				fParser = SAXParserFactory.newInstance().newSAXParser();
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
 		}
 		return fParser;
 	}
