@@ -217,18 +217,32 @@ public class PDEManifestElement extends BundleObject {
     		sb.append(";"); //$NON-NLS-1$
 			sb.append(dkey);
 			sb.append(table.equals(fDirectives) ? ":=" : "="); //$NON-NLS-1$ //$NON-NLS-2$
-    		if (value instanceof String) {
+
+			if (value instanceof String) {
+				boolean wrap = shouldWrap(value.toString());
+				if (wrap) sb.append("\"");
     			sb.append(value);
+    			if (wrap) sb.append("\"");
     		} else if (value instanceof ArrayList) {
     			ArrayList values = (ArrayList)value;
-    			if (values.size() > 1) sb.append("\"");
+    			boolean wrap = (values.size() > 1 
+    								|| (values.size() == 1 && shouldWrap(values.get(0).toString())));
+    			if (wrap) sb.append("\"");
 	    		for (int i = 0; i < values.size(); i++) {
 	    			if (i != 0) sb.append(","); //$NON-NLS-1$
 	    			sb.append(values.get(i));
 	    		}
-	    		if (values.size() > 1) sb.append("\""); //$NON-NLS-1$
+	    		if (wrap) sb.append("\""); //$NON-NLS-1$
     		}
     	}
+    }
+    
+    private boolean shouldWrap(String value) {
+    	return value.indexOf(' ') != -1
+    			|| value.indexOf(',') != -1
+    			|| value.indexOf('.') != -1
+    			|| value.indexOf('[') != -1
+    			|| value.indexOf('(') != -1;
     }
     
     public ManifestHeader getHeader() {
