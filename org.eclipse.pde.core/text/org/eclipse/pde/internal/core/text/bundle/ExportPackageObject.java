@@ -60,6 +60,7 @@ public class ExportPackageObject extends PackageObject {
     				addDirective(FRIENDS, iter.next().toString());
     		}
     	}
+    	fHeader.update();
         firePropertyChanged(this, INTERNAL, Boolean.valueOf(old), Boolean.valueOf(internal));
     }
     
@@ -70,6 +71,7 @@ public class ExportPackageObject extends PackageObject {
     public void addFriend(PackageFriend friend) {
         fFriends.put(friend.getName(), friend);
         addDirective(FRIENDS, friend.getName());
+        fHeader.update();
         fireStructureChanged(friend, IModelChangedEvent.INSERT);        
     }
     
@@ -83,6 +85,7 @@ public class ExportPackageObject extends PackageObject {
 	        while (iter.hasNext())
 	        	addDirective(FRIENDS, iter.next().toString());
         }
+        fHeader.update();
         fireStructureChanged(friend, IModelChangedEvent.REMOVE);       
     }
     

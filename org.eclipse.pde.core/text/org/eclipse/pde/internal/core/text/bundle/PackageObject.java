@@ -17,33 +17,28 @@ public class PackageObject extends PDEManifestElement {
     private static final long serialVersionUID = 1L;
 
     private String fVersionAttribute;
-    private String fName;
-    private String fVersion;
     
     public PackageObject(ManifestHeader header, ManifestElement element, String versionAttribute) {
     	super(header, element);
     	fVersionAttribute = versionAttribute;
-        fName = element.getValue();
-        fVersion = element.getAttribute(fVersionAttribute);
         setModel(fHeader.getBundle().getModel());
     }
     
     public PackageObject(ManifestHeader header, String name, String version, String versionAttribute) {
         super(header, name.length() > 0 ? name : ".");
-        fVersion = version;
         fVersionAttribute = versionAttribute;
-        fName = name.length() > 0 ? name : "."; //$NON-NLS-1$
         setModel(fHeader.getBundle().getModel());
     }
     
      public String toString() {
-        StringBuffer buffer = new StringBuffer(fName);
-        if (fVersion != null && fVersion.length() > 0) {
+        StringBuffer buffer = new StringBuffer(getValue());
+        String version = getVersion();
+        if (version != null && version.length() > 0) {
             buffer.append(" "); //$NON-NLS-1$
-            boolean wrap = Character.isDigit(fVersion.charAt(0));
+            boolean wrap = Character.isDigit(version.charAt(0));
             if (wrap)
                 buffer.append("("); //$NON-NLS-1$
-            buffer.append(fVersion);
+            buffer.append(version);
             if (wrap)
                 buffer.append(")"); //$NON-NLS-1$
         }
@@ -51,20 +46,21 @@ public class PackageObject extends PDEManifestElement {
     }
     
     public String getVersion() {
-        return fVersion;
+        return getAttribute(fVersionAttribute);
     }
 
     public String getName() {
-        return fName;
+        return getValue();
     }
     
     public void setName(String name) {
-    	fName = name;
+     	setValueComponents(new String[] {name});    	
     }
 
     public void setVersion(String version) {
-        String old = fVersion;
-        fVersion = version;
+        String old = getVersion();
+        setAttribute(fVersionAttribute, version);
+        fHeader.update();
         firePropertyChanged(this, fVersionAttribute, old, version);
     }
 

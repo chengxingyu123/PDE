@@ -67,10 +67,6 @@ public class PDEManifestElement extends BundleObject {
 		setTableValue(fAttributes, key, value);
 	}
 	
-	protected void setAttributes(TreeMap attributes) {
-		fAttributes = attributes;
-	}
-	
 	public String getDirective(String key) {
 		return getTableValue(fDirectives, key);
 	}
@@ -91,10 +87,6 @@ public class PDEManifestElement extends BundleObject {
 		setTableValue(fDirectives, key, value);
 	}
 	
-	protected void setDirectives(TreeMap directives) {
-		fDirectives = directives;
-	}
-
 	private String getTableValue(TreeMap table, String key) {
 		if (table == null)
 			return null;
@@ -179,20 +171,24 @@ public class PDEManifestElement extends BundleObject {
     
     private void init(ManifestElement manifestElement) {
 		setValueComponents(manifestElement.getValueComponents());
-		TreeMap attributes = new TreeMap();
 		Enumeration attKeys = manifestElement.getKeys();
-		while (attKeys != null && attKeys.hasMoreElements()) {
-			String attKey = (String)attKeys.nextElement();
-			attributes.put(attKey, manifestElement.getAttributes(attKey));
+		if (attKeys != null) {
+			while (attKeys.hasMoreElements()) {
+				String attKey = (String)attKeys.nextElement();
+				String[] values = manifestElement.getAttributes(attKey);
+				for (int i = 0; i < values.length; i++)
+					addAttribute(attKey, values[i]);
+			}
 		}
-		TreeMap directives = new TreeMap();
 		Enumeration dirKeys = manifestElement.getDirectiveKeys();
-		while (dirKeys != null && dirKeys.hasMoreElements()) {
-			String dirKey = (String)dirKeys.nextElement();
-			directives.put(dirKey, manifestElement.getDirective(dirKey));
+		if (dirKeys != null) {
+			while (dirKeys.hasMoreElements()) {
+				String dirKey = (String)dirKeys.nextElement();
+				String[] values = manifestElement.getDirectives(dirKey);
+				for (int i = 0; i < values.length; i++)
+					addDirective(dirKey, values[i]);
+			}
 		}
-		setAttributes(attributes);
-		setDirectives(directives);
     }
     
     public String write() {

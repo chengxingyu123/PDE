@@ -55,6 +55,7 @@ public class ImportPackageObject extends PackageObject {
     		setDirective(Constants.RESOLUTION_DIRECTIVE, null);
     		setAttribute(ICoreConstants.OPTIONAL_ATTRIBUTE, null);
     	}
+    	fHeader.update();
     	firePropertyChanged(this, Constants.RESOLUTION_DIRECTIVE, Boolean.toString(old), Boolean.toString(optional));
     }
 

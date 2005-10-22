@@ -112,6 +112,6 @@ public class RequiredExecutionEnvironmentHeader extends CompositeManifestHeader 
     			element.setValue(newValue);
     		}
     	}
-    	updateValue(true);
+    	update(true);
      }
 }

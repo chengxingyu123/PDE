@@ -49,7 +49,7 @@ public class RequireBundleHeader extends CompositeManifestHeader {
 				element.setAttribute(ICoreConstants.REPROVIDE_ATTRIBUTE, "true");
 
 		if (version != null && version.trim().length() > 0)
-			element.addAttribute(Constants.BUNDLE_VERSION_ATTRIBUTE, version.trim()); 		
+			element.setAttribute(Constants.BUNDLE_VERSION_ATTRIBUTE, version.trim()); 		
 
 		addManifestElement(element);
 	}
@@ -92,7 +92,7 @@ public class RequireBundleHeader extends CompositeManifestHeader {
 			}
 			element.setAttribute(Constants.BUNDLE_VERSION_ATTRIBUTE, iimport.getVersion());
 		}
-		updateValue(true);
+		update(true);
 	}
 	
 }

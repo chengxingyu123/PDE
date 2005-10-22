@@ -50,7 +50,7 @@ public class SingleManifestHeader extends ManifestHeader {
     		fElement.setValueComponents((String[])null);
     	else
     		fElement.setValueComponents(new String[] {value});
-    	updateValue();
+    	update();
     }
     
     public String getAttribute(String key) {
@@ -65,7 +65,7 @@ public class SingleManifestHeader extends ManifestHeader {
     	return fElement.getValue();
     }
     
-    private void updateValue() {
+    public void update() {
     	String old = fValue;   	
     	fValue = fElement.write();
     	fBundle.getModel().fireModelObjectChanged(this, fName, old, fValue);

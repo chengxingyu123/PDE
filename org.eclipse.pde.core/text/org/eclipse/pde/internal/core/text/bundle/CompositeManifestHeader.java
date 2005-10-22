@@ -60,9 +60,11 @@ public class CompositeManifestHeader extends ManifestHeader {
 		return new PDEManifestElement(this, element);
 	}
 	
+	public void update() {
+		update(true);
+	}
 	
-	
-	public void updateValue(boolean notify) {
+	public void update(boolean notify) {
 		StringBuffer sb = new StringBuffer();
 		PDEManifestElement[] elements = getElements();
 		for (int i = 0; i < elements.length; i++) {	
@@ -98,7 +100,7 @@ public class CompositeManifestHeader extends ManifestHeader {
 			fManifestElements.add(element);
 		}
 		if (update) {
-			updateValue(false);
+			update(false);
 			fireStructureChanged(element, IModelChangedEvent.INSERT);
 		}
 	}
@@ -120,7 +122,7 @@ public class CompositeManifestHeader extends ManifestHeader {
 					object = fManifestElements.remove(i);
 			}
 		}
-		updateValue(false);
+		update(false);
 		if (object instanceof BundleObject)
 			fireStructureChanged((BundleObject)object, IModelChangedEvent.REMOVE);
 		return object;
@@ -174,7 +176,7 @@ public class CompositeManifestHeader extends ManifestHeader {
 		   Object object2 = fManifestElements.get(index2);
 		   fManifestElements.set(index1, object2);
 		   fManifestElements.set(index2, object1);
-		   updateValue(true);
+		   update(true);
 	   }
    }
    

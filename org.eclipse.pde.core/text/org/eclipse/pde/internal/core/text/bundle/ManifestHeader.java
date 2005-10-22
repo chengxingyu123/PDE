@@ -131,6 +131,9 @@ public class ManifestHeader extends BundleObject implements IManifestHeader {
 	protected int getManifestVersion() {
 		return BundlePluginBase.getBundleManifestVersion(fBundle);
 	}
+	
+	public void update() {
+	}
 
 }
 

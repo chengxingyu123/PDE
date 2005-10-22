@@ -43,4 +43,11 @@ public interface IManifestHeader extends IDocumentKey {
 	 * @param value the header value
 	 */
 	void setValue(String value);
+	
+	/**
+	 * Forces the header to update its value based on the current components,
+	 * attributes and directives it contains.
+	 * 
+	 */
+	void update();
 }

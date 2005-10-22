@@ -32,6 +32,4 @@ public class ImportPackageHeader extends BasePackageHeader {
         return result;
     }
     
-
-
 }
