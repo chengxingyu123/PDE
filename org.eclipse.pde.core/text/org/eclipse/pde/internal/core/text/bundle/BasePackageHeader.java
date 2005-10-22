@@ -10,7 +10,6 @@
  *******************************************************************************/
 package org.eclipse.pde.internal.core.text.bundle;
 
-import org.eclipse.pde.core.IModelChangedEvent;
 import org.eclipse.pde.internal.core.ICoreConstants;
 import org.eclipse.pde.internal.core.bundle.BundlePluginBase;
 import org.eclipse.pde.internal.core.ibundle.IBundle;
@@ -31,13 +30,10 @@ public abstract class BasePackageHeader extends CompositeManifestHeader {
     
     public void addPackage(PackageObject object) {
         addManifestElement(object);
-        fireStructureChanged(object, IModelChangedEvent.INSERT);
     }
     
     public Object removePackage(PackageObject object) {
-        Object value = removeManifestElement(object);
-        fireStructureChanged(object, IModelChangedEvent.REMOVE);
-        return value;
+        return removeManifestElement(object);
     }
     
     public boolean hasPackage(String packageName) {
@@ -45,9 +41,7 @@ public abstract class BasePackageHeader extends CompositeManifestHeader {
     }
     
     public Object removePackage(String name) {
-    	PackageObject object = (PackageObject) removeManifestElement(name);
-    	fireStructureChanged(object, IModelChangedEvent.REMOVE);
-    	return object;
+    	return removeManifestElement(name);
     }
     
     public boolean renamePackage(String oldName, String newName) {

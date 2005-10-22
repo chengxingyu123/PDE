@@ -16,6 +16,8 @@ import java.util.TreeMap;
 import java.util.Vector;
 
 import org.eclipse.osgi.util.ManifestElement;
+import org.eclipse.pde.core.IModelChangedEvent;
+import org.eclipse.pde.internal.core.bundle.BundleObject;
 import org.eclipse.pde.internal.core.ibundle.IBundle;
 import org.osgi.framework.BundleException;
 
@@ -58,7 +60,9 @@ public class CompositeManifestHeader extends ManifestHeader {
 		return new PDEManifestElement(this, element);
 	}
 	
-	public void updateValue() {
+	
+	
+	public void updateValue(boolean notify) {
 		StringBuffer sb = new StringBuffer();
 		PDEManifestElement[] elements = getElements();
 		for (int i = 0; i < elements.length; i++) {	
@@ -67,9 +71,12 @@ public class CompositeManifestHeader extends ManifestHeader {
 				sb.append(fLineDelimiter);
 				sb.append(" ");
 			}
-			sb.append(elements[0].write());
+			sb.append(elements[i].write());
 		}
+		String old = fValue;
 		fValue = sb.toString();
+		if (notify)
+			firePropertyChanged(this, fName, old, fValue);
 	}
 	
 	protected void addManifestElement(String value) {
@@ -90,8 +97,10 @@ public class CompositeManifestHeader extends ManifestHeader {
 				fManifestElements = new ArrayList(1);
 			fManifestElements.add(element);
 		}
-		if (update)
-			updateValue();
+		if (update) {
+			updateValue(false);
+			fireStructureChanged(element, IModelChangedEvent.INSERT);
+		}
 	}
 	
 	protected Object removeManifestElement(PDEManifestElement element) {
@@ -111,7 +120,9 @@ public class CompositeManifestHeader extends ManifestHeader {
 					object = fManifestElements.remove(i);
 			}
 		}
-		updateValue();
+		updateValue(false);
+		if (object instanceof BundleObject)
+			fireStructureChanged((BundleObject)object, IModelChangedEvent.REMOVE);
 		return object;
 	}
 	
@@ -163,7 +174,7 @@ public class CompositeManifestHeader extends ManifestHeader {
 		   Object object2 = fManifestElements.get(index2);
 		   fManifestElements.set(index1, object2);
 		   fManifestElements.set(index2, object1);
-		   updateValue();
+		   updateValue(true);
 	   }
    }
    

@@ -92,7 +92,7 @@ public class RequireBundleHeader extends CompositeManifestHeader {
 			}
 			element.setAttribute(Constants.BUNDLE_VERSION_ATTRIBUTE, iimport.getVersion());
 		}
-		updateValue();
+		updateValue(true);
 	}
 	
 }
