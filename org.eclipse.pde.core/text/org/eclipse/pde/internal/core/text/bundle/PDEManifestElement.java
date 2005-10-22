@@ -148,11 +148,7 @@ public class PDEManifestElement extends BundleObject {
     	if (value == null || value.trim().length() == 0)
     		table.remove(key);
     	else {
-    		String[] tokens = ManifestElement.getArrayFromList(value);
-    		ArrayList values = new ArrayList(tokens.length);
-    		for (int i = 0; i < tokens.length; i++)
-    			values.add(tokens[i]);
-    		table.put(key, values);
+     		table.put(key, value);
     	}
     }
     
