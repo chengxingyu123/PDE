@@ -67,17 +67,13 @@ public class CompositeManifestHeader extends ManifestHeader {
 				sb.append(fLineDelimiter);
 				sb.append(" ");
 			}
-			sb.append(elements[i].write());
+			sb.append(elements[0].write());
 		}
-		String old = fValue;
 		fValue = sb.toString();
-		fBundle.getModel().fireModelObjectChanged(this, getName(), old, fValue);
 	}
 	
 	protected void addManifestElement(String value) {
-		PDEManifestElement element = new PDEManifestElement(this);
-		element.setValue(value);
-		addManifestElement(element);
+		addManifestElement(new PDEManifestElement(this, value));
 	}
 	
 	protected void addManifestElement(PDEManifestElement element) {

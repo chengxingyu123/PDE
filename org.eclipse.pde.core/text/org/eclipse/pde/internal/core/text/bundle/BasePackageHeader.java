@@ -21,7 +21,7 @@ public abstract class BasePackageHeader extends CompositeManifestHeader {
     private static final long serialVersionUID = 1L;
     
 	public BasePackageHeader(String name, String value, IBundle bundle, String lineDelimiter) {
-		super(name, value, bundle, lineDelimiter);
+		super(name, value, bundle, lineDelimiter, true);
 	}
 
     protected String getVersionAttribute() {

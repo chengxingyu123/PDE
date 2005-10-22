@@ -30,8 +30,7 @@ public class SingleManifestHeader extends ManifestHeader {
 			if (elements.length > 0) {
 				fElement = new PDEManifestElement(this, elements[0]);
 			} else {
-				fElement = new PDEManifestElement(this);
-				fElement.setValue("");
+				fElement = new PDEManifestElement(this, "");
 			}
 		} catch (BundleException e) {
 		}

@@ -33,8 +33,7 @@ public class RequireBundleHeader extends CompositeManifestHeader {
 	}
 	
 	public void addBundle(String id, String version, boolean exported, boolean optional) {
-		PDEManifestElement element = new PDEManifestElement(this);
-		element.setValue(id);
+		PDEManifestElement element = new PDEManifestElement(this, id);
 
 		int bundleManifestVersion = BundlePluginBase.getBundleManifestVersion(getBundle());
 		if (optional)

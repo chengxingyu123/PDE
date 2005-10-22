@@ -29,7 +29,7 @@ public class PackageObject extends PDEManifestElement {
     }
     
     public PackageObject(ManifestHeader header, String name, String version, String versionAttribute) {
-        super(header);
+        super(header, name.length() > 0 ? name : ".");
         fVersion = version;
         fVersionAttribute = versionAttribute;
         fName = name.length() > 0 ? name : "."; //$NON-NLS-1$

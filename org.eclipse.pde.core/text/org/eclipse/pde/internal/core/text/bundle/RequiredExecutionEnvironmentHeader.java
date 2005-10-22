@@ -106,10 +106,11 @@ public class RequiredExecutionEnvironmentHeader extends CompositeManifestHeader 
     		}
     	} else {
     		if (element == null) {
-    			element = new PDEManifestElement(this);
+    			element = new PDEManifestElement(this, newValue);
     			addManifestElement(element);
+    		} else {
+    			element.setValue(newValue);
     		}
-    		element.setValue(newValue);
     	}
     	updateValue();
      }

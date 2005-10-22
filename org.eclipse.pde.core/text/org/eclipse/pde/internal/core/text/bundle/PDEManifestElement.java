@@ -30,11 +30,12 @@ public class PDEManifestElement extends BundleObject {
 	protected TreeMap fDirectives;
 	protected ManifestHeader fHeader;
 	
-	public PDEManifestElement(ManifestHeader header) {
+	public PDEManifestElement(ManifestHeader header, String value) {
 		fHeader = header;
+		setValue(value);
 	}
 	protected PDEManifestElement(ManifestHeader header, ManifestElement manifestElement) {
-		this(header);
+		fHeader = header;
 		init(manifestElement);
 	}
 	
