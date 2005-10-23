@@ -172,7 +172,7 @@ public class PDEManifestElement extends BundleObject {
 		if (attKeys != null) {
 			while (attKeys.hasMoreElements()) {
 				String attKey = (String)attKeys.nextElement();
-				String[] values = manifestElement.getAttributes(attKey);
+				String[] values =  ManifestElement.getArrayFromList(manifestElement.getAttribute(attKey));
 				for (int i = 0; i < values.length; i++)
 					addAttribute(attKey, values[i]);
 			}
@@ -181,7 +181,7 @@ public class PDEManifestElement extends BundleObject {
 		if (dirKeys != null) {
 			while (dirKeys.hasMoreElements()) {
 				String dirKey = (String)dirKeys.nextElement();
-				String[] values = manifestElement.getDirectives(dirKey);
+				String[] values = ManifestElement.getArrayFromList(manifestElement.getDirective(dirKey));
 				for (int i = 0; i < values.length; i++)
 					addDirective(dirKey, values[i]);
 			}

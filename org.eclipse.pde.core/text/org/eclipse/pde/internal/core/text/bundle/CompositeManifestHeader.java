@@ -61,7 +61,7 @@ public class CompositeManifestHeader extends ManifestHeader {
 	}
 	
 	public void update() {
-		update(true);
+		update(false);
 	}
 	
 	public void update(boolean notify) {

@@ -37,13 +37,15 @@ public class ExportPackageObject extends PackageObject {
     
     protected void processFriends() {
     	String[] friends = getDirectives(FRIENDS);
-        for (int i = 0; i < friends.length; i++) {
-            fFriends.put(friends[i], new PackageFriend(this, friends[i]));
-        }
+    	if (friends != null) {
+	        for (int i = 0; i < friends.length; i++) {
+	            fFriends.put(friends[i], new PackageFriend(this, friends[i]));
+	        }
+    	}
     }
 
     public boolean isInternal() {
-        return "true".equals(getDirective(INTERNAL)) || fFriends.size() == 0;
+        return "true".equals(getDirective(INTERNAL)) || getDirective(FRIENDS) != null;
     }
 
     public void setInternal(boolean internal) {
@@ -61,7 +63,7 @@ public class ExportPackageObject extends PackageObject {
     		}
     	}
     	fHeader.update();
-        firePropertyChanged(this, INTERNAL, Boolean.valueOf(old), Boolean.valueOf(internal));
+    	firePropertyChanged(this, INTERNAL, Boolean.toString(old), Boolean.toString(internal));
     }
     
     public PackageFriend[] getFriends() {
@@ -71,6 +73,7 @@ public class ExportPackageObject extends PackageObject {
     public void addFriend(PackageFriend friend) {
         fFriends.put(friend.getName(), friend);
         addDirective(FRIENDS, friend.getName());
+        setDirective(INTERNAL, null);
         fHeader.update();
         fireStructureChanged(friend, IModelChangedEvent.INSERT);        
     }
