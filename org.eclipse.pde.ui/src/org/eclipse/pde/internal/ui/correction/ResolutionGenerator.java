@@ -36,7 +36,7 @@ public class ResolutionGenerator implements IMarkerResolutionGenerator2 {
 			case PDEMarkerFactory.SINGLETON_ATT_NOT_SET:
 				return new IMarkerResolution[] {new AddSingletonToSymbolicName(AbstractPDEMarkerResolution.RENAME_TYPE, false)};
 			case PDEMarkerFactory.PROJECT_BUILD_ORDER_ENTRIES:
-				return new IMarkerResolution[] {new RemoveBuildOrderEntries(AbstractPDEMarkerResolution.REMOVE_TYPE)};
+				return new IMarkerResolution[] {new RemoveStaticProjectReferences(AbstractPDEMarkerResolution.REMOVE_TYPE)};
 			case PDEMarkerFactory.EXPORT_PKG_NOT_EXIST:
 				String pkgName = null;
 				try {

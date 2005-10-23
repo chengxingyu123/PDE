@@ -15,15 +15,14 @@ import org.eclipse.pde.internal.core.ibundle.IManifestHeader;
 import org.eclipse.pde.internal.core.text.bundle.Bundle;
 import org.eclipse.pde.internal.core.text.bundle.BundleModel;
 import org.eclipse.pde.internal.core.text.bundle.BundleSymbolicNameHeader;
-import org.eclipse.pde.internal.core.text.bundle.ManifestHeader;
 import org.eclipse.pde.internal.ui.PDEUIMessages;
 import org.osgi.framework.Constants;
 
-public class AddSingleonToSymbolicName extends ManifestHeaderErrorResolution {
+public class AddSingletonToSymbolicName extends ManifestHeaderErrorResolution {
 
 	private boolean fisDirective;
 	
-	public AddSingleonToSymbolicName(int type, boolean directive) {
+	public AddSingletonToSymbolicName(int type, boolean directive) {
 		super(type);
 		fisDirective = directive;
 	}
@@ -44,7 +43,7 @@ public class AddSingleonToSymbolicName extends ManifestHeaderErrorResolution {
 		IBundle bundle = model.getBundle();
 		if (bundle instanceof Bundle) {
 			Bundle bun = (Bundle)bundle;
-			IManifestHeader header = (ManifestHeader)bun.getManifestHeader(Constants.BUNDLE_SYMBOLICNAME);
+			IManifestHeader header = bun.getManifestHeader(Constants.BUNDLE_SYMBOLICNAME);
 			if (header instanceof BundleSymbolicNameHeader) {
 				((BundleSymbolicNameHeader)header).setSingleton(true);
 			}

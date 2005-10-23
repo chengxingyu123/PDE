@@ -16,9 +16,9 @@ import org.eclipse.core.resources.IProjectDescription;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.pde.internal.ui.PDEUIMessages;
 
-public class RemoveBuildOrderEntries extends AbstractPDEMarkerResolution {
+public class RemoveStaticProjectReferences extends AbstractPDEMarkerResolution {
 
-	public RemoveBuildOrderEntries(int type) {
+	public RemoveStaticProjectReferences(int type) {
 		super(type);
 	}
 
