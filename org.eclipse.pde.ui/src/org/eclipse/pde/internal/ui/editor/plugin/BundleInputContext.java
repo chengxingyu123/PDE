@@ -79,8 +79,8 @@ public class BundleInputContext extends UTF8InputContext {
 		if (objects != null) {
 			for (int i = 0; i < objects.length; i++) {
 				Object object = objects[i];
-                if (object instanceof PackageObject)
-                    object = ((PackageObject)object).getHeader();
+                if (object instanceof PDEManifestElement)
+                    object = ((PDEManifestElement)object).getHeader();
                 else if (object instanceof PackageFriend)
                     object = ((PackageFriend)object).getHeader();
                 
