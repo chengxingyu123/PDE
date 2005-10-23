@@ -39,10 +39,12 @@ public class SingleManifestHeader extends ManifestHeader {
 	
     public void setAttribute(String key, String value) {
     	fElement.setAttribute(key, value);
+    	update();
     }
     
     public void setDirective(String key, String value) {
     	fElement.setDirective(key, value);
+    	update();
     }
     
     public void setMainComponent(String value) {

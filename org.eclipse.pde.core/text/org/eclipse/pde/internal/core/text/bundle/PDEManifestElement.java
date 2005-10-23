@@ -64,7 +64,7 @@ public class PDEManifestElement extends BundleObject {
 	}
 	
 	protected void setAttribute(String key, String value) {
-		setTableValue(fAttributes, key, value);
+		fAttributes = setTableValue(fAttributes, key, value);
 	}
 	
 	public String getDirective(String key) {
@@ -84,7 +84,7 @@ public class PDEManifestElement extends BundleObject {
 	}
 	
 	protected void setDirective(String key, String value) {
-		setTableValue(fDirectives, key, value);
+		fDirectives = setTableValue(fDirectives, key, value);
 	}
 	
 	private String getTableValue(TreeMap table, String key) {
@@ -141,7 +141,7 @@ public class PDEManifestElement extends BundleObject {
 		return table;
 	}
 	
-    private void setTableValue(TreeMap table, String key, String value) {
+    private TreeMap setTableValue(TreeMap table, String key, String value) {
     	if (table == null) {
 			table = new TreeMap();
 		}
@@ -150,6 +150,7 @@ public class PDEManifestElement extends BundleObject {
     	else {
      		table.put(key, value);
     	}
+    	return table;
     }
     
     public void setValue(String value) {
