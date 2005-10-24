@@ -8,7 +8,7 @@
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
-package org.eclipse.pde.internal.ui.correction;
+package org.eclipse.pde.internal.core.text.bundle;
 
 import java.util.HashMap;
 
@@ -16,9 +16,6 @@ import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.pde.core.IModelChangedEvent;
 import org.eclipse.pde.internal.core.text.IDocumentKey;
-import org.eclipse.pde.internal.core.text.bundle.ManifestHeader;
-import org.eclipse.pde.internal.core.text.bundle.PDEManifestElement;
-import org.eclipse.pde.internal.core.text.bundle.PackageFriend;
 import org.eclipse.text.edits.DeleteEdit;
 import org.eclipse.text.edits.InsertEdit;
 import org.eclipse.text.edits.ReplaceEdit;
