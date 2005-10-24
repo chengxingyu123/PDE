@@ -13,6 +13,7 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.SubProgressMonitor;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IPackageFragment;
@@ -122,22 +123,19 @@ public class OrganizeManifestJob extends WorkspaceJob {
 		monitor.beginTask(PDEUIMessages.OrganizeManifestJob_taskName, 3);
 		
 		if (!monitor.isCanceled()) {
-			organizeExportPackages(bundle, fProject);
+			organizeExportPackages(bundle, fProject, new SubProgressMonitor(monitor, 1));
 		}
-		monitor.worked(1);
 			
 		if (!monitor.isCanceled()) {
-			organizeImportPackages(bundle, removeImports);
+			organizeImportPackages(bundle, removeImports, new SubProgressMonitor(monitor,1));
 		}
-		monitor.worked(1);
 		
 		if (!monitor.isCanceled()) {
-			organizeRequireBundles(bundle, removeImports);
+			organizeRequireBundles(bundle, removeImports, new SubProgressMonitor(monitor,1));
 		}
-		monitor.worked(1);
 	}
 	
-	protected static void organizeExportPackages(IBundle bundle, IProject project) {
+	protected static void organizeExportPackages(IBundle bundle, IProject project, IProgressMonitor monitor) {
 		if (!(bundle instanceof Bundle))
 			return;
 		
@@ -181,7 +179,9 @@ public class OrganizeManifestJob extends WorkspaceJob {
 					header.removePackage(currentPkgs[i]);
 			}
 		} catch (JavaModelException e) {
-		} 
+		} finally {
+			monitor.done();
+		}
 	}
 
 	private static boolean isImmediateRoot(IPackageFragmentRoot root) throws JavaModelException {
@@ -190,7 +190,7 @@ public class OrganizeManifestJob extends WorkspaceJob {
 				|| (kind == IPackageFragmentRoot.K_BINARY && !root.isExternal());
 	}
 
-	protected static void organizeImportPackages(IBundle bundle, boolean removeImports) {
+	protected static void organizeImportPackages(IBundle bundle, boolean removeImports, IProgressMonitor monitor) {
 		if (!(bundle instanceof Bundle))
 			return;
 		ImportPackageHeader header = (ImportPackageHeader)((Bundle)bundle).getManifestHeader(Constants.IMPORT_PACKAGE);
@@ -209,6 +209,7 @@ public class OrganizeManifestJob extends WorkspaceJob {
 				}
 			}
 		}
+		monitor.done();
 	}
 	
 	private static final Set getAvailableExportedPackages() {
@@ -221,7 +222,7 @@ public class OrganizeManifestJob extends WorkspaceJob {
 		return set;
 	}
 
-	protected static void organizeRequireBundles(IBundle bundle, boolean removeImports) {
+	protected static void organizeRequireBundles(IBundle bundle, boolean removeImports, IProgressMonitor monitor) {
 		if (!(bundle instanceof Bundle))
 			return;
 		
@@ -240,6 +241,7 @@ public class OrganizeManifestJob extends WorkspaceJob {
 				}
 			}
 		}
+		monitor.done();
 	}
 
 }
