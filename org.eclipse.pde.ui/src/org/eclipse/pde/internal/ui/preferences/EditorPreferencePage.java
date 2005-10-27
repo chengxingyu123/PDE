@@ -74,14 +74,24 @@ public class EditorPreferencePage
 	private class HighlightingColorListItem {
 		private String fDisplayName;
 		private String fColorKey;
+		private String fBoldKey;
+		private String fItalicKey;
 		private RGB fColorValue;
 		public HighlightingColorListItem(String displayName, String colorKey, RGB itemColor) {
 			fDisplayName = displayName;
 			fColorKey = colorKey;
 			fColorValue = itemColor;
+			fBoldKey = fColorKey + IPDEColorConstants.P_BOLD_SUFFIX;
+			fItalicKey = fColorKey + IPDEColorConstants.P_ITALIC_SUFFIX;
 		}
 		public String getColorKey() {
 			return fColorKey;
+		}
+		public String getBoldKey() {
+			return fBoldKey;
+		}
+		public String getItalicKey() {
+			return fItalicKey;
 		}
 		public String getDisplayName() {
 			return fDisplayName;
