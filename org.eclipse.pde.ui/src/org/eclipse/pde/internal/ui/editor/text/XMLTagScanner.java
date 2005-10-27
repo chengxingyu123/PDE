@@ -10,9 +10,14 @@
  *******************************************************************************/
 package org.eclipse.pde.internal.ui.editor.text;
 
-import org.eclipse.jface.text.*;
-import org.eclipse.jface.text.rules.*;
-import org.eclipse.jface.util.*;
+import org.eclipse.jface.text.TextAttribute;
+import org.eclipse.jface.text.rules.IRule;
+import org.eclipse.jface.text.rules.MultiLineRule;
+import org.eclipse.jface.text.rules.RuleBasedScanner;
+import org.eclipse.jface.text.rules.SingleLineRule;
+import org.eclipse.jface.text.rules.Token;
+import org.eclipse.jface.text.rules.WhitespaceRule;
+import org.eclipse.jface.util.PropertyChangeEvent;
 
 
 
@@ -23,7 +28,7 @@ public class XMLTagScanner extends RuleBasedScanner {
 		
 		IRule[] rules = new IRule[3];
 		// Add rule for single and double quotes
-		rules[0] = new SingleLineRule("\"", "\"", fStringToken, '\\'); //$NON-NLS-1$ //$NON-NLS-2$
+		rules[0] = new MultiLineRule("\"", "\"", fStringToken, '\\'); //$NON-NLS-1$ //$NON-NLS-2$
 		rules[1] = new SingleLineRule("'", "'", fStringToken, '\\'); //$NON-NLS-1$ //$NON-NLS-2$
 		// Add generic whitespace rule.
 		rules[2] = new WhitespaceRule(new XMLWhitespaceDetector());

@@ -38,9 +38,9 @@ import org.eclipse.pde.internal.ui.IHelpContextIds;
 import org.eclipse.pde.internal.ui.IPreferenceConstants;
 import org.eclipse.pde.internal.ui.PDEPlugin;
 import org.eclipse.pde.internal.ui.PDEUIMessages;
-import org.eclipse.pde.internal.ui.editor.ManifestConfiguration;
-import org.eclipse.pde.internal.ui.editor.context.ManifestDocumentSetupParticipant;
+import org.eclipse.pde.internal.ui.editor.XMLConfiguration;
 import org.eclipse.pde.internal.ui.editor.context.PDEPreviewUpdater;
+import org.eclipse.pde.internal.ui.editor.context.XMLDocumentSetupParticpant;
 import org.eclipse.pde.internal.ui.editor.text.ColorManager;
 import org.eclipse.pde.internal.ui.editor.text.IPDEColorConstants;
 import org.eclipse.swt.SWT;
@@ -57,8 +57,6 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Link;
-import org.eclipse.swt.widgets.TabFolder;
-import org.eclipse.swt.widgets.TabItem;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 import org.eclipse.ui.PlatformUI;
@@ -71,48 +69,45 @@ public class EditorPreferencePage
 	private static final boolean XML_SYNTAX = true;
 	private static final boolean MF_SYNTAX = false;
 	
-	private class HighlightingColorListItem {
+	private class ColorListItem {
 		private String fDisplayName;
 		private String fColorKey;
-		private String fBoldKey;
-		private String fItalicKey;
-		private RGB fColorValue;
-		public HighlightingColorListItem(String displayName, String colorKey, RGB itemColor) {
+		private RGB fRGB;
+		
+		public ColorListItem(String displayName, String colorKey, RGB rgb) {
 			fDisplayName = displayName;
 			fColorKey = colorKey;
-			fColorValue = itemColor;
-			fBoldKey = fColorKey + IPDEColorConstants.P_BOLD_SUFFIX;
-			fItalicKey = fColorKey + IPDEColorConstants.P_ITALIC_SUFFIX;
+			fRGB = rgb;
 		}
 		public String getColorKey() {
 			return fColorKey;
 		}
 		public String getBoldKey() {
-			return fBoldKey;
+			return fColorKey + IPDEColorConstants.P_BOLD_SUFFIX;
 		}
 		public String getItalicKey() {
-			return fItalicKey;
+			return fColorKey + IPDEColorConstants.P_ITALIC_SUFFIX;
 		}
 		public String getDisplayName() {
 			return fDisplayName;
 		}
 		public Color getItemColor() {
-			return new Color(getShell().getDisplay(), fColorValue);
+			return new Color(getShell().getDisplay(), getColorValue());
 		}
 		public RGB getColorValue() {
-			return fColorValue;
+			return fRGB;
 		}
 		public void setColorValue(RGB itemColor) {
-			fColorValue = itemColor;
+			fRGB = itemColor;
 		}
 	}
 	
 	private class ColorListLabelProvider extends LabelProvider implements IColorProvider {
 		public String getText(Object element) {
-			return ((HighlightingColorListItem)element).getDisplayName();
+			return ((ColorListItem)element).getDisplayName();
 		}
 		public Color getForeground(Object element) {
-			return ((HighlightingColorListItem)element).getItemColor();
+			return ((ColorListItem)element).getItemColor();
 		}
 		public Color getBackground(Object element) {
 			return null;
@@ -133,48 +128,73 @@ public class EditorPreferencePage
 	}
 
 	private ColorManager fColorManager;
-	private IPreferenceStore fStore;
 	private PDEPreviewUpdater fXMLPreviewUpdater;
 
 	private ArrayList fXMLColorData;
 	private ArrayList fMFColorData;
+	private TableViewer fXMLViewer;
+	private TableViewer fMFViewer;
 	private String fXMLSample = "XMLSyntaxPreviewCode.txt";
 	private String fMFSample = "ManifestSyntaxPreviewCode.txt";
+	private String[][] fXMLColorStrings = new String[][] {
+			//	{Display name, IPreferenceStore id}
+			{PDEUIMessages.EditorPreferencePage_text, IPDEColorConstants.P_DEFAULT},
+			{PDEUIMessages.EditorPreferencePage_proc, IPDEColorConstants.P_PROC_INSTR},
+			{PDEUIMessages.EditorPreferencePage_tag, IPDEColorConstants.P_TAG},
+			{PDEUIMessages.EditorPreferencePage_string, IPDEColorConstants.P_STRING},
+			{PDEUIMessages.EditorPreferencePage_comment, IPDEColorConstants.P_XML_COMMENT}};
+	private String[][] fMFColorStrings = new String[][] {
+			{"Header Name", IPDEColorConstants.P_HEADER_NAME},
+			{"Assignment", IPDEColorConstants.P_HEADER_ASSIGNMENT},
+			{"Header Value", IPDEColorConstants.P_HEADER_VALUE}};
 	
 	public EditorPreferencePage() {
 		setDescription(PDEUIMessages.EditorPreferencePage_colorSettings); 
 		setPreferenceStore(PDEPlugin.getDefault().getPreferenceStore());
-		fStore = PDEPlugin.getDefault().getPreferenceStore();
-		fColorManager = new ColorManager();
-		fXMLColorData = loadColorData(new String[][] {
-			//	{Display name, IPreferenceStore id}
-				{PDEUIMessages.EditorPreferencePage_text, IPDEColorConstants.P_DEFAULT},
-				{PDEUIMessages.EditorPreferencePage_proc, IPDEColorConstants.P_PROC_INSTR},
-				{PDEUIMessages.EditorPreferencePage_tag, IPDEColorConstants.P_TAG},
-				{PDEUIMessages.EditorPreferencePage_string, IPDEColorConstants.P_STRING},
-				{PDEUIMessages.EditorPreferencePage_comment, IPDEColorConstants.P_XML_COMMENT}});
-		fMFColorData = loadColorData(new String[][] {
-				{"Header Name", IPDEColorConstants.P_HEADER_NAME},
-				{"Assignment", IPDEColorConstants.P_HEADER_ASSIGNMENT},
-				{"Header Value", IPDEColorConstants.P_HEADER_VALUE}});
+		fColorManager = ColorManager.getDefault();
+		IPreferenceStore store = PDEPlugin.getDefault().getPreferenceStore();
+		fXMLColorData = loadColorData(store, false, fXMLColorStrings);
+		fMFColorData = loadColorData(store, false, fMFColorStrings);
 	}
 
-	private ArrayList loadColorData(String[][] colors) {
+	private ArrayList loadColorData(IPreferenceStore store, boolean def, String[][] colors) {
 		ArrayList list = new ArrayList(colors.length);
 		for (int i = 0; i < colors.length; i++) {
-			list.add(new HighlightingColorListItem(colors[i][0], colors[i][1], PreferenceConverter.getColor(fStore, colors[i][1])));
+			RGB rgb = def ?
+					PreferenceConverter.getDefaultColor(store, colors[i][1]) :
+					PreferenceConverter.getColor(store, colors[i][1]);
+			list.add(new ColorListItem(colors[i][0], colors[i][1], rgb));
 		}
 		return list;
 	}
 	
 	public boolean performOk() {
+		IPreferenceStore store = PDEPlugin.getDefault().getPreferenceStore();
+		savePreferences(fXMLColorData, store);
+		savePreferences(fMFColorData, store);
 		PDEPlugin.getDefault().savePluginPreferences();
 		return super.performOk();
 	}
-
+	
+	private void savePreferences(ArrayList colors, IPreferenceStore store) {
+		for (int i = 0; i < colors.size(); i++) {
+			ColorListItem item = (ColorListItem)colors.get(i);
+			PreferenceConverter.setValue(store, item.getColorKey(), item.getColorValue());
+		}
+	}
+	
+	protected void performDefaults() {
+		IPreferenceStore store = PDEPlugin.getDefault().getPreferenceStore();
+		fXMLColorData = loadColorData(store, true, fXMLColorStrings);
+		fMFColorData = loadColorData(store, true, fMFColorStrings);
+		fXMLViewer.refresh();
+//		fMFViewer.refresh();
+		super.performDefaults();
+	}
+	
 	public void init(IWorkbench workbench) {
 	}
-
+	
 	protected Control createContents(Composite parent) {
 		final Link link = new Link(parent, SWT.NONE);
 		final String target = "org.eclipse.ui.preferencePages.GeneralTextEditor"; //$NON-NLS-1$
@@ -185,17 +205,20 @@ public class EditorPreferencePage
 			}
 		});
 		
-		TabFolder folder = new TabFolder(parent, SWT.NONE);
-		folder.setLayout(new GridLayout());	
-		folder.setLayoutData(new GridData(GridData.FILL_BOTH));
+		createSyntaxPage(parent, XML_SYNTAX);
 		
-		TabItem item = new TabItem(folder, SWT.NONE);
-		item.setText("&XML Highlighting");
-		item.setControl(createSyntaxPage(folder, XML_SYNTAX));
-		
-		item = new TabItem(folder, SWT.NONE);
-		item.setText("&Manifest Highlighting");
-		item.setControl(createSyntaxPage(folder, MF_SYNTAX));
+		// manifest config page not ready, only display xml page (no tabs)
+//		TabFolder folder = new TabFolder(parent, SWT.NONE);
+//		folder.setLayout(new GridLayout());	
+//		folder.setLayoutData(new GridData(GridData.FILL_BOTH));
+//		
+//		TabItem item = new TabItem(folder, SWT.NONE);
+//		item.setText("&XML Highlighting");
+//		item.setControl(createSyntaxPage(folder, XML_SYNTAX));
+//		
+//		item = new TabItem(folder, SWT.NONE);
+//		item.setText("&Manifest Highlighting");
+//		item.setControl(createSyntaxPage(folder, MF_SYNTAX));
 			
 		Dialog.applyDialogFont(getControl());
 		PlatformUI.getWorkbench().getHelpSystem().setHelp(getControl(), IHelpContextIds.EDITOR_PREFERENCE_PAGE);
@@ -236,6 +259,20 @@ public class EditorPreferencePage
 		gd.horizontalAlignment = GridData.BEGINNING;
 		foregroundColorButton.setLayoutData(gd);
 		
+		final Button boldCheckBox= new Button(propertiesComp, SWT.CHECK);
+		boldCheckBox.setText("&Bold");
+		gd= new GridData(GridData.FILL_HORIZONTAL);
+		gd.horizontalAlignment= GridData.BEGINNING;
+		gd.horizontalSpan= 2;
+		boldCheckBox.setLayoutData(gd);
+		
+		final Button italicCheckBox= new Button(propertiesComp, SWT.CHECK);
+		italicCheckBox.setText("I&talic");
+		gd= new GridData(GridData.FILL_HORIZONTAL);
+		gd.horizontalAlignment= GridData.BEGINNING;
+		gd.horizontalSpan= 2;
+		italicCheckBox.setLayoutData(gd);
+		
 		label = new Label(colorComposite, SWT.LEFT);
 		label.setText("Preview:");
 		label.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
@@ -249,8 +286,10 @@ public class EditorPreferencePage
 		
 		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
 			public void selectionChanged(SelectionChangedEvent event) {
-				HighlightingColorListItem item = getHighlightingColorListItem(isXML, viewer);
+				ColorListItem item = getColorListItem(isXML, viewer);
 				colorSelector.setColorValue(item.getColorValue());
+				boldCheckBox.setSelection(false);
+				italicCheckBox.setSelection(false);
 			}
 		});
 		
@@ -258,14 +297,18 @@ public class EditorPreferencePage
 			public void widgetDefaultSelected(SelectionEvent e) {
 			}
 			public void widgetSelected(SelectionEvent e) {
-				HighlightingColorListItem item = getHighlightingColorListItem(isXML, viewer);
+				ColorListItem item = getColorListItem(isXML, viewer);
 				item.setColorValue(colorSelector.getColorValue());
 				viewer.update(item, null);
-				PreferenceConverter.setValue(fStore, item.getColorKey(), item.getColorValue());
 			}
 		});
 		viewer.setInput(isXML ? fXMLColorData : fMFColorData);
 		viewer.setSelection(new StructuredSelection(viewer.getElementAt(0)));
+		
+		if (isXML)
+			fXMLViewer = viewer;
+		else
+			fMFViewer = viewer;
 		
 		return colorComposite;
 	}
@@ -277,14 +320,14 @@ public class EditorPreferencePage
 		String content = loadPreviewContentFromFile(isXML ? fXMLSample : fMFSample);
 		IDocument document = new Document(content);
 		if (isXML) {
-//			configuration = new XMLConfiguration(fColorManager);
-//			previewViewer.configure(configuration);
-//			fXMLPreviewUpdater = new PDEPreviewUpdater(previewViewer, configuration, fStore);
-//			new XMLDocumentSetupParticpant().setup(document);
-		} else {
-			configuration = new ManifestConfiguration(fColorManager, fStore);
+			configuration = new XMLConfiguration(fColorManager);
 			previewViewer.configure(configuration);
-			new ManifestDocumentSetupParticipant().setup(document);
+//			fXMLPreviewUpdater = new PDEPreviewUpdater(previewViewer, configuration, fStore);
+			new XMLDocumentSetupParticpant().setup(document);
+		} else {
+//			configuration = new ManifestConfiguration(fColorManager, fStore);
+//			previewViewer.configure(configuration);
+//			new ManifestDocumentSetupParticipant().setup(document);
 		}
 		
 		previewViewer.setEditable(false);	
@@ -302,10 +345,10 @@ public class EditorPreferencePage
 		}
 	}
 
-	private HighlightingColorListItem getHighlightingColorListItem(boolean isXML, TableViewer viewer) {
+	private ColorListItem getColorListItem(boolean isXML, TableViewer viewer) {
 		IStructuredSelection selection;
 		selection = (IStructuredSelection) viewer.getSelection();
-		return (HighlightingColorListItem) selection.getFirstElement();
+		return (ColorListItem) selection.getFirstElement();
 	}
 	
 	protected String loadPreviewContentFromFile(String filename) {
@@ -323,9 +366,5 @@ public class EditorPreferencePage
 		finally { if (reader != null) { try { reader.close(); } catch (IOException e) {}}}
 		
 		return buffer.toString();
-	}
-	
-	protected void performDefaults() {
-		super.performDefaults();
 	}
 }
