@@ -15,14 +15,21 @@ import org.eclipse.swt.graphics.RGB;
 public interface IPDEColorConstants {
 	RGB XML_COMMENT =       new RGB(128,   0,   0);
 	RGB PROC_INSTR =        new RGB(128, 128, 128);
-	RGB STRING=             new RGB(  0, 128,   0);
-	RGB DEFAULT=            new RGB(  0,   0,   0);
-	RGB TAG=                new RGB(  0,   0, 128);
+	RGB STRING =            new RGB(  0, 128,   0);
+	RGB DEFAULT =           new RGB(  0,   0,   0);
+	RGB TAG =               new RGB(  0,   0, 128);
 	
+	RGB HEADER_NAME = 		new RGB(  0,   0, 128);
+	RGB HEADER_VALUE = 		new RGB(  0,  64, 128);
+	RGB HEADER_ASSIGNMENT = new RGB(  0, 128, 128);
 	
 	String P_XML_COMMENT = "editor.color.xml_comment"; //$NON-NLS-1$
 	String P_PROC_INSTR = "editor.color.instr"; //$NON-NLS-1$
 	String P_STRING = "editor.color.string"; //$NON-NLS-1$
 	String P_DEFAULT = "editor.color.default"; //$NON-NLS-1$
 	String P_TAG = "editor.color.tag"; //$NON-NLS-1$
+	
+	String P_HEADER_NAME = "editor.color.manifest_header_name"; //$NON-NLS-1$
+	String P_HEADER_VALUE = "editor.color.manifest_header_value"; //$NON-NLS-1$
+	String P_HEADER_ASSIGNMENT = "editor.color.manifest_header_assignment"; //$NON-NLS-1$
 }
