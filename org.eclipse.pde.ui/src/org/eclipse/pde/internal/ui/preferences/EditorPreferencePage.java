@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 
+import org.eclipse.core.filebuffers.IDocumentSetupParticipant;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.preference.ColorSelector;
 import org.eclipse.jface.preference.IPreferenceStore;
@@ -41,8 +42,8 @@ import org.eclipse.pde.internal.ui.IPreferenceConstants;
 import org.eclipse.pde.internal.ui.PDEPlugin;
 import org.eclipse.pde.internal.ui.PDEUIMessages;
 import org.eclipse.pde.internal.ui.editor.XMLConfiguration;
-import org.eclipse.pde.internal.ui.editor.context.PDEPreviewUpdater;
 import org.eclipse.pde.internal.ui.editor.context.XMLDocumentSetupParticpant;
+import org.eclipse.pde.internal.ui.editor.context.XMLPreviewUpdater;
 import org.eclipse.pde.internal.ui.editor.text.ColorManager;
 import org.eclipse.pde.internal.ui.editor.text.IPDEColorConstants;
 import org.eclipse.swt.SWT;
@@ -50,7 +51,6 @@ import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Color;
-import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -69,30 +69,28 @@ public class EditorPreferencePage
 	implements IWorkbenchPreferencePage, IPreferenceConstants {
 
 	private static final boolean XML_SYNTAX = true;
-	private static final boolean MF_SYNTAX = false;
+//	private static final boolean MF_SYNTAX = false;
 	
-	private class PrefLinkedColorItem {
+	private class StoreLinkedDisplayItem {
 		private String fDisplayName;
 		private String fColorKey;
+		private Color fColor;
 		
-		public PrefLinkedColorItem(String displayName, String colorKey) {
+		public StoreLinkedDisplayItem(String displayName, String colorKey) {
 			fDisplayName = displayName;
 			fColorKey = colorKey;
 		}
 		public String getColorKey() {
 			return fColorKey;
 		}
-		public String getBoldKey() {
-			return fColorKey + IPDEColorConstants.P_BOLD_SUFFIX;
-		}
-		public String getItalicKey() {
-			return fColorKey + IPDEColorConstants.P_ITALIC_SUFFIX;
-		}
 		public String getDisplayName() {
 			return fDisplayName;
 		}
 		public Color getItemColor() {
-			return new Color(getShell().getDisplay(), getColorValue());
+			if (fColor != null)
+				fColor.dispose();
+			fColor = new Color(getShell().getDisplay(), getColorValue());
+			return fColor;
 		}
 		public RGB getColorValue() {
 			return PreferenceConverter.getDefaultColor(fStore, getColorKey());
@@ -103,11 +101,12 @@ public class EditorPreferencePage
 	}
 	
 	private class ColorListLabelProvider extends LabelProvider implements IColorProvider {
+		
 		public String getText(Object element) {
-			return ((PrefLinkedColorItem)element).getDisplayName();
+			return ((StoreLinkedDisplayItem)element).getDisplayName();
 		}
 		public Color getForeground(Object element) {
-			return ((PrefLinkedColorItem)element).getItemColor();
+			return ((StoreLinkedDisplayItem)element).getItemColor();
 		}
 		public Color getBackground(Object element) {
 			return null;
@@ -129,44 +128,51 @@ public class EditorPreferencePage
 
 	private ColorManager fColorManager;
 	private IPreferenceStore fStore;
-	private PDEPreviewUpdater fXMLPreviewUpdater;
+	private XMLPreviewUpdater fXMLPreviewUpdater;
 
 	private ArrayList fXMLColorData;
 	private ArrayList fMFColorData;
 	private TableViewer fXMLViewer;
-	private TableViewer fMFViewer;
+//	private TableViewer fMFViewer;
+	private SourceViewerConfiguration fXMLConfiguration;
+	private SourceViewerConfiguration fMFConfiguration;
+	private IDocumentSetupParticipant fXMLDocSetupParticipant;
+	private IDocumentSetupParticipant fMFDocSetupParticipant;
 	private String fXMLSample = "XMLSyntaxPreviewCode.txt";
 	private String fMFSample = "ManifestSyntaxPreviewCode.txt";
 	private String[][] fXMLColorStrings = new String[][] {
-			//	{Display name, IPreferenceStore id}
+/*			{Display name, IPreferenceStore id}				*/
 			{PDEUIMessages.EditorPreferencePage_text, IPDEColorConstants.P_DEFAULT},
 			{PDEUIMessages.EditorPreferencePage_proc, IPDEColorConstants.P_PROC_INSTR},
 			{PDEUIMessages.EditorPreferencePage_tag, IPDEColorConstants.P_TAG},
 			{PDEUIMessages.EditorPreferencePage_string, IPDEColorConstants.P_STRING},
 			{PDEUIMessages.EditorPreferencePage_comment, IPDEColorConstants.P_XML_COMMENT}};
-	private String[][] fMFColorStrings = new String[][] {
-			{"Header Name", IPDEColorConstants.P_HEADER_NAME},
-			{"Assignment", IPDEColorConstants.P_HEADER_ASSIGNMENT},
-			{"Header Value", IPDEColorConstants.P_HEADER_VALUE}};
-	private Button fBoldCheckBox;
-	private Button fItalicCheckBox;
+//	private String[][] fMFColorStrings = new String[][] {
+//			{"Header Name", IPDEColorConstants.P_HEADER_NAME},
+//			{"Assignment", IPDEColorConstants.P_HEADER_ASSIGNMENT},
+//			{"Header Value", IPDEColorConstants.P_HEADER_VALUE}};
 	
 	public EditorPreferencePage() {
 		setDescription(PDEUIMessages.EditorPreferencePage_colorSettings); 
 		fStore = new PreferenceStore();
 		fColorManager = ColorManager.getDefault();
+		fXMLConfiguration = new XMLConfiguration(fColorManager);
+		fXMLDocSetupParticipant = new XMLDocumentSetupParticpant();
 		IPreferenceStore store = PDEPlugin.getDefault().getPreferenceStore();
-		fXMLColorData = loadColorData(store, fXMLColorStrings);
-//		fMFColorData = loadColorData(store, fMFColorStrings);
+		fXMLColorData = loadColorData(store, false, fXMLColorStrings);
+//		fMFColorData = loadColorData(store, false, fMFColorStrings);
 		setPreferenceStore(fStore);
 	}
 
-	private ArrayList loadColorData(IPreferenceStore store, String[][] colors) {
+	private ArrayList loadColorData(IPreferenceStore store, boolean def, String[][] colors) {
 		ArrayList list = new ArrayList(colors.length);
 		for (int i = 0; i < colors.length; i++) {
-			RGB rgb = PreferenceConverter.getColor(store, colors[i][1]);
-			fStore.setDefault(colors[i][1], StringConverter.asString(rgb));
-			list.add(new PrefLinkedColorItem(colors[i][0], colors[i][1]));
+			StoreLinkedDisplayItem item = new StoreLinkedDisplayItem(colors[i][0], colors[i][1]);
+			RGB rgb = def ?
+					PreferenceConverter.getDefaultColor(store, item.getColorKey()) : 
+					PreferenceConverter.getColor(store, item.getColorKey());
+			fStore.setDefault(item.getColorKey(), StringConverter.asString(rgb));
+			list.add(item);
 		}
 		return list;
 	}
@@ -181,16 +187,20 @@ public class EditorPreferencePage
 	
 	private void setPreferences(ArrayList colors, IPreferenceStore store) {
 		for (int i = 0; i < colors.size(); i++) {
-			PrefLinkedColorItem item = (PrefLinkedColorItem)colors.get(i);
+			StoreLinkedDisplayItem item = (StoreLinkedDisplayItem)colors.get(i);
 			PreferenceConverter.setValue(store, item.getColorKey(), item.getColorValue());
+			fColorManager.updateProperty(item.getColorKey());
 		}
 	}
 	
 	protected void performDefaults() {
-		ColorManager.initializeDefaults(fStore);
+		IPreferenceStore store = PDEPlugin.getDefault().getPreferenceStore();
+		fXMLColorData = loadColorData(store, true, fXMLColorStrings);
 		fXMLViewer.refresh();
 		fXMLViewer.setSelection(fXMLViewer.getSelection()); // refresh the color selector's color
+//		fMFColorData = loadColorData(store, true, fMFColorStrings);
 //		fMFViewer.refresh();
+//		fMFViewer.setSelection(fMFViewer.getSelection()); // refresh the color selector's color
 		super.performDefaults();
 	}
 	
@@ -209,7 +219,7 @@ public class EditorPreferencePage
 		
 		createSyntaxPage(parent, XML_SYNTAX);
 		
-// 		manifest config page not ready, only display xml page (no tabs) 	\\
+/* 		manifest config page not ready, only display xml page (no tabs) 	*/
 		
 //		TabFolder folder = new TabFolder(parent, SWT.NONE);
 //		folder.setLayout(new GridLayout());	
@@ -232,7 +242,7 @@ public class EditorPreferencePage
 	public Control createSyntaxPage(Composite parent, final boolean isXML) {
 		
 		Composite colorComposite = new Composite(parent, SWT.NONE);
-		colorComposite.setLayout(new GridLayout(2, true));
+		colorComposite.setLayout(new GridLayout(2, false));
 		colorComposite.setLayoutData(new GridData(GridData.FILL_BOTH));
 
 		Label label = new Label(colorComposite, SWT.LEFT);
@@ -257,50 +267,33 @@ public class EditorPreferencePage
 		label.setText("&Color:");
 		
 		final ColorSelector colorSelector = new ColorSelector(propertiesComp);
-		Button foregroundColorButton = colorSelector.getButton();
-		GridData gd = new GridData(GridData.FILL_HORIZONTAL);
-		gd.horizontalAlignment = GridData.BEGINNING;
-		foregroundColorButton.setLayoutData(gd);
-		
-		fBoldCheckBox = new Button(propertiesComp, SWT.CHECK);
-		fBoldCheckBox.setText("&Bold");
-		gd= new GridData(GridData.FILL_HORIZONTAL);
-		gd.horizontalAlignment = GridData.BEGINNING;
-		gd.horizontalSpan = 2;
-		fBoldCheckBox.setLayoutData(gd);
-		
-		fItalicCheckBox = new Button(propertiesComp, SWT.CHECK);
-		fItalicCheckBox.setText("I&talic");
-		gd= new GridData(GridData.FILL_HORIZONTAL);
-		gd.horizontalAlignment = GridData.BEGINNING;
-		gd.horizontalSpan = 2;
-		fItalicCheckBox.setLayoutData(gd);
+		Button colorButton = colorSelector.getButton();
+		colorButton.setLayoutData(new GridData(GridData.BEGINNING));
 		
 		label = new Label(colorComposite, SWT.LEFT);
 		label.setText("Preview:");
 		label.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-		
-		final SourceViewer previewer = createPreviewer(colorComposite, isXML);
-		Control pControl = previewer.getControl();
-		gd = new GridData(GridData.FILL_BOTH);
-		gd.heightHint = convertHeightInCharsToPixels(4);
+	
+		Control control = createPreviewer(colorComposite, isXML);
+		GridData gd = new GridData(GridData.FILL_BOTH);
+		gd.heightHint = convertHeightInCharsToPixels(9);
 		gd.horizontalSpan = 2;
-		pControl.setLayoutData(gd);
-		
-		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
-			public void selectionChanged(SelectionChangedEvent event) {
-				PrefLinkedColorItem item = getHighlightingColorListItem(isXML, viewer);
-				colorSelector.setColorValue(item.getColorValue());
-			}
-		});
-		
-		foregroundColorButton.addSelectionListener(new SelectionListener() {
+		control.setLayoutData(gd);
+
+		colorButton.addSelectionListener(new SelectionListener() {
 			public void widgetDefaultSelected(SelectionEvent e) {
 			}
 			public void widgetSelected(SelectionEvent e) {
-				PrefLinkedColorItem item = getHighlightingColorListItem(isXML, viewer);
+				StoreLinkedDisplayItem item = getStoreLinkedItem(viewer);
 				item.setColorValue(colorSelector.getColorValue());
 				viewer.update(item, null);
+			}
+		});
+		
+		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
+			public void selectionChanged(SelectionChangedEvent event) {
+				StoreLinkedDisplayItem item = getStoreLinkedItem(viewer);
+				colorSelector.setColorValue(item.getColorValue());
 			}
 		});
 		viewer.setInput(isXML ? fXMLColorData : fMFColorData);
@@ -308,48 +301,44 @@ public class EditorPreferencePage
 		
 		if (isXML)
 			fXMLViewer = viewer;
-		else
-			fMFViewer = viewer;
+//		else
+//			fMFViewer = viewer;
 		
 		return colorComposite;
 	}
 	
-	private SourceViewer createPreviewer(Composite parent, boolean isXML) {
+	
+	private Control createPreviewer(Composite parent, boolean isXML) {
+		SourceViewer previewViewer = new SourceViewer(parent, null, SWT.BORDER | SWT.V_SCROLL);
 		
-		SourceViewer previewViewer = new SourceViewer(parent, null, null, false, SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL);
-		SourceViewerConfiguration configuration;
+		SourceViewerConfiguration config = isXML ? fXMLConfiguration : fMFConfiguration;
+		
+		previewViewer.configure(config);
+		previewViewer.setEditable(false);	
+		previewViewer.getTextWidget().setFont(JFaceResources.getFont(JFaceResources.TEXT_FONT));
+		
+		fXMLPreviewUpdater = new XMLPreviewUpdater(previewViewer, config, fStore);
+		
 		String content = loadPreviewContentFromFile(isXML ? fXMLSample : fMFSample);
 		IDocument document = new Document(content);
-		if (isXML) {
-			configuration = new XMLConfiguration(fColorManager);
-			previewViewer.configure(configuration);
-//			fXMLPreviewUpdater = new PDEPreviewUpdater(previewViewer, configuration, fStore);
-			new XMLDocumentSetupParticpant().setup(document);
-		} else {
-//			configuration = new ManifestConfiguration(fColorManager, fStore);
-//			previewViewer.configure(configuration);
-//			new ManifestDocumentSetupParticipant().setup(document);
-		}
-		
-		previewViewer.setEditable(false);	
-		Font font = JFaceResources.getFont(JFaceResources.TEXT_FONT);
-		previewViewer.getTextWidget().setFont(font);
+		if (isXML) fXMLDocSetupParticipant.setup(document);
+		else fMFDocSetupParticipant.setup(document);
 		previewViewer.setDocument(document);
 		
-		return previewViewer;
+		return previewViewer.getControl();
 	}
 	
 	public void dispose() {
 		super.dispose();
-		if (fXMLPreviewUpdater != null) {
+		if (fXMLPreviewUpdater != null)
 			fXMLPreviewUpdater.dispose();
-		}
+		if (fColorManager != null)
+			fColorManager.dispose();
 	}
-
-	private PrefLinkedColorItem getHighlightingColorListItem(boolean isXML, TableViewer viewer) {
-		IStructuredSelection selection;
-		selection = (IStructuredSelection) viewer.getSelection();
-		return (PrefLinkedColorItem) selection.getFirstElement();
+	
+	private StoreLinkedDisplayItem getStoreLinkedItem(TableViewer viewer) {
+		IStructuredSelection selection = (IStructuredSelection) viewer.getSelection();
+		return (StoreLinkedDisplayItem) selection.getFirstElement();
 	}
 	
 	protected String loadPreviewContentFromFile(String filename) {

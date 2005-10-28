@@ -24,15 +24,15 @@ import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.texteditor.AbstractTextEditor;
 
-public class PDEPreviewUpdater {
+public class XMLPreviewUpdater {
 
 	private Color fForegroundColor = null;
 
-	public PDEPreviewUpdater(final SourceViewer viewer,
+	public XMLPreviewUpdater(final SourceViewer viewer,
 			final SourceViewerConfiguration configuration,
-			final IPreferenceStore preferenceStore) {
+			final IPreferenceStore prefStore) {
 
-		initializeViewerColors(viewer, preferenceStore);
+		initializeViewerColors(viewer, prefStore);
 
 		final IPropertyChangeListener propertyChangeListener = new IPropertyChangeListener() {
 			public void propertyChange(PropertyChangeEvent event) {
@@ -41,20 +41,18 @@ public class PDEPreviewUpdater {
 						.equals(property)
 						|| AbstractTextEditor.PREFERENCE_COLOR_FOREGROUND_SYSTEM_DEFAULT
 								.equals(property)) {
-					initializeViewerColors(viewer, preferenceStore);
+					initializeViewerColors(viewer, prefStore);
 				}
 			}
 
 		};
-		preferenceStore.addPropertyChangeListener(propertyChangeListener);
+		prefStore.addPropertyChangeListener(propertyChangeListener);
 	}
 
 	protected void initializeViewerColors(ISourceViewer viewer,
 			IPreferenceStore store) {
 		StyledText styledText = viewer.getTextWidget();
-		Color color = store
-				.getBoolean(AbstractTextEditor.PREFERENCE_COLOR_FOREGROUND_SYSTEM_DEFAULT) ? null
-				: createColor(store,
+		Color color = createColor(store,
 						AbstractTextEditor.PREFERENCE_COLOR_FOREGROUND,
 						styledText.getDisplay());
 		styledText.setForeground(color);
