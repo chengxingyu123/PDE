@@ -15,7 +15,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 
-import org.eclipse.core.filebuffers.IDocumentSetupParticipant;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.preference.ColorSelector;
 import org.eclipse.jface.preference.IPreferenceStore;
@@ -27,7 +26,8 @@ import org.eclipse.jface.resource.StringConverter;
 import org.eclipse.jface.text.Document;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.source.SourceViewer;
-import org.eclipse.jface.text.source.SourceViewerConfiguration;
+import org.eclipse.jface.util.IPropertyChangeListener;
+import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.jface.viewers.IColorProvider;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredContentProvider;
@@ -41,11 +41,11 @@ import org.eclipse.pde.internal.ui.IHelpContextIds;
 import org.eclipse.pde.internal.ui.IPreferenceConstants;
 import org.eclipse.pde.internal.ui.PDEPlugin;
 import org.eclipse.pde.internal.ui.PDEUIMessages;
-import org.eclipse.pde.internal.ui.editor.XMLConfiguration;
 import org.eclipse.pde.internal.ui.editor.context.XMLDocumentSetupParticpant;
-import org.eclipse.pde.internal.ui.editor.context.XMLPreviewUpdater;
 import org.eclipse.pde.internal.ui.editor.text.ColorManager;
 import org.eclipse.pde.internal.ui.editor.text.IPDEColorConstants;
+import org.eclipse.pde.internal.ui.editor.text.ChangeAwareSourceViewerConfiguration;
+import org.eclipse.pde.internal.ui.editor.text.XMLSourceViewerConfiguration;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
@@ -67,9 +67,6 @@ import org.eclipse.ui.dialogs.PreferencesUtil;
 public class EditorPreferencePage
 	extends PreferencePage
 	implements IWorkbenchPreferencePage, IPreferenceConstants {
-
-	private static final boolean XML_SYNTAX = true;
-//	private static final boolean MF_SYNTAX = false;
 	
 	private class StoreLinkedDisplayItem {
 		private String fDisplayName;
@@ -93,10 +90,18 @@ public class EditorPreferencePage
 			return fColor;
 		}
 		public RGB getColorValue() {
-			return PreferenceConverter.getDefaultColor(fStore, getColorKey());
+			return PreferenceConverter.getDefaultColor(fStore, fColorKey);
 		}
 		public void setColorValue(RGB itemColor) {
-			PreferenceConverter.setDefault(fStore, getColorKey(), itemColor);
+			RGB oldrgb = getColorValue();
+			PreferenceConverter.setDefault(fStore, fColorKey, itemColor);
+			fStore.firePropertyChangeEvent(fColorKey, oldrgb, itemColor);
+		}
+		public void disposeColor() {
+			if (fColor != null) {
+				fColor.dispose();
+				fColor = null;
+			}
 		}
 	}
 	
@@ -128,16 +133,11 @@ public class EditorPreferencePage
 
 	private ColorManager fColorManager;
 	private IPreferenceStore fStore;
-	private XMLPreviewUpdater fXMLPreviewUpdater;
 
 	private ArrayList fXMLColorData;
 	private ArrayList fMFColorData;
 	private TableViewer fXMLViewer;
 //	private TableViewer fMFViewer;
-	private SourceViewerConfiguration fXMLConfiguration;
-	private SourceViewerConfiguration fMFConfiguration;
-	private IDocumentSetupParticipant fXMLDocSetupParticipant;
-	private IDocumentSetupParticipant fMFDocSetupParticipant;
 	private String fXMLSample = "XMLSyntaxPreviewCode.txt";
 	private String fMFSample = "ManifestSyntaxPreviewCode.txt";
 	private String[][] fXMLColorStrings = new String[][] {
@@ -156,8 +156,6 @@ public class EditorPreferencePage
 		setDescription(PDEUIMessages.EditorPreferencePage_colorSettings); 
 		fStore = new PreferenceStore();
 		fColorManager = ColorManager.getDefault();
-		fXMLConfiguration = new XMLConfiguration(fColorManager);
-		fXMLDocSetupParticipant = new XMLDocumentSetupParticpant();
 		IPreferenceStore store = PDEPlugin.getDefault().getPreferenceStore();
 		fXMLColorData = loadColorData(store, false, fXMLColorStrings);
 //		fMFColorData = loadColorData(store, false, fMFColorStrings);
@@ -217,7 +215,8 @@ public class EditorPreferencePage
 			}
 		});
 		
-		createSyntaxPage(parent, XML_SYNTAX);
+		final boolean XML = true;
+		createSyntaxPage(parent, XML);
 		
 /* 		manifest config page not ready, only display xml page (no tabs) 	*/
 		
@@ -227,11 +226,11 @@ public class EditorPreferencePage
 //		
 //		TabItem item = new TabItem(folder, SWT.NONE);
 //		item.setText("&XML Highlighting");
-//		item.setControl(createSyntaxPage(folder, XML_SYNTAX));
+//		item.setControl(createSyntaxPage(folder, XML));
 //		
 //		item = new TabItem(folder, SWT.NONE);
 //		item.setText("&Manifest Highlighting");
-//		item.setControl(createSyntaxPage(folder, MF_SYNTAX));
+//		item.setControl(createSyntaxPage(folder, !XML));
 			
 		Dialog.applyDialogFont(getControl());
 		PlatformUI.getWorkbench().getHelpSystem().setHelp(getControl(), IHelpContextIds.EDITOR_PREFERENCE_PAGE);
@@ -309,20 +308,36 @@ public class EditorPreferencePage
 	
 	
 	private Control createPreviewer(Composite parent, boolean isXML) {
-		SourceViewer previewViewer = new SourceViewer(parent, null, SWT.BORDER | SWT.V_SCROLL);
+		final SourceViewer previewViewer = new SourceViewer(parent, null, SWT.BORDER | SWT.V_SCROLL);
 		
-		SourceViewerConfiguration config = isXML ? fXMLConfiguration : fMFConfiguration;
+		final ChangeAwareSourceViewerConfiguration config;
+		if (isXML)
+			config = new XMLSourceViewerConfiguration(null, fColorManager);
+		else
+			config = null;
 		
+		IPropertyChangeListener propertyChangeListener = new IPropertyChangeListener() {
+			public void propertyChange(PropertyChangeEvent event) {
+				if (config.affectsTextPresentation(event)) {
+					config.adaptToPreferenceChange(event);
+					previewViewer.invalidateTextPresentation();
+				}
+			}
+		};
 		previewViewer.configure(config);
+		fStore.addPropertyChangeListener(propertyChangeListener);
+		
 		previewViewer.setEditable(false);	
 		previewViewer.getTextWidget().setFont(JFaceResources.getFont(JFaceResources.TEXT_FONT));
 		
-		fXMLPreviewUpdater = new XMLPreviewUpdater(previewViewer, config, fStore);
-		
 		String content = loadPreviewContentFromFile(isXML ? fXMLSample : fMFSample);
 		IDocument document = new Document(content);
-		if (isXML) fXMLDocSetupParticipant.setup(document);
-		else fMFDocSetupParticipant.setup(document);
+		
+		if (isXML)
+			new XMLDocumentSetupParticpant().setup(document);
+//		else
+//			new MFDocumentSetupParticipant.setup(document);
+		
 		previewViewer.setDocument(document);
 		
 		return previewViewer.getControl();
@@ -330,10 +345,13 @@ public class EditorPreferencePage
 	
 	public void dispose() {
 		super.dispose();
-		if (fXMLPreviewUpdater != null)
-			fXMLPreviewUpdater.dispose();
 		if (fColorManager != null)
 			fColorManager.dispose();
+		for (int i = 0; i < fXMLColorData.size(); i++) {
+			((StoreLinkedDisplayItem)fXMLColorData.get(i)).disposeColor();
+		}
+//		for (int i = 0; i < fMFColorData.size(); i++)
+//			((StoreLinkedDisplayItem)fMFColorData.get(i)).disposeColor();
 	}
 	
 	private StoreLinkedDisplayItem getStoreLinkedItem(TableViewer viewer) {

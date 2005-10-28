@@ -10,19 +10,25 @@
  *******************************************************************************/
 package org.eclipse.pde.internal.ui.editor.text;
 
-import org.eclipse.jface.text.*;
-import org.eclipse.jface.text.presentation.*;
-import org.eclipse.jface.text.reconciler.*;
-import org.eclipse.jface.text.rules.*;
-import org.eclipse.jface.text.source.*;
-import org.eclipse.jface.util.*;
-import org.eclipse.pde.core.*;
+import org.eclipse.jface.text.IDocument;
+import org.eclipse.jface.text.ITextDoubleClickStrategy;
+import org.eclipse.jface.text.TextAttribute;
+import org.eclipse.jface.text.presentation.IPresentationReconciler;
+import org.eclipse.jface.text.presentation.PresentationReconciler;
+import org.eclipse.jface.text.reconciler.IReconciler;
+import org.eclipse.jface.text.reconciler.MonoReconciler;
+import org.eclipse.jface.text.rules.DefaultDamagerRepairer;
+import org.eclipse.jface.text.rules.Token;
+import org.eclipse.jface.text.source.IAnnotationHover;
+import org.eclipse.jface.text.source.ISourceViewer;
+import org.eclipse.jface.util.PropertyChangeEvent;
+import org.eclipse.pde.core.IBaseModel;
 import org.eclipse.pde.internal.core.text.IReconcilingParticipant;
-import org.eclipse.pde.internal.ui.editor.*;
-import org.eclipse.ui.editors.text.TextSourceViewerConfiguration;
+import org.eclipse.pde.internal.ui.editor.XMLDoubleClickStrategy;
+import org.eclipse.pde.internal.ui.editor.XMLSourcePage;
 
 
-public class XMLSourceViewerConfiguration extends TextSourceViewerConfiguration {
+public class XMLSourceViewerConfiguration extends ChangeAwareSourceViewerConfiguration {
 	private AnnotationHover fAnnotationHover;
 	private XMLDoubleClickStrategy fDoubleClickStrategy;
 	private XMLTagScanner fTagScanner;
@@ -114,6 +120,8 @@ public class XMLSourceViewerConfiguration extends TextSourceViewerConfiguration 
 	}
 	
 	public IReconciler getReconciler(ISourceViewer sourceViewer) {
+		if (fSourcePage == null)
+			return fReconciler;
 		if (fReconciler == null) {
 			IBaseModel model = fSourcePage.getInputContext().getModel();
 			if (model instanceof IReconcilingParticipant) {
@@ -157,6 +165,16 @@ public class XMLSourceViewerConfiguration extends TextSourceViewerConfiguration 
     	fXMLCommentAttr= new TextAttribute(((ColorManager)fColorManager).getColor(event.getProperty()), fXMLCommentAttr.getBackground(), fXMLCommentAttr.getStyle());
     }
  
-	
+	public boolean affectsTextPresentation(PropertyChangeEvent event) {
+		String property = event.getProperty();
+		return property.startsWith(IPDEColorConstants.P_DEFAULT) ||
+			property.startsWith(IPDEColorConstants.P_HEADER_ASSIGNMENT) ||
+			property.startsWith(IPDEColorConstants.P_HEADER_NAME) ||
+			property.startsWith(IPDEColorConstants.P_HEADER_VALUE) ||
+			property.startsWith(IPDEColorConstants.P_PROC_INSTR) ||
+			property.startsWith(IPDEColorConstants.P_STRING) || 
+			property.startsWith(IPDEColorConstants.P_TAG) || 
+			property.startsWith(IPDEColorConstants.P_XML_COMMENT);
+	}
 	
 }
