@@ -20,7 +20,9 @@ import org.eclipse.jface.preference.ColorSelector;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.PreferenceConverter;
 import org.eclipse.jface.preference.PreferencePage;
+import org.eclipse.jface.preference.PreferenceStore;
 import org.eclipse.jface.resource.JFaceResources;
+import org.eclipse.jface.resource.StringConverter;
 import org.eclipse.jface.text.Document;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.source.SourceViewer;
@@ -69,15 +71,13 @@ public class EditorPreferencePage
 	private static final boolean XML_SYNTAX = true;
 	private static final boolean MF_SYNTAX = false;
 	
-	private class ColorListItem {
+	private class PrefLinkedColorItem {
 		private String fDisplayName;
 		private String fColorKey;
-		private RGB fRGB;
 		
-		public ColorListItem(String displayName, String colorKey, RGB rgb) {
+		public PrefLinkedColorItem(String displayName, String colorKey) {
 			fDisplayName = displayName;
 			fColorKey = colorKey;
-			fRGB = rgb;
 		}
 		public String getColorKey() {
 			return fColorKey;
@@ -95,19 +95,19 @@ public class EditorPreferencePage
 			return new Color(getShell().getDisplay(), getColorValue());
 		}
 		public RGB getColorValue() {
-			return fRGB;
+			return PreferenceConverter.getDefaultColor(fStore, getColorKey());
 		}
 		public void setColorValue(RGB itemColor) {
-			fRGB = itemColor;
+			PreferenceConverter.setDefault(fStore, getColorKey(), itemColor);
 		}
 	}
 	
 	private class ColorListLabelProvider extends LabelProvider implements IColorProvider {
 		public String getText(Object element) {
-			return ((ColorListItem)element).getDisplayName();
+			return ((PrefLinkedColorItem)element).getDisplayName();
 		}
 		public Color getForeground(Object element) {
-			return ((ColorListItem)element).getItemColor();
+			return ((PrefLinkedColorItem)element).getItemColor();
 		}
 		public Color getBackground(Object element) {
 			return null;
@@ -128,6 +128,7 @@ public class EditorPreferencePage
 	}
 
 	private ColorManager fColorManager;
+	private IPreferenceStore fStore;
 	private PDEPreviewUpdater fXMLPreviewUpdater;
 
 	private ArrayList fXMLColorData;
@@ -147,47 +148,48 @@ public class EditorPreferencePage
 			{"Header Name", IPDEColorConstants.P_HEADER_NAME},
 			{"Assignment", IPDEColorConstants.P_HEADER_ASSIGNMENT},
 			{"Header Value", IPDEColorConstants.P_HEADER_VALUE}};
+	private Button fBoldCheckBox;
+	private Button fItalicCheckBox;
 	
 	public EditorPreferencePage() {
 		setDescription(PDEUIMessages.EditorPreferencePage_colorSettings); 
-		setPreferenceStore(PDEPlugin.getDefault().getPreferenceStore());
+		fStore = new PreferenceStore();
 		fColorManager = ColorManager.getDefault();
 		IPreferenceStore store = PDEPlugin.getDefault().getPreferenceStore();
-		fXMLColorData = loadColorData(store, false, fXMLColorStrings);
-		fMFColorData = loadColorData(store, false, fMFColorStrings);
+		fXMLColorData = loadColorData(store, fXMLColorStrings);
+//		fMFColorData = loadColorData(store, fMFColorStrings);
+		setPreferenceStore(fStore);
 	}
 
-	private ArrayList loadColorData(IPreferenceStore store, boolean def, String[][] colors) {
+	private ArrayList loadColorData(IPreferenceStore store, String[][] colors) {
 		ArrayList list = new ArrayList(colors.length);
 		for (int i = 0; i < colors.length; i++) {
-			RGB rgb = def ?
-					PreferenceConverter.getDefaultColor(store, colors[i][1]) :
-					PreferenceConverter.getColor(store, colors[i][1]);
-			list.add(new ColorListItem(colors[i][0], colors[i][1], rgb));
+			RGB rgb = PreferenceConverter.getColor(store, colors[i][1]);
+			fStore.setDefault(colors[i][1], StringConverter.asString(rgb));
+			list.add(new PrefLinkedColorItem(colors[i][0], colors[i][1]));
 		}
 		return list;
 	}
 	
 	public boolean performOk() {
 		IPreferenceStore store = PDEPlugin.getDefault().getPreferenceStore();
-		savePreferences(fXMLColorData, store);
-		savePreferences(fMFColorData, store);
+		setPreferences(fXMLColorData, store);
+//		setPreferences(fMFColorData, store);
 		PDEPlugin.getDefault().savePluginPreferences();
 		return super.performOk();
 	}
 	
-	private void savePreferences(ArrayList colors, IPreferenceStore store) {
+	private void setPreferences(ArrayList colors, IPreferenceStore store) {
 		for (int i = 0; i < colors.size(); i++) {
-			ColorListItem item = (ColorListItem)colors.get(i);
+			PrefLinkedColorItem item = (PrefLinkedColorItem)colors.get(i);
 			PreferenceConverter.setValue(store, item.getColorKey(), item.getColorValue());
 		}
 	}
 	
 	protected void performDefaults() {
-		IPreferenceStore store = PDEPlugin.getDefault().getPreferenceStore();
-		fXMLColorData = loadColorData(store, true, fXMLColorStrings);
-		fMFColorData = loadColorData(store, true, fMFColorStrings);
+		ColorManager.initializeDefaults(fStore);
 		fXMLViewer.refresh();
+		fXMLViewer.setSelection(fXMLViewer.getSelection()); // refresh the color selector's color
 //		fMFViewer.refresh();
 		super.performDefaults();
 	}
@@ -207,7 +209,8 @@ public class EditorPreferencePage
 		
 		createSyntaxPage(parent, XML_SYNTAX);
 		
-		// manifest config page not ready, only display xml page (no tabs)
+// 		manifest config page not ready, only display xml page (no tabs) 	\\
+		
 //		TabFolder folder = new TabFolder(parent, SWT.NONE);
 //		folder.setLayout(new GridLayout());	
 //		folder.setLayoutData(new GridData(GridData.FILL_BOTH));
@@ -259,19 +262,19 @@ public class EditorPreferencePage
 		gd.horizontalAlignment = GridData.BEGINNING;
 		foregroundColorButton.setLayoutData(gd);
 		
-		final Button boldCheckBox= new Button(propertiesComp, SWT.CHECK);
-		boldCheckBox.setText("&Bold");
+		fBoldCheckBox = new Button(propertiesComp, SWT.CHECK);
+		fBoldCheckBox.setText("&Bold");
 		gd= new GridData(GridData.FILL_HORIZONTAL);
-		gd.horizontalAlignment= GridData.BEGINNING;
-		gd.horizontalSpan= 2;
-		boldCheckBox.setLayoutData(gd);
+		gd.horizontalAlignment = GridData.BEGINNING;
+		gd.horizontalSpan = 2;
+		fBoldCheckBox.setLayoutData(gd);
 		
-		final Button italicCheckBox= new Button(propertiesComp, SWT.CHECK);
-		italicCheckBox.setText("I&talic");
+		fItalicCheckBox = new Button(propertiesComp, SWT.CHECK);
+		fItalicCheckBox.setText("I&talic");
 		gd= new GridData(GridData.FILL_HORIZONTAL);
-		gd.horizontalAlignment= GridData.BEGINNING;
-		gd.horizontalSpan= 2;
-		italicCheckBox.setLayoutData(gd);
+		gd.horizontalAlignment = GridData.BEGINNING;
+		gd.horizontalSpan = 2;
+		fItalicCheckBox.setLayoutData(gd);
 		
 		label = new Label(colorComposite, SWT.LEFT);
 		label.setText("Preview:");
@@ -286,10 +289,8 @@ public class EditorPreferencePage
 		
 		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
 			public void selectionChanged(SelectionChangedEvent event) {
-				ColorListItem item = getColorListItem(isXML, viewer);
+				PrefLinkedColorItem item = getHighlightingColorListItem(isXML, viewer);
 				colorSelector.setColorValue(item.getColorValue());
-				boldCheckBox.setSelection(false);
-				italicCheckBox.setSelection(false);
 			}
 		});
 		
@@ -297,7 +298,7 @@ public class EditorPreferencePage
 			public void widgetDefaultSelected(SelectionEvent e) {
 			}
 			public void widgetSelected(SelectionEvent e) {
-				ColorListItem item = getColorListItem(isXML, viewer);
+				PrefLinkedColorItem item = getHighlightingColorListItem(isXML, viewer);
 				item.setColorValue(colorSelector.getColorValue());
 				viewer.update(item, null);
 			}
@@ -345,10 +346,10 @@ public class EditorPreferencePage
 		}
 	}
 
-	private ColorListItem getColorListItem(boolean isXML, TableViewer viewer) {
+	private PrefLinkedColorItem getHighlightingColorListItem(boolean isXML, TableViewer viewer) {
 		IStructuredSelection selection;
 		selection = (IStructuredSelection) viewer.getSelection();
-		return (ColorListItem) selection.getFirstElement();
+		return (PrefLinkedColorItem) selection.getFirstElement();
 	}
 	
 	protected String loadPreviewContentFromFile(String filename) {
