@@ -195,7 +195,7 @@ public class PluginValidationOperation implements IRunnableWithProgress {
 		fModels = models;
 		fProductID = product;
 		fApplicationID = application;
-		fState = new MinimalState();
+//		fState = new MinimalState();
 	}
 
 	/* (non-Javadoc)
