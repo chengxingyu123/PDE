@@ -105,13 +105,12 @@ public class EditorPreferencePage
 				fColor = null;
 			}
 		}
+		public String toString() { // called by the label provider
+			return fDisplayName;
+		}
 	}
 	
 	private class ColorListLabelProvider extends LabelProvider implements IColorProvider {
-		
-		public String getText(Object element) {
-			return ((StoreLinkedDisplayItem)element).getDisplayName();
-		}
 		public Color getForeground(Object element) {
 			return ((StoreLinkedDisplayItem)element).getItemColor();
 		}
@@ -269,15 +268,20 @@ public class EditorPreferencePage
 		Button colorButton = colorSelector.getButton();
 		colorButton.setLayoutData(new GridData(GridData.BEGINNING));
 		
-		label = new Label(colorComposite, SWT.LEFT);
+		Composite previewComp = new Composite(colorComposite, SWT.NONE);
+		layout = new GridLayout();
+		layout.marginHeight = layout.marginWidth = 0;
+		previewComp.setLayout(layout);
+		GridData gd = new GridData(GridData.FILL_BOTH);
+		gd.horizontalSpan = 2;
+		previewComp.setLayoutData(gd);
+		
+		label = new Label(previewComp, SWT.NONE);
 		label.setText("Preview:");
 		label.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 	
-		Control control = createPreviewer(colorComposite, isXML);
-		GridData gd = new GridData(GridData.FILL_BOTH);
-		gd.heightHint = convertHeightInCharsToPixels(9);
-		gd.horizontalSpan = 2;
-		control.setLayoutData(gd);
+		Control control = createPreviewer(previewComp, isXML);
+		control.setLayoutData(new GridData(GridData.FILL_BOTH));
 
 		colorButton.addSelectionListener(new SelectionListener() {
 			public void widgetDefaultSelected(SelectionEvent e) {

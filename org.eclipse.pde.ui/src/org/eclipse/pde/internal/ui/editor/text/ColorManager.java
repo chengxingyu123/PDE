@@ -93,9 +93,12 @@ public class ColorManager implements IColorManager, IPDEColorConstants {
 		fColorTable.put(property, new Color(Display.getCurrent(), setting));
 	}
 
-	public void updateProperty(String property){
-		IPreferenceStore pstore = PDEPlugin.getDefault().getPreferenceStore();
+	public void updateProperty(String property, IPreferenceStore pstore) {
 		putColor(pstore, property);
+	}
+	
+	public void updateProperty(String property){
+		updateProperty(property, PDEPlugin.getDefault().getPreferenceStore());
 	}
 
 	public Color getColor(String key) {
