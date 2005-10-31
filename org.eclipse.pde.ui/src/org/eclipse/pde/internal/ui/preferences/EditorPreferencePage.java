@@ -143,7 +143,7 @@ public class EditorPreferencePage
 	private String fXMLSample = "XMLSyntaxPreviewCode.txt";
 	private String fMFSample = "ManifestSyntaxPreviewCode.txt";
 	private String[][] fXMLColorStrings = new String[][] {
-/*			{Display name, IPreferenceStore id}				*/
+	/*		{Display name, IPreferenceStore key}		*/
 			{PDEUIMessages.EditorPreferencePage_text, IPDEColorConstants.P_DEFAULT},
 			{PDEUIMessages.EditorPreferencePage_proc, IPDEColorConstants.P_PROC_INSTR},
 			{PDEUIMessages.EditorPreferencePage_tag, IPDEColorConstants.P_TAG},
@@ -244,7 +244,7 @@ public class EditorPreferencePage
 		colorComposite.setLayoutData(new GridData(GridData.FILL_BOTH));
 
 		Label label = new Label(colorComposite, SWT.LEFT);
-		label.setText("&Elements:");
+		label.setText("Elements:");
 		label.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 
 		label = new Label(colorComposite, SWT.LEFT);
@@ -255,6 +255,7 @@ public class EditorPreferencePage
 		viewer.setLabelProvider(new ColorListLabelProvider());
 		viewer.setContentProvider(new ColorListContentProvider());
 		viewer.getControl().setLayoutData(new GridData(GridData.FILL_BOTH));
+		viewer.getControl().setFont(JFaceResources.getFont(JFaceResources.TEXT_FONT));
 
 		Composite propertiesComp = new Composite(colorComposite, SWT.NONE);
 		GridLayout layout = new GridLayout(2, false);
@@ -336,7 +337,7 @@ public class EditorPreferencePage
 		if (isXML)
 			new XMLDocumentSetupParticpant().setup(document);
 //		else
-//			new MFDocumentSetupParticipant().setup(document);
+//			new ManifestDocumentSetupParticipant().setup(document);
 		
 		previewViewer.setDocument(document);
 		
