@@ -42,9 +42,9 @@ import org.eclipse.pde.internal.ui.IPreferenceConstants;
 import org.eclipse.pde.internal.ui.PDEPlugin;
 import org.eclipse.pde.internal.ui.PDEUIMessages;
 import org.eclipse.pde.internal.ui.editor.context.XMLDocumentSetupParticpant;
+import org.eclipse.pde.internal.ui.editor.text.ChangeAwareSourceViewerConfiguration;
 import org.eclipse.pde.internal.ui.editor.text.ColorManager;
 import org.eclipse.pde.internal.ui.editor.text.IPDEColorConstants;
-import org.eclipse.pde.internal.ui.editor.text.ChangeAwareSourceViewerConfiguration;
 import org.eclipse.pde.internal.ui.editor.text.XMLSourceViewerConfiguration;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -59,6 +59,8 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Link;
+import org.eclipse.swt.widgets.TabFolder;
+import org.eclipse.swt.widgets.TabItem;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 import org.eclipse.ui.PlatformUI;
@@ -92,10 +94,10 @@ public class EditorPreferencePage
 		public RGB getColorValue() {
 			return PreferenceConverter.getDefaultColor(fStore, fColorKey);
 		}
-		public void setColorValue(RGB itemColor) {
+		public void setColorValue(RGB rgb) {
 			RGB oldrgb = getColorValue();
-			PreferenceConverter.setDefault(fStore, fColorKey, itemColor);
-			fStore.firePropertyChangeEvent(fColorKey, oldrgb, itemColor);
+			PreferenceConverter.setDefault(fStore, fColorKey, rgb);
+			fStore.firePropertyChangeEvent(fColorKey, oldrgb, rgb);
 		}
 		public void disposeColor() {
 			if (fColor != null) {
@@ -137,7 +139,7 @@ public class EditorPreferencePage
 	private ArrayList fXMLColorData;
 	private ArrayList fMFColorData;
 	private TableViewer fXMLViewer;
-//	private TableViewer fMFViewer;
+	private TableViewer fMFViewer;
 	private String fXMLSample = "XMLSyntaxPreviewCode.txt";
 	private String fMFSample = "ManifestSyntaxPreviewCode.txt";
 	private String[][] fXMLColorStrings = new String[][] {
@@ -147,10 +149,10 @@ public class EditorPreferencePage
 			{PDEUIMessages.EditorPreferencePage_tag, IPDEColorConstants.P_TAG},
 			{PDEUIMessages.EditorPreferencePage_string, IPDEColorConstants.P_STRING},
 			{PDEUIMessages.EditorPreferencePage_comment, IPDEColorConstants.P_XML_COMMENT}};
-//	private String[][] fMFColorStrings = new String[][] {
-//			{"Header Name", IPDEColorConstants.P_HEADER_NAME},
-//			{"Assignment", IPDEColorConstants.P_HEADER_ASSIGNMENT},
-//			{"Header Value", IPDEColorConstants.P_HEADER_VALUE}};
+	private String[][] fMFColorStrings = new String[][] {
+			{"Header Name", IPDEColorConstants.P_HEADER_NAME},
+			{"Assignment", IPDEColorConstants.P_HEADER_ASSIGNMENT},
+			{"Header Value", IPDEColorConstants.P_HEADER_VALUE}};
 	
 	public EditorPreferencePage() {
 		setDescription(PDEUIMessages.EditorPreferencePage_colorSettings); 
@@ -158,7 +160,7 @@ public class EditorPreferencePage
 		fColorManager = ColorManager.getDefault();
 		IPreferenceStore store = PDEPlugin.getDefault().getPreferenceStore();
 		fXMLColorData = loadColorData(store, false, fXMLColorStrings);
-//		fMFColorData = loadColorData(store, false, fMFColorStrings);
+		fMFColorData = loadColorData(store, false, fMFColorStrings);
 		setPreferenceStore(fStore);
 	}
 
@@ -178,7 +180,7 @@ public class EditorPreferencePage
 	public boolean performOk() {
 		IPreferenceStore store = PDEPlugin.getDefault().getPreferenceStore();
 		setPreferences(fXMLColorData, store);
-//		setPreferences(fMFColorData, store);
+		setPreferences(fMFColorData, store);
 		PDEPlugin.getDefault().savePluginPreferences();
 		return super.performOk();
 	}
@@ -196,9 +198,9 @@ public class EditorPreferencePage
 		fXMLColorData = loadColorData(store, true, fXMLColorStrings);
 		fXMLViewer.refresh();
 		fXMLViewer.setSelection(fXMLViewer.getSelection()); // refresh the color selector's color
-//		fMFColorData = loadColorData(store, true, fMFColorStrings);
-//		fMFViewer.refresh();
-//		fMFViewer.setSelection(fMFViewer.getSelection()); // refresh the color selector's color
+		fMFColorData = loadColorData(store, true, fMFColorStrings);
+		fMFViewer.refresh();
+		fMFViewer.setSelection(fMFViewer.getSelection()); // refresh the color selector's color
 		super.performDefaults();
 	}
 	
@@ -216,21 +218,18 @@ public class EditorPreferencePage
 		});
 		
 		final boolean XML = true;
-		createSyntaxPage(parent, XML);
 		
-/* 		manifest config page not ready, only display xml page (no tabs) 	*/
+		TabFolder folder = new TabFolder(parent, SWT.NONE);
+		folder.setLayout(new GridLayout());	
+		folder.setLayoutData(new GridData(GridData.FILL_BOTH));
 		
-//		TabFolder folder = new TabFolder(parent, SWT.NONE);
-//		folder.setLayout(new GridLayout());	
-//		folder.setLayoutData(new GridData(GridData.FILL_BOTH));
-//		
-//		TabItem item = new TabItem(folder, SWT.NONE);
-//		item.setText("&XML Highlighting");
-//		item.setControl(createSyntaxPage(folder, XML));
-//		
-//		item = new TabItem(folder, SWT.NONE);
-//		item.setText("&Manifest Highlighting");
-//		item.setControl(createSyntaxPage(folder, !XML));
+		TabItem item = new TabItem(folder, SWT.NONE);
+		item.setText("&XML Highlighting");
+		item.setControl(createSyntaxPage(folder, XML));
+		
+		item = new TabItem(folder, SWT.NONE);
+		item.setText("&Manifest Highlighting");
+		item.setControl(createSyntaxPage(folder, !XML));
 			
 		Dialog.applyDialogFont(getControl());
 		PlatformUI.getWorkbench().getHelpSystem().setHelp(getControl(), IHelpContextIds.EDITOR_PREFERENCE_PAGE);
@@ -300,8 +299,8 @@ public class EditorPreferencePage
 		
 		if (isXML)
 			fXMLViewer = viewer;
-//		else
-//			fMFViewer = viewer;
+		else
+			fMFViewer = viewer;
 		
 		return colorComposite;
 	}
@@ -324,9 +323,10 @@ public class EditorPreferencePage
 				}
 			}
 		};
-		previewViewer.configure(config);
-		fStore.addPropertyChangeListener(propertyChangeListener);
-		
+		if (config != null) {
+			previewViewer.configure(config);
+			fStore.addPropertyChangeListener(propertyChangeListener);
+		}
 		previewViewer.setEditable(false);	
 		previewViewer.getTextWidget().setFont(JFaceResources.getFont(JFaceResources.TEXT_FONT));
 		
@@ -336,7 +336,7 @@ public class EditorPreferencePage
 		if (isXML)
 			new XMLDocumentSetupParticpant().setup(document);
 //		else
-//			new MFDocumentSetupParticipant.setup(document);
+//			new MFDocumentSetupParticipant().setup(document);
 		
 		previewViewer.setDocument(document);
 		
@@ -350,8 +350,8 @@ public class EditorPreferencePage
 		for (int i = 0; i < fXMLColorData.size(); i++) {
 			((StoreLinkedDisplayItem)fXMLColorData.get(i)).disposeColor();
 		}
-//		for (int i = 0; i < fMFColorData.size(); i++)
-//			((StoreLinkedDisplayItem)fMFColorData.get(i)).disposeColor();
+		for (int i = 0; i < fMFColorData.size(); i++)
+			((StoreLinkedDisplayItem)fMFColorData.get(i)).disposeColor();
 	}
 	
 	private StoreLinkedDisplayItem getStoreLinkedItem(TableViewer viewer) {
