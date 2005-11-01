@@ -219,7 +219,7 @@ public class EditorPreferencePage
 		final boolean XML = true;
 		
 		TabFolder folder = new TabFolder(parent, SWT.NONE);
-		folder.setLayout(new GridLayout());	
+		folder.setLayout(new TabFolderLayout());	
 		folder.setLayoutData(new GridData(GridData.FILL_BOTH));
 		
 		TabItem item = new TabItem(folder, SWT.NONE);
