@@ -115,52 +115,46 @@ public abstract class SyntaxColorTab {
 		return list;
 	}
 	
-	public Control createContents(Composite parent) {
-		
-		Composite colorComposite = new Composite(parent, SWT.NONE);
-		colorComposite.setLayout(new GridLayout(2, false));
-		colorComposite.setLayoutData(new GridData(GridData.FILL_BOTH));
-
-		Label label = new Label(colorComposite, SWT.LEFT);
+	public Control createContents(Composite parent) {	
+		Composite container = new Composite(parent, SWT.NONE);
+		container.setLayout(new GridLayout());
+		container.setLayoutData(new GridData(GridData.FILL_BOTH));
+		createElementTable(container);
+		createPreviewer(container);
+		return container;
+	}
+	
+	private void createElementTable(Composite parent) {
+		Composite container = new Composite(parent, SWT.NONE);
+		GridLayout layout = new GridLayout(2, false);
+		layout.marginWidth = layout.marginHeight = 0;
+		container.setLayout(layout);
+		container.setLayoutData(new GridData(GridData.FILL_BOTH));
+			
+		Label label = new Label(container, SWT.LEFT);
 		label.setText("Elements:");
 		label.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 
-		label = new Label(colorComposite, SWT.LEFT);
+		label = new Label(container, SWT.LEFT);
 		label.setText("Properties:");
 		label.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 			
-		final TableViewer viewer = new TableViewer(colorComposite, SWT.SINGLE | SWT.V_SCROLL | SWT.BORDER);
+		final TableViewer viewer = new TableViewer(container, SWT.SINGLE | SWT.V_SCROLL | SWT.BORDER);
 		viewer.setLabelProvider(new ColorListLabelProvider());
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.getControl().setLayoutData(new GridData(GridData.FILL_BOTH));
 		viewer.getControl().setFont(JFaceResources.getFont(JFaceResources.TEXT_FONT));
 
-		Composite propertiesComp = new Composite(colorComposite, SWT.NONE);
-		GridLayout layout = new GridLayout(2, false);
-		propertiesComp.setLayout(layout);
-		propertiesComp.setLayoutData(new GridData(GridData.FILL_BOTH));
+		Composite colorComposite = new Composite(container, SWT.NONE);
+		colorComposite.setLayout(new GridLayout(2, false));
+		colorComposite.setLayoutData(new GridData(GridData.FILL_BOTH));
 		
-		label = new Label(propertiesComp, SWT.LEFT);
+		label = new Label(colorComposite, SWT.LEFT);
 		label.setText("&Color:");
 		
-		final ColorSelector colorSelector = new ColorSelector(propertiesComp);
+		final ColorSelector colorSelector = new ColorSelector(colorComposite);
 		Button colorButton = colorSelector.getButton();
 		colorButton.setLayoutData(new GridData(GridData.BEGINNING));
-		
-		Composite previewComp = new Composite(colorComposite, SWT.NONE);
-		layout = new GridLayout();
-		layout.marginHeight = layout.marginWidth = 0;
-		previewComp.setLayout(layout);
-		GridData gd = new GridData(GridData.FILL_BOTH);
-		gd.horizontalSpan = 2;
-		previewComp.setLayoutData(gd);
-		
-		label = new Label(previewComp, SWT.NONE);
-		label.setText("Preview:");
-		label.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-	
-		Control control = createPreviewer(previewComp);
-		control.setLayoutData(new GridData(GridData.FILL_BOTH));
 
 		colorButton.addSelectionListener(new SelectionListener() {
 			public void widgetDefaultSelected(SelectionEvent e) {
@@ -180,14 +174,20 @@ public abstract class SyntaxColorTab {
 		});
 		viewer.setInput(getViewerInput());
 		viewer.setSelection(new StructuredSelection(viewer.getElementAt(0)));
+	}	
+	
+	private void createPreviewer(Composite parent) {
+		Composite previewComp = new Composite(parent, SWT.NONE);
+		GridLayout layout = new GridLayout();
+		layout.marginHeight = layout.marginWidth = 0;
+		previewComp.setLayout(layout);
+		previewComp.setLayoutData(new GridData(GridData.FILL_BOTH));
 		
-		return colorComposite;
-	}
-	
-	protected abstract ArrayList getViewerInput();
-	
-	private Control createPreviewer(Composite parent) {
-		final SourceViewer previewViewer = new SourceViewer(parent, null, SWT.BORDER|SWT.V_SCROLL);	
+		Label label = new Label(previewComp, SWT.NONE);
+		label.setText("Preview:");
+		label.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+
+		final SourceViewer previewViewer = new SourceViewer(previewComp, null, SWT.BORDER|SWT.V_SCROLL);	
 		final ChangeAwareSourceViewerConfiguration config = getSourceViewerConfiguration();
 		
 		if (config != null) {
@@ -206,7 +206,8 @@ public abstract class SyntaxColorTab {
 		previewViewer.getTextWidget().setFont(JFaceResources.getFont(JFaceResources.TEXT_FONT));	
 		previewViewer.setDocument(getDocument());
 		
-		return previewViewer.getControl();
+		Control control = previewViewer.getControl();
+		control.setLayoutData(new GridData(GridData.FILL_BOTH));
 	}
 	
 	protected abstract ChangeAwareSourceViewerConfiguration getSourceViewerConfiguration();
@@ -219,17 +220,17 @@ public abstract class SyntaxColorTab {
 		}*/
 	}
 	
-	public void performDefaults() {
-	}	
+	public abstract void performDefaults();
 	
-	public void dispose() {
-	}
+	public abstract void dispose();
+	
+	protected abstract IDocument getDocument();
+	
+	protected abstract ArrayList getViewerInput();
 	
 	private StoreLinkedDisplayItem getStoreLinkedItem(TableViewer viewer) {
 		IStructuredSelection selection = (IStructuredSelection) viewer.getSelection();
 		return (StoreLinkedDisplayItem) selection.getFirstElement();
 	}
-	
-	protected abstract IDocument getDocument();
 
 }

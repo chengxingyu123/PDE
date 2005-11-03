@@ -37,7 +37,6 @@ public class ManifestSyntaxColorTab extends SyntaxColorTab {
 	}
 	
 	public void dispose() {
-		super.dispose();
 		for (int i = 0; i < fMFColorData.size(); i++)
 			((StoreLinkedDisplayItem)fMFColorData.get(i)).disposeColor();
 	}
@@ -56,6 +55,9 @@ public class ManifestSyntaxColorTab extends SyntaxColorTab {
 
 	protected ChangeAwareSourceViewerConfiguration getSourceViewerConfiguration() {
 		return null;
+	}
+
+	public void performDefaults() {
 	}
 
 }
