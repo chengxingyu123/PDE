@@ -36,11 +36,6 @@ public class ManifestSyntaxColorTab extends SyntaxColorTab {
 		return fMFColorData;
 	}
 	
-	public void dispose() {
-		for (int i = 0; i < fMFColorData.size(); i++)
-			((ColorElement)fMFColorData.get(i)).disposeColor();
-	}
-	
 	protected IDocument getDocument() {
 		StringBuffer buffer = new StringBuffer();
 		String delimiter = System.getProperty("line.separator");
@@ -55,9 +50,6 @@ public class ManifestSyntaxColorTab extends SyntaxColorTab {
 
 	protected ChangeAwareSourceViewerConfiguration getSourceViewerConfiguration() {
 		return null;
-	}
-
-	public void performDefaults() {
 	}
 
 }

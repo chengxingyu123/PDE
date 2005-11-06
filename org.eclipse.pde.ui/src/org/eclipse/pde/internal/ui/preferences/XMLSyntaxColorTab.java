@@ -42,12 +42,6 @@ public class XMLSyntaxColorTab extends SyntaxColorTab {
 		return fXMLColorData;
 	}
 	
-	public void dispose() {
-		for (int i = 0; i < fXMLColorData.size(); i++) {
-			((ColorElement)fXMLColorData.get(i)).disposeColor();
-		}
-	}
-	
 	protected IDocument getDocument() {
 		StringBuffer buffer = new StringBuffer();
 		String delimiter = System.getProperty("line.separator");
@@ -72,9 +66,6 @@ public class XMLSyntaxColorTab extends SyntaxColorTab {
 
 	protected ChangeAwareSourceViewerConfiguration getSourceViewerConfiguration() {
 		return new XMLSourceViewerConfiguration(null, fColorManager);
-	}
-
-	public void performDefaults() {
 	}
 
 }

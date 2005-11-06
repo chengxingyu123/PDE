@@ -217,9 +217,24 @@ public abstract class SyntaxColorTab {
 		}
 	}
 	
-	public abstract void performDefaults();
+	public void performDefaults() {
+		IPreferenceStore store = PDEPlugin.getDefault().getPreferenceStore();
+		int count = fElementViewer.getTable().getItemCount();
+		for (int i = 0; i < count; i++) {
+			ColorElement item = (ColorElement)fElementViewer.getElementAt(i);
+			RGB rgb = PreferenceConverter.getDefaultColor(store, item.getColorKey());		
+			item.setColorValue(rgb);
+			fElementViewer.update(item, null);
+		}		
+	}
 	
-	public abstract void dispose();
+	public void dispose() {
+		int count = fElementViewer.getTable().getItemCount();
+		for (int i = 0; i < count; i++) {
+			ColorElement item = (ColorElement)fElementViewer.getElementAt(i);
+			item.disposeColor();
+		}				
+	}
 	
 	protected abstract IDocument getDocument();
 	
