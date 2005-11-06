@@ -10,8 +10,6 @@
  *******************************************************************************/
 package org.eclipse.pde.internal.ui.preferences;
 
-import java.util.ArrayList;
-
 import org.eclipse.jface.preference.ColorSelector;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.PreferenceConverter;
@@ -82,8 +80,11 @@ public abstract class SyntaxColorTab {
 				return;
 			RGB oldrgb = fColorValue;
 			fColorValue = rgb;
-			fSourceViewerConfiguration.adaptToPreferenceChange(new PropertyChangeEvent(this, fColorKey, oldrgb, rgb));
-			fPreviewViewer.invalidateTextPresentation();
+			if (fSourceViewerConfiguration != null) {
+				PropertyChangeEvent event = new PropertyChangeEvent(this, fColorKey, oldrgb, rgb);
+				fSourceViewerConfiguration.adaptToPreferenceChange(event);
+				fPreviewViewer.invalidateTextPresentation();
+			}
 		}
 		public void disposeColor() {
 			if (fColor != null) {
@@ -108,15 +109,18 @@ public abstract class SyntaxColorTab {
 	public SyntaxColorTab(IColorManager manager) {
 		fColorManager = manager;
 	}
+	
+	protected abstract String[][] getColorStrings();
 
-	protected ArrayList loadColorData(String[][] colors) {
+	private ColorElement[] getColorData() {
+		String[][] colors = getColorStrings();
 		IPreferenceStore store = PDEPlugin.getDefault().getPreferenceStore();
-		ArrayList list = new ArrayList(colors.length);
+		ColorElement[] list = new ColorElement[colors.length];
 		for (int i = 0; i < colors.length; i++) {
 			String displayName = colors[i][0];
 			String key = colors[i][1];
 			RGB setting = PreferenceConverter.getColor(store, key);
-			list.add(new ColorElement(displayName, key, setting));	
+			list[i] = new ColorElement(displayName, key, setting);	
 		}
 		return list;
 	}
@@ -176,7 +180,7 @@ public abstract class SyntaxColorTab {
 				colorSelector.setColorValue(item.getColorValue());
 			}
 		});
-		fElementViewer.setInput(getViewerInput());
+		fElementViewer.setInput(getColorData());
 		fElementViewer.setSorter(new ViewerSorter());
 		fElementViewer.setSelection(new StructuredSelection(fElementViewer.getElementAt(0)));
 	}	
@@ -237,8 +241,6 @@ public abstract class SyntaxColorTab {
 	}
 	
 	protected abstract IDocument getDocument();
-	
-	protected abstract ArrayList getViewerInput();
 	
 	private ColorElement getColorElement(TableViewer viewer) {
 		IStructuredSelection selection = (IStructuredSelection) viewer.getSelection();

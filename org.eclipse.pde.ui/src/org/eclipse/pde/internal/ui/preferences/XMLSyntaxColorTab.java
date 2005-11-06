@@ -10,8 +10,6 @@
  *******************************************************************************/
 package org.eclipse.pde.internal.ui.preferences;
 
-import java.util.ArrayList;
-
 import org.eclipse.jface.text.Document;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.pde.internal.ui.PDEUIMessages;
@@ -23,9 +21,7 @@ import org.eclipse.pde.internal.ui.editor.text.XMLSourceViewerConfiguration;
 
 public class XMLSyntaxColorTab extends SyntaxColorTab {
 
-	private ArrayList fXMLColorData;
-
-	private String[][] fXMLColorStrings = new String[][] {
+	private static final String[][] COLOR_STRINGS = new String[][] {
 			/*		{Display name, IPreferenceStore key}		*/
 					{PDEUIMessages.EditorPreferencePage_text, IPDEColorConstants.P_DEFAULT},
 					{PDEUIMessages.EditorPreferencePage_proc, IPDEColorConstants.P_PROC_INSTR},
@@ -35,11 +31,6 @@ public class XMLSyntaxColorTab extends SyntaxColorTab {
 
 	public XMLSyntaxColorTab(IColorManager manager) {
 		super(manager);
-		fXMLColorData = loadColorData(fXMLColorStrings);
-	}
-	
-	protected ArrayList getViewerInput() {
-		return fXMLColorData;
 	}
 	
 	protected IDocument getDocument() {
@@ -68,4 +59,7 @@ public class XMLSyntaxColorTab extends SyntaxColorTab {
 		return new XMLSourceViewerConfiguration(null, fColorManager);
 	}
 
+	protected String[][] getColorStrings() {
+		return COLOR_STRINGS;
+	}
 }

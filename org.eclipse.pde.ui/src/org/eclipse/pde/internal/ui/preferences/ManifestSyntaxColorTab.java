@@ -10,8 +10,6 @@
  *******************************************************************************/
 package org.eclipse.pde.internal.ui.preferences;
 
-import java.util.ArrayList;
-
 import org.eclipse.jface.text.Document;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.pde.internal.ui.editor.text.ChangeAwareSourceViewerConfiguration;
@@ -20,20 +18,13 @@ import org.eclipse.pde.internal.ui.editor.text.IPDEColorConstants;
 
 public class ManifestSyntaxColorTab extends SyntaxColorTab {
 
-	private ArrayList fMFColorData;
-
-	private String[][] fMFColorStrings = new String[][] {
+	private static final String[][] COLOR_STRINGS = new String[][] {
 			{"Header Name", IPDEColorConstants.P_HEADER_NAME},
 			{"Assignment", IPDEColorConstants.P_HEADER_ASSIGNMENT},
 			{"Header Value", IPDEColorConstants.P_HEADER_VALUE}};
 
 	public ManifestSyntaxColorTab(IColorManager manager) {
 		super(manager);
-		fMFColorData = loadColorData(fMFColorStrings);
-	}
-	
-	protected ArrayList getViewerInput() {
-		return fMFColorData;
 	}
 	
 	protected IDocument getDocument() {
@@ -41,15 +32,25 @@ public class ManifestSyntaxColorTab extends SyntaxColorTab {
 		String delimiter = System.getProperty("line.separator");
 		buffer.append("Manifest-Version: 1.0");
 		buffer.append(delimiter);
-		buffer.append("Bundle-ManifestVersion: 2");
-		buffer.append(delimiter);
 		buffer.append("Bundle-Name: %name");
+		buffer.append(delimiter);
+		buffer.append("Bundle-SymbolicName: com.example.xyz");
+		buffer.append(delimiter);
+		buffer.append("Require-Bundle:");
+		buffer.append(delimiter);
+		buffer.append(" org.eclipse.core.runtime; bundle-version=\"3.0.0\",");
+		buffer.append(delimiter);
+		buffer.append(" org.eclipse.ui; resolution:=optional");
 		IDocument document = new Document(buffer.toString());
 		return document;
 	}
 
 	protected ChangeAwareSourceViewerConfiguration getSourceViewerConfiguration() {
 		return null;
+	}
+
+	protected String[][] getColorStrings() {
+		return COLOR_STRINGS;
 	}
 
 }
