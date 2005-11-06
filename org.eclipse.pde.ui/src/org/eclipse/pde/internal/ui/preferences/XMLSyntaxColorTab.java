@@ -44,7 +44,7 @@ public class XMLSyntaxColorTab extends SyntaxColorTab {
 	
 	public void dispose() {
 		for (int i = 0; i < fXMLColorData.size(); i++) {
-			((StoreLinkedDisplayItem)fXMLColorData.get(i)).disposeColor();
+			((ColorElement)fXMLColorData.get(i)).disposeColor();
 		}
 	}
 	

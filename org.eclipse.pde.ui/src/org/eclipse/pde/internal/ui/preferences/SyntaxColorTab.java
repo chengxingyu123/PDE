@@ -16,7 +16,6 @@ import org.eclipse.jface.preference.ColorSelector;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.PreferenceConverter;
 import org.eclipse.jface.resource.JFaceResources;
-import org.eclipse.jface.resource.StringConverter;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.source.SourceViewer;
 import org.eclipse.jface.util.PropertyChangeEvent;
@@ -47,19 +46,20 @@ import org.eclipse.swt.widgets.Label;
 public abstract class SyntaxColorTab {
 
 	protected IColorManager fColorManager;
-	private IPreferenceStore fStore = PDEPlugin.getDefault().getPreferenceStore();
 	private TableViewer fElementViewer;
 	private SourceViewer fPreviewViewer;
 	private ChangeAwareSourceViewerConfiguration fSourceViewerConfiguration;
 
-	class StoreLinkedDisplayItem {
+	class ColorElement {
 		private String fDisplayName;
 		private String fColorKey;
+		private RGB fColorValue;
 		private Color fColor;
 		
-		public StoreLinkedDisplayItem(String displayName, String colorKey) {
+		public ColorElement(String displayName, String colorKey, RGB colorValue) {
 			fDisplayName = displayName;
 			fColorKey = colorKey;
+			fColorValue = colorValue;
 		}
 		public String getColorKey() {
 			return fColorKey;
@@ -67,18 +67,21 @@ public abstract class SyntaxColorTab {
 		public String getDisplayName() {
 			return fDisplayName;
 		}
+		public RGB getColorValue() {
+			return fColorValue;
+		}		
 		public Color getItemColor() {
-			if (fColor != null)
-				fColor.dispose();
-			fColor = new Color(PDEPlugin.getActiveWorkbenchShell().getDisplay(), getColorValue());
+			if (fColor != null && !fColor.getRGB().equals(fColorValue))
+				disposeColor();
+			if (fColor == null) 
+				fColor = new Color(PDEPlugin.getActiveWorkbenchShell().getDisplay(), getColorValue());
 			return fColor;
 		}
-		public RGB getColorValue() {
-			return PreferenceConverter.getDefaultColor(fStore, fColorKey);
-		}
 		public void setColorValue(RGB rgb) {
-			RGB oldrgb = getColorValue();
-			PreferenceConverter.setDefault(fStore, fColorKey, rgb);
+			if (fColorValue.equals(rgb))
+				return;
+			RGB oldrgb = fColorValue;
+			fColorValue = rgb;
 			fSourceViewerConfiguration.adaptToPreferenceChange(new PropertyChangeEvent(this, fColorKey, oldrgb, rgb));
 			fPreviewViewer.invalidateTextPresentation();
 		}
@@ -88,14 +91,14 @@ public abstract class SyntaxColorTab {
 				fColor = null;
 			}
 		}
-		public String toString() { // called by the label provider
-			return fDisplayName;
+		public String toString() { 
+			return getDisplayName();
 		}
 	}
 	
 	class ColorListLabelProvider extends LabelProvider implements IColorProvider {
 		public Color getForeground(Object element) {
-			return ((StoreLinkedDisplayItem)element).getItemColor();
+			return ((ColorElement)element).getItemColor();
 		}
 		public Color getBackground(Object element) {
 			return null;
@@ -107,12 +110,13 @@ public abstract class SyntaxColorTab {
 	}
 
 	protected ArrayList loadColorData(String[][] colors) {
+		IPreferenceStore store = PDEPlugin.getDefault().getPreferenceStore();
 		ArrayList list = new ArrayList(colors.length);
 		for (int i = 0; i < colors.length; i++) {
-			StoreLinkedDisplayItem item = new StoreLinkedDisplayItem(colors[i][0], colors[i][1]);
-			RGB rgb = PreferenceConverter.getColor(fStore, item.getColorKey());
-			fStore.setDefault(item.getColorKey(), StringConverter.asString(rgb));
-			list.add(item);
+			String displayName = colors[i][0];
+			String key = colors[i][1];
+			RGB setting = PreferenceConverter.getColor(store, key);
+			list.add(new ColorElement(displayName, key, setting));	
 		}
 		return list;
 	}
@@ -160,7 +164,7 @@ public abstract class SyntaxColorTab {
 
 		colorButton.addSelectionListener(new SelectionAdapter() {
 			public void widgetSelected(SelectionEvent e) {
-				StoreLinkedDisplayItem item = getStoreLinkedItem(fElementViewer);
+				ColorElement item = getColorElement(fElementViewer);
 				item.setColorValue(colorSelector.getColorValue());
 				fElementViewer.update(item, null);
 			}
@@ -168,7 +172,7 @@ public abstract class SyntaxColorTab {
 		
 		fElementViewer.addSelectionChangedListener(new ISelectionChangedListener() {
 			public void selectionChanged(SelectionChangedEvent event) {
-				StoreLinkedDisplayItem item = getStoreLinkedItem(fElementViewer);
+				ColorElement item = getColorElement(fElementViewer);
 				colorSelector.setColorValue(item.getColorValue());
 			}
 		});
@@ -205,10 +209,11 @@ public abstract class SyntaxColorTab {
 	protected abstract ChangeAwareSourceViewerConfiguration getSourceViewerConfiguration();
 	
 	public void performOk() {
+		IPreferenceStore store = PDEPlugin.getDefault().getPreferenceStore();
 		int count = fElementViewer.getTable().getItemCount();
 		for (int i = 0; i < count; i++) {
-			StoreLinkedDisplayItem item = (StoreLinkedDisplayItem)fElementViewer.getElementAt(i);
-			PreferenceConverter.setValue(fStore, item.getColorKey(), item.getColorValue());
+			ColorElement item = (ColorElement)fElementViewer.getElementAt(i);
+			PreferenceConverter.setValue(store, item.getColorKey(), item.getColorValue());
 		}
 	}
 	
@@ -220,9 +225,9 @@ public abstract class SyntaxColorTab {
 	
 	protected abstract ArrayList getViewerInput();
 	
-	private StoreLinkedDisplayItem getStoreLinkedItem(TableViewer viewer) {
+	private ColorElement getColorElement(TableViewer viewer) {
 		IStructuredSelection selection = (IStructuredSelection) viewer.getSelection();
-		return (StoreLinkedDisplayItem) selection.getFirstElement();
+		return (ColorElement) selection.getFirstElement();
 	}
 
 }

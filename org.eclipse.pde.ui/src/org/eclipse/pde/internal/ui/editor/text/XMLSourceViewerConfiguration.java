@@ -148,23 +148,16 @@ public class XMLSourceViewerConfiguration extends ChangeAwareSourceViewerConfigu
 		if (fTagScanner == null)
 			return; //property change before the editor is fully created
 		
+    	fColorManager.handlePropertyChangeEvent(event);
 		fTagScanner.adaptToPreferenceChange(fColorManager, event);
 		fPdeScanner.adaptToPreferenceChange(fColorManager, event);
 		String property= event.getProperty();
 		if (property.startsWith(IPDEColorConstants.P_XML_COMMENT)) {
-			adaptToColorChange(event);
+	    	fXMLCommentAttr= new TextAttribute(fColorManager.getColor(event.getProperty()), fXMLCommentAttr.getBackground(), fXMLCommentAttr.getStyle());
 			fNdr.setDefaultTextAttribute(fXMLCommentAttr);
 		} 
 	}
 	
-	 /**
-     * Update the text attributes associated with the tokens of this scanner as a color preference has been changed. 
-     */
-    private void adaptToColorChange(PropertyChangeEvent event) {
-    	fColorManager.handlePropertyChangeEvent(event);
-    	fXMLCommentAttr= new TextAttribute(fColorManager.getColor(event.getProperty()), fXMLCommentAttr.getBackground(), fXMLCommentAttr.getStyle());
-    }
- 
 	public boolean affectsTextPresentation(PropertyChangeEvent event) {
 		String property = event.getProperty();
 		return property.startsWith(IPDEColorConstants.P_DEFAULT) ||

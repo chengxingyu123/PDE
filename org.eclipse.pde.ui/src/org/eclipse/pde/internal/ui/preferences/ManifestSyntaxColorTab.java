@@ -38,7 +38,7 @@ public class ManifestSyntaxColorTab extends SyntaxColorTab {
 	
 	public void dispose() {
 		for (int i = 0; i < fMFColorData.size(); i++)
-			((StoreLinkedDisplayItem)fMFColorData.get(i)).disposeColor();
+			((ColorElement)fMFColorData.get(i)).disposeColor();
 	}
 	
 	protected IDocument getDocument() {

@@ -32,13 +32,7 @@ public class XMLScanner extends RuleBasedScanner {
 		rules[1] = new WhitespaceRule(new XMLWhitespaceDetector());
 		setRules(rules);
 	}
-	protected void adaptToColorChange(IColorManager colorManager,PropertyChangeEvent event, Token token) {
-		colorManager.handlePropertyChangeEvent(event);
-		TextAttribute attr= (TextAttribute) token.getData();
-		token.setData(new TextAttribute(colorManager.getColor(event.getProperty()), attr.getBackground(), attr.getStyle()));
-
-	}
-
+	
 	private Token getTokenAffected(PropertyChangeEvent event) {
     	if (event.getProperty().startsWith(IPDEColorConstants.P_PROC_INSTR)) {
     		return fProcInstr;
@@ -48,7 +42,11 @@ public class XMLScanner extends RuleBasedScanner {
     
     public void adaptToPreferenceChange(IColorManager colorManager, PropertyChangeEvent event) {
     	String property= event.getProperty();
-    	if (property.startsWith(IPDEColorConstants.P_DEFAULT) || property.startsWith(IPDEColorConstants.P_PROC_INSTR))
-    		adaptToColorChange(colorManager, event, getTokenAffected(event));
+    	if (property.startsWith(IPDEColorConstants.P_DEFAULT) || property.startsWith(IPDEColorConstants.P_PROC_INSTR)) {
+    		Token token = getTokenAffected(event);
+			TextAttribute attr= (TextAttribute) token.getData();
+			token.setData(new TextAttribute(colorManager.getColor(event.getProperty()), attr.getBackground(), attr.getStyle()));
+    	}
     }
+    
 }
