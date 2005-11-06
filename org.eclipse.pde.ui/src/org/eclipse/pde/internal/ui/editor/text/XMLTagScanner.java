@@ -34,13 +34,13 @@ public class XMLTagScanner extends RuleBasedScanner {
 		rules[2] = new WhitespaceRule(new XMLWhitespaceDetector());
 		setRules(rules);
 	}
-	protected void adaptToColorChange(ColorManager colorManager, PropertyChangeEvent event, Token token) {
-		colorManager.updateProperty(event.getProperty());
+	protected void adaptToColorChange(IColorManager colorManager, PropertyChangeEvent event, Token token) {
+		colorManager.handlePropertyChangeEvent(event);
 		TextAttribute attr= (TextAttribute) token.getData();
 		token.setData(new TextAttribute(colorManager.getColor(event.getProperty()), attr.getBackground(), attr.getStyle()));
 	}
 
-    public void adaptToPreferenceChange(ColorManager colorManager,PropertyChangeEvent event) {
+    public void adaptToPreferenceChange(IColorManager colorManager,PropertyChangeEvent event) {
     	String property= event.getProperty();
     	if (property.startsWith(IPDEColorConstants.P_TAG) || property.startsWith(IPDEColorConstants.P_STRING)) {
     			adaptToColorChange(colorManager, event, getTokenAffected(event));

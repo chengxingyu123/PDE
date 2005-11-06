@@ -17,7 +17,6 @@ import org.eclipse.jface.text.presentation.PresentationReconciler;
 import org.eclipse.jface.text.rules.DefaultDamagerRepairer;
 import org.eclipse.jface.text.source.ISourceViewer;
 import org.eclipse.jface.util.PropertyChangeEvent;
-import org.eclipse.pde.internal.ui.editor.text.ColorManager;
 import org.eclipse.pde.internal.ui.editor.text.IColorManager;
 import org.eclipse.ui.editors.text.TextSourceViewerConfiguration;
 
@@ -55,7 +54,7 @@ public class ManifestConfiguration extends TextSourceViewerConfiguration {
 	}
 
 	public void handlePropertyChangeEvent(PropertyChangeEvent event) {
-		((ColorManager)fColorManager).handlePropertyChangeEvent(event);
+		fColorManager.handlePropertyChangeEvent(event);
 		if (fManifestNameScanner.affectsBehavior(event))
 			fManifestNameScanner.adaptToPreferenceChange(event);
 		if (fManifestValueScanner.affectsBehavior(event))

@@ -145,11 +145,11 @@ public class XMLSourceViewerConfiguration extends ChangeAwareSourceViewerConfigu
 	 * Update the default tokens of the scanners.
 	 */
 	public void adaptToPreferenceChange(PropertyChangeEvent event) {
-		if (fTagScanner == null) {
+		if (fTagScanner == null)
 			return; //property change before the editor is fully created
-		}
-		fTagScanner.adaptToPreferenceChange((ColorManager)fColorManager, event);
-		fPdeScanner.adaptToPreferenceChange((ColorManager)fColorManager, event);
+		
+		fTagScanner.adaptToPreferenceChange(fColorManager, event);
+		fPdeScanner.adaptToPreferenceChange(fColorManager, event);
 		String property= event.getProperty();
 		if (property.startsWith(IPDEColorConstants.P_XML_COMMENT)) {
 			adaptToColorChange(event);
@@ -161,16 +161,13 @@ public class XMLSourceViewerConfiguration extends ChangeAwareSourceViewerConfigu
      * Update the text attributes associated with the tokens of this scanner as a color preference has been changed. 
      */
     private void adaptToColorChange(PropertyChangeEvent event) {
-    	((ColorManager)fColorManager).updateProperty(event.getProperty()); 
-    	fXMLCommentAttr= new TextAttribute(((ColorManager)fColorManager).getColor(event.getProperty()), fXMLCommentAttr.getBackground(), fXMLCommentAttr.getStyle());
+    	fColorManager.handlePropertyChangeEvent(event);
+    	fXMLCommentAttr= new TextAttribute(fColorManager.getColor(event.getProperty()), fXMLCommentAttr.getBackground(), fXMLCommentAttr.getStyle());
     }
  
 	public boolean affectsTextPresentation(PropertyChangeEvent event) {
 		String property = event.getProperty();
 		return property.startsWith(IPDEColorConstants.P_DEFAULT) ||
-			property.startsWith(IPDEColorConstants.P_HEADER_ASSIGNMENT) ||
-			property.startsWith(IPDEColorConstants.P_HEADER_NAME) ||
-			property.startsWith(IPDEColorConstants.P_HEADER_VALUE) ||
 			property.startsWith(IPDEColorConstants.P_PROC_INSTR) ||
 			property.startsWith(IPDEColorConstants.P_STRING) || 
 			property.startsWith(IPDEColorConstants.P_TAG) || 

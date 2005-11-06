@@ -19,7 +19,6 @@ import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.jface.resource.StringConverter;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.source.SourceViewer;
-import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.IColorProvider;
@@ -32,10 +31,10 @@ import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.ViewerSorter;
 import org.eclipse.pde.internal.ui.PDEPlugin;
 import org.eclipse.pde.internal.ui.editor.text.ChangeAwareSourceViewerConfiguration;
-import org.eclipse.pde.internal.ui.editor.text.ColorManager;
+import org.eclipse.pde.internal.ui.editor.text.IColorManager;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.layout.GridData;
@@ -47,8 +46,11 @@ import org.eclipse.swt.widgets.Label;
 
 public abstract class SyntaxColorTab {
 
-	protected ColorManager fColorManager;
+	protected IColorManager fColorManager;
 	private IPreferenceStore fStore = PDEPlugin.getDefault().getPreferenceStore();
+	private TableViewer fElementViewer;
+	private SourceViewer fPreviewViewer;
+	private ChangeAwareSourceViewerConfiguration fSourceViewerConfiguration;
 
 	class StoreLinkedDisplayItem {
 		private String fDisplayName;
@@ -77,7 +79,8 @@ public abstract class SyntaxColorTab {
 		public void setColorValue(RGB rgb) {
 			RGB oldrgb = getColorValue();
 			PreferenceConverter.setDefault(fStore, fColorKey, rgb);
-			fStore.firePropertyChangeEvent(fColorKey, oldrgb, rgb);
+			fSourceViewerConfiguration.adaptToPreferenceChange(new PropertyChangeEvent(this, fColorKey, oldrgb, rgb));
+			fPreviewViewer.invalidateTextPresentation();
 		}
 		public void disposeColor() {
 			if (fColor != null) {
@@ -99,7 +102,7 @@ public abstract class SyntaxColorTab {
 		}
 	}
 	
-	public SyntaxColorTab(ColorManager manager) {
+	public SyntaxColorTab(IColorManager manager) {
 		fColorManager = manager;
 	}
 
@@ -138,11 +141,11 @@ public abstract class SyntaxColorTab {
 		label.setText("Properties:");
 		label.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 			
-		final TableViewer viewer = new TableViewer(container, SWT.SINGLE | SWT.V_SCROLL | SWT.BORDER);
-		viewer.setLabelProvider(new ColorListLabelProvider());
-		viewer.setContentProvider(new ArrayContentProvider());
-		viewer.getControl().setLayoutData(new GridData(GridData.FILL_BOTH));
-		viewer.getControl().setFont(JFaceResources.getFont(JFaceResources.TEXT_FONT));
+		fElementViewer = new TableViewer(container, SWT.SINGLE | SWT.V_SCROLL | SWT.BORDER);
+		fElementViewer.setLabelProvider(new ColorListLabelProvider());
+		fElementViewer.setContentProvider(new ArrayContentProvider());
+		fElementViewer.getControl().setLayoutData(new GridData(GridData.FILL_BOTH));
+		fElementViewer.getControl().setFont(JFaceResources.getFont(JFaceResources.TEXT_FONT));
 
 		Composite colorComposite = new Composite(container, SWT.NONE);
 		colorComposite.setLayout(new GridLayout(2, false));
@@ -155,25 +158,23 @@ public abstract class SyntaxColorTab {
 		Button colorButton = colorSelector.getButton();
 		colorButton.setLayoutData(new GridData(GridData.BEGINNING));
 
-		colorButton.addSelectionListener(new SelectionListener() {
-			public void widgetDefaultSelected(SelectionEvent e) {
-			}
+		colorButton.addSelectionListener(new SelectionAdapter() {
 			public void widgetSelected(SelectionEvent e) {
-				StoreLinkedDisplayItem item = getStoreLinkedItem(viewer);
+				StoreLinkedDisplayItem item = getStoreLinkedItem(fElementViewer);
 				item.setColorValue(colorSelector.getColorValue());
-				viewer.update(item, null);
+				fElementViewer.update(item, null);
 			}
 		});
 		
-		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
+		fElementViewer.addSelectionChangedListener(new ISelectionChangedListener() {
 			public void selectionChanged(SelectionChangedEvent event) {
-				StoreLinkedDisplayItem item = getStoreLinkedItem(viewer);
+				StoreLinkedDisplayItem item = getStoreLinkedItem(fElementViewer);
 				colorSelector.setColorValue(item.getColorValue());
 			}
 		});
-		viewer.setInput(getViewerInput());
-		viewer.setSorter(new ViewerSorter());
-		viewer.setSelection(new StructuredSelection(viewer.getElementAt(0)));
+		fElementViewer.setInput(getViewerInput());
+		fElementViewer.setSorter(new ViewerSorter());
+		fElementViewer.setSelection(new StructuredSelection(fElementViewer.getElementAt(0)));
 	}	
 	
 	private void createPreviewer(Composite parent) {
@@ -187,37 +188,28 @@ public abstract class SyntaxColorTab {
 		label.setText("Preview:");
 		label.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 
-		final SourceViewer previewViewer = new SourceViewer(previewComp, null, SWT.BORDER|SWT.V_SCROLL);	
-		final ChangeAwareSourceViewerConfiguration config = getSourceViewerConfiguration();
+		fPreviewViewer = new SourceViewer(previewComp, null, SWT.BORDER|SWT.V_SCROLL);	
+		fSourceViewerConfiguration = getSourceViewerConfiguration();
 		
-		if (config != null) {
-			previewViewer.configure(config);
-			IPropertyChangeListener propertyChangeListener = new IPropertyChangeListener() {
-				public void propertyChange(PropertyChangeEvent event) {
-					if (config.affectsTextPresentation(event)) {
-						config.adaptToPreferenceChange(event);
-						previewViewer.invalidateTextPresentation();
-					}
-				}
-			};
-			fStore.addPropertyChangeListener(propertyChangeListener);
-		}
-		previewViewer.setEditable(false);	
-		previewViewer.getTextWidget().setFont(JFaceResources.getFont(JFaceResources.TEXT_FONT));	
-		previewViewer.setDocument(getDocument());
+		if (fSourceViewerConfiguration != null)
+			fPreviewViewer.configure(fSourceViewerConfiguration);
+	
+		fPreviewViewer.setEditable(false);	
+		fPreviewViewer.getTextWidget().setFont(JFaceResources.getFont(JFaceResources.TEXT_FONT));	
+		fPreviewViewer.setDocument(getDocument());
 		
-		Control control = previewViewer.getControl();
+		Control control = fPreviewViewer.getControl();
 		control.setLayoutData(new GridData(GridData.FILL_BOTH));
 	}
 	
 	protected abstract ChangeAwareSourceViewerConfiguration getSourceViewerConfiguration();
 	
 	public void performOk() {
-		/*for (int i = 0; i < colors.size(); i++) {
-			StoreLinkedDisplayItem item = (StoreLinkedDisplayItem)colors.get(i);
-			PreferenceConverter.setValue(store, item.getColorKey(), item.getColorValue());
-			fColorManager.updateProperty(item.getColorKey());
-		}*/
+		int count = fElementViewer.getTable().getItemCount();
+		for (int i = 0; i < count; i++) {
+			StoreLinkedDisplayItem item = (StoreLinkedDisplayItem)fElementViewer.getElementAt(i);
+			PreferenceConverter.setValue(fStore, item.getColorKey(), item.getColorValue());
+		}
 	}
 	
 	public abstract void performDefaults();

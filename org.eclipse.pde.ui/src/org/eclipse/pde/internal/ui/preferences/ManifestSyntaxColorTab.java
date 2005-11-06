@@ -15,7 +15,7 @@ import java.util.ArrayList;
 import org.eclipse.jface.text.Document;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.pde.internal.ui.editor.text.ChangeAwareSourceViewerConfiguration;
-import org.eclipse.pde.internal.ui.editor.text.ColorManager;
+import org.eclipse.pde.internal.ui.editor.text.IColorManager;
 import org.eclipse.pde.internal.ui.editor.text.IPDEColorConstants;
 
 public class ManifestSyntaxColorTab extends SyntaxColorTab {
@@ -27,7 +27,7 @@ public class ManifestSyntaxColorTab extends SyntaxColorTab {
 			{"Assignment", IPDEColorConstants.P_HEADER_ASSIGNMENT},
 			{"Header Value", IPDEColorConstants.P_HEADER_VALUE}};
 
-	public ManifestSyntaxColorTab(ColorManager manager) {
+	public ManifestSyntaxColorTab(IColorManager manager) {
 		super(manager);
 		fMFColorData = loadColorData(fMFColorStrings);
 	}

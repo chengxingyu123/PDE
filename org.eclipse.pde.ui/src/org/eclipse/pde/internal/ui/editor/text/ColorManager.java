@@ -17,7 +17,6 @@ import java.util.Map;
 import org.eclipse.jdt.internal.ui.JavaPlugin;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.PreferenceConverter;
-import org.eclipse.jface.resource.StringConverter;
 import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.pde.internal.ui.PDEPlugin;
 import org.eclipse.swt.SWT;
@@ -31,15 +30,15 @@ public class ColorManager implements IColorManager, IPDEColorConstants {
 	private Map fColorTable = new HashMap(5);
 	private static int counter = 0;
 
-	private ColorManager() {
+	public ColorManager() {
 		initialize();
 	}
 	
-	public static ColorManager getDefault(){
-		if (fColorManager == null){
+	public static IColorManager getDefault(){
+		if (fColorManager == null)
 			fColorManager = new ColorManager();
-		}
-		counter++;
+
+		counter += 1;
 		return fColorManager;
 	}
 
@@ -66,9 +65,7 @@ public class ColorManager implements IColorManager, IPDEColorConstants {
 		putColor(pstore, P_HEADER_ASSIGNMENT);
 		pstore = JavaPlugin.getDefault().getCombinedPreferenceStore();
 		for (int i = 0; i < IColorManager.PROPERTIES_COLORS.length; i++) {
-			String property = IColorManager.PROPERTIES_COLORS[i];
-			RGB setting = PreferenceConverter.getColor(pstore, property);
-			fColorTable.put(property, new Color(Display.getCurrent(), setting));
+			putColor(pstore, IColorManager.PROPERTIES_COLORS[i]);
 		}
 	}
 
@@ -83,7 +80,10 @@ public class ColorManager implements IColorManager, IPDEColorConstants {
 	}
 	
 	private void putColor(IPreferenceStore pstore, String property) {
-		RGB setting = PreferenceConverter.getColor(pstore, property);
+		putColor(property, PreferenceConverter.getColor(pstore, property));
+	}
+	
+	private void putColor(String property, RGB setting) {
 		Color oldColor = (Color) fColorTable.get(property);
 		if (oldColor != null){
 			if (oldColor.getRGB().equals(setting))
@@ -93,29 +93,17 @@ public class ColorManager implements IColorManager, IPDEColorConstants {
 		fColorTable.put(property, new Color(Display.getCurrent(), setting));
 	}
 
-	public void updateProperty(String property, IPreferenceStore pstore) {
-		putColor(pstore, property);
-	}
-	
-	public void updateProperty(String property){
-		updateProperty(property, PDEPlugin.getDefault().getPreferenceStore());
-	}
-
 	public Color getColor(String key) {
 		Color color = (Color) fColorTable.get(key);
-		if (color == null) {
-			color =
-				Display.getCurrent().getSystemColor(SWT.COLOR_LIST_FOREGROUND);
-		}
+		if (color == null) 
+			color = Display.getCurrent().getSystemColor(SWT.COLOR_LIST_FOREGROUND);	
 		return color;
 	}
 
 	public void handlePropertyChangeEvent(PropertyChangeEvent event) {
 		Object color = event.getNewValue();
-		if (color instanceof String) {
-			RGB setting = StringConverter.asRGB((String)color, null);
-			if (setting != null)
-				fColorTable.put(event.getProperty(), new Color(Display.getCurrent(), setting));
+		if (color instanceof RGB) {
+			putColor(event.getProperty(), (RGB)color);
 		}
 	}
 }

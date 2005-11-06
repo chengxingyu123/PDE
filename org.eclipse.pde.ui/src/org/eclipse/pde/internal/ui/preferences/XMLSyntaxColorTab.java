@@ -17,7 +17,7 @@ import org.eclipse.jface.text.IDocument;
 import org.eclipse.pde.internal.ui.PDEUIMessages;
 import org.eclipse.pde.internal.ui.editor.context.XMLDocumentSetupParticpant;
 import org.eclipse.pde.internal.ui.editor.text.ChangeAwareSourceViewerConfiguration;
-import org.eclipse.pde.internal.ui.editor.text.ColorManager;
+import org.eclipse.pde.internal.ui.editor.text.IColorManager;
 import org.eclipse.pde.internal.ui.editor.text.IPDEColorConstants;
 import org.eclipse.pde.internal.ui.editor.text.XMLSourceViewerConfiguration;
 
@@ -33,7 +33,7 @@ public class XMLSyntaxColorTab extends SyntaxColorTab {
 					{PDEUIMessages.EditorPreferencePage_string, IPDEColorConstants.P_STRING},
 					{PDEUIMessages.EditorPreferencePage_comment, IPDEColorConstants.P_XML_COMMENT}};
 
-	public XMLSyntaxColorTab(ColorManager manager) {
+	public XMLSyntaxColorTab(IColorManager manager) {
 		super(manager);
 		fXMLColorData = loadColorData(fXMLColorStrings);
 	}

@@ -14,6 +14,7 @@ import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.preference.PreferencePage;
 import org.eclipse.pde.internal.ui.IHelpContextIds;
 import org.eclipse.pde.internal.ui.IPreferenceConstants;
+import org.eclipse.pde.internal.ui.PDEPlugin;
 import org.eclipse.pde.internal.ui.PDEUIMessages;
 import org.eclipse.pde.internal.ui.editor.text.ColorManager;
 import org.eclipse.swt.SWT;
@@ -40,12 +41,13 @@ public class EditorPreferencePage
 
 	public EditorPreferencePage() {
 		setDescription(PDEUIMessages.EditorPreferencePage_colorSettings);
-		fColorManager = ColorManager.getDefault();
+		fColorManager = new ColorManager();
 	}
 
 	public boolean performOk() {
 		fXMLTab.performOk();
 		fManifestTab.performOk();
+		PDEPlugin.getDefault().savePluginPreferences();
 		return super.performOk();
 	}
 	
