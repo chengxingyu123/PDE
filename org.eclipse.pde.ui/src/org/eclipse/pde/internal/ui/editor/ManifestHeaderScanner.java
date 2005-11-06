@@ -16,13 +16,13 @@ public class ManifestHeaderScanner extends AbstractManifestScanner{
 	}
 
 	protected String[] getTokenProperties() {
-		return new String[] {IPDEColorConstants.P_HEADER_NAME};
+		return new String[] {IPDEColorConstants.P_HEADER_KEY};
 	}
 
 	protected List createRules() {
-		setDefaultReturnToken(getToken(IPDEColorConstants.P_HEADER_NAME));
+		setDefaultReturnToken(getToken(IPDEColorConstants.P_HEADER_KEY));
 		List rules = new ArrayList();
-		rules.add(new WordRule(new ManifestHeaderDetector(), getToken(IPDEColorConstants.P_HEADER_NAME)));
+		rules.add(new WordRule(new ManifestHeaderDetector(), getToken(IPDEColorConstants.P_HEADER_KEY)));
 		return rules;
 	}
 }

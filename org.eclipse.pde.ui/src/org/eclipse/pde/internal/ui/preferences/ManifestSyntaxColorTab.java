@@ -19,9 +19,11 @@ import org.eclipse.pde.internal.ui.editor.text.IPDEColorConstants;
 public class ManifestSyntaxColorTab extends SyntaxColorTab {
 
 	private static final String[][] COLOR_STRINGS = new String[][] {
-			{"Header Name", IPDEColorConstants.P_HEADER_NAME},
+			{"Keys", IPDEColorConstants.P_HEADER_KEY},
 			{"Assignment", IPDEColorConstants.P_HEADER_ASSIGNMENT},
-			{"Header Value", IPDEColorConstants.P_HEADER_VALUE}};
+			{"Values", IPDEColorConstants.P_HEADER_VALUE},
+			{"Attributes", IPDEColorConstants.P_HEADER_ATTRIBUTE},
+			{"Directives", IPDEColorConstants.P_HEADER_DIRECTIVE}};
 
 	public ManifestSyntaxColorTab(IColorManager manager) {
 		super(manager);

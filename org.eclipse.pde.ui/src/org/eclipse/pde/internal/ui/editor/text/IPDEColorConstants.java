@@ -19,9 +19,11 @@ public interface IPDEColorConstants {
 	RGB DEFAULT =           new RGB(  0,   0,   0);
 	RGB TAG =               new RGB(  0,   0, 128);
 	
-	RGB HEADER_NAME = 		new RGB(255,   0,   0);
+	RGB HEADER_KEY = 		new RGB(  0,   0,   0);
 	RGB HEADER_VALUE = 		new RGB(  0,   0, 255);
 	RGB HEADER_ASSIGNMENT = new RGB(  0,   0,   0);
+	RGB HEADER_ATTRIBUTE  = new RGB(  0, 128,   0);
+	RGB HEADER_DIRECTIVE  = new RGB(128,   0,   0);
 	
 	String P_BOLD_SUFFIX = ".bold"; //$NON-NLS-1$
 	String P_ITALIC_SUFFIX = ".italic"; //$NON-NLS-1$
@@ -32,7 +34,9 @@ public interface IPDEColorConstants {
 	String P_DEFAULT = "editor.color.default"; //$NON-NLS-1$
 	String P_TAG = "editor.color.tag"; //$NON-NLS-1$
 	
-	String P_HEADER_NAME = "editor.color.manifest_header_name"; //$NON-NLS-1$
-	String P_HEADER_VALUE = "editor.color.manifest_header_value"; //$NON-NLS-1$
-	String P_HEADER_ASSIGNMENT = "editor.color.manifest_header_assignment"; //$NON-NLS-1$
+	String P_HEADER_KEY = "editor.color.header_key"; //$NON-NLS-1$
+	String P_HEADER_VALUE = "editor.color.header_value"; //$NON-NLS-1$
+	String P_HEADER_ASSIGNMENT = "editor.color.header_assignment"; //$NON-NLS-1$
+	String P_HEADER_ATTRIBUTE = "editor.color.header_attribute";
+	String P_HEADER_DIRECTIVE = "editor.color.header_directive";
 }
