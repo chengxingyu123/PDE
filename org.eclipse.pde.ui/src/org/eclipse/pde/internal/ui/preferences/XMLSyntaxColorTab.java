@@ -35,7 +35,7 @@ public class XMLSyntaxColorTab extends SyntaxColorTab {
 
 	public XMLSyntaxColorTab(ColorManager manager) {
 		super(manager);
-		fXMLColorData = loadColorData(null, false, fXMLColorStrings);
+		fXMLColorData = loadColorData(fXMLColorStrings);
 	}
 	
 	protected ArrayList getViewerInput() {

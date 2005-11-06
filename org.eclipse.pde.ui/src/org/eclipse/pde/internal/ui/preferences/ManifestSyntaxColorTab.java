@@ -29,7 +29,7 @@ public class ManifestSyntaxColorTab extends SyntaxColorTab {
 
 	public ManifestSyntaxColorTab(ColorManager manager) {
 		super(manager);
-		fMFColorData = loadColorData(null, false, fMFColorStrings);
+		fMFColorData = loadColorData(fMFColorStrings);
 	}
 	
 	protected ArrayList getViewerInput() {

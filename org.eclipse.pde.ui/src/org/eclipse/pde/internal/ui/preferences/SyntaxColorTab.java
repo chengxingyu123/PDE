@@ -29,6 +29,7 @@ import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
+import org.eclipse.jface.viewers.ViewerSorter;
 import org.eclipse.pde.internal.ui.PDEPlugin;
 import org.eclipse.pde.internal.ui.editor.text.ChangeAwareSourceViewerConfiguration;
 import org.eclipse.pde.internal.ui.editor.text.ColorManager;
@@ -47,7 +48,7 @@ import org.eclipse.swt.widgets.Label;
 public abstract class SyntaxColorTab {
 
 	protected ColorManager fColorManager;
-	private IPreferenceStore fStore;
+	private IPreferenceStore fStore = PDEPlugin.getDefault().getPreferenceStore();
 
 	class StoreLinkedDisplayItem {
 		private String fDisplayName;
@@ -102,13 +103,11 @@ public abstract class SyntaxColorTab {
 		fColorManager = manager;
 	}
 
-	protected ArrayList loadColorData(IPreferenceStore store, boolean def, String[][] colors) {
+	protected ArrayList loadColorData(String[][] colors) {
 		ArrayList list = new ArrayList(colors.length);
 		for (int i = 0; i < colors.length; i++) {
 			StoreLinkedDisplayItem item = new StoreLinkedDisplayItem(colors[i][0], colors[i][1]);
-			RGB rgb = def ?
-					PreferenceConverter.getDefaultColor(store, item.getColorKey()) : 
-					PreferenceConverter.getColor(store, item.getColorKey());
+			RGB rgb = PreferenceConverter.getColor(fStore, item.getColorKey());
 			fStore.setDefault(item.getColorKey(), StringConverter.asString(rgb));
 			list.add(item);
 		}
@@ -173,6 +172,7 @@ public abstract class SyntaxColorTab {
 			}
 		});
 		viewer.setInput(getViewerInput());
+		viewer.setSorter(new ViewerSorter());
 		viewer.setSelection(new StructuredSelection(viewer.getElementAt(0)));
 	}	
 	
