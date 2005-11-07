@@ -21,12 +21,9 @@ import org.eclipse.pde.internal.ui.editor.text.IColorManager;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Link;
-import org.eclipse.swt.widgets.TabFolder;
-import org.eclipse.swt.widgets.TabItem;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 import org.eclipse.ui.PlatformUI;
@@ -37,7 +34,7 @@ public class EditorPreferencePage
 	implements IWorkbenchPreferencePage, IPreferenceConstants {
 		
 	private XMLSyntaxColorTab fXMLTab;
-	private ManifestSyntaxColorTab fManifestTab;
+	//private ManifestSyntaxColorTab fManifestTab;
 	private IColorManager fColorManager;
 
 	public EditorPreferencePage() {
@@ -47,7 +44,7 @@ public class EditorPreferencePage
 
 	public boolean performOk() {
 		fXMLTab.performOk();
-		fManifestTab.performOk();
+		//fManifestTab.performOk();
 		PDEPlugin.getDefault().savePluginPreferences();
 		return super.performOk();
 	}
@@ -55,13 +52,13 @@ public class EditorPreferencePage
 	public void dispose() {
 		fColorManager.dispose();
 		fXMLTab.dispose();
-		fManifestTab.dispose();
+		//fManifestTab.dispose();
 		super.dispose();
 	}
 	
 	protected void performDefaults() {
 		fXMLTab.performDefaults();
-		fManifestTab.performDefaults();
+		//fManifestTab.performDefaults();
 		super.performDefaults();
 	}
 	
@@ -78,12 +75,15 @@ public class EditorPreferencePage
 			}
 		});
 		
-		TabFolder folder = new TabFolder(parent, SWT.NONE);
+		fXMLTab = new XMLSyntaxColorTab(fColorManager);
+		fXMLTab.createContents(parent);
+		
+		/*TabFolder folder = new TabFolder(parent, SWT.NONE);
 		folder.setLayout(new TabFolderLayout());	
 		folder.setLayoutData(new GridData(GridData.FILL_BOTH));
 		
 		createXMLTab(folder);
-		createManifestTab(folder);
+		createManifestTab(folder);*/
 		
 		Dialog.applyDialogFont(getControl());
 		PlatformUI.getWorkbench().getHelpSystem().setHelp(getControl(), IHelpContextIds.EDITOR_PREFERENCE_PAGE);
@@ -91,18 +91,18 @@ public class EditorPreferencePage
 		return parent;
 	}
 	
-	private void createXMLTab(TabFolder folder) {
+	/*private void createXMLTab(TabFolder folder) {
 		fXMLTab = new XMLSyntaxColorTab(fColorManager);
 		TabItem item = new TabItem(folder, SWT.NONE);
 		item.setText("&XML Highlighting");
 		item.setControl(fXMLTab.createContents(folder));
-	}
+	}*/
 	
-	private void createManifestTab(TabFolder folder) {
+	/*private void createManifestTab(TabFolder folder) {
 		fManifestTab = new ManifestSyntaxColorTab(fColorManager);
 		TabItem item = new TabItem(folder, SWT.NONE);
 		item.setText("&Manifest Highlighting");
 		item.setControl(fManifestTab.createContents(folder));				
-	}
+	}*/
 	
 }
