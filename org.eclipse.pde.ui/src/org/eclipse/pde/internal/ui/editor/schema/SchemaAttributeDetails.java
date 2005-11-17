@@ -10,6 +10,7 @@
  *******************************************************************************/
 package org.eclipse.pde.internal.ui.editor.schema;
 import java.util.ArrayList;
+import java.util.Vector;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
@@ -23,6 +24,7 @@ import org.eclipse.jdt.core.search.IJavaSearchScope;
 import org.eclipse.jdt.core.search.SearchEngine;
 import org.eclipse.jdt.ui.IJavaElementSearchConstants;
 import org.eclipse.jdt.ui.JavaUI;
+import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.wizard.WizardDialog;
@@ -30,7 +32,9 @@ import org.eclipse.pde.internal.core.ischema.IMetaAttribute;
 import org.eclipse.pde.internal.core.ischema.ISchemaAttribute;
 import org.eclipse.pde.internal.core.ischema.ISchemaRestriction;
 import org.eclipse.pde.internal.core.ischema.ISchemaSimpleType;
+import org.eclipse.pde.internal.core.schema.ChoiceRestriction;
 import org.eclipse.pde.internal.core.schema.SchemaAttribute;
+import org.eclipse.pde.internal.core.schema.SchemaEnumeration;
 import org.eclipse.pde.internal.core.schema.SchemaSimpleType;
 import org.eclipse.pde.internal.ui.PDEPlugin;
 import org.eclipse.pde.internal.ui.PDEUIMessages;
@@ -87,9 +91,14 @@ public class SchemaAttributeDetails extends AbstractSchemaDetails {
 		}
 	}
 	class SchemaAttributeContentProvider extends DefaultTableProvider {
+		
 		public Object[] getElements(Object inputElement) {
-			if (inputElement instanceof Object[])
-				return (Object[])inputElement;
+			ISchemaSimpleType type = fAttribute.getType();
+			ISchemaRestriction restriction = type.getRestriction();
+			if (type.getName().equals(BOOLEAN_TYPE))
+				return BOOLS;
+			else if (restriction != null)
+				return restriction.getChildren();
 			return new Object[0];
 		}
 	}
@@ -107,7 +116,7 @@ public class SchemaAttributeDetails extends AbstractSchemaDetails {
 		fTranslatable = createComboPart(parent, toolkit, BOOLS, 2);
 		
 		toolkit.createLabel(parent, "Type:").setForeground(foreground);
-		fType = createComboPart(parent, toolkit, new String[] {"string", "boolean"}, 2);
+		fType = createComboPart(parent, toolkit, new String[] {STRING_TYPE, BOOLEAN_TYPE}, 2);
 		
 		fResLabel = toolkit.createLabel(parent, "Restrictions:");
 		fResLabel.setForeground(foreground);
@@ -148,7 +157,7 @@ public class SchemaAttributeDetails extends AbstractSchemaDetails {
 		fValue.setDimLabel(true);
 		
 		toolkit.createLabel(parent, "Kind:").setForeground(foreground);
-		fKind = createComboPart(parent, toolkit, new String[] {"string", "java", "resource"}, 2);
+		fKind = createComboPart(parent, toolkit, new String[] {STRING_TYPE, "java", "resource"}, 2);
 		
 		fClassEntry = new FormEntry(parent, toolkit, "Superclass:", "Browse...", true, 6);
 		fInterfaceEntry = new FormEntry(parent, toolkit, "Interface:", "Browse...", true, 6);
@@ -167,9 +176,8 @@ public class SchemaAttributeDetails extends AbstractSchemaDetails {
 		
 		fTranslatable.select(fAttribute.isTranslatable() ? 0 : 1);
 		
-		boolean isStringType = fAttribute.getType().getName().equals("string");
+		boolean isStringType = fAttribute.getType().getName().equals(STRING_TYPE);
 		fType.select(isStringType ? 0 : 1);
-		updateResTable(isStringType);
 		
 		fUse.select(fAttribute.getUse());
 		Object value = fAttribute.getValue();
@@ -201,6 +209,8 @@ public class SchemaAttributeDetails extends AbstractSchemaDetails {
 			if (fAttribute.getBasedOn() != null)
 				fAttribute.setBasedOn(null);
 		}
+		
+		updateResTable(isStringType);
 	}
 
 	public void hookListeners() {
@@ -245,8 +255,8 @@ public class SchemaAttributeDetails extends AbstractSchemaDetails {
 		});
 		fType.addSelectionListener(new SelectionAdapter() {
 			public void widgetSelected(SelectionEvent e) {
-				updateResTable(fType.getSelection().equals("string"));
 				fAttribute.setType(new SchemaSimpleType(fAttribute.getSchema(), fType.getSelection()));
+				updateResTable(fType.getSelection().equals(STRING_TYPE));
 			}
 		});
 		fUse.addSelectionListener(new SelectionAdapter() {
@@ -293,7 +303,35 @@ public class SchemaAttributeDetails extends AbstractSchemaDetails {
 						IJavaElementSearchConstants.CONSIDER_INTERFACES, fInterfaceEntry);
 			}
 		});
-		
+		fAddRestriction.addSelectionListener(new SelectionAdapter() {
+			public void widgetSelected(SelectionEvent e) {
+				String text = fNewRestriction.getText();
+				if (text.length() > 0) {
+					ChoiceRestriction res = (ChoiceRestriction)fAttribute.getType().getRestriction();
+					Vector vres = new Vector();
+					if (res != null)  {
+						Object[] currRes = res.getChildren();
+						for (int i = 0; i < currRes.length; i++) {
+							vres.add(currRes[i]);
+						}
+					}
+					vres.add(new SchemaEnumeration(fAttribute.getSchema(), text));
+					if (res == null)
+						res = new ChoiceRestriction(fAttribute .getSchema());
+					ISchemaSimpleType type = fAttribute.getType();
+					if (type instanceof SchemaSimpleType)
+							((SchemaSimpleType)type).setRestriction(res);
+					res.setChildren(vres);
+					fRestrictionsTable.refresh();
+				}
+			}
+		});
+		fRemoveRestriction.addSelectionListener(new SelectionAdapter() {
+			public void widgetSelected(SelectionEvent e) {
+				ISelection selection = fRestrictionsTable.getSelection();
+				if (selection.isEmpty()) return;
+			}
+		});
 	}
 	
 	private String handleLinkActivated(String value, boolean isInter) {
@@ -363,13 +401,7 @@ public class SchemaAttributeDetails extends AbstractSchemaDetails {
 		fRestrictionsTable.getControl().setEnabled(enabled);
 		fAddRestriction.setEnabled(enabled);
 		fRemoveRestriction.setEnabled(enabled);
-		if (!enabled)
-			fRestrictionsTable.setInput(BOOLS);
-		else {
-			ISchemaRestriction restriction = fAttribute.getType().getRestriction();
-			fRestrictionsTable.setInput(restriction != null ?
-					fAttribute.getType().getRestriction().getChildren() : new Object());
-		}
+		fRestrictionsTable.refresh();
 	}
 	
 	private IPackageFragmentRoot[] getDirectRoots(IJavaProject project) {

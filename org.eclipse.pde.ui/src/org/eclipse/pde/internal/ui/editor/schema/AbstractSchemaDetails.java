@@ -34,8 +34,11 @@ import org.eclipse.ui.forms.widgets.Section;
 
 public abstract class AbstractSchemaDetails extends PDEDetails {
 
+	protected static final String STRING_TYPE = "string";
+	protected static final String BOOLEAN_TYPE = "boolean";
 	protected static final String[] BOOLS = 
 		new String[] { Boolean.toString(true), Boolean.toString(false) };
+	
 	private Section fSection;
 	private Text dtdLabel;
 	private ElementSection fElementSection;
