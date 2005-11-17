@@ -120,8 +120,8 @@ public class SchemaEditor extends MultiSourceEditor {
 
 	protected void addPages() {
 		try {
+		 		 		 addPage(new SchemaOverviewPage(this));
 			addPage(new SchemaFormPage(this));
-			addPage(new SchemaDocPage(this));
 		} catch (PartInitException e) {
 			PDEPlugin.logException(e);
 		}
@@ -132,11 +132,7 @@ public class SchemaEditor extends MultiSourceEditor {
 	protected String computeInitialPageId() {
 		String firstPageId = super.computeInitialPageId();
 		if (firstPageId == null) {
-			InputContext primary = inputContextManager.getPrimaryContext();
-			if (primary.getId().equals(SchemaInputContext.CONTEXT_ID))
-				firstPageId = SchemaFormPage.PAGE_ID;
-			if (firstPageId == null)
-				firstPageId = SchemaFormPage.PAGE_ID;
+		 		 		 firstPageId = SchemaOverviewPage.PAGE_ID;
 		}
 		return firstPageId;
 	}

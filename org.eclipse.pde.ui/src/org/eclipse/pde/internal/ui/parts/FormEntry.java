@@ -30,6 +30,7 @@ public class FormEntry {
 	private boolean dirty;
 	boolean ignoreModify = false;
 	private IFormEntryListener listener;
+	private boolean fDimLabelOnDisable;
 	/**
 	 * The default constructor. Call 'createControl' to make it.
 	 *  
@@ -38,6 +39,10 @@ public class FormEntry {
 		createControl(parent, toolkit, labelText, style, null, false, 0, 0);
 	}
 	
+	public FormEntry(Composite parent, FormToolkit toolkit, String labelText, int style, boolean dimLabel) {
+		fDimLabelOnDisable = dimLabel;
+		createControl(parent, toolkit, labelText, style, null, false, 0, 0);
+	}
 	/**
 	 * This constructor create all the controls right away.
 	 * 
@@ -96,6 +101,7 @@ public class FormEntry {
 		fillIntoGrid(parent, indent, tcolspan);
 	}
 	public void setEditable(boolean editable) {
+		if (fDimLabelOnDisable) label.setEnabled(editable);
 		text.setEditable(editable);
 		if (browse!=null) 
 			browse.setEnabled(editable);
@@ -272,5 +278,15 @@ public class FormEntry {
 		ignoreModify = blockNotification;
 		setValue(value);
 		ignoreModify = false;
+	}
+	
+	public void setDimLabel(boolean dimLabel) {
+		fDimLabelOnDisable = dimLabel;
+	}
+	
+	public void setVisible(boolean visible) {
+		text.setVisible(visible);
+		browse.setVisible(visible);
+		label.setVisible(visible);
 	}
 }
