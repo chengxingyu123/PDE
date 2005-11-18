@@ -97,6 +97,8 @@ public String getPointId();
 public void setPointId(String pointId) throws CoreException;
 public String getPluginId();
 public void setPluginId(String pluginId) throws CoreException;
+public boolean extensionsDependant();
+public void setExtensionsDependant(boolean dep);
 /**
  * Returns an object that holds a reference to this schema.
  * Descriptors are responsible for loading and disposing

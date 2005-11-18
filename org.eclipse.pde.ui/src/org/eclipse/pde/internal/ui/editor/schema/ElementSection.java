@@ -30,6 +30,7 @@ import org.eclipse.pde.internal.core.ischema.ISchemaCompositor;
 import org.eclipse.pde.internal.core.ischema.ISchemaElement;
 import org.eclipse.pde.internal.core.ischema.ISchemaObject;
 import org.eclipse.pde.internal.core.ischema.ISchemaObjectReference;
+import org.eclipse.pde.internal.core.ischema.ISchemaRootElement;
 import org.eclipse.pde.internal.core.ischema.ISchemaType;
 import org.eclipse.pde.internal.core.schema.Schema;
 import org.eclipse.pde.internal.core.schema.SchemaAttribute;
@@ -283,7 +284,7 @@ public class ElementSection extends TreeSection {
 			SchemaCompositor compositor = (SchemaCompositor) ((SchemaElementReference) sobject).getCompositor();
 			compositor.removeChild(sobject);
 		} else if (sobject instanceof ISchemaElement) {
-			if (!((ISchemaElement)sobject).getName().equals("extension")) {
+			if (!(sobject instanceof ISchemaRootElement)) {
 				Schema schema = (Schema) parent;
 				schema.removeElement((ISchemaElement) sobject);
 				schema.updateReferencesFor((ISchemaElement) sobject, ISchema.REFRESH_DELETE);
@@ -484,7 +485,9 @@ public class ElementSection extends TreeSection {
 	}
 
 	private void doPaste(Object realTarget, Object sibling, Object object) {
-		if (realTarget instanceof ISchemaObjectReference) {
+		if (object instanceof ISchemaRootElement) {
+			// do not paste root elements
+		} else if (realTarget instanceof ISchemaObjectReference) {
 			
 		} else if (object instanceof ISchemaObjectReference) {
 			
@@ -516,7 +519,9 @@ public class ElementSection extends TreeSection {
 				continue;
 			} else if (obj instanceof ISchemaObjectReference && target instanceof ISchemaCompositor) {
 				continue;
-			} else if (target instanceof ISchemaElement && !(target instanceof ISchemaObjectReference)) {
+			} else if (target instanceof ISchemaElement 
+					&& !(target instanceof ISchemaObjectReference)
+					&& !(obj instanceof ISchemaRootElement)) {
 				continue;
 			}
 			return false;

@@ -212,6 +212,10 @@ public class SchemaElement extends RepeatableSchemaObject implements
 		if (type instanceof SchemaSimpleType) {
 			writer.print(" type=\"" + type.getName() + "\""); //$NON-NLS-1$ //$NON-NLS-2$
 		}
+		String extendedProperties = getExtenderProperies();
+		if (extendedProperties != null)
+			writer.print(extendedProperties);
+		
 		writer.println(">"); //$NON-NLS-1$
 		String indent2 = indent + Schema.INDENT;
 		String realDescription = getWritableDescription();
@@ -266,5 +270,9 @@ public class SchemaElement extends RepeatableSchemaObject implements
 	 */
 	public boolean isDeprecated() {
 		return fDeprecated;
+	}
+	
+	public String getExtenderProperies() {
+		return null;
 	}
 }

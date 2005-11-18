@@ -16,6 +16,7 @@ import org.eclipse.pde.internal.core.ischema.ISchemaAttribute;
 import org.eclipse.pde.internal.core.ischema.ISchemaCompositor;
 import org.eclipse.pde.internal.core.ischema.ISchemaElement;
 import org.eclipse.pde.internal.core.ischema.ISchemaObjectReference;
+import org.eclipse.pde.internal.core.ischema.ISchemaRootElement;
 import org.eclipse.pde.internal.ui.IHelpContextIds;
 import org.eclipse.pde.internal.ui.PDEUIMessages;
 import org.eclipse.pde.internal.ui.editor.PDEFormEditor;
@@ -59,9 +60,12 @@ public class SchemaFormPage extends PDEFormPage implements IModelChangedListener
 		public IDetailsPage getPage(Object object) {
 			if (object instanceof ISchemaObjectReference)
 				fCurrDetails = new SchemaElementReferenceDetails((ISchemaObjectReference)object, section);
-			else if (object instanceof ISchemaElement)
-				fCurrDetails = new SchemaElementDetails((ISchemaElement)object, section);
-			else if (object instanceof ISchemaCompositor)
+			else if (object instanceof ISchemaElement) {
+				if (object instanceof ISchemaRootElement)
+					fCurrDetails = new SchemaRootElementDetails((ISchemaElement)object, section);
+				else
+					fCurrDetails = new SchemaElementDetails((ISchemaElement)object, section);
+			} else if (object instanceof ISchemaCompositor)
 				fCurrDetails = new SchemaCompositorDetails((ISchemaCompositor)object, section);
 			else if (object instanceof ISchemaAttribute)
 				fCurrDetails = new SchemaAttributeDetails((ISchemaAttribute)object, section);
@@ -105,7 +109,8 @@ public class SchemaFormPage extends PDEFormPage implements IModelChangedListener
 
 	public void modelChanged(IModelChangedEvent event) {
 		if (event.getChangeType() == IModelChangedEvent.CHANGE) {
-			if (event.getChangedProperty().equals("name")) {
+			String changeProperty = event.getChangedProperty();
+			if (changeProperty != null && changeProperty.equals("name")) {
 				Object[] change = event.getChangedObjects();
 				if (change.length > 0 && change[0] instanceof ISchema)
 					getManagedForm().getForm().setText(((ISchema)change[0]).getName());

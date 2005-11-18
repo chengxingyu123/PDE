@@ -11,8 +11,8 @@
 package org.eclipse.pde.internal.ui.editor.schema;
 
 import org.eclipse.pde.internal.core.ischema.ISchemaElement;
-import org.eclipse.pde.internal.core.schema.SchemaElement;
 import org.eclipse.pde.internal.core.schema.SchemaElementReference;
+import org.eclipse.pde.internal.core.schema.SchemaRootElement;
 import org.eclipse.pde.internal.ui.editor.FormEntryAdapter;
 import org.eclipse.pde.internal.ui.parts.ComboPart;
 import org.eclipse.pde.internal.ui.parts.FormEntry;
@@ -24,20 +24,19 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.forms.FormColors;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 
-public class SchemaElementDetails extends AbstractSchemaDetails {
+public class SchemaRootElementDetails extends AbstractSchemaDetails {
 
-	private SchemaElement fElement;
+	private SchemaRootElement fElement;
 	private FormEntry fIcon;
-	private FormEntry fLabelProperty;
 	private FormEntry fName;
 	private ComboPart fDeprecated;
-	private ComboPart fTranslatable;
+	private FormEntry fSuggestion;
 	
-	public SchemaElementDetails(ISchemaElement element, ElementSection section) {
+	public SchemaRootElementDetails(ISchemaElement element, ElementSection section) {
 		super(section, true);
 		if (element instanceof SchemaElementReference)
-			element = (SchemaElement)((SchemaElementReference)element).getReferencedObject();
-		fElement = (SchemaElement)element;
+			element = (SchemaRootElement)((SchemaElementReference)element).getReferencedObject();
+		fElement = (SchemaRootElement)element;
 	}
 
 	public void createDetails(Composite parent) {
@@ -45,20 +44,13 @@ public class SchemaElementDetails extends AbstractSchemaDetails {
 		Color foreground = toolkit.getColors().getColor(FormColors.TITLE);
 		
 		fName = new FormEntry(parent, toolkit, "Name:", SWT.NONE);
-		fName.setFormEntryListener(new FormEntryAdapter(this) {
-			public void textValueChanged(FormEntry entry) {
-				
-			}
-		});
-		fLabelProperty = new FormEntry(parent, toolkit, "Label Property:", SWT.NONE);
 		fIcon = new FormEntry(parent, toolkit, "Icon:", SWT.NONE);
 		
 		toolkit.createLabel(parent, "Deprecated:").setForeground(foreground);
 		fDeprecated = createComboPart(parent, toolkit, BOOLS, 2);
 
-		
-		toolkit.createLabel(parent, "Translatable:").setForeground(foreground);
-		fTranslatable = createComboPart(parent, toolkit, BOOLS, 2);
+		fSuggestion = new FormEntry(parent, toolkit, "Suggested:", SWT.NONE);
+		fSuggestion.setDimLabel(true);
 		
 		setText("Element Details");
 		setDecription("Properties for the \"" + fElement.getName() + "\" element.");
@@ -69,25 +61,20 @@ public class SchemaElementDetails extends AbstractSchemaDetails {
 			return;
 		String curr = fElement.getName();
 		fName.setValue(curr != null ? curr : "");
-		curr = fElement.getLabelProperty();
-		fLabelProperty.setValue(curr != null ? curr : "");
 		curr = fElement.getIconProperty();
 		fIcon.setValue(curr != null ? curr : "");
 		
 		fDeprecated.select(fElement.isDeprecated() ? 0 : 1);
+		fSuggestion.setEditable(fElement.isDeprecated());
 		
-		fTranslatable.select(fElement.hasTranslatableContent() ? 0 : 1);
+		curr = fElement.getDeprecatedSuggestion();
+		fSuggestion.setValue(curr != null ? curr : "");
 	}
 
 	public void hookListeners() {
 		fIcon.setFormEntryListener(new FormEntryAdapter(this) {
 			public void textValueChanged(FormEntry entry) {
 				fElement.setIconProperty(fIcon.getValue());
-			}
-		});
-		fLabelProperty.setFormEntryListener(new FormEntryAdapter(this) {
-			public void textValueChanged(FormEntry entry) {
-				fElement.setLabelProperty(fLabelProperty.getValue());
 			}
 		});
 		fName.setFormEntryListener(new FormEntryAdapter(this) {
@@ -98,11 +85,12 @@ public class SchemaElementDetails extends AbstractSchemaDetails {
 		fDeprecated.addSelectionListener(new SelectionAdapter() {
 			public void widgetSelected(SelectionEvent e) {
 				fElement.setDeprecatedProperty(fDeprecated.getSelectionIndex() == 0);
+				fSuggestion.setEditable(fDeprecated.getSelectionIndex() == 0);
 			}
 		});
-		fTranslatable.addSelectionListener(new SelectionAdapter() {
-			public void widgetSelected(SelectionEvent e) {
-				fElement.setTranslatableProperty(fTranslatable.getSelectionIndex() == 0);
+		fSuggestion.setFormEntryListener(new FormEntryAdapter(this) {
+			public void textValueChanged(FormEntry entry) {
+				fElement.setDeprecatedSuggestion(fSuggestion.getValue());
 			}
 		});
 	}

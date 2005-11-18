@@ -29,7 +29,7 @@ public class SchemaOverviewPage extends PDEFormPage {
 	 private IColorManager colorManager = ColorManager.getDefault();
 	 private DocSection docSection;
 	 private SchemaSpecSection extensionPointSection;
-	 private ExtraSchemaSpecSection extraSpecSection;
+	 private SchemaIncludesSection extraSpecSection;
 	 public SchemaOverviewPage(PDEFormEditor editor) {
  		 super(editor, PAGE_ID, PDEUIMessages.SchemaEditor_DocPage_title);
 	 }
@@ -54,7 +54,7 @@ public class SchemaOverviewPage extends PDEFormPage {
  		 extensionPointSection.getSection().setLayoutData(
 	 		 new GridData(GridData.FILL_HORIZONTAL | GridData.VERTICAL_ALIGN_BEGINNING));
  		 
- 		 extraSpecSection = new ExtraSchemaSpecSection(this, form.getBody());
+ 		 extraSpecSection = new SchemaIncludesSection(this, form.getBody());
  		 extraSpecSection.getSection().setLayoutData(
 	 		 new GridData(GridData.FILL_HORIZONTAL | GridData.VERTICAL_ALIGN_BEGINNING));
  		 

@@ -36,6 +36,8 @@ public class Schema extends PlatformObject implements ISchema {
 	private String fPointID;
 
 	private String fPluginID;
+	
+	private String fDeclaringDepends = Boolean.toString(true);
 
 	private ISchemaDescriptor fSchemaDescriptor;
 
@@ -574,6 +576,8 @@ public class Schema extends PlatformObject implements ISchema {
 		String aname = getAttribute(elementNode, "name"); //$NON-NLS-1$
 		String atype = getAttribute(elementNode, "type"); //$NON-NLS-1$
 		String aref = getAttribute(elementNode, "ref"); //$NON-NLS-1$
+		String depSug = getAttribute(elementNode, SchemaRootElement.P_DEP_SUGGESTION); 
+		
 		int minOccurs = 1;
 		int maxOccurs = 1;
 		String aminOccurs = getAttribute(elementNode, "minOccurs"); //$NON-NLS-1$
@@ -602,7 +606,12 @@ public class Schema extends PlatformObject implements ISchema {
 		if (atype != null) {
 			type = resolveTypeReference(atype);
 		}
-		SchemaElement element = new SchemaElement(parent, aname);
+		SchemaElement element;
+		if (aname.equals("extension")) {
+			element = new SchemaRootElement(parent, aname);
+			((ISchemaRootElement)element).setDeprecatedSuggestion(depSug);
+		} else
+			element = new SchemaElement(parent, aname);
 		//element.bindSourceLocation(elementNode, lineTable);
 		element.setMinOccurs(minOccurs);
 		element.setMaxOccurs(maxOccurs);
@@ -701,6 +710,8 @@ public class Schema extends PlatformObject implements ISchema {
 								setName(getAttribute(meta, "name")); //$NON-NLS-1$
 								fPluginID = getAttribute(meta, "plugin"); //$NON-NLS-1$
 								fPointID = getAttribute(meta, "id"); //$NON-NLS-1$
+								String dep = getAttribute(meta, "declaringDepends"); //$NON-NLS-1$
+								fDeclaringDepends = dep != null ? dep : Boolean.toString(true);
 								fValid = true;
 							} else if (meta.getNodeName()
 									.equals("meta.section")) { //$NON-NLS-1$
@@ -763,6 +774,7 @@ public class Schema extends PlatformObject implements ISchema {
 		fIncludes = null;
 		fPointID = null;
 		fPluginID = null;
+		fDeclaringDepends = Boolean.toString(true);;
 		fReferences = null;
 		fDescription = null;
 		fName = null;
@@ -896,6 +908,7 @@ public class Schema extends PlatformObject implements ISchema {
 		writer.println(indent2 + "<appInfo>"); //$NON-NLS-1$
 		writer.print(indent3 + "<meta.schema plugin=\"" + pluginId + "\""); //$NON-NLS-1$ //$NON-NLS-2$
 		writer.print(" id=\"" + pointId + "\""); //$NON-NLS-1$ //$NON-NLS-2$
+		writer.print(" declaringDepends=\"" + fDeclaringDepends + "\"");
 		writer.println(" name=\"" + getName() + "\"/>"); //$NON-NLS-1$ //$NON-NLS-2$
 		writer.println(indent2 + "</appInfo>"); //$NON-NLS-1$
 		writer.println(indent2 + "<documentation>"); //$NON-NLS-1$
@@ -935,5 +948,15 @@ public class Schema extends PlatformObject implements ISchema {
 				"\\r\\n|\\r|\\n", lineDelimiter); //$NON-NLS-1$
 
 		return platformDescription;
+	}
+
+	public boolean extensionsDependant() {
+		return fDeclaringDepends.equals(Boolean.toString(true));
+	}
+
+	public void setExtensionsDependant(boolean dep) {
+		String oldValue = fDeclaringDepends;
+		fDeclaringDepends = Boolean.toString(dep);
+		fireModelObjectChanged(this, P_PLUGIN, oldValue, Boolean.toString(dep));
 	}
 }

@@ -29,7 +29,6 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.swt.widgets.Text;
@@ -53,8 +52,6 @@ public abstract class AbstractSchemaDetails extends PDEDetails {
 	private Spinner fMinOccurSpinner;
 	private Spinner fMaxOccurSpinner;
 	private Button fUnboundSelect;
-	private Button fBoundSelect;
-	private Control fUnboundLabel;
 	
 	public AbstractSchemaDetails(ElementSection section, boolean showDTD) {
 		fElementSection = section;
@@ -203,12 +200,11 @@ public abstract class AbstractSchemaDetails extends PDEDetails {
 		Composite comp = toolkit.createComposite(parent);
 		GridData gd = new GridData(GridData.FILL_HORIZONTAL);
 		gd.horizontalSpan = 2;
-		GridLayout layout = new GridLayout(4, false);
+		GridLayout layout = new GridLayout(3, false);
 		layout.marginHeight = layout.marginWidth = 0;
 		comp.setLayout(layout);
 		comp.setLayoutData(gd);
 		
-		fBoundSelect = toolkit.createButton(comp, "", SWT.RADIO);
 		fMaxOccurSpinner = new Spinner(comp, SWT.BORDER);
 		fMaxOccurSpinner.setMinimum(1);
 		fMaxOccurSpinner.setMaximum(999);
@@ -221,13 +217,15 @@ public abstract class AbstractSchemaDetails extends PDEDetails {
 			}
 		});
 		
-		fUnboundSelect = toolkit.createButton(comp, "", SWT.RADIO);
-		fUnboundLabel = toolkit.createLabel(comp, "Unbound", SWT.NONE);
-		fUnboundLabel.setForeground(toolkit.getColors().getColor(FormColors.TITLE));
+		fUnboundSelect = toolkit.createButton(comp, "", SWT.CHECK);
+		gd = new GridData();
+		gd.horizontalIndent = 10;
+		fUnboundSelect.setLayoutData(gd);
+		toolkit.createLabel(comp, "Unbounded", SWT.NONE).setForeground(
+				toolkit.getColors().getColor(FormColors.TITLE));
 		fUnboundSelect.addSelectionListener(new SelectionAdapter() {
 			public void widgetSelected(SelectionEvent e) {
 				boolean unbound = fUnboundSelect.getSelection();
-				fUnboundLabel.setEnabled(unbound);
 				fMaxOccurSpinner.setEnabled(!unbound);
 			}
 		});
@@ -258,9 +256,7 @@ public abstract class AbstractSchemaDetails extends PDEDetails {
 	protected void updateMaxOccur(int max) {
 		if (fMaxOccurSpinner == null) return;
 		boolean isMax = max == Integer.MAX_VALUE;
-		fUnboundLabel.setEnabled(isMax);
 		fUnboundSelect.setSelection(isMax);
-		fBoundSelect.setSelection(!isMax);
 		fMaxOccurSpinner.setEnabled(!isMax);
 		if (!isMax)
 			fMaxOccurSpinner.setSelection(max);

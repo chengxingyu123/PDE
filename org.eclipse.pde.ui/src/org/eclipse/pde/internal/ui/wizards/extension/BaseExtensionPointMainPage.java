@@ -44,6 +44,7 @@ import org.eclipse.pde.internal.core.schema.SchemaAttribute;
 import org.eclipse.pde.internal.core.schema.SchemaComplexType;
 import org.eclipse.pde.internal.core.schema.SchemaCompositor;
 import org.eclipse.pde.internal.core.schema.SchemaElement;
+import org.eclipse.pde.internal.core.schema.SchemaRootElement;
 import org.eclipse.pde.internal.core.schema.SchemaSimpleType;
 import org.eclipse.pde.internal.core.util.CoreUtility;
 import org.eclipse.pde.internal.core.util.IdUtil;
@@ -225,7 +226,7 @@ public abstract class BaseExtensionPointMainPage extends WizardPage {
 		schema.addDocumentSection(section);
 		SchemaElement element;
 		if (!shared) {
-			element = new SchemaElement(schema, "extension"); //$NON-NLS-1$
+			element = new SchemaRootElement(schema, "extension"); //$NON-NLS-1$
 			SchemaComplexType complexType = new SchemaComplexType(schema);
 			element.setType(complexType);
 			SchemaCompositor compositor = new SchemaCompositor(element,

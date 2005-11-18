@@ -12,6 +12,7 @@ package org.eclipse.pde.internal.ui.editor.schema;
 
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.pde.internal.core.schema.*;
+
 import java.util.*;
 import org.eclipse.pde.internal.core.ischema.*;
 import org.eclipse.ui.views.properties.*;
@@ -132,7 +133,9 @@ public class ElementPropertySource extends SchemaObjectPropertySource {
 			else if (name.equals(P_NAME)) {
 				element.setName(svalue);
 				fixReferences(element);
-			}
+			} else if(name.equals(SchemaRootElement.P_DEP_SUGGESTION) &&
+					element instanceof ISchemaRootElement)
+				((ISchemaRootElement)element).setDeprecatedSuggestion(svalue);
 	    }
 	}
 }

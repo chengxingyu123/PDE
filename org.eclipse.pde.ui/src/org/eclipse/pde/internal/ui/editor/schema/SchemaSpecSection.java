@@ -13,16 +13,24 @@ import org.eclipse.pde.core.IEditable;
 import org.eclipse.pde.internal.core.ischema.ISchema;
 import org.eclipse.pde.internal.core.schema.Schema;
 import org.eclipse.pde.internal.ui.PDEUIMessages;
-import org.eclipse.pde.internal.ui.editor.*;
-import org.eclipse.pde.internal.ui.parts.*;
-import org.eclipse.swt.layout.*;
+import org.eclipse.pde.internal.ui.editor.FormEntryAdapter;
+import org.eclipse.pde.internal.ui.editor.PDESection;
+import org.eclipse.pde.internal.ui.parts.FormEntry;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.ui.forms.widgets.*;
+import org.eclipse.ui.forms.widgets.FormToolkit;
+import org.eclipse.ui.forms.widgets.Section;
 
 public class SchemaSpecSection extends PDESection {
 	private FormEntry pluginText;
 	private FormEntry pointText;
 	private FormEntry nameText;
+	private Button fDependsButton;
 		 public SchemaSpecSection(SchemaOverviewPage page, Composite parent) {
 		 		 super(page, parent, Section.DESCRIPTION);
 		getSection().setText(PDEUIMessages.SchemaEditor_SpecSection_title);
@@ -68,6 +76,22 @@ public class SchemaSpecSection extends PDESection {
 				getPage().getManagedForm().getForm().setText(schema.getName());
 			}
 		});
+		
+		Composite comp = toolkit.createComposite(container);
+		layout = new GridLayout();
+		layout.marginHeight = layout.marginWidth = 0;
+		GridData gd = new GridData(GridData.FILL_HORIZONTAL);
+		gd.horizontalSpan = 2;
+		comp.setLayout(layout);
+		comp.setLayoutData(gd);
+		fDependsButton = toolkit.createButton(comp, "Extending plug-ins must declare dependency", SWT.CHECK);
+		fDependsButton.addSelectionListener(new SelectionAdapter() {
+			public void widgetSelected(SelectionEvent e) {
+				ISchema schema = (ISchema)getPage().getModel();
+				schema.setExtensionsDependant(fDependsButton.getSelection());
+			}
+		});
+		
 		toolkit.paintBordersFor(container);
 		section.setClient(container);
 		initialize();
@@ -85,6 +109,7 @@ public class SchemaSpecSection extends PDESection {
 			pluginText.getText().setEnabled(false);
 			pointText.getText().setEnabled(false);
 			nameText.getText().setEnabled(false);
+			fDependsButton.setEnabled(false);
 		}
 		schema.addModelChangedListener(this);
 	}
@@ -104,6 +129,7 @@ public class SchemaSpecSection extends PDESection {
 		setIfDefined(pluginText, schema.getPluginId());
 		setIfDefined(pointText, schema.getPointId());
 		setIfDefined(nameText, schema.getName());
+		fDependsButton.setSelection(schema.extensionsDependant());
 		getPage().getManagedForm().getForm().setText(schema.getName());
 		super.refresh();
 	}

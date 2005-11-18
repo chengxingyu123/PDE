@@ -24,6 +24,7 @@ import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
+import org.eclipse.jface.window.Window;
 import org.eclipse.jface.wizard.WizardDialog;
 import org.eclipse.pde.internal.core.ischema.IMetaAttribute;
 import org.eclipse.pde.internal.core.ischema.ISchemaAttribute;
@@ -50,7 +51,6 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Table;
-import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
@@ -87,7 +87,6 @@ public class SchemaAttributeDetails extends AbstractSchemaDetails {
 	private TableViewer fRestrictionsTable;
 	private FormEntry fClassEntry;
 	private FormEntry fInterfaceEntry;
-	private Text fNewRestriction;
 	private Button fAddRestriction;
 	private Button fRemoveRestriction;
 	private Label fResLabel;
@@ -142,9 +141,6 @@ public class SchemaAttributeDetails extends AbstractSchemaDetails {
 		tableComp.setLayout(layout);
 		tableComp.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 		
-		fNewRestriction = toolkit.createText(tableComp, "");
-		fNewRestriction.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-		
 		Table table = toolkit.createTable(tableComp, SWT.BORDER | SWT.MULTI | SWT.V_SCROLL);
 		gd = new GridData(GridData.FILL_HORIZONTAL);
 		gd.heightHint = 40;
@@ -158,7 +154,7 @@ public class SchemaAttributeDetails extends AbstractSchemaDetails {
 		layout = new GridLayout(); layout.marginHeight = layout.marginWidth = 0;
 		resButtonComp.setLayout(layout);
 		resButtonComp.setLayoutData(new GridData(GridData.VERTICAL_ALIGN_BEGINNING));
-		fAddRestriction = toolkit.createButton(resButtonComp, "Add", SWT.NONE);
+		fAddRestriction = toolkit.createButton(resButtonComp, "Add...", SWT.NONE);
 		fRemoveRestriction = toolkit.createButton(resButtonComp, "Remove", SWT.NONE);
 		fAddRestriction.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 		fRemoveRestriction.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
@@ -311,8 +307,10 @@ public class SchemaAttributeDetails extends AbstractSchemaDetails {
 		});
 		fAddRestriction.addSelectionListener(new SelectionAdapter() {
 			public void widgetSelected(SelectionEvent e) {
-				String text = fNewRestriction.getText();
-				if (text.length() > 0) {
+				NewRestrictionDialog dialog = new NewRestrictionDialog(getPage().getSite().getShell());
+				if (dialog.open() != Window.OK) return;
+				String text = dialog.getNewRestriction();
+				if (text != null && text.length() > 0) {
 					ISchemaSimpleType type = fAttribute.getType();
 					ChoiceRestriction res = (ChoiceRestriction)type.getRestriction();
 					Vector vres = new Vector();
@@ -329,7 +327,6 @@ public class SchemaAttributeDetails extends AbstractSchemaDetails {
 					if (type instanceof SchemaSimpleType)
 							((SchemaSimpleType)type).setRestriction(res);
 					fRestrictionsTable.refresh();
-					fNewRestriction.setText("");
 				}
 			}
 		});
@@ -418,7 +415,6 @@ public class SchemaAttributeDetails extends AbstractSchemaDetails {
 	
 	private void updateResTable(boolean enabled) {
 		fResLabel.setEnabled(enabled);
-		fNewRestriction.setEnabled(enabled);
 		fRestrictionsTable.getControl().setEnabled(enabled);
 		fAddRestriction.setEnabled(enabled);
 		fRemoveRestriction.setEnabled(enabled);
