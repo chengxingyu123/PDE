@@ -21,10 +21,17 @@ import org.eclipse.pde.internal.ui.editor.PDEFormPage;
 import org.eclipse.pde.internal.ui.editor.PDESection;
 import org.eclipse.pde.internal.ui.parts.ComboPart;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.forms.FormColors;
 import org.eclipse.ui.forms.IFormPart;
@@ -43,6 +50,11 @@ public abstract class AbstractSchemaDetails extends PDEDetails {
 	private Text dtdLabel;
 	private ElementSection fElementSection;
 	private boolean fShowDTD;
+	private Spinner fMinOccurSpinner;
+	private Spinner fMaxOccurSpinner;
+	private Button fUnboundSelect;
+	private Button fBoundSelect;
+	private Control fUnboundLabel;
 	
 	public AbstractSchemaDetails(ElementSection section, boolean showDTD) {
 		fElementSection = section;
@@ -160,5 +172,106 @@ public abstract class AbstractSchemaDetails extends PDEDetails {
 		cp.setItems(items);
 		cp.getControl().setEnabled(isEditable());
 		return cp;
+	}
+	
+	protected Composite createMinOccurComp(Composite parent, FormToolkit toolkit) {
+		toolkit.createLabel(parent, "Min Occurences:").setForeground(
+				toolkit.getColors().getColor(FormColors.TITLE));
+		Composite comp = toolkit.createComposite(parent);
+		GridData gd = new GridData(GridData.FILL_HORIZONTAL);
+		gd.horizontalSpan = 2;
+		GridLayout layout = new GridLayout();
+		layout.marginHeight = layout.marginWidth = 0;
+		comp.setLayout(layout);
+		comp.setLayoutData(gd);
+		fMinOccurSpinner = new Spinner(comp, SWT.BORDER);
+		fMinOccurSpinner.setMinimum(0);
+		fMinOccurSpinner.setMaximum(999);
+		fMinOccurSpinner.addModifyListener(new ModifyListener() {
+			public void modifyText(ModifyEvent e) {
+				int minOccur = fMinOccurSpinner.getSelection();
+				if (minOccur > getMaxOccur())
+					fMinOccurSpinner.setSelection(minOccur - 1);
+			}
+		});
+		return comp;
+	}
+	
+	protected Composite createMaxOccurComp(Composite parent, FormToolkit toolkit) {
+		toolkit.createLabel(parent, "Max Occurences:").setForeground(
+				toolkit.getColors().getColor(FormColors.TITLE));
+		Composite comp = toolkit.createComposite(parent);
+		GridData gd = new GridData(GridData.FILL_HORIZONTAL);
+		gd.horizontalSpan = 2;
+		GridLayout layout = new GridLayout(4, false);
+		layout.marginHeight = layout.marginWidth = 0;
+		comp.setLayout(layout);
+		comp.setLayoutData(gd);
+		
+		fBoundSelect = toolkit.createButton(comp, "", SWT.RADIO);
+		fMaxOccurSpinner = new Spinner(comp, SWT.BORDER);
+		fMaxOccurSpinner.setMinimum(1);
+		fMaxOccurSpinner.setMaximum(999);
+		fMaxOccurSpinner.setIncrement(1);
+		fMaxOccurSpinner.addModifyListener(new ModifyListener() {
+			public void modifyText(ModifyEvent e) {
+				int maxValue = fMaxOccurSpinner.getSelection();
+				if (maxValue < getMinOccur())
+					fMaxOccurSpinner.setSelection(maxValue + 1);
+			}
+		});
+		
+		fUnboundSelect = toolkit.createButton(comp, "", SWT.RADIO);
+		fUnboundLabel = toolkit.createLabel(comp, "Unbound", SWT.NONE);
+		fUnboundLabel.setForeground(toolkit.getColors().getColor(FormColors.TITLE));
+		fUnboundSelect.addSelectionListener(new SelectionAdapter() {
+			public void widgetSelected(SelectionEvent e) {
+				boolean unbound = fUnboundSelect.getSelection();
+				fUnboundLabel.setEnabled(unbound);
+				fMaxOccurSpinner.setEnabled(!unbound);
+			}
+		});
+		
+		return comp;
+	}
+	
+	protected int getMinOccur() {
+		if (fMinOccurSpinner != null)
+			return fMinOccurSpinner.getSelection();
+		return 0;
+	}
+	
+	protected int getMaxOccur() {
+		if (fMaxOccurSpinner != null) {
+			if (fMaxOccurSpinner.isEnabled())
+				return fMaxOccurSpinner.getSelection();
+			return Integer.MAX_VALUE;
+		}
+		return 1;
+	}
+	
+	protected void updateMinOccur(int min) {
+		if (fMinOccurSpinner == null) return;
+		fMinOccurSpinner.setSelection(min);
+	}
+	
+	protected void updateMaxOccur(int max) {
+		if (fMaxOccurSpinner == null) return;
+		boolean isMax = max == Integer.MAX_VALUE;
+		fUnboundLabel.setEnabled(isMax);
+		fUnboundSelect.setSelection(isMax);
+		fBoundSelect.setSelection(!isMax);
+		fMaxOccurSpinner.setEnabled(!isMax);
+		if (!isMax)
+			fMaxOccurSpinner.setSelection(max);
+	}
+	
+	protected void hookMinOccur(SelectionAdapter adapter) {
+		fMinOccurSpinner.addSelectionListener(adapter);
+	}
+	
+	protected void hookMaxOccur(SelectionAdapter adapter) {
+		fUnboundSelect.addSelectionListener(adapter);
+		fMaxOccurSpinner.addSelectionListener(adapter);
 	}
 }

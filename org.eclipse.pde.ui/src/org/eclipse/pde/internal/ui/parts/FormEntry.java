@@ -101,8 +101,13 @@ public class FormEntry {
 		fillIntoGrid(parent, indent, tcolspan);
 	}
 	public void setEditable(boolean editable) {
-		if (fDimLabelOnDisable) label.setEnabled(editable);
 		text.setEditable(editable);
+		if (fDimLabelOnDisable) {
+			if (label instanceof Hyperlink)
+				((Hyperlink)label).setUnderlined(editable);
+			label.setEnabled(editable);
+			text.setEnabled(editable);
+		}
 		if (browse!=null) 
 			browse.setEnabled(editable);
 	}
@@ -282,11 +287,5 @@ public class FormEntry {
 	
 	public void setDimLabel(boolean dimLabel) {
 		fDimLabelOnDisable = dimLabel;
-	}
-	
-	public void setVisible(boolean visible) {
-		text.setVisible(visible);
-		browse.setVisible(visible);
-		label.setVisible(visible);
 	}
 }
