@@ -135,7 +135,7 @@ public class ElementSection extends TreeSection {
 //		initDragAndDrop();
 	}
 
-	private void initDragAndDrop() {
+	protected void initDragAndDrop() {
 		clipboard = new Clipboard(treeViewer.getControl().getDisplay());
 		int ops = DND.DROP_COPY | DND.DROP_MOVE;
 		Transfer[] transfers = new Transfer[] {ModelDataTransfer.getInstance(), TextTransfer.getInstance() };

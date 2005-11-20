@@ -142,15 +142,6 @@ public class SchemaAttribute extends SchemaObject implements ISchemaAttribute {
 				valueFilter);
 	}
 
-	private void ensureNoRestriction() {
-		if (type instanceof SchemaSimpleType
-				&& ((SchemaSimpleType) type).getRestriction() != null) {
-			SchemaSimpleType simpleType = (SchemaSimpleType) type;
-			simpleType.setRestriction(null);
-			setType(simpleType);
-		}
-	}
-
 	public void write(String indent, PrintWriter writer) {
 		boolean annotation = false;
 		ISchemaSimpleType type = getType();

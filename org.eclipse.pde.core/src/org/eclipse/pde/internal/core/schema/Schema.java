@@ -774,7 +774,7 @@ public class Schema extends PlatformObject implements ISchema {
 		fIncludes = null;
 		fPointID = null;
 		fPluginID = null;
-		fDeclaringDepends = Boolean.toString(true);;
+		fDeclaringDepends = Boolean.toString(true);
 		fReferences = null;
 		fDescription = null;
 		fName = null;
