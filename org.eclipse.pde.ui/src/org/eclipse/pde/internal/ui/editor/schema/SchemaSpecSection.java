@@ -27,29 +27,33 @@ import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.Section;
 
 public class SchemaSpecSection extends PDESection {
-	private FormEntry pluginText;
-	private FormEntry pointText;
-	private FormEntry nameText;
-	private Button fDependsButton;
-		 public SchemaSpecSection(SchemaOverviewPage page, Composite parent) {
-		 		 super(page, parent, Section.DESCRIPTION);
+	
+	private FormEntry fPluginText;
+	private FormEntry fPointText;
+	private FormEntry fNameText;
+	private Button fDependencyButton;
+		
+	public SchemaSpecSection(SchemaOverviewPage page, Composite parent) {
+	    super(page, parent, Section.DESCRIPTION);
 		getSection().setText(PDEUIMessages.SchemaEditor_SpecSection_title);
 		getSection().setDescription(PDEUIMessages.SchemaEditor_SpecSection_desc);
 		createClient(getSection(), page.getManagedForm().getToolkit());
 	}
+	
 	public void commit(boolean onSave) {
-		pluginText.commit();
-		pointText.commit();
-		nameText.commit();
+		fPluginText.commit();
+		fPointText.commit();
+		fNameText.commit();
 		super.commit(onSave);
 	}
 	
 	public void cancelEdit() {
-		pluginText.cancelEdit();
-		pointText.cancelEdit();
-		nameText.cancelEdit();
+		fPluginText.cancelEdit();
+		fPointText.cancelEdit();
+		fNameText.cancelEdit();
 		super.cancelEdit();
 	}
+	
 	public void createClient(Section section, FormToolkit toolkit) {
 		Composite container = toolkit.createComposite(section);
 		GridLayout layout = new GridLayout();
@@ -57,38 +61,33 @@ public class SchemaSpecSection extends PDESection {
 		layout.verticalSpacing = 9;
 		container.setLayout(layout);
 		final Schema schema = (Schema) getPage().getModel();
-		pluginText = new FormEntry(container, toolkit, PDEUIMessages.SchemaEditor_SpecSection_plugin, null, false);
-		pluginText.setFormEntryListener(new FormEntryAdapter(this) {
+		fPluginText = new FormEntry(container, toolkit, PDEUIMessages.SchemaEditor_SpecSection_plugin, null, false);
+		fPluginText.setFormEntryListener(new FormEntryAdapter(this) {
 			public void textValueChanged(FormEntry text) {
 				schema.setPluginId(text.getValue());
 			}
 		});
-		pointText = new FormEntry(container, toolkit, PDEUIMessages.SchemaEditor_SpecSection_point, null, false);
-		pointText.setFormEntryListener(new FormEntryAdapter(this) {
+		fPointText = new FormEntry(container, toolkit, PDEUIMessages.SchemaEditor_SpecSection_point, null, false);
+		fPointText.setFormEntryListener(new FormEntryAdapter(this) {
 			public void textValueChanged(FormEntry text) {
 				schema.setPointId(text.getValue());
 			}
 		});
-		nameText = new FormEntry(container, toolkit, PDEUIMessages.SchemaEditor_SpecSection_name, null, false);
-		nameText.setFormEntryListener(new FormEntryAdapter(this) {
+		fNameText = new FormEntry(container, toolkit, PDEUIMessages.SchemaEditor_SpecSection_name, null, false);
+		fNameText.setFormEntryListener(new FormEntryAdapter(this) {
 			public void textValueChanged(FormEntry text) {
 				schema.setName(text.getValue());
 				getPage().getManagedForm().getForm().setText(schema.getName());
 			}
 		});
 		
-		Composite comp = toolkit.createComposite(container);
-		layout = new GridLayout();
-		layout.marginHeight = layout.marginWidth = 0;
-		GridData gd = new GridData(GridData.FILL_HORIZONTAL);
+		fDependencyButton = toolkit.createButton(container, "Clients must declare a dependency on the extension point's plug-in", SWT.CHECK);
+		GridData gd = new GridData();
 		gd.horizontalSpan = 2;
-		comp.setLayout(layout);
-		comp.setLayoutData(gd);
-		fDependsButton = toolkit.createButton(comp, "Extending plug-ins must declare dependency", SWT.CHECK);
-		fDependsButton.addSelectionListener(new SelectionAdapter() {
+		fDependencyButton.setLayoutData(gd);
+		fDependencyButton.addSelectionListener(new SelectionAdapter() {
 			public void widgetSelected(SelectionEvent e) {
-				ISchema schema = (ISchema)getPage().getModel();
-				schema.setExtensionsDependant(fDependsButton.getSelection());
+				schema.setRequiresPlugin(fDependencyButton.getSelection());
 			}
 		});
 		
@@ -97,40 +96,37 @@ public class SchemaSpecSection extends PDESection {
 		section.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 		initialize();
 	}
+	
 	public void dispose() {
 		ISchema schema = (ISchema) getPage().getModel();
-		if (schema!=null)
+		if (schema != null)
 			schema.removeModelChangedListener(this);
 		super.dispose();
 	}
+	
 	public void initialize() {
 		ISchema schema = (ISchema) getPage().getModel();
 		refresh();
 		if (!(schema instanceof IEditable)) {
-			pluginText.getText().setEnabled(false);
-			pointText.getText().setEnabled(false);
-			nameText.getText().setEnabled(false);
-			fDependsButton.setEnabled(false);
+			fPluginText.getText().setEnabled(false);
+			fPointText.getText().setEnabled(false);
+			fNameText.getText().setEnabled(false);
+			fDependencyButton.setEnabled(false);
 		}
 		schema.addModelChangedListener(this);
 	}
 
 	public void setFocus() {
-		if (pointText != null)
-			pointText.getText().setFocus();
+		if (fPointText != null)
+			fPointText.getText().setFocus();
 	}
-	private void setIfDefined(FormEntry formText, String value) {
-		if (value != null) {
-			formText.setValue(value, true);
-		}
-	}
-
+	
 	public void refresh() {
 		ISchema schema = (ISchema)getPage().getModel();
-		setIfDefined(pluginText, schema.getPluginId());
-		setIfDefined(pointText, schema.getPointId());
-		setIfDefined(nameText, schema.getName());
-		fDependsButton.setSelection(schema.extensionsDependant());
+		fPluginText.setValue(schema.getPluginId(), true);
+		fPointText.setValue(schema.getPointId(), true);
+		fNameText.setValue(schema.getName(), true);
+		fDependencyButton.setSelection(schema.requiresPlugin());
 		getPage().getManagedForm().getForm().setText(schema.getName());
 		super.refresh();
 	}
