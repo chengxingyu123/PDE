@@ -442,14 +442,13 @@ public class Schema extends PlatformObject implements ISchema {
 							if (meta.getNodeName().equals("meta.attribute")) { //$NON-NLS-1$
 								element.setKind(processKind(getAttribute(meta,
 										"kind"))); //$NON-NLS-1$
-								element
-										.setBasedOn(getAttribute(meta,
-												"basedOn")); //$NON-NLS-1$
-								element
-										.setTranslatableProperty(processTranslatable(getAttribute(
+								element.setBasedOn(
+										getAttribute(meta,"basedOn")); //$NON-NLS-1$
+								element.setTranslatableProperty(
+										processTranslatable(getAttribute(
 												meta, "translatable"))); //$NON-NLS-1$
-								element
-										.setDeprecatedProperty(processDeprecated(getAttribute(
+								element.setDeprecatedProperty(
+										processDeprecated(getAttribute(
 												meta, "deprecated"))); //$NON-NLS-1$
 							}
 						}
@@ -602,7 +601,6 @@ public class Schema extends PlatformObject implements ISchema {
 		String aname = getAttribute(elementNode, "name"); //$NON-NLS-1$
 		String atype = getAttribute(elementNode, "type"); //$NON-NLS-1$
 		String aref = getAttribute(elementNode, "ref"); //$NON-NLS-1$
-		String depSug = getAttribute(elementNode, SchemaRootElement.P_DEP_SUGGESTION); 
 		
 		int minOccurs = 1;
 		int maxOccurs = 1;
@@ -633,10 +631,9 @@ public class Schema extends PlatformObject implements ISchema {
 			type = resolveTypeReference(atype);
 		}
 		SchemaElement element;
-		if (aname.equals("extension")) {
+		if (aname.equals("extension"))
 			element = new SchemaRootElement(parent, aname);
-			((ISchemaRootElement)element).setDeprecatedSuggestion(depSug);
-		} else
+		else
 			element = new SchemaElement(parent, aname);
 		//element.bindSourceLocation(elementNode, lineTable);
 		element.setMinOccurs(minOccurs);
@@ -683,6 +680,10 @@ public class Schema extends PlatformObject implements ISchema {
 												meta, "translatable"))); //$NON-NLS-1$
 								element.setDeprecatedProperty(processDeprecated(getAttribute(
 												meta, "deprecated"))); //$NON-NLS-1$
+								if (element instanceof ISchemaRootElement) {
+									String depSug = getAttribute(meta, SchemaRootElement.P_DEP_REPLACEMENT);
+									((ISchemaRootElement)element).setDeprecatedSuggestion(depSug);
+								}
 							}
 						}
 					}
