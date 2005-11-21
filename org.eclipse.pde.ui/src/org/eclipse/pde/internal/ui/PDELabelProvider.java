@@ -102,9 +102,6 @@ public class PDELabelProvider extends SharedLabelProvider {
 		if (obj instanceof PackageObject) {
 			return getObjectText((PackageObject)obj);
 		}
-		if (obj instanceof ISchemaInclude) {
-			return super.getText(obj);
-		}
 		return super.getText(obj);
 	}
 
@@ -194,6 +191,7 @@ public class PDELabelProvider extends SharedLabelProvider {
 					text += maxOccurs + ")"; //$NON-NLS-1$
 			}
 		}
+		
 		return text;
 	}
 
@@ -304,6 +302,9 @@ public class PDELabelProvider extends SharedLabelProvider {
 		}
 		if (obj instanceof ISchemaAttribute) {
 			return getObjectImage((ISchemaAttribute) obj);
+		}
+		if (obj instanceof ISchemaInclude) {
+			return get(PDEPluginImages.DESC_PAGE_OBJ);
 		}
 		if (obj instanceof IDocumentSection || obj instanceof ISchema) {
 			int flags = getSchemaObjectFlags((ISchemaObject) obj);
