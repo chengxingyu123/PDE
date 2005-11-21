@@ -220,8 +220,7 @@ public class Schema extends PlatformObject implements ISchema {
 		Vector candidates = new Vector();
 		ISchemaType type = element.getType();
 		if (type instanceof ISchemaComplexType) {
-			ISchemaCompositor compositor = ((ISchemaComplexType) type)
-					.getCompositor();
+			ISchemaCompositor compositor = ((ISchemaComplexType)type).getCompositor();
 			if (compositor != null)
 				collectElements(compositor, candidates);
 		}

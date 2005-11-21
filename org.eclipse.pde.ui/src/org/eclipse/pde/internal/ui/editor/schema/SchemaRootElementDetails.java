@@ -27,7 +27,6 @@ import org.eclipse.ui.forms.widgets.FormToolkit;
 public class SchemaRootElementDetails extends AbstractSchemaDetails {
 
 	private SchemaRootElement fElement;
-	private FormEntry fIcon;
 	private FormEntry fName;
 	private ComboPart fDeprecated;
 	private FormEntry fSuggestion;
@@ -44,7 +43,6 @@ public class SchemaRootElementDetails extends AbstractSchemaDetails {
 		Color foreground = toolkit.getColors().getColor(FormColors.TITLE);
 		
 		fName = new FormEntry(parent, toolkit, "Name:", SWT.NONE);
-		fIcon = new FormEntry(parent, toolkit, "Icon:", SWT.NONE);
 		
 		toolkit.createLabel(parent, "Deprecated:").setForeground(foreground);
 		fDeprecated = createComboPart(parent, toolkit, BOOLS, 2);
@@ -59,24 +57,13 @@ public class SchemaRootElementDetails extends AbstractSchemaDetails {
 	public void updateFields() {
 		if (fElement == null)
 			return;
-		String curr = fElement.getName();
-		fName.setValue(curr != null ? curr : "");
-		curr = fElement.getIconProperty();
-		fIcon.setValue(curr != null ? curr : "");
-		
+		fName.setValue(fElement.getName());		
 		fDeprecated.select(fElement.isDeprecated() ? 0 : 1);
 		fSuggestion.setEditable(fElement.isDeprecated());
-		
-		curr = fElement.getDeprecatedSuggestion();
-		fSuggestion.setValue(curr != null ? curr : "");
+		fSuggestion.setValue(fElement.getDeprecatedSuggestion());
 	}
 
 	public void hookListeners() {
-		fIcon.setFormEntryListener(new FormEntryAdapter(this) {
-			public void textValueChanged(FormEntry entry) {
-				fElement.setIconProperty(fIcon.getValue());
-			}
-		});
 		fName.setFormEntryListener(new FormEntryAdapter(this) {
 			public void textValueChanged(FormEntry entry) {
 				fElement.setName(fName.getValue());
