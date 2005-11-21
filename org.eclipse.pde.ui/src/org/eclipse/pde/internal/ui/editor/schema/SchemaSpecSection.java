@@ -94,6 +94,7 @@ public class SchemaSpecSection extends PDESection {
 		
 		toolkit.paintBordersFor(container);
 		section.setClient(container);
+		section.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 		initialize();
 	}
 	public void dispose() {

@@ -25,10 +25,14 @@ import org.eclipse.ui.forms.widgets.ScrolledForm;
 public class SchemaOverviewPage extends PDEFormPage {
 		 
 	 public static final String PAGE_ID = "overview"; //$NON-NLS-1$
-	 private IColorManager colorManager = ColorManager.getDefault();
-	 private DocSection docSection;
-	 private SchemaSpecSection extensionPointSection;
-	 private SchemaIncludesSection extraSpecSection;
+	 
+	 private IColorManager fColorManager = ColorManager.getDefault();
+	 
+	 private DocSection fDocSection;
+	 
+	 private SchemaSpecSection fGeneralInfoSection;
+	 private SchemaIncludesSection fInclusionSection;
+	 
 	 public SchemaOverviewPage(PDEFormEditor editor) {
  		 super(editor, PAGE_ID, PDEUIMessages.SchemaEditor_DocPage_title);
 	 }
@@ -41,6 +45,7 @@ public class SchemaOverviewPage extends PDEFormPage {
 	 		 getManagedForm().commit(false);
  		 super.setActive(active);
 	 }
+	 
 	 protected void createFormContent(IManagedForm managedForm) {
  		 super.createFormContent(managedForm);
  		 ScrolledForm form = managedForm.getForm();
@@ -49,35 +54,24 @@ public class SchemaOverviewPage extends PDEFormPage {
  		 layout.horizontalSpacing = 15;
  		 form.getBody().setLayout(layout);
 
- 		 extensionPointSection = new SchemaSpecSection(this, form.getBody());
- 		 extensionPointSection.getSection().setLayoutData(
-	 		 new GridData(GridData.FILL_HORIZONTAL | GridData.VERTICAL_ALIGN_BEGINNING));
- 		 
- 		 extraSpecSection = new SchemaIncludesSection(this, form.getBody());
- 		 extraSpecSection.getSection().setLayoutData(
-	 		 new GridData(GridData.FILL_HORIZONTAL | GridData.VERTICAL_ALIGN_BEGINNING));
- 		 
- 		 
- 		 docSection = new DocSection(this, form.getBody(), colorManager);
+ 		 fGeneralInfoSection = new SchemaSpecSection(this, form.getBody());		 
+ 		 fInclusionSection = new SchemaIncludesSection(this, form.getBody());
+ 		 fDocSection = new DocSection(this, form.getBody(), fColorManager);
  		 GridData gd = new GridData(GridData.FILL_BOTH);
  		 gd.horizontalSpan = 2;
  		 gd.verticalIndent = 20;
- 		 docSection.getSection().setLayoutData(gd);
+ 		 fDocSection.getSection().setLayoutData(gd);
 
- 		 managedForm.addPart(extensionPointSection);
- 		 managedForm.addPart(extraSpecSection);
- 		 managedForm.addPart(docSection);
+ 		 managedForm.addPart(fGeneralInfoSection);
+ 		 managedForm.addPart(fInclusionSection);
+ 		 managedForm.addPart(fDocSection);
  		 
  		 PlatformUI.getWorkbench().getHelpSystem().setHelp(form.getBody(), IHelpContextIds.SCHEMA_EDITOR_DOC);
- 		 form.setText(PDEUIMessages.SchemaEditor_DocForm_title);		 		 
 	 }
 	 
 	 public void dispose() {
- 		 colorManager.dispose();
+ 		 fColorManager.dispose();
  		 super.dispose();
 	 }
 
-	 public void updateEditorInput(Object obj) {
- 		 docSection.updateEditorInput(obj);
-	 }
 }

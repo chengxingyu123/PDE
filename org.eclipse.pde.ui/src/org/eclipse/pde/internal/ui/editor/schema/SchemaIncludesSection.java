@@ -28,6 +28,7 @@ import org.eclipse.pde.internal.ui.util.FileValidator;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Table;
@@ -110,6 +111,7 @@ public class SchemaIncludesSection extends PDESection {
 		
 		toolkit.paintBordersFor(container);
 		section.setClient(container);
+		section.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 		initialize();
 	}
 
