@@ -285,7 +285,22 @@ public class FormEntry {
 		ignoreModify = false;
 	}
 	
+	/**
+	 * 
+	 * Sets the value of this entry that govners if it's label will be
+	 * disabled when the form entry is disabled.
+	 * 
+	 * @param dimLabel
+	 */
 	public void setDimLabel(boolean dimLabel) {
 		fDimLabelOnDisable = dimLabel;
+	}
+	
+	public void setVisible(boolean visible) {
+		label.setVisible(visible);
+		if (text != null)
+			text.setVisible(visible);
+		if (browse != null)
+			browse.setVisible(visible);
 	}
 }

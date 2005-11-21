@@ -90,6 +90,7 @@ public class SchemaAttributeDetails extends AbstractSchemaDetails {
 	private Button fAddRestriction;
 	private Button fRemoveRestriction;
 	private Label fResLabel;
+	private Label fTransLabel;
 	
 	public SchemaAttributeDetails(ISchemaAttribute attribute, ElementSection section) {
 		super(section, false);
@@ -106,9 +107,7 @@ public class SchemaAttributeDetails extends AbstractSchemaDetails {
 		public Object[] getElements(Object inputElement) {
 			ISchemaSimpleType type = fAttribute.getType();
 			ISchemaRestriction restriction = type.getRestriction();
-			if (type.getName().equals(BOOLEAN_TYPE))
-				return BOOLS;
-			else if (restriction != null)
+			if (restriction != null)
 				return restriction.getChildren();
 			return new Object[0];
 		}
@@ -122,16 +121,27 @@ public class SchemaAttributeDetails extends AbstractSchemaDetails {
 		
 		toolkit.createLabel(parent, "Deprecated:").setForeground(foreground);
 		fDeprecated = createComboPart(parent, toolkit, BOOLS, 2);
-	
-		toolkit.createLabel(parent, "Translatable:").setForeground(foreground);
-		fTranslatable = createComboPart(parent, toolkit, BOOLS, 2);
+		
+		toolkit.createLabel(parent, "Use:").setForeground(foreground);
+		fUse = createComboPart(parent, toolkit, USE, 2);
+		
+		fValue = new FormEntry(parent, toolkit, "Default Value:", null, false, 6);
+		fValue.setDimLabel(true);
 		
 		toolkit.createLabel(parent, "Type:").setForeground(foreground);
 		fType = createComboPart(parent, toolkit, TYPES, 2);
 		
+		fTransLabel = toolkit.createLabel(parent, "Translatable:");
+		fTransLabel.setForeground(foreground);
+		GridData gd = new GridData(GridData.VERTICAL_ALIGN_BEGINNING);
+		gd.horizontalIndent = 6;
+		gd.verticalIndent = 2;
+		fTransLabel.setLayoutData(gd);
+		fTranslatable = createComboPart(parent, toolkit, BOOLS, 2);
+		
 		fResLabel = toolkit.createLabel(parent, "Restrictions:");
 		fResLabel.setForeground(foreground);
-		GridData gd = new GridData(GridData.VERTICAL_ALIGN_BEGINNING);
+		gd = new GridData(GridData.VERTICAL_ALIGN_BEGINNING);
 		gd.horizontalIndent = 6;
 		gd.verticalIndent = 2;
 		fResLabel.setLayoutData(gd);
@@ -160,15 +170,7 @@ public class SchemaAttributeDetails extends AbstractSchemaDetails {
 		fRemoveRestriction.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 		
 		fClassEntry = new FormEntry(parent, toolkit, "Superclass:", "Browse...", true, 6);
-		fClassEntry.setDimLabel(true);
 		fInterfaceEntry = new FormEntry(parent, toolkit, "Interface:", "Browse...", true, 6);
-		fInterfaceEntry.setDimLabel(true);
-		
-		toolkit.createLabel(parent, "Use:").setForeground(foreground);
-		fUse = createComboPart(parent, toolkit, USE, 2);
-		
-		fValue = new FormEntry(parent, toolkit, "Default Value:", null, false, 6);
-		fValue.setDimLabel(true);
 		
 		setText("Attribute Details");
 		setDecription("Properties for the \"" + fAttribute.getName() + "\" attribute.");
@@ -213,8 +215,7 @@ public class SchemaAttributeDetails extends AbstractSchemaDetails {
 			if (fAttribute.getBasedOn() != null)
 				fAttribute.setBasedOn(null);
 		}
-		
-		updateResTable(isStringType && kind == IMetaAttribute.STRING);
+		updateTypeParts(isStringType && kind == IMetaAttribute.STRING, kind == IMetaAttribute.JAVA);
 	}
 
 	public void hookListeners() {
@@ -244,12 +245,11 @@ public class SchemaAttributeDetails extends AbstractSchemaDetails {
 				String typeString = fType.getSelection();
 				if (!typeString.equals(BOOLEAN_TYPE))
 					typeString = STRING_TYPE;
+				
 				fAttribute.setType(new SchemaSimpleType(fAttribute.getSchema(), typeString));
 				
 				int kind = fType.getSelectionIndex() - 1; // adjust for "boolean" in combo
 				fAttribute.setKind(kind > 0 ? kind : 0); // kind could be -1
-				fInterfaceEntry.setEditable(kind == IMetaAttribute.JAVA);
-				fClassEntry.setEditable(kind == IMetaAttribute.JAVA);
 				
 				ISchemaSimpleType type = fAttribute.getType();
 				if (type instanceof SchemaSimpleType
@@ -257,8 +257,7 @@ public class SchemaAttributeDetails extends AbstractSchemaDetails {
 						&& ((SchemaSimpleType) type).getRestriction() != null) {
 					((SchemaSimpleType) type).setRestriction(null);
 				}
-				
-				updateResTable(kind == IMetaAttribute.STRING);
+				updateTypeParts(kind == IMetaAttribute.STRING, kind == IMetaAttribute.JAVA);
 			}
 		});
 		fUse.addSelectionListener(new SelectionAdapter() {
@@ -413,11 +412,21 @@ public class SchemaAttributeDetails extends AbstractSchemaDetails {
 		}
 	}
 	
-	private void updateResTable(boolean enabled) {
-		fResLabel.setEnabled(enabled);
-		fRestrictionsTable.getControl().setEnabled(enabled);
-		fAddRestriction.setEnabled(enabled);
-		fRemoveRestriction.setEnabled(enabled);
+	private void updateTypeParts(boolean isStringKind, boolean isJavaKind) {
+		fTranslatable.getControl().setEnabled(isStringKind);
+		fTranslatable.getControl().setVisible(isStringKind || isJavaKind);
+		fTransLabel.setEnabled(isStringKind);
+		fTransLabel.setVisible(isStringKind || isJavaKind);
+		fResLabel.setEnabled(isStringKind);
+		fResLabel.setVisible(isStringKind || isJavaKind);
+		fRestrictionsTable.getControl().setVisible(isStringKind || isJavaKind);
+		fRestrictionsTable.getControl().setEnabled(isStringKind);
+		fAddRestriction.setVisible(isStringKind || isJavaKind);
+		fAddRestriction.setEnabled(isStringKind);
+		fRemoveRestriction.setVisible(isStringKind || isJavaKind);
+		fRemoveRestriction.setEnabled(isStringKind);
 		fRestrictionsTable.refresh();
+		fInterfaceEntry.setVisible(isJavaKind);
+		fClassEntry.setVisible(isJavaKind);
 	}
 }

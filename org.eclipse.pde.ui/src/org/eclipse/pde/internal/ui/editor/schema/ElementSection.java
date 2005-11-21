@@ -234,7 +234,7 @@ public class ElementSection extends TreeSection {
 			else if (object instanceof SchemaAttribute)
 				element = (SchemaElement) ((SchemaAttribute) object).getParent();
 			
-			if (element != null	&& element.getName().equals("extension") == false
+			if (element != null	&& !(element instanceof ISchemaRootElement)
 					&& !(element instanceof SchemaElementReference)) { //$NON-NLS-1$
 				newAttributeAction.setElement((SchemaElement) element);
 				newAttributeAction.setEnabled(schema.isEditable());
@@ -243,8 +243,7 @@ public class ElementSection extends TreeSection {
 		}
 		manager.add(submenu);
 		if (!selection.isEmpty()) {
-			if (!(object instanceof SchemaElement)
-					|| !((SchemaElement) object).getName().equals("extension")) { //$NON-NLS-1$
+			if (!(object instanceof ISchemaRootElement)) { //$NON-NLS-1$
 				manager.add(new Separator());
 				Action deleteAction = new Action() {
 					public void run() {
@@ -309,7 +308,7 @@ public class ElementSection extends TreeSection {
 				element = (SchemaElement) ((SchemaElementReference) object).getReferencedObject();
 			else
 				element = (SchemaElement) ((SchemaAttribute) object).getParent();
-			if (!element.getName().equals("extension")) { //$NON-NLS-1$
+			if (!(element instanceof ISchemaRootElement)) { //$NON-NLS-1$
 				newAttributeAction.setElement(element);
 				newAttributeAction.run();
 			}
@@ -416,20 +415,19 @@ public class ElementSection extends TreeSection {
 	}
 
 	private void updateButtons() {
-		if (schema.isEditable() == false)
+		if (!schema.isEditable())
 			return;
 		Object object = ((IStructuredSelection) treeViewer.getSelection()).getFirstElement();
 		ISchemaObject sobject = (ISchemaObject) object;
 
 		boolean canAddAttribute = false;
 		if (sobject != null) {
-			String name = sobject.getName();
 			if (sobject instanceof ISchemaElement) {
-				if (name.equals("extension") == false) //$NON-NLS-1$
+				if (!(sobject instanceof ISchemaRootElement)) //$NON-NLS-1$
 					canAddAttribute = true;
 			} else if (sobject instanceof ISchemaAttribute) {
 				ISchemaElement element = (ISchemaElement) (sobject.getParent());
-				if (element.getName().equals("extension") == false) //$NON-NLS-1$
+				if (!(element instanceof ISchemaRootElement)) //$NON-NLS-1$
 					canAddAttribute = true;
 			}
 		}
