@@ -1,14 +1,5 @@
-/*******************************************************************************
- * Copyright (c) 2000, 2004 IBM Corporation and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
- *
- * Contributors:
- *     IBM Corporation - initial API and implementation
- *******************************************************************************/
 package org.eclipse.pde.internal.ui.editor.schema;
+
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -129,7 +120,6 @@ public class ElementSection extends TreeSection {
 		TreePart treePart = getTreePart();
 		createViewerPartControl(container, SWT.MULTI, 2, toolkit);
 		treeViewer = treePart.getTreeViewer();
-		treeViewer.setAutoExpandLevel(TreeViewer.ALL_LEVELS);
 		treeViewer.setContentProvider(new ContentProvider());
 		treeViewer.setLabelProvider(PDEPlugin.getDefault().getLabelProvider());
 //		initDragAndDrop();
@@ -409,7 +399,6 @@ public class ElementSection extends TreeSection {
 	public void refresh() {
 		ISelection selection = treeViewer.getSelection();
 		treeViewer.refresh();
-		treeViewer.expandAll();
 		if (!selection.isEmpty())
 			treeViewer.setSelection(selection);
 		super.refresh();
@@ -537,5 +526,9 @@ public class ElementSection extends TreeSection {
 	void fireSelection(ISelection selection) {
 		if (selection == null) selection = treeViewer.getSelection();
 		treeViewer.setSelection(selection);
+	}
+
+	public void handleCollapseAll() {
+		treeViewer.collapseAll();
 	}
 }
