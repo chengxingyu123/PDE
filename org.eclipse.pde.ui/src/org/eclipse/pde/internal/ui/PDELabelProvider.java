@@ -102,6 +102,9 @@ public class PDELabelProvider extends SharedLabelProvider {
 		if (obj instanceof PackageObject) {
 			return getObjectText((PackageObject)obj);
 		}
+		if (obj instanceof ISchemaInclude) {
+			return super.getText(obj);
+		}
 		return super.getText(obj);
 	}
 

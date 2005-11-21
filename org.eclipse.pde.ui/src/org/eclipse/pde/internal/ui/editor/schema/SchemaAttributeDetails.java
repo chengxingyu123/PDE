@@ -169,8 +169,8 @@ public class SchemaAttributeDetails extends AbstractSchemaDetails {
 		fAddRestriction.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 		fRemoveRestriction.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 		
-		fClassEntry = new FormEntry(parent, toolkit, "Superclass:", "Browse...", true, 6);
-		fInterfaceEntry = new FormEntry(parent, toolkit, "Interface:", "Browse...", true, 6);
+		fClassEntry = new FormEntry(parent, toolkit, "Extends:", "Browse...", true, 6);
+		fInterfaceEntry = new FormEntry(parent, toolkit, "Implements:", "Browse...", true, 6);
 		
 		setText("Attribute Details");
 		setDecription("Properties for the \"" + fAttribute.getName() + "\" attribute.");
@@ -194,8 +194,6 @@ public class SchemaAttributeDetails extends AbstractSchemaDetails {
 		fValue.setEditable(fAttribute.getUse() == 2);
 		fValue.setValue(value != null ? value.toString() : "");
 		
-		fInterfaceEntry.setEditable(kind == IMetaAttribute.JAVA);
-		fClassEntry.setEditable(kind == IMetaAttribute.JAVA);
 		if (kind == IMetaAttribute.JAVA) {
 			curr = fAttribute.getBasedOn();
 			if (curr != null && curr.length() > 0) {
@@ -211,9 +209,6 @@ public class SchemaAttributeDetails extends AbstractSchemaDetails {
 					fInterfaceEntry.setValue(curr.substring(index + 1));
 				}
 			}
-		} else {
-			if (fAttribute.getBasedOn() != null)
-				fAttribute.setBasedOn(null);
 		}
 		updateTypeParts(isStringType && kind == IMetaAttribute.STRING, kind == IMetaAttribute.JAVA);
 	}
@@ -264,14 +259,14 @@ public class SchemaAttributeDetails extends AbstractSchemaDetails {
 			public void widgetSelected(SelectionEvent e) {
 				int use = fUse.getSelectionIndex();
 				fAttribute.setUse(use);
+				fValue.setEditable(use == 2);
 				if (use == 2 && fValue.getValue().length() == 0) {
 					fValue.setValue("(ENTER DEFAULT)");
 					fValue.getText().setSelection(0, fValue.getValue().length());
 					fValue.getText().setFocus();
-				}
-				if (use != 2)
+				} else if (use != 2)
 					fValue.setValue("");
-				fValue.setEditable(use == 2);
+				
 			}
 		});
 		fClassEntry.setFormEntryListener(new FormEntryAdapter(this, actionBars) {
@@ -427,6 +422,8 @@ public class SchemaAttributeDetails extends AbstractSchemaDetails {
 		fRemoveRestriction.setEnabled(isStringKind);
 		fRestrictionsTable.refresh();
 		fInterfaceEntry.setVisible(isJavaKind);
+		fInterfaceEntry.setEditable(isJavaKind);
 		fClassEntry.setVisible(isJavaKind);
+		fClassEntry.setEditable(isJavaKind);
 	}
 }

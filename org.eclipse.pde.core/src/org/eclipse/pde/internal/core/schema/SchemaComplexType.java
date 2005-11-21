@@ -101,8 +101,7 @@ public class SchemaComplexType
 		String indent2 = indent + Schema.INDENT;
 		SchemaCompositor compositor = (SchemaCompositor) getCompositor();
 		if (compositor != null) {
-			if (compositor.getChildCount() > 0)
-				compositor.write(indent2, writer);
+			compositor.write(indent2, writer);
 		}
 		for (int i = 0; i < attributes.size(); i++) {
 			ISchemaAttribute attribute =

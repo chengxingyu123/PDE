@@ -11,26 +11,37 @@
 package org.eclipse.pde.internal.ui.editor.schema;
 
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IProject;
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ISelection;
-import org.eclipse.jface.viewers.LabelProvider;
+import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
+import org.eclipse.jface.viewers.Viewer;
+import org.eclipse.jface.viewers.ViewerFilter;
 import org.eclipse.pde.core.IModelChangedEvent;
+import org.eclipse.pde.core.plugin.IPluginModelBase;
+import org.eclipse.pde.internal.PDE;
+import org.eclipse.pde.internal.core.PDECore;
 import org.eclipse.pde.internal.core.ischema.ISchema;
 import org.eclipse.pde.internal.core.ischema.ISchemaInclude;
 import org.eclipse.pde.internal.core.schema.Schema;
 import org.eclipse.pde.internal.core.schema.SchemaInclude;
+import org.eclipse.pde.internal.ui.PDELabelProvider;
 import org.eclipse.pde.internal.ui.PDEPlugin;
 import org.eclipse.pde.internal.ui.PDEUIMessages;
 import org.eclipse.pde.internal.ui.editor.TableSection;
-import org.eclipse.pde.internal.ui.elements.DefaultTableProvider;
 import org.eclipse.pde.internal.ui.parts.TablePart;
 import org.eclipse.pde.internal.ui.util.FileExtensionFilter;
 import org.eclipse.pde.internal.ui.util.FileValidator;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.ui.IEditorInput;
+import org.eclipse.ui.IFileEditorInput;
+import org.eclipse.ui.actions.ActionFactory;
 import org.eclipse.ui.dialogs.ElementTreeSelectionDialog;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.Section;
@@ -40,20 +51,21 @@ import org.eclipse.ui.model.WorkbenchLabelProvider;
 public class SchemaIncludesSection extends TableSection {
 
 	private TableViewer fViewer;
-
-	class SchemaIncludesLabelProvider extends LabelProvider {
-		public String getText(Object element) {
-			return super.getText(element);
+	
+	class PDEProjectFilter extends ViewerFilter {
+		public boolean select(Viewer viewer, Object parentElement, Object element) {
+			if (element instanceof IProject) {
+				try {
+					return ((IProject)element).hasNature(PDE.PLUGIN_NATURE);
+				} catch (CoreException e) {
+				}
+			} else if (element instanceof IFile) {
+				return isUnlistedInclude((IFile)element);
+			}
+			return true;
 		}
 	}
-	class SchemaContentProvider extends DefaultTableProvider {
-		public Object[] getElements(Object inputElement) {
-			if (inputElement instanceof ISchema)
-				return ((ISchema)inputElement).getIncludes();
-			return new Object[0];
-		}
-	}
-
+	
 	public SchemaIncludesSection(SchemaOverviewPage page, Composite parent) {
 		super(page, parent, Section.DESCRIPTION, new String[] { "Add...", "Remove" });
 		getSection().setText("Schema Inclusions");
@@ -65,14 +77,17 @@ public class SchemaIncludesSection extends TableSection {
 		createViewerPartControl(container, SWT.MULTI, 2, toolkit);
 		TablePart tablePart = getTablePart();
 		fViewer = tablePart.getTableViewer();
-		fViewer.setLabelProvider(new SchemaIncludesLabelProvider());
+		PDELabelProvider lp = PDEPlugin.getDefault().getLabelProvider();
+		lp.connect(this);
+		fViewer.setLabelProvider(lp);
 		fViewer.setContentProvider(new ArrayContentProvider());
-		fViewer.setInput(getSchema());
 
 		getSchema().addModelChangedListener(this);
 		toolkit.paintBordersFor(container);
 		section.setClient(container);
 		section.setLayoutData(new GridData(GridData.FILL_BOTH));
+		
+		initialize();
 	}
 
 	protected void buttonSelected(int index) {
@@ -81,11 +96,21 @@ public class SchemaIncludesSection extends TableSection {
 		else
 			handleRemoveInclude();
 	}
-
+	
+	protected void selectionChanged(IStructuredSelection selection) {
+		getPage().getManagedForm().fireSelectionChanged(this, selection);
+		getPage().getPDEEditor().setSelection(selection);
+		if (!getSchema().isEditable())
+			return;
+		Object object = ((IStructuredSelection) fViewer.getSelection()).getFirstElement();
+		getTablePart().setButtonEnabled(1, object instanceof ISchemaInclude);
+	}
+	
 	public void dispose() {
 		ISchema schema = getSchema();
 		if (schema != null)
 			schema.removeModelChangedListener(this);
+		PDEPlugin.getDefault().getLabelProvider().disconnect(this);
 		super.dispose();
 	}
 
@@ -106,7 +131,15 @@ public class SchemaIncludesSection extends TableSection {
 			}
 		}
 	}
-
+	
+	public boolean doGlobalAction(String actionId) {
+		if (actionId.equals(ActionFactory.DELETE.getId())) {
+			handleRemoveInclude();
+			return true;
+		}
+		return false;
+	}
+	
 	private ISchema getSchema() {
 		return (ISchema) getPage().getModel();
 	}
@@ -135,6 +168,7 @@ public class SchemaIncludesSection extends TableSection {
 		dialog.setTitle(PDEUIMessages.ProductExportWizardPage_fileSelection);
 		dialog.setMessage("Select an extension point schema file:");
 		dialog.addFilter(new FileExtensionFilter("exsd")); //$NON-NLS-1$
+		dialog.addFilter(new PDEProjectFilter());
 		dialog.setInput(PDEPlugin.getWorkspace().getRoot());
 
 		if (dialog.open() == ElementTreeSelectionDialog.OK) {
@@ -143,11 +177,59 @@ public class SchemaIncludesSection extends TableSection {
 				return;
 			IFile newInclude = (IFile) result;
 
-			String location = "schema:/" + newInclude.getFullPath().toString();
+			String location = getIncludeLocation(newInclude);
 			ISchemaInclude include = new SchemaInclude(getSchema(), location, false);
 			ISchema schema = getSchema();
 			if (schema instanceof Schema)
 				((Schema) schema).addInclude(include);
 		}
+	}
+	
+	private void initialize() {
+		getTablePart().setButtonEnabled(0, getSchema().isEditable());
+		getTablePart().setButtonEnabled(1, false);
+		fViewer.setInput(getSchema().getIncludes());
+	}
+	
+	private String getIncludeLocation(IFile file) {
+		IEditorInput input = getPage().getEditorInput();
+		if (!(input instanceof IFileEditorInput))
+			return null;
+		IPath schemaPath = ((IFileEditorInput)input).getFile().getFullPath();
+		IPath currPath = file.getFullPath();
+		int matchinSegments = schemaPath.matchingFirstSegments(currPath);
+		if (matchinSegments > 0) {
+			schemaPath = schemaPath.removeFirstSegments(matchinSegments);
+			currPath = currPath.removeFirstSegments(matchinSegments);
+			if (schemaPath.segmentCount() == 1)
+				return currPath.toString();
+			StringBuffer sb = new StringBuffer();
+			while (schemaPath.segmentCount() > 1) {
+				sb.append("../");
+				schemaPath = schemaPath.removeFirstSegments(1);
+			}
+			return sb.toString() + currPath.toString();
+		}
+		IPluginModelBase model = PDECore.getDefault().getModelManager().findModel(
+				file.getProject());
+		String id = model.getPluginBase().getId();
+		if (id != null)
+			return "schema://" + id + "/" + file.getProjectRelativePath().toString();
+		return null;
+	}
+	
+	private boolean isUnlistedInclude(IFile file) {
+		String location = getIncludeLocation(file);
+		if (location == null)
+			return false;
+		boolean unlisted = true;
+		ISchemaInclude[] includes = getSchema().getIncludes();
+		for (int i = 0; i < includes.length; i++) {
+			if (includes[i].getLocation().equals(location)) {
+				unlisted = false;
+				break;
+			}
+		}
+		return unlisted;
 	}
 }
