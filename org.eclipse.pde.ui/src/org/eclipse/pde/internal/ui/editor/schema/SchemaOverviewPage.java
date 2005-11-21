@@ -18,6 +18,7 @@ import org.eclipse.pde.internal.ui.editor.text.ColorManager;
 import org.eclipse.pde.internal.ui.editor.text.IColorManager;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.forms.IManagedForm;
 import org.eclipse.ui.forms.widgets.ScrolledForm;
@@ -37,9 +38,6 @@ public class SchemaOverviewPage extends PDEFormPage {
  		 super(editor, PAGE_ID, PDEUIMessages.SchemaEditor_DocPage_title);
 	 }
 	 
-	 /**
-	  * @see org.eclipse.pde.internal.ui.editor.PDEFormPage#becomesInvisible(IFormPage)
-	  */
 	 public void setActive(boolean active) {
  		 if (!active)
 	 		 getManagedForm().commit(false);
@@ -49,13 +47,19 @@ public class SchemaOverviewPage extends PDEFormPage {
 	 protected void createFormContent(IManagedForm managedForm) {
  		 super.createFormContent(managedForm);
  		 ScrolledForm form = managedForm.getForm();
- 		 GridLayout layout = new GridLayout(2, true);
- 		 layout.marginWidth = 10;
- 		 layout.horizontalSpacing = 15;
+ 		 GridLayout layout = new GridLayout();
+ 		 layout.marginWidth = 9;
  		 form.getBody().setLayout(layout);
 
- 		 fGeneralInfoSection = new SchemaSpecSection(this, form.getBody());		 
- 		 fInclusionSection = new SchemaIncludesSection(this, form.getBody());
+ 		 Composite top = managedForm.getToolkit().createComposite(form.getBody());
+ 		 layout = new GridLayout(2, true);
+ 		 layout.marginHeight = layout.marginWidth = 0;
+ 		 layout.horizontalSpacing = 9;
+ 		 top.setLayout(layout);
+ 		 top.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+ 		 fGeneralInfoSection = new SchemaSpecSection(this, top);		 
+ 		 fInclusionSection = new SchemaIncludesSection(this, top);
+ 		 
  		 fDocSection = new DocSection(this, form.getBody(), fColorManager);
  		 GridData gd = new GridData(GridData.FILL_BOTH);
  		 gd.horizontalSpan = 2;
