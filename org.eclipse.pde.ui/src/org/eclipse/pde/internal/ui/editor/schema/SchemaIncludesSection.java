@@ -208,7 +208,8 @@ public class SchemaIncludesSection extends TableSection {
 				sb.append("../");
 				schemaPath = schemaPath.removeFirstSegments(1);
 			}
-			return sb.toString() + currPath.toString();
+			String location = sb.toString() + currPath.toString(); 
+			return location.trim().length() > 0 ? location : null;  
 		}
 		IPluginModelBase model = PDECore.getDefault().getModelManager().findModel(
 				file.getProject());
