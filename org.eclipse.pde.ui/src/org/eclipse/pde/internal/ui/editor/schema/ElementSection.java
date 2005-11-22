@@ -332,6 +332,9 @@ public class ElementSection extends TreeSection {
 			markStale();
 			return;
 		}
+		if (e.getChangedProperty() != null
+				&& e.getChangedProperty().equals("description"))
+			return;
 		Object[] objects = e.getChangedObjects();
 		for (int i = 0; i < objects.length; i++) {
 			Object obj = objects[0];
@@ -382,7 +385,8 @@ public class ElementSection extends TreeSection {
 			} else if (obj instanceof ISchemaComplexType) {
 				// first compositor added/removed
 				treeViewer.refresh();
-				if (e.getChangeType() == IModelChangedEvent.INSERT) {
+				if (e.getChangeType() == IModelChangedEvent.INSERT ||
+						e.getChangeType() == IModelChangedEvent.CHANGE) {
 					ISchemaComplexType type = (ISchemaComplexType) obj;
 					final ISchemaCompositor compositor = type.getCompositor();
 					treeViewer.getTree().getDisplay().asyncExec(new Runnable() {
