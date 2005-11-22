@@ -7,7 +7,7 @@ public class SchemaRootElement extends SchemaElement implements
 		ISchemaRootElement {
 
 	private static final long serialVersionUID = 1L;
-	public static final String P_DEP_REPLACEMENT = "deprecatedReplacement";
+	public static final String P_DEP_REPLACEMENT = "replacement";
 	private String fDeperecatedReplacement;
 	
 	public SchemaRootElement(ISchemaObject parent, String name) {

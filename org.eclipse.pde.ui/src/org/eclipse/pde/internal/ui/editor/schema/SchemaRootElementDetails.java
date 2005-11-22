@@ -47,7 +47,7 @@ public class SchemaRootElementDetails extends AbstractSchemaDetails {
 		toolkit.createLabel(parent, "Deprecated:").setForeground(foreground);
 		fDeprecated = createComboPart(parent, toolkit, BOOLS, 2);
 
-		fSuggestion = new FormEntry(parent, toolkit, "Replacement:", SWT.NONE);
+		fSuggestion = new FormEntry(parent, toolkit, "Replacement:", null, false, 6);
 		fSuggestion.setDimLabel(true);
 		
 		setText("Element Details");

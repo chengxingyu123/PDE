@@ -38,11 +38,6 @@ public class FormEntry {
 	public FormEntry(Composite parent, FormToolkit toolkit, String labelText, int style) {
 		createControl(parent, toolkit, labelText, style, null, false, 0, 0);
 	}
-	
-	public FormEntry(Composite parent, FormToolkit toolkit, String labelText, int style, boolean dimLabel) {
-		fDimLabelOnDisable = dimLabel;
-		createControl(parent, toolkit, labelText, style, null, false, 0, 0);
-	}
 	/**
 	 * This constructor create all the controls right away.
 	 * 

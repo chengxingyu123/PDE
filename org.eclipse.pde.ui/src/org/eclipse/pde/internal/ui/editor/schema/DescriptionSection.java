@@ -112,7 +112,7 @@ public class DescriptionSection extends PDESection implements IPartSelectionList
 		Control control = children[children.length - 1];
 		gd = new GridData(GridData.FILL_BOTH);
 		gd.widthHint = 200;
-		gd.heightHint = 64;
+		gd.heightHint = 90;
 		control.setLayoutData(gd);
 		styledText.setMenu(getPage().getPDEEditor().getContextMenu());
 		styledText.addFocusListener(new FocusAdapter() {
