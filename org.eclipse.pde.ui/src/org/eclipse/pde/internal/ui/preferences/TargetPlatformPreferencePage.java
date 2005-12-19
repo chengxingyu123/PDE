@@ -26,6 +26,7 @@ import org.eclipse.jface.preference.PreferencePage;
 import org.eclipse.pde.internal.core.ExternalModelManager;
 import org.eclipse.pde.internal.core.ICoreConstants;
 import org.eclipse.pde.internal.core.PDECore;
+import org.eclipse.pde.internal.core.itarget.ITarget;
 import org.eclipse.pde.internal.core.target.TargetModel;
 import org.eclipse.pde.internal.ui.IHelpContextIds;
 import org.eclipse.pde.internal.ui.PDEPlugin;
@@ -119,8 +120,13 @@ public class TargetPlatformPreferencePage extends PreferencePage implements IWor
 		profiles.setLayout(new GridLayout(4, false));
 		profiles.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 				
-		Link currentProfile = new Link(profiles, SWT.NONE);
-		currentProfile.setText(PDEUIMessages.TargetPlatformPreferencePage_CurrentProfileLabel);
+		Link profile = new Link(profiles, SWT.NONE);
+		profile.setText(PDEUIMessages.TargetPlatformPreferencePage_CurrentProfileLabel);
+		profile.addSelectionListener(new SelectionAdapter() {
+			public void widgetSelected(SelectionEvent e) {
+				handleOpenTargetProfile();
+			}
+		});
 		
 		fProfileCombo = new Combo(profiles, SWT.BORDER | SWT.READ_ONLY);
 		loadTargetCombo();
@@ -140,6 +146,11 @@ public class TargetPlatformPreferencePage extends PreferencePage implements IWor
 		Button loadProfileButton = new Button(profiles, SWT.PUSH);
 		loadProfileButton.setText(PDEUIMessages.TargetPlatformPreferencePage_ApplyButton);
 		loadProfileButton.setLayoutData(new GridData());
+		loadProfileButton.addSelectionListener(new SelectionAdapter() {
+			public void widgetSelected(SelectionEvent e) {
+				handleLoadTargetProfile();
+			}
+		});
 		SWTUtil.setButtonDimensionHint(loadProfileButton);
 		
 	}
@@ -213,8 +224,7 @@ public class TargetPlatformPreferencePage extends PreferencePage implements IWor
 					fEnvironmentTab.updateChoices();
 				}
 			}
-		});
-		
+		});		
 	}
 	
 	private void createPluginsTab(TabFolder folder) {
@@ -273,7 +283,18 @@ public class TargetPlatformPreferencePage extends PreferencePage implements IWor
 		}
 	}
 	
+	private void handleOpenTargetProfile() {
+		// TODO open file in an editor in new window.
+		// If the profile could not be located for some reason, open a warning dialog indicating so.
+	}
+	
 	private void loadTargetCombo() {
+		// TODO load all pre-canned (ie. registered via extension) targets 
+		// Also load saved workspace profiles, if any. 
+		// If a saved workspace profile no longer exists in the workspace, skip it.
+		
+		// TODO make sure the list is sorted alphabetically
+		
 //		String pref = fPreferences.getString(ICoreConstants.TARGET_PROFILE);
 //		if (pref.indexOf('\\') > 0) {
 //			IPath targetPath = new Path(pref);
@@ -351,6 +372,19 @@ public class TargetPlatformPreferencePage extends PreferencePage implements IWor
 	public void init(IWorkbench workbench) {
 	}
 	
+	private void handleLoadTargetProfile() {		
+		// TODO create target model from the specified profile
+		ITarget target = null;
+		
+		// TODO set fHomeText with the location from the target profile
+		
+		// TODO reset all tabs based on settings in the target profile
+		fPluginsTab.loadTargetProfile(target);
+		fEnvironmentTab.loadTargetProfile(target);
+		fArgumentsTab.loadTargetProfile(target);
+		fSourceTab.loadTargetProfile(target);
+	}
+	
 	public void performDefaults() {
 		fHomeText.setText(ExternalModelManager.computeDefaultPlatformPath());
 		fPluginsTab.handleReload();
@@ -388,6 +422,11 @@ public class TargetPlatformPreferencePage extends PreferencePage implements IWor
 	}
 	
 	private void saveTarget() {
+		// TODO save selected target profile
+		// if it's a pre-canned profile, save the target profile id
+		// if it's from the workspace, save the file path.
+		// do not need to save the display name, we could always get it later.
+		
 //		String value = fProfileCombo.getText().trim();
 //		int index = value.lastIndexOf('[');
 //		value = value.substring(index, value.length() - 1);

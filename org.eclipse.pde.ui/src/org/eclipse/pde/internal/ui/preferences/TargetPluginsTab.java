@@ -45,6 +45,7 @@ import org.eclipse.pde.internal.core.ModelProviderEvent;
 import org.eclipse.pde.internal.core.PDECore;
 import org.eclipse.pde.internal.core.PDEState;
 import org.eclipse.pde.internal.core.PluginPathFinder;
+import org.eclipse.pde.internal.core.itarget.ITarget;
 import org.eclipse.pde.internal.ui.PDEPlugin;
 import org.eclipse.pde.internal.ui.PDEUIMessages;
 import org.eclipse.pde.internal.ui.elements.DefaultContentProvider;
@@ -238,6 +239,10 @@ public class TargetPluginsTab {
 			return fInitialModels;
 		}
 		return fModels;
+	}
+	
+	protected void loadTargetProfile(ITarget target) {
+		
 	}
 
 	protected void handleReload() {

@@ -25,6 +25,7 @@ import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.pde.internal.core.IEnvironmentVariables;
 import org.eclipse.pde.internal.core.PDECore;
+import org.eclipse.pde.internal.core.itarget.ITarget;
 import org.eclipse.pde.internal.ui.IHelpContextIds;
 import org.eclipse.pde.internal.ui.PDEPlugin;
 import org.eclipse.pde.internal.ui.PDEUIMessages;
@@ -203,6 +204,10 @@ public class TargetEnvironmentTab implements IEnvironmentVariables {
 		fWSCombo.setText(preferences.getString(WS));
 		fNLCombo.setText(expandLocaleName(preferences.getString(NL)));
 		fArchCombo.setText(preferences.getString(ARCH));		
+	}
+	
+	protected void loadTargetProfile(ITarget target) {
+		
 	}
 	
 	/**
