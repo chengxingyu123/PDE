@@ -13,6 +13,10 @@ package org.eclipse.pde.internal.ui.preferences;
 
 import java.util.ArrayList;
 
+import org.eclipse.core.resources.IFile;
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IConfigurationElement;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Preferences;
 import org.eclipse.jface.dialogs.Dialog;
@@ -22,8 +26,12 @@ import org.eclipse.jface.preference.PreferencePage;
 import org.eclipse.pde.internal.core.ExternalModelManager;
 import org.eclipse.pde.internal.core.ICoreConstants;
 import org.eclipse.pde.internal.core.PDECore;
+import org.eclipse.pde.internal.core.target.TargetModel;
 import org.eclipse.pde.internal.ui.IHelpContextIds;
+import org.eclipse.pde.internal.ui.PDEPlugin;
 import org.eclipse.pde.internal.ui.PDEUIMessages;
+import org.eclipse.pde.internal.ui.util.FileExtensionFilter;
+import org.eclipse.pde.internal.ui.util.FileValidator;
 import org.eclipse.pde.internal.ui.util.SWTUtil;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.BusyIndicator;
@@ -45,6 +53,9 @@ import org.eclipse.swt.widgets.TabItem;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.dialogs.ElementTreeSelectionDialog;
+import org.eclipse.ui.model.WorkbenchContentProvider;
+import org.eclipse.ui.model.WorkbenchLabelProvider;
 
 public class TargetPlatformPreferencePage extends PreferencePage implements IWorkbenchPreferencePage {
 
@@ -54,11 +65,12 @@ public class TargetPlatformPreferencePage extends PreferencePage implements IWor
 	
 	private Label fHomeLabel;
 	private Combo fHomeText;
+	private Combo fProfileCombo;
 	private Button fBrowseButton;
-	private TargetPluginsTab fPluginsBlock;
-	private TargetEnvironmentTab fEnvironmentBlock;
-	private TargetSourceTab fSourceBlock;
-	private JavaArgumentsTab fArgumentsBlock;
+	private TargetPluginsTab fPluginsTab;
+	private TargetEnvironmentTab fEnvironmentTab;
+	private TargetSourceTab fSourceTab;
+	private JavaArgumentsTab fArgumentsTab;
 	
 	private Preferences fPreferences = null;
 	private boolean fNeedsReload = false;
@@ -74,15 +86,15 @@ public class TargetPlatformPreferencePage extends PreferencePage implements IWor
 	}
 	
 	public TargetPlatformPreferencePage(int index) {
-		setDescription(PDEUIMessages.Preferences_TargetPlatformPage_Description); 
+		//setDescription(PDEUIMessages.Preferences_TargetPlatformPage_Description); 
 		fPreferences = PDECore.getDefault().getPluginPreferences();
-		fPluginsBlock = new TargetPluginsTab(this);
+		fPluginsTab = new TargetPluginsTab(this);
 		fIndex = index;
 	}
 	
 	public void dispose() {
-		fPluginsBlock.dispose();
-		fSourceBlock.dispose();
+		fPluginsTab.dispose();
+		fSourceTab.dispose();
 		super.dispose();
 	}
 
@@ -93,39 +105,44 @@ public class TargetPlatformPreferencePage extends PreferencePage implements IWor
 		container.setLayout(layout);
 
 		Group profiles = new Group(container, SWT.NONE);
-		profiles.setText("Target Profiles");
+		profiles.setText(PDEUIMessages.TargetPlatformPreferencePage_TargetGroupTitle);
 		layout = new GridLayout(5, false);
 		profiles.setLayout(layout);
 		profiles.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 		Label currentProfile = new Label(profiles, SWT.NONE);
-		currentProfile.setText("Current Profile:");
+		currentProfile.setText(PDEUIMessages.TargetPlatformPreferencePage_CurrentProfileLabel);
 		
-		Combo profileCombo = new Combo(profiles, SWT.BORDER | SWT.READ_ONLY);
-		profileCombo.setItems(new String[] {
-				"item1", "item2"
-		});
-		profileCombo.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+		fProfileCombo = new Combo(profiles, SWT.BORDER | SWT.READ_ONLY);
+		loadTargetCombo();
+		fProfileCombo.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 		
 		Button profileBrowse = new Button(profiles, SWT.PUSH);
-		profileBrowse.setText("Browse...");
+		profileBrowse.setText(PDEUIMessages.TargetPlatformPreferencePage_BrowseButton);
 		GridData gd = new GridData();
 		gd.widthHint = 60;
 		profileBrowse.setLayoutData(gd);
+		profileBrowse.addSelectionListener(new SelectionAdapter() {
+
+			public void widgetSelected(SelectionEvent e) {
+				handleTargetBrowse();
+			}
+			
+		});
 		
 		Button profilePreview = new Button(profiles, SWT.PUSH);
-		profilePreview.setText("Preview...");
+		profilePreview.setText(PDEUIMessages.TargetPlatformPreferencePage_PreviewButton);
 		gd = new GridData();
 		gd.widthHint = 60;
 		profilePreview.setLayoutData(gd);
 		
 		Button profileApply = new Button(profiles, SWT.PUSH);
-		profileApply.setText("Apply");
+		profileApply.setText(PDEUIMessages.TargetPlatformPreferencePage_ApplyButton);
 		gd = new GridData();
 		gd.widthHint = 60;
 		profileApply.setLayoutData(gd);
 		
 		Group target = new Group(container, SWT.NONE);
-		target.setText("Current Profile");
+		target.setText(PDEUIMessages.TargetPlatformPreferencePage_ProfileGroupTitle);
 		layout = new GridLayout(3, false);
 		target.setLayout(layout);
 		target.setLayoutData(new GridData(GridData.FILL_BOTH));
@@ -155,7 +172,7 @@ public class TargetPlatformPreferencePage extends PreferencePage implements IWor
 		});
 		fHomeText.addSelectionListener(new SelectionAdapter() {
 			public void widgetSelected(SelectionEvent e) {
-				fPluginsBlock.handleReload();
+				fPluginsTab.handleReload();
 				fNeedsReload = false;
 			}
 		});
@@ -189,7 +206,7 @@ public class TargetPlatformPreferencePage extends PreferencePage implements IWor
 		fTabFolder.addSelectionListener(new SelectionAdapter() {
 			public void widgetSelected(SelectionEvent e) {
 				if (fTabFolder.getSelectionIndex() == ENVIRONMENT_INDEX) {
-					fEnvironmentBlock.updateChoices();
+					fEnvironmentTab.updateChoices();
 				}
 			}
 		});
@@ -200,9 +217,9 @@ public class TargetPlatformPreferencePage extends PreferencePage implements IWor
 	}
 	
 	private void createPluginsTab(TabFolder folder) {
-		Control block = fPluginsBlock.createContents(folder);
+		Control block = fPluginsTab.createContents(folder);
 		block.setLayoutData(new GridData(GridData.FILL_BOTH));	
-		fPluginsBlock.initialize();
+		fPluginsTab.initialize();
 
 		TabItem tab = new TabItem(folder, SWT.NONE);
 		tab.setText(PDEUIMessages.TargetPlatformPreferencePage_pluginsTab); 
@@ -210,8 +227,8 @@ public class TargetPlatformPreferencePage extends PreferencePage implements IWor
 	}
 	
 	private void createEnvironmentTab(TabFolder folder) {
-		fEnvironmentBlock = new TargetEnvironmentTab();
-		Control block = fEnvironmentBlock.createContents(folder);
+		fEnvironmentTab = new TargetEnvironmentTab();
+		Control block = fEnvironmentTab.createContents(folder);
 		
 		TabItem tab = new TabItem(folder, SWT.NONE);
 		tab.setText(PDEUIMessages.TargetPlatformPreferencePage_environmentTab); 
@@ -219,8 +236,8 @@ public class TargetPlatformPreferencePage extends PreferencePage implements IWor
 	}
 	
 	private void createSourceTab(TabFolder folder) {
-		fSourceBlock = new TargetSourceTab();
-		Control block = fSourceBlock.createContents(folder);
+		fSourceTab = new TargetSourceTab();
+		Control block = fSourceTab.createContents(folder);
 		
 		TabItem tab = new TabItem(folder, SWT.NONE);
 		tab.setText(PDEUIMessages.TargetPlatformPreferencePage_sourceCode);  
@@ -228,8 +245,8 @@ public class TargetPlatformPreferencePage extends PreferencePage implements IWor
 	}
 	
 	private void createArgumentsTab(TabFolder folder) {
-		fArgumentsBlock = new JavaArgumentsTab(this);
-		Control block = fArgumentsBlock.createControl(folder);
+		fArgumentsTab = new JavaArgumentsTab(this);
+		Control block = fArgumentsTab.createControl(folder);
 		
 		TabItem tab = new TabItem(folder, SWT.NONE);
 		tab.setText(PDEUIMessages.TargetPlatformPreferencePage_agrumentsTab);
@@ -250,9 +267,84 @@ public class TargetPlatformPreferencePage extends PreferencePage implements IWor
 			if (fHomeText.indexOf(newPath) == -1)
 				fHomeText.add(newPath, 0);
 			fHomeText.setText(newPath);
-			fPluginsBlock.handleReload();
+			fPluginsTab.handleReload();
 			fNeedsReload = false;
 		}
+	}
+	
+	private void loadTargetCombo() {
+//		String pref = fPreferences.getString(ICoreConstants.TARGET_PROFILE);
+//		if (pref.indexOf('\\') > 0) {
+//			IPath targetPath = new Path(pref);
+//			IFile file = PDEPlugin.getWorkspace().getRoot().getFile(targetPath);
+//			if (file != null) { 
+//				TargetModel model = new TargetModel();
+//				try {
+//					model.load(file.getContents(), false);
+//					String value = model.getTarget().getName();
+//					value = value + " [" + file.getFullPath().toOSString() + "]";
+//					if (fProfileCombo.indexOf(value) == -1)
+//						fProfileCombo.add(value, 0);
+//					fProfileCombo.setText(value);
+//				} catch (CoreException e) {
+//				}
+//			}
+//		} else {
+//			prefId = pref.substring(3);
+//		}
+		
+		IConfigurationElement[] elems = PDECore.getDefault().getTargetProfileManager().getValidTargets();
+		for (int i = 0; i < elems.length; i++) {
+			String name = elems[i].getAttribute("name"); //$NON-NLS-1$
+//			String id = elems[i].getAttribute("id");
+//			name = name + " [" + id + "]";
+			if (fProfileCombo.indexOf(name) == -1)
+				fProfileCombo.add(name);
+//			if (id.equals(prefId))
+//				fProfileCombo.setText(name);
+		}
+	}
+	
+	private void handleTargetBrowse() {
+		ElementTreeSelectionDialog dialog =
+			new ElementTreeSelectionDialog(
+				getShell(),
+				new WorkbenchLabelProvider(),
+				new WorkbenchContentProvider());
+				
+		dialog.setValidator(new FileValidator());
+		dialog.setAllowMultiple(false);
+		dialog.setTitle(PDEUIMessages.TargetPlatformPreferencePage_FileSelectionTitle); 
+		dialog.setMessage(PDEUIMessages.TargetPlatformPreferencePage_FileSelectionMessage); 
+		dialog.addFilter(new FileExtensionFilter("target"));  //$NON-NLS-1$
+		dialog.setInput(PDEPlugin.getWorkspace().getRoot());
+		IFile target = getTargetFile();
+		if (target != null) dialog.setInitialSelection(target);
+
+		if (dialog.open() == ElementTreeSelectionDialog.OK) {
+			IFile file = (IFile)dialog.getFirstResult();
+			//String value = file.getFullPath().toOSString();
+			TargetModel model = new TargetModel();
+			try {
+				model.load(file.getContents(), false);
+				String value = model.getTarget().getName();
+				value = value + " [" + file.getFullPath().toOSString() + "]"; //$NON-NLS-1$ //$NON-NLS-2$
+				if (fProfileCombo.indexOf(value) == -1)
+					fProfileCombo.add(value, 0);
+				fProfileCombo.setText(value);
+			} catch (CoreException e) {
+			}
+		}
+	}
+	
+	private IFile getTargetFile() {
+		String target = fProfileCombo.getText().trim();
+		if (target.equals("")) //$NON-NLS-1$
+			return null;
+		IPath targetPath = new Path(target);
+		if (targetPath.segmentCount() < 2) 
+			return null;
+		return PDEPlugin.getWorkspace().getRoot().getFile(targetPath);
 	}
 
 	public void init(IWorkbench workbench) {
@@ -260,15 +352,15 @@ public class TargetPlatformPreferencePage extends PreferencePage implements IWor
 	
 	public void performDefaults() {
 		fHomeText.setText(ExternalModelManager.computeDefaultPlatformPath());
-		fPluginsBlock.handleReload();
-		fEnvironmentBlock.performDefaults();
-		fArgumentsBlock.performDefaults();
-		fSourceBlock.performDefaults();
+		fPluginsTab.handleReload();
+		fEnvironmentTab.performDefaults();
+		fArgumentsTab.performDefaults();
+		fSourceTab.performDefaults();
 		super.performDefaults();
 	}
 
 	public boolean performOk() {
-		fEnvironmentBlock.performOk();
+		fEnvironmentTab.performOk();
 		if (fNeedsReload && !ExternalModelManager.arePathsEqual(new Path(fOriginalText), new Path(fHomeText.getText()))) {
 			MessageDialog dialog =
 				new MessageDialog(
@@ -285,12 +377,20 @@ public class TargetPlatformPreferencePage extends PreferencePage implements IWor
 				getContainer().updateButtons();
 				return false;
 			}
-			fPluginsBlock.handleReload();
+			fPluginsTab.handleReload();
 		} 
-		fSourceBlock.performOk();
-		fPluginsBlock.performOk();
-		fArgumentsBlock.performOk();
+		fSourceTab.performOk();
+		fPluginsTab.performOk();
+		fArgumentsTab.performOk();
+		saveTarget();
 		return super.performOk();
+	}
+	
+	private void saveTarget() {
+//		String value = fProfileCombo.getText().trim();
+//		int index = value.lastIndexOf('[');
+//		value = value.substring(index, value.length() - 1);
+//		fPreferences.setValue(ICoreConstants.TARGET_PROFILE, value);
 	}
 	
 	public String[] getPlatformLocations() {
@@ -305,6 +405,6 @@ public class TargetPlatformPreferencePage extends PreferencePage implements IWor
 	}
 	
 	public TargetSourceTab getSourceBlock() {
-		return fSourceBlock;
+		return fSourceTab;
 	}
 }

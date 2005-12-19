@@ -2477,4 +2477,20 @@ public class PDEUIMessages extends NLS {
 
 	public static String ExtensionPointsSection_schemaNotFound;
 
+	public static String TargetPlatformPreferencePage_TargetGroupTitle;
+
+	public static String TargetPlatformPreferencePage_CurrentProfileLabel;
+
+	public static String TargetPlatformPreferencePage_BrowseButton;
+
+	public static String TargetPlatformPreferencePage_PreviewButton;
+
+	public static String TargetPlatformPreferencePage_ApplyButton;
+
+	public static String TargetPlatformPreferencePage_ProfileGroupTitle;
+
+	public static String TargetPlatformPreferencePage_FileSelectionTitle;
+
+	public static String TargetPlatformPreferencePage_FileSelectionMessage;
+
 }
