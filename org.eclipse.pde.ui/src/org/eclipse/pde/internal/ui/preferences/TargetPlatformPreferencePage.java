@@ -137,16 +137,18 @@ public class TargetPlatformPreferencePage extends PreferencePage implements IWor
 		});
 		SWTUtil.setButtonDimensionHint(browse);
 		
-		Button profileApply = new Button(profiles, SWT.PUSH);
-		profileApply.setText(PDEUIMessages.TargetPlatformPreferencePage_ApplyButton);
-		profileApply.setLayoutData(new GridData());
-		SWTUtil.setButtonDimensionHint(profileApply);
+		Button loadProfileButton = new Button(profiles, SWT.PUSH);
+		loadProfileButton.setText(PDEUIMessages.TargetPlatformPreferencePage_ApplyButton);
+		loadProfileButton.setLayoutData(new GridData());
+		SWTUtil.setButtonDimensionHint(loadProfileButton);
 		
 	}
 	
 	private void createCurrentTargetPlatformGroup(Composite container) {
 		Composite target = new Composite(container, SWT.NONE);
-		target.setLayout(new GridLayout(3, false));
+		GridLayout layout = new GridLayout(3, false);
+		layout.marginHeight = layout.marginWidth = 0;
+		target.setLayout(layout);
 		target.setLayoutData(new GridData(GridData.FILL_BOTH));
 		
 		fHomeLabel = new Label(target, SWT.NULL);
