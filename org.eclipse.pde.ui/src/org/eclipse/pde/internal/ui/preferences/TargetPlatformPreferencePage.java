@@ -48,6 +48,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.DirectoryDialog;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Link;
 import org.eclipse.swt.widgets.TabFolder;
 import org.eclipse.swt.widgets.TabItem;
 import org.eclipse.ui.IWorkbench;
@@ -86,7 +87,7 @@ public class TargetPlatformPreferencePage extends PreferencePage implements IWor
 	}
 	
 	public TargetPlatformPreferencePage(int index) {
-		//setDescription(PDEUIMessages.Preferences_TargetPlatformPage_Description); 
+		setDescription(PDEUIMessages.Preferences_TargetPlatformPage_Description); 
 		fPreferences = PDECore.getDefault().getPluginPreferences();
 		fPluginsTab = new TargetPluginsTab(this);
 		fIndex = index;
@@ -99,52 +100,53 @@ public class TargetPlatformPreferencePage extends PreferencePage implements IWor
 	}
 
 	public Control createContents(Composite parent) {
-		Composite container = new Composite(parent, SWT.NULL);
+		Composite container = new Composite(parent, SWT.NONE);
 		GridLayout layout = new GridLayout();
 		layout.marginHeight = layout.marginWidth = 0;
 		container.setLayout(layout);
 
+		createCurrentTargetPlatformGroup(container);
+		createTargetProfilesGroup(container);
+		
+		Dialog.applyDialogFont(container);
+		PlatformUI.getWorkbench().getHelpSystem().setHelp(container, IHelpContextIds.TARGET_PLATFORM_PREFERENCE_PAGE);
+		return container;
+	}
+	
+	private void createTargetProfilesGroup(Composite container) {
 		Group profiles = new Group(container, SWT.NONE);
 		profiles.setText(PDEUIMessages.TargetPlatformPreferencePage_TargetGroupTitle);
-		layout = new GridLayout(5, false);
-		profiles.setLayout(layout);
+		profiles.setLayout(new GridLayout(4, false));
 		profiles.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-		Label currentProfile = new Label(profiles, SWT.NONE);
+				
+		Link currentProfile = new Link(profiles, SWT.NONE);
 		currentProfile.setText(PDEUIMessages.TargetPlatformPreferencePage_CurrentProfileLabel);
 		
 		fProfileCombo = new Combo(profiles, SWT.BORDER | SWT.READ_ONLY);
 		loadTargetCombo();
 		fProfileCombo.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 		
-		Button profileBrowse = new Button(profiles, SWT.PUSH);
-		profileBrowse.setText(PDEUIMessages.TargetPlatformPreferencePage_BrowseButton);
+		Button browse = new Button(profiles, SWT.PUSH);
+		browse.setText(PDEUIMessages.TargetPlatformPreferencePage_BrowseButton);
 		GridData gd = new GridData();
-		gd.widthHint = 60;
-		profileBrowse.setLayoutData(gd);
-		profileBrowse.addSelectionListener(new SelectionAdapter() {
-
+		browse.setLayoutData(gd);
+		browse.addSelectionListener(new SelectionAdapter() {
 			public void widgetSelected(SelectionEvent e) {
 				handleTargetBrowse();
-			}
-			
+			}			
 		});
-		
-		Button profilePreview = new Button(profiles, SWT.PUSH);
-		profilePreview.setText(PDEUIMessages.TargetPlatformPreferencePage_PreviewButton);
-		gd = new GridData();
-		gd.widthHint = 60;
-		profilePreview.setLayoutData(gd);
+		SWTUtil.setButtonDimensionHint(browse);
 		
 		Button profileApply = new Button(profiles, SWT.PUSH);
 		profileApply.setText(PDEUIMessages.TargetPlatformPreferencePage_ApplyButton);
-		gd = new GridData();
-		gd.widthHint = 60;
-		profileApply.setLayoutData(gd);
+		profileApply.setLayoutData(new GridData());
+		SWTUtil.setButtonDimensionHint(profileApply);
 		
-		Group target = new Group(container, SWT.NONE);
-		target.setText(PDEUIMessages.TargetPlatformPreferencePage_ProfileGroupTitle);
-		layout = new GridLayout(3, false);
-		target.setLayout(layout);
+	}
+	
+	private void createCurrentTargetPlatformGroup(Composite container) {
+		Composite target = new Composite(container, SWT.NONE);
+		target.setLayout(new GridLayout(3, false));
 		target.setLayoutData(new GridData(GridData.FILL_BOTH));
 		
 		fHomeLabel = new Label(target, SWT.NULL);
@@ -189,7 +191,7 @@ public class TargetPlatformPreferencePage extends PreferencePage implements IWor
 		
 		
 		fTabFolder = new TabFolder(target, SWT.NONE);
-		gd = new GridData(GridData.FILL_BOTH);
+		GridData gd = new GridData(GridData.FILL_BOTH);
 		gd.horizontalSpan = 3;
 		fTabFolder.setLayoutData(gd);
 		
@@ -211,9 +213,6 @@ public class TargetPlatformPreferencePage extends PreferencePage implements IWor
 			}
 		});
 		
-		Dialog.applyDialogFont(container);
-		PlatformUI.getWorkbench().getHelpSystem().setHelp(container, IHelpContextIds.TARGET_PLATFORM_PREFERENCE_PAGE);
-		return container;
 	}
 	
 	private void createPluginsTab(TabFolder folder) {
