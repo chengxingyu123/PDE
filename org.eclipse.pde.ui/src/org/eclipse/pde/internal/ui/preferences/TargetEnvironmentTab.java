@@ -252,14 +252,18 @@ public class TargetEnvironmentTab implements IEnvironmentVariables {
 			return;
 		int jreType = info.getJREType();
 		switch (jreType) {
-		case IRuntimeInfo.TYPE_DEFAULT:
+		case IRuntimeInfo.TYPE_DEFAULT:			
+			// TODO make sure the default JRE is selected
+			// you could get it via JavaRuntime#getDefaultVMInstall
 			return;
 		case IRuntimeInfo.TYPE_NAMED:
 			int index = fJRECombo.indexOf(info.getJREName());
 			fJRECombo.select(index);
 			break;
-		case IRuntimeInfo.TYPE_EXECUTION_ENV:
+		case IRuntimeInfo.TYPE_EXECUTION_ENV:			
 			//TODO Set JVM for execution env.
+			//TODO take a look at BaseBuildAction#getBootClasspath() for an example
+			// of how to retrieve a VM for an Execution environment
 		default:
 			break;
 		}
