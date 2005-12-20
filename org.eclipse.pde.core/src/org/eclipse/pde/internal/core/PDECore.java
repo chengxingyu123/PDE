@@ -280,7 +280,8 @@ public class PDECore extends Plugin implements IEnvironmentVariables {
 	}
 	
 	public TargetProfileManager getTargetProfileManager() {
-		fTargetProfileManager = new TargetProfileManager();
+		if (fTargetProfileManager == null)
+			fTargetProfileManager = new TargetProfileManager();
 		return fTargetProfileManager;
 	}
 	

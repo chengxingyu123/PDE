@@ -46,6 +46,7 @@ import org.eclipse.pde.internal.core.PDECore;
 import org.eclipse.pde.internal.core.PDEState;
 import org.eclipse.pde.internal.core.PluginPathFinder;
 import org.eclipse.pde.internal.core.itarget.ITarget;
+import org.eclipse.pde.internal.core.itarget.ITargetPlugin;
 import org.eclipse.pde.internal.ui.PDEPlugin;
 import org.eclipse.pde.internal.ui.PDEUIMessages;
 import org.eclipse.pde.internal.ui.elements.DefaultContentProvider;
@@ -158,6 +159,10 @@ public class TargetPluginsTab {
 		public void incrementCounter(int increment) {
 			updateCounter(getSelectionCount() + increment);
 		}
+		
+		public void updateCounter(int amount) {
+			super.updateCounter(amount);
+		}
 	}
 
 	public TargetPluginsTab(TargetPlatformPreferencePage page) {
@@ -242,7 +247,40 @@ public class TargetPluginsTab {
 	}
 	
 	protected void loadTargetProfile(ITarget target) {
+		//TODO work on add plugins from features
+		if (target.useAllPlugins()) {
+			handleSelectAll(true);
+			return;
+		}
+		ITargetPlugin[] plugins = target.getPlugins();
+		HashSet set = new HashSet((4/3) * plugins.length + 1);
+		for (int i = 0 ; i < plugins.length; i++) {
+			set.add(plugins[i].getId());
+		}
 		
+		IPluginModelBase[] models = getAllModels();
+		int counter = 0;
+		for (int i = 0; i < models.length; i++) {
+			String id = models[i].getPluginBase().getId();
+			if (id == null)
+				continue;
+			if (set.contains(id)) {
+				++counter;
+				if (!fPluginListViewer.getChecked(models[i])) {
+					fPluginListViewer.setChecked(models[i], true);
+					if (!models[i].isEnabled())
+						fChangedModels.add(models[i]);
+				}
+				set.remove(id);
+			} else {
+				if (fPluginListViewer.getChecked(models[i])) {
+					fPluginListViewer.setChecked(models[i], false);
+					if (models[i].isEnabled())
+						fChangedModels.add(models[i]);
+				}
+			}		
+		}
+		fTablePart.updateCounter(counter);
 	}
 
 	protected void handleReload() {

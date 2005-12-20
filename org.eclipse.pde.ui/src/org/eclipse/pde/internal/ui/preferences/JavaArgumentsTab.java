@@ -4,6 +4,7 @@ import org.eclipse.core.runtime.Preferences;
 import org.eclipse.debug.ui.StringVariableSelectionDialog;
 import org.eclipse.pde.internal.core.ICoreConstants;
 import org.eclipse.pde.internal.core.PDECore;
+import org.eclipse.pde.internal.core.itarget.IArgumentsInfo;
 import org.eclipse.pde.internal.core.itarget.ITarget;
 import org.eclipse.pde.internal.ui.PDEUIMessages;
 import org.eclipse.swt.SWT;
@@ -108,6 +109,15 @@ public class JavaArgumentsTab {
 	}
 	
 	protected void loadTargetProfile(ITarget target) {
-		
+		IArgumentsInfo info = target.getArguments();
+		if (info == null) {
+			fProgramArgs.setText("");
+			fVMArgs.setText("");
+			return;
+		}
+		String progArgs = (info.getProgramArguments() == null) ? "" : info.getProgramArguments();
+		fProgramArgs.setText(progArgs);
+		String vmArgs = (info.getVMArguments() == null) ? "" : info.getVMArguments();
+		fVMArgs.setText(vmArgs);
 	}
 }

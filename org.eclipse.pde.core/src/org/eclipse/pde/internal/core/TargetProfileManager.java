@@ -1,6 +1,7 @@
 package org.eclipse.pde.internal.core;
 
-import java.util.HashSet;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtension;
@@ -12,7 +13,7 @@ import org.eclipse.core.runtime.Platform;
 
 public class TargetProfileManager implements IRegistryChangeListener{
 	
-	IConfigurationElement[] elements;
+	Map fTargets;
 	private static String[] attributes;
 	{
 		attributes = new String[] {"id", "name" }; //$NON-NLS-1$ //$NON-NLS-2$
@@ -34,26 +35,23 @@ public class TargetProfileManager implements IRegistryChangeListener{
 	}
 	
 	public IConfigurationElement[] getTargets() {
-		if (elements == null)
+		if (fTargets == null)
 			loadElements();
-		return elements;
+		return (IConfigurationElement[])fTargets.values().toArray(new IConfigurationElement[fTargets.size()]);
+	}
+	
+	public IConfigurationElement getTarget(String id) {
+		if (fTargets == null)
+			loadElements();
+		return (IConfigurationElement)fTargets.get(id);
 	}
 	
 	private void loadElements() {
+		fTargets = new HashMap();
 		IExtensionRegistry registry = Platform.getExtensionRegistry();
 		registry.addRegistryChangeListener(this);
-		elements = registry.getConfigurationElementsFor("org.eclipse.pde.core.targetProfiles"); //$NON-NLS-1$
-	}
-	
-	public IConfigurationElement[] getValidTargets() {
-		if (elements == null)
-			loadElements();
-		HashSet result = new HashSet();
-		for (int i = 0; i < elements.length; i++) {
-			if (isValid(elements[i]))
-				result.add(elements[i]);
-		}
-		return (IConfigurationElement[])result.toArray(new IConfigurationElement[result.size()]) ;
+		IConfigurationElement[] elements = registry.getConfigurationElementsFor("org.eclipse.pde.core.targetProfiles"); //$NON-NLS-1$
+		add(elements);
 	}
 	
 	private boolean isValid (IConfigurationElement elem) {
@@ -67,19 +65,19 @@ public class TargetProfileManager implements IRegistryChangeListener{
 	}
 	
 	private void add(IConfigurationElement[] elems) {
-		IConfigurationElement[] newArray = new IConfigurationElement[elements.length + elems.length];
-		System.arraycopy(elements, 0, newArray, 0, elements.length);
-		System.arraycopy(elems, 0, newArray, elements.length, elems.length);
-		elements = newArray;
+		for (int i = 0; i < elems.length; i++) {
+			IConfigurationElement elem = elems[i];
+			if (isValid(elem)) {
+				String id = elem.getAttribute("id");
+				fTargets.put(id, elem);
+			}
+		}
 	}
 	
 	private void remove(IConfigurationElement[] elems) {
-		HashSet set = new HashSet((4/3) * elements.length + 1);
-		for (int i = 0; i < elements.length; i++) 
-			set.add(elements[i]);
-		for (int i = 0; i < elems.length; i++)
-			set.remove(elems[i]);
-		elements = (IConfigurationElement[]) set.toArray(new IConfigurationElement[set.size()]);
+		for (int i = 0 ; i < elems.length; i++) {
+			fTargets.remove(elems[i].getAttribute("id"));
+		}
 	}
 	
 	public void shutdown() {

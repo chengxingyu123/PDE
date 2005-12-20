@@ -25,6 +25,8 @@ import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.pde.internal.core.IEnvironmentVariables;
 import org.eclipse.pde.internal.core.PDECore;
+import org.eclipse.pde.internal.core.itarget.IEnvironmentInfo;
+import org.eclipse.pde.internal.core.itarget.IRuntimeInfo;
 import org.eclipse.pde.internal.core.itarget.ITarget;
 import org.eclipse.pde.internal.ui.IHelpContextIds;
 import org.eclipse.pde.internal.ui.PDEPlugin;
@@ -207,7 +209,60 @@ public class TargetEnvironmentTab implements IEnvironmentVariables {
 	}
 	
 	protected void loadTargetProfile(ITarget target) {
+		loadTargetProfileEnvironment(target.getEnvironment());
+		loadTargetProfileJRE(target.getTargetJREInfo());
+	}
+	
+	private void loadTargetProfileEnvironment(IEnvironmentInfo info) {
+		if (info == null)
+			return;
+		String os = info.getOS();
+		String ws = info.getWS();
+		String arch = info.getArch();
+		String nl = info.getNL();
+		nl = expandLocaleName(nl);
 		
+		if (!os.equals("")) {
+			if (fOSCombo.indexOf(os) == -1)
+				fOSCombo.add(os);
+			fOSCombo.setText(os);
+		}
+		
+		if (!ws.equals("")) {
+			if (fWSCombo.indexOf(ws) == -1)
+				fWSCombo.add(ws);
+			fWSCombo.setText(ws);
+		}
+		
+		if (!arch.equals("")) {
+			if (fArchCombo.indexOf(arch) == -1)
+				fArchCombo.add(arch);
+			fArchCombo.setText(arch);
+		}
+		
+		if (!nl.equals("")) {
+			if (fNLCombo.indexOf(nl) == -1)
+				fNLCombo.add(nl);
+			fNLCombo.setText(nl);
+		}
+	}
+	
+	private void loadTargetProfileJRE(IRuntimeInfo info) {
+		if (info == null)
+			return;
+		int jreType = info.getJREType();
+		switch (jreType) {
+		case IRuntimeInfo.TYPE_DEFAULT:
+			return;
+		case IRuntimeInfo.TYPE_NAMED:
+			int index = fJRECombo.indexOf(info.getJREName());
+			fJRECombo.select(index);
+			break;
+		case IRuntimeInfo.TYPE_EXECUTION_ENV:
+			//TODO Set JVM for execution env.
+		default:
+			break;
+		}
 	}
 	
 	/**

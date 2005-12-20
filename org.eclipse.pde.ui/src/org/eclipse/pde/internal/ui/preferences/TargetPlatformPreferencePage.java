@@ -11,21 +11,34 @@
 package org.eclipse.pde.internal.ui.preferences;
 
 
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+
 
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Preferences;
+import org.eclipse.core.variables.VariablesPlugin;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.preference.PreferencePage;
+import org.eclipse.jface.viewers.ISelection;
+import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.pde.internal.core.ExternalModelManager;
 import org.eclipse.pde.internal.core.ICoreConstants;
 import org.eclipse.pde.internal.core.PDECore;
+import org.eclipse.pde.internal.core.itarget.ILocationInfo;
 import org.eclipse.pde.internal.core.itarget.ITarget;
 import org.eclipse.pde.internal.core.target.TargetModel;
 import org.eclipse.pde.internal.ui.IHelpContextIds;
@@ -47,17 +60,25 @@ import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.DirectoryDialog;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Link;
 import org.eclipse.swt.widgets.TabFolder;
 import org.eclipse.swt.widgets.TabItem;
 import org.eclipse.ui.IWorkbench;
+import org.eclipse.ui.IWorkbenchPage;
+import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchPreferencePage;
+import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.dialogs.ElementTreeSelectionDialog;
+import org.eclipse.ui.ide.IDE;
 import org.eclipse.ui.model.WorkbenchContentProvider;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
+import org.eclipse.ui.part.ISetSelectionTarget;
+import org.osgi.framework.Bundle;
 
 public class TargetPlatformPreferencePage extends PreferencePage implements IWorkbenchPreferencePage {
 
@@ -79,6 +100,7 @@ public class TargetPlatformPreferencePage extends PreferencePage implements IWor
 	private String fOriginalText;
 	private int fIndex;
 	private TabFolder fTabFolder;
+	private boolean fContainsWorkspaceProfile = false;
 	
 	/**
 	 * MainPreferencePage constructor comment.
@@ -285,46 +307,104 @@ public class TargetPlatformPreferencePage extends PreferencePage implements IWor
 	
 	private void handleOpenTargetProfile() {
 		// TODO open file in an editor in new window.
+		Display.getCurrent().asyncExec(new Runnable() {
+			public void run() {
+				IFile file = getTargetFile();
+				IWorkbenchWindow ww = PDEPlugin.getActiveWorkbenchWindow();
+				if (ww == null) {
+					return;
+				}
+				IWorkbenchPage page = ww.getActivePage();
+				if (page == null)
+					return;
+				IWorkbenchPart focusPart = page.getActivePart();
+				if (file == null) {
+					// TODO open editor for external profile
+					String value = fProfileCombo.getText().trim();
+					int beginIndex = value.lastIndexOf('[');
+					value = value.substring(beginIndex +1, value.length() - 1);
+					IConfigurationElement elem = PDECore.getDefault().getTargetProfileManager().getTarget(value);
+					String path = elem.getAttribute("path"); 
+					String symbolicName = elem.getDeclaringExtension().getNamespace();
+					URL url = getResourceURL(symbolicName, path);
+					IFile[] files;
+					try {
+						URI uri = new URI("file", url.getPath(), null);
+						files = ResourcesPlugin.getWorkspace().getRoot().findFilesForLocationURI(uri);
+					} catch (URISyntaxException e) {
+						return;
+					}
+					if (files.length == 0 || !files[0].exists())
+						return;
+					file = files[0];
+				}
+				if (focusPart instanceof ISetSelectionTarget) {
+					ISelection selection = new StructuredSelection(file);
+					((ISetSelectionTarget) focusPart).selectReveal(selection);
+				}
+				try {
+					IDE.openEditor(page, file, PDEPlugin.TARGET_EDITOR_ID);
+				} catch (PartInitException e) {
+				}
+			}
+		});	
+		//TODO
 		// If the profile could not be located for some reason, open a warning dialog indicating so.
 	}
 	
 	private void loadTargetCombo() {
-		// TODO load all pre-canned (ie. registered via extension) targets 
-		// Also load saved workspace profiles, if any. 
-		// If a saved workspace profile no longer exists in the workspace, skip it.
-		
-		// TODO make sure the list is sorted alphabetically
-		
-//		String pref = fPreferences.getString(ICoreConstants.TARGET_PROFILE);
-//		if (pref.indexOf('\\') > 0) {
-//			IPath targetPath = new Path(pref);
-//			IFile file = PDEPlugin.getWorkspace().getRoot().getFile(targetPath);
-//			if (file != null) { 
-//				TargetModel model = new TargetModel();
-//				try {
-//					model.load(file.getContents(), false);
-//					String value = model.getTarget().getName();
-//					value = value + " [" + file.getFullPath().toOSString() + "]";
-//					if (fProfileCombo.indexOf(value) == -1)
-//						fProfileCombo.add(value, 0);
-//					fProfileCombo.setText(value);
-//				} catch (CoreException e) {
-//				}
-//			}
-//		} else {
-//			prefId = pref.substring(3);
-//		}
-		
-		IConfigurationElement[] elems = PDECore.getDefault().getTargetProfileManager().getValidTargets();
+		String prefId = null;
+		String pref = fPreferences.getString(ICoreConstants.TARGET_PROFILE);
+		if (pref.startsWith("file:")) { //$NON-NLS-1$
+			IPath targetPath = new Path(pref.substring(5));
+			IFile file = PDEPlugin.getWorkspace().getRoot().getFile(targetPath);
+			// If a saved workspace profile no longer exists in the workspace, skip it.
+			if (file != null) { 
+				TargetModel model = new TargetModel();
+				try {
+					model.load(file.getContents(), false);
+					String value = model.getTarget().getName();
+					value = value + " [" + file.getFullPath().toOSString() + "]"; //$NON-NLS-1$ //$NON-NLS-2$
+					if (fProfileCombo.indexOf(value) == -1)
+						fProfileCombo.add(value, 0);
+					fProfileCombo.setText(value);
+					fContainsWorkspaceProfile = true;
+				} catch (CoreException e) {
+				}
+			}
+		} else if (pref.startsWith("id:")){ //$NON-NLS-1$
+			prefId = pref.substring(3);
+		}
+
+		//load all pre-canned (ie. registered via extension) targets 
+		IConfigurationElement[] elems = PDECore.getDefault().getTargetProfileManager().getTargets();
+		Arrays.sort(elems, new Comparator() {
+
+			public int compare(Object o1, Object o2) {
+				String value1 = getString((IConfigurationElement)o1);
+				String value2 = getString((IConfigurationElement)o2);
+				return value1.compareTo(value2);
+			}
+			
+			private String getString(IConfigurationElement elem){
+				String name = elem.getAttribute("name"); //$NON-NLS-1$
+				String id = elem.getAttribute("id");
+				name = name + " [" + id + "]";
+				return name;
+			}
+			
+		});
 		for (int i = 0; i < elems.length; i++) {
 			String name = elems[i].getAttribute("name"); //$NON-NLS-1$
-//			String id = elems[i].getAttribute("id");
-//			name = name + " [" + id + "]";
+			String id = elems[i].getAttribute("id"); //$NON-NLS-1$
+			name = name + " [" + id + "]"; //$NON-NLS-1$ //$NON-NLS-2$
 			if (fProfileCombo.indexOf(name) == -1)
 				fProfileCombo.add(name);
-//			if (id.equals(prefId))
-//				fProfileCombo.setText(name);
+			if (id.equals(prefId))
+				fProfileCombo.setText(name);
 		}
+		if (fProfileCombo.getText().equals("")) //$NON-NLS-1$
+			fProfileCombo.select(0);
 	}
 	
 	private void handleTargetBrowse() {
@@ -345,24 +425,31 @@ public class TargetPlatformPreferencePage extends PreferencePage implements IWor
 
 		if (dialog.open() == ElementTreeSelectionDialog.OK) {
 			IFile file = (IFile)dialog.getFirstResult();
-			//String value = file.getFullPath().toOSString();
 			TargetModel model = new TargetModel();
 			try {
 				model.load(file.getContents(), false);
 				String value = model.getTarget().getName();
 				value = value + " [" + file.getFullPath().toOSString() + "]"; //$NON-NLS-1$ //$NON-NLS-2$
-				if (fProfileCombo.indexOf(value) == -1)
+				if (fProfileCombo.indexOf(value) == -1) {
 					fProfileCombo.add(value, 0);
+					if (fContainsWorkspaceProfile)
+						fProfileCombo.remove(1);
+				}
 				fProfileCombo.setText(value);
+				fContainsWorkspaceProfile = true;
 			} catch (CoreException e) {
 			}
 		}
 	}
 	
 	private IFile getTargetFile() {
+		if (!fContainsWorkspaceProfile || !(fProfileCombo.getSelectionIndex() == 0))
+			return null;
 		String target = fProfileCombo.getText().trim();
 		if (target.equals("")) //$NON-NLS-1$
 			return null;
+		int beginIndex = target.lastIndexOf('[');
+		target = target.substring(beginIndex +1, target.length() - 1);
 		IPath targetPath = new Path(target);
 		if (targetPath.segmentCount() < 2) 
 			return null;
@@ -373,16 +460,63 @@ public class TargetPlatformPreferencePage extends PreferencePage implements IWor
 	}
 	
 	private void handleLoadTargetProfile() {		
-		// TODO create target model from the specified profile
 		ITarget target = null;
+		TargetModel model = new TargetModel();
+		IFile file = getTargetFile();
+		if (file != null) 
+			try {
+				model.load(file.getContents(), false);
+			} catch (CoreException e) {
+				return;
+			}
+		else { 
+			String value = fProfileCombo.getText().trim();
+			int beginIndex = value.lastIndexOf('[');
+			value = value.substring(beginIndex +1, value.length() - 1);
+			IConfigurationElement elem = PDECore.getDefault().getTargetProfileManager().getTarget(value);
+			String path = elem.getAttribute("path"); 
+			String symbolicName = elem.getDeclaringExtension().getNamespace();
+			URL url = getResourceURL(symbolicName, path);
+			if (url == null)
+				return;
+			try {
+				model.load(url.openStream(), false);
+			} catch (CoreException e) {
+				return;
+			} catch (IOException e) {
+				return;
+			}
+		}
+		target = model.getTarget();
+		ILocationInfo info = target.getLocationInfo();
+		if (!info.getPath().equals("")) {
+			String path;
+			try {
+				path = VariablesPlugin.getDefault().getStringVariableManager().performStringSubstitution(info.getPath());
+			} catch (CoreException e) {
+				return;
+			}
+			fHomeText.setText(path);
+			fPluginsTab.handleReload();
+		}
 		
-		// TODO set fHomeText with the location from the target profile
-		
-		// TODO reset all tabs based on settings in the target profile
 		fPluginsTab.loadTargetProfile(target);
 		fEnvironmentTab.loadTargetProfile(target);
 		fArgumentsTab.loadTargetProfile(target);
 		fSourceTab.loadTargetProfile(target);
+	}
+	
+	private URL getResourceURL(String bundleID, String resourcePath) {
+		try {
+			Bundle bundle = Platform.getBundle(bundleID);
+			if (bundle != null) {
+				URL entry = bundle.getEntry(resourcePath);
+				if (entry != null)
+					return Platform.asLocalURL(entry);
+			}
+		} catch (IOException e) {
+		}
+		return null;
 	}
 	
 	public void performDefaults() {
@@ -422,15 +556,15 @@ public class TargetPlatformPreferencePage extends PreferencePage implements IWor
 	}
 	
 	private void saveTarget() {
-		// TODO save selected target profile
-		// if it's a pre-canned profile, save the target profile id
-		// if it's from the workspace, save the file path.
-		// do not need to save the display name, we could always get it later.
+		String value = fProfileCombo.getText().trim();
+		int index = value.lastIndexOf('[');
+		value = value.substring(index + 1, value.length() - 1);
 		
-//		String value = fProfileCombo.getText().trim();
-//		int index = value.lastIndexOf('[');
-//		value = value.substring(index, value.length() - 1);
-//		fPreferences.setValue(ICoreConstants.TARGET_PROFILE, value);
+		if (fContainsWorkspaceProfile && fProfileCombo.getSelectionIndex() == 0) {
+			fPreferences.setValue(ICoreConstants.TARGET_PROFILE, "file:" + value);
+		} else {
+			fPreferences.setValue(ICoreConstants.TARGET_PROFILE, "id:" + value);
+		}
 	}
 	
 	public String[] getPlatformLocations() {
