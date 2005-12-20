@@ -355,6 +355,11 @@ public class TargetPlatformPreferencePage extends PreferencePage implements IWor
 	private void loadTargetCombo() {
 		String prefId = null;
 		String pref = fPreferences.getString(ICoreConstants.TARGET_PROFILE);
+		
+		// TODO 
+		// On second thought, for workspace profiles, I prefer the prefix to be of the standard form 
+		// ${workspace_loc:com.example.xyz/sample.target}
+		// you could then perform a string substitution on it to ensure it exists.
 		if (pref.startsWith("file:")) { //$NON-NLS-1$
 			IPath targetPath = new Path(pref.substring(5));
 			IFile file = PDEPlugin.getWorkspace().getRoot().getFile(targetPath);
@@ -372,10 +377,18 @@ public class TargetPlatformPreferencePage extends PreferencePage implements IWor
 				} catch (CoreException e) {
 				}
 			}
+			
+		// TODO no need for id:  Lack of ${workspace_loc...} is sufficient hint that this is an id.
 		} else if (pref.startsWith("id:")){ //$NON-NLS-1$
 			prefId = pref.substring(3);
 		}
 
+		
+		// TODO no need to expose the ID at all.  It is for internal use only.
+		
+		// TODO I prefer this sorting logic gets moved to the target profile manager itself
+		// and have some kind of convenience method on it to return sorted targets.
+		
 		//load all pre-canned (ie. registered via extension) targets 
 		IConfigurationElement[] elems = PDECore.getDefault().getTargetProfileManager().getTargets();
 		Arrays.sort(elems, new Comparator() {
