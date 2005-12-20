@@ -502,6 +502,9 @@ public class TargetPlatformPreferencePage extends PreferencePage implements IWor
 		}
 		target = model.getTarget();
 		ILocationInfo info = target.getLocationInfo();
+		// TODO this is not sufficient
+		// if Target#useDefault() returns true, you should reset the target location to be 
+		// equal to the location of the host platform
 		if (!info.getPath().equals("")) {
 			String path;
 			try {
