@@ -20,7 +20,10 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Preferences;
+import org.eclipse.jdt.launching.IVMInstall;
 import org.eclipse.jdt.launching.JavaRuntime;
+import org.eclipse.jdt.launching.environments.IExecutionEnvironment;
+import org.eclipse.jdt.launching.environments.IExecutionEnvironmentsManager;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.pde.internal.core.IEnvironmentVariables;
@@ -251,22 +254,43 @@ public class TargetEnvironmentTab implements IEnvironmentVariables {
 		if (info == null)
 			return;
 		int jreType = info.getJREType();
+		String vmName = null;
 		switch (jreType) {
-		case IRuntimeInfo.TYPE_DEFAULT:			
-			// TODO make sure the default JRE is selected
-			// you could get it via JavaRuntime#getDefaultVMInstall
-			return;
-		case IRuntimeInfo.TYPE_NAMED:
-			int index = fJRECombo.indexOf(info.getJREName());
-			fJRECombo.select(index);
+		case IRuntimeInfo.TYPE_DEFAULT:
+			vmName = JavaRuntime.getDefaultVMInstall().getName();
 			break;
-		case IRuntimeInfo.TYPE_EXECUTION_ENV:			
-			//TODO Set JVM for execution env.
-			//TODO take a look at BaseBuildAction#getBootClasspath() for an example
-			// of how to retrieve a VM for an Execution environment
+		case IRuntimeInfo.TYPE_NAMED:
+			vmName = info.getJREName();
+			break;
+		case IRuntimeInfo.TYPE_EXECUTION_ENV:
+			IExecutionEnvironmentsManager manager = JavaRuntime.getExecutionEnvironmentsManager();
+			IExecutionEnvironment environment = manager.getEnvironment(info.getJREName());
+			IVMInstall vm = null;
+			if (environment != null) {
+				vm = environment.getDefaultVM();
+				if (vm == null) {
+					IVMInstall[] installs = environment.getCompatibleVMs();
+					// take the first strictly compatible vm if there is no default
+					for (int i = 0; i < installs.length; i++) {
+						IVMInstall install = installs[i];
+						if (environment.isStrictlyCompatible(install)) {
+							vmName = install.getName();
+							break;
+						}
+					}
+					// use the first vm failing that
+					if (vm == null && installs.length > 0) 
+						vmName = installs[0].getName();
+				} else 
+					vmName = vm.getName();
+			}
+			if (vmName == null)
+				vmName = JavaRuntime.getDefaultVMInstall().getName();
 		default:
 			break;
 		}
+		int index = fJRECombo.indexOf(vmName);
+		fJRECombo.select(index);
 	}
 	
 	/**

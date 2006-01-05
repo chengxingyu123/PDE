@@ -16,9 +16,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.ResourcesPlugin;
@@ -26,7 +23,6 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
-import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Preferences;
 import org.eclipse.core.variables.VariablesPlugin;
 import org.eclipse.jface.dialogs.Dialog;
@@ -38,6 +34,7 @@ import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.pde.internal.core.ExternalModelManager;
 import org.eclipse.pde.internal.core.ICoreConstants;
 import org.eclipse.pde.internal.core.PDECore;
+import org.eclipse.pde.internal.core.TargetProfileManager;
 import org.eclipse.pde.internal.core.itarget.ILocationInfo;
 import org.eclipse.pde.internal.core.itarget.ITarget;
 import org.eclipse.pde.internal.core.target.TargetModel;
@@ -78,7 +75,6 @@ import org.eclipse.ui.ide.IDE;
 import org.eclipse.ui.model.WorkbenchContentProvider;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.eclipse.ui.part.ISetSelectionTarget;
-import org.osgi.framework.Bundle;
 
 public class TargetPlatformPreferencePage extends PreferencePage implements IWorkbenchPreferencePage {
 
@@ -94,6 +90,7 @@ public class TargetPlatformPreferencePage extends PreferencePage implements IWor
 	private TargetEnvironmentTab fEnvironmentTab;
 	private TargetSourceTab fSourceTab;
 	private JavaArgumentsTab fArgumentsTab;
+	private IConfigurationElement [] fElements;
 	
 	private Preferences fPreferences = null;
 	private boolean fNeedsReload = false;
@@ -309,108 +306,90 @@ public class TargetPlatformPreferencePage extends PreferencePage implements IWor
 		// TODO open file in an editor in new window.
 		Display.getCurrent().asyncExec(new Runnable() {
 			public void run() {
-				IFile file = getTargetFile();
-				IWorkbenchWindow ww = PDEPlugin.getActiveWorkbenchWindow();
-				if (ww == null) {
-					return;
-				}
-				IWorkbenchPage page = ww.getActivePage();
-				if (page == null)
-					return;
-				IWorkbenchPart focusPart = page.getActivePart();
-				if (file == null) {
-					// TODO open editor for external profile
-					String value = fProfileCombo.getText().trim();
-					int beginIndex = value.lastIndexOf('[');
-					value = value.substring(beginIndex +1, value.length() - 1);
-					IConfigurationElement elem = PDECore.getDefault().getTargetProfileManager().getTarget(value);
-					String path = elem.getAttribute("path"); 
-					String symbolicName = elem.getDeclaringExtension().getNamespace();
-					URL url = getResourceURL(symbolicName, path);
-					IFile[] files;
-					try {
-						URI uri = new URI("file", url.getPath(), null);
-						files = ResourcesPlugin.getWorkspace().getRoot().findFilesForLocationURI(uri);
-					} catch (URISyntaxException e) {
+				boolean error = false;
+				try {
+					IFile file = getTargetFile();
+					IWorkbenchWindow ww = PDEPlugin.getActiveWorkbenchWindow();
+					if (ww == null) {
+						error = true;
 						return;
 					}
-					if (files.length == 0 || !files[0].exists())
+					IWorkbenchPage page = ww.getActivePage();
+					if (page == null) {
+						error = true;
 						return;
-					file = files[0];
-				}
-				if (focusPart instanceof ISetSelectionTarget) {
-					ISelection selection = new StructuredSelection(file);
-					((ISetSelectionTarget) focusPart).selectReveal(selection);
-				}
-				try {
-					IDE.openEditor(page, file, PDEPlugin.TARGET_EDITOR_ID);
-				} catch (PartInitException e) {
+					}
+					IWorkbenchPart focusPart = page.getActivePart();
+					if (file == null) {
+						// TODO open editor for external profile
+						URL url = getExternalTargetURL();
+						if (url == null) {
+							error = true;
+							return;
+						}
+						IFile[] files;
+						try {
+							URI uri = new URI("file", url.getPath(), null);
+							files = ResourcesPlugin.getWorkspace().getRoot().findFilesForLocationURI(uri);
+						} catch (URISyntaxException e) {
+							error = true;
+							return;
+						}
+						if (files.length == 0 || !files[0].exists()) {
+							error = true;
+							return;
+						}
+						file = files[0];
+					}
+					if (focusPart instanceof ISetSelectionTarget) {
+						ISelection selection = new StructuredSelection(file);
+						((ISetSelectionTarget) focusPart).selectReveal(selection);
+					}
+					try {
+						IDE.openEditor(page, file, PDEPlugin.TARGET_EDITOR_ID);
+					} catch (PartInitException e) {
+						error = true;
+					}
+				} finally {
+					if (error) {
+						MessageDialog.openError(getShell(), "Cannot open target profile", "Target profile could not be found");
+					}
 				}
 			}
 		});	
-		//TODO
-		// If the profile could not be located for some reason, open a warning dialog indicating so.
 	}
 	
 	private void loadTargetCombo() {
 		String prefId = null;
 		String pref = fPreferences.getString(ICoreConstants.TARGET_PROFILE);
 		
-		// TODO 
-		// On second thought, for workspace profiles, I prefer the prefix to be of the standard form 
-		// ${workspace_loc:com.example.xyz/sample.target}
-		// you could then perform a string substitution on it to ensure it exists.
-		if (pref.startsWith("file:")) { //$NON-NLS-1$
-			IPath targetPath = new Path(pref.substring(5));
-			IFile file = PDEPlugin.getWorkspace().getRoot().getFile(targetPath);
-			// If a saved workspace profile no longer exists in the workspace, skip it.
-			if (file != null) { 
-				TargetModel model = new TargetModel();
-				try {
+		if (pref.startsWith("${workspace_loc:")) { //$NON-NLS-1$
+			try {
+				pref = pref.substring(16, pref.length() -1);
+				IPath targetPath = new Path(pref);
+				IFile file = PDEPlugin.getWorkspace().getRoot().getFile(targetPath);
+				// If a saved workspace profile no longer exists in the workspace, skip it.
+				if (file != null && file.exists()) {
+					TargetModel model = new TargetModel();
 					model.load(file.getContents(), false);
 					String value = model.getTarget().getName();
-					value = value + " [" + file.getFullPath().toOSString() + "]"; //$NON-NLS-1$ //$NON-NLS-2$
+					value = value + " [" + file.getFullPath().toString() + "]"; //$NON-NLS-1$ //$NON-NLS-2$
 					if (fProfileCombo.indexOf(value) == -1)
 						fProfileCombo.add(value, 0);
 					fProfileCombo.setText(value);
 					fContainsWorkspaceProfile = true;
-				} catch (CoreException e) {
-				}
+				} 
+			}catch (CoreException e) {
 			}
-			
-		// TODO no need for id:  Lack of ${workspace_loc...} is sufficient hint that this is an id.
-		} else if (pref.startsWith("id:")){ //$NON-NLS-1$
+		} else if (pref.length() > 3){ //$NON-NLS-1$
 			prefId = pref.substring(3);
 		}
-
-		
-		// TODO no need to expose the ID at all.  It is for internal use only.
-		
-		// TODO I prefer this sorting logic gets moved to the target profile manager itself
-		// and have some kind of convenience method on it to return sorted targets.
 		
 		//load all pre-canned (ie. registered via extension) targets 
-		IConfigurationElement[] elems = PDECore.getDefault().getTargetProfileManager().getTargets();
-		Arrays.sort(elems, new Comparator() {
-
-			public int compare(Object o1, Object o2) {
-				String value1 = getString((IConfigurationElement)o1);
-				String value2 = getString((IConfigurationElement)o2);
-				return value1.compareTo(value2);
-			}
-			
-			private String getString(IConfigurationElement elem){
-				String name = elem.getAttribute("name"); //$NON-NLS-1$
-				String id = elem.getAttribute("id");
-				name = name + " [" + id + "]";
-				return name;
-			}
-			
-		});
-		for (int i = 0; i < elems.length; i++) {
-			String name = elems[i].getAttribute("name"); //$NON-NLS-1$
-			String id = elems[i].getAttribute("id"); //$NON-NLS-1$
-			name = name + " [" + id + "]"; //$NON-NLS-1$ //$NON-NLS-2$
+		fElements = PDECore.getDefault().getTargetProfileManager().getSortedTargets();
+		for (int i = 0; i < fElements.length; i++) {
+			String name =fElements[i].getAttribute("name"); //$NON-NLS-1$
+			String id = fElements[i].getAttribute("id"); //$NON-NLS-1$
 			if (fProfileCombo.indexOf(name) == -1)
 				fProfileCombo.add(name);
 			if (id.equals(prefId))
@@ -442,12 +421,9 @@ public class TargetPlatformPreferencePage extends PreferencePage implements IWor
 			try {
 				model.load(file.getContents(), false);
 				String value = model.getTarget().getName();
-				value = value + " [" + file.getFullPath().toOSString() + "]"; //$NON-NLS-1$ //$NON-NLS-2$
-				if (fProfileCombo.indexOf(value) == -1) {
+				value = value + " [" + file.getFullPath().toString() + "]"; //$NON-NLS-1$ //$NON-NLS-2$
+				if (fProfileCombo.indexOf(value) == -1) 
 					fProfileCombo.add(value, 0);
-					if (fContainsWorkspaceProfile)
-						fProfileCombo.remove(1);
-				}
 				fProfileCombo.setText(value);
 				fContainsWorkspaceProfile = true;
 			} catch (CoreException e) {
@@ -456,7 +432,7 @@ public class TargetPlatformPreferencePage extends PreferencePage implements IWor
 	}
 	
 	private IFile getTargetFile() {
-		if (!fContainsWorkspaceProfile || !(fProfileCombo.getSelectionIndex() == 0))
+		if (!fContainsWorkspaceProfile || !(fProfileCombo.getSelectionIndex() < (fProfileCombo.getItemCount() - fElements.length)))
 			return null;
 		String target = fProfileCombo.getText().trim();
 		if (target.equals("")) //$NON-NLS-1$
@@ -467,6 +443,16 @@ public class TargetPlatformPreferencePage extends PreferencePage implements IWor
 		if (targetPath.segmentCount() < 2) 
 			return null;
 		return PDEPlugin.getWorkspace().getRoot().getFile(targetPath);
+	}
+	
+	private URL getExternalTargetURL() {
+		int offSet = fProfileCombo.getItemCount() - fElements.length;
+		if (offSet > fProfileCombo.getSelectionIndex())
+			return null;
+		IConfigurationElement elem = fElements[fProfileCombo.getSelectionIndex() - offSet];
+		String path = elem.getAttribute("path"); 
+		String symbolicName = elem.getDeclaringExtension().getNamespace();
+		return TargetProfileManager.getResourceURL(symbolicName, path);
 	}
 
 	public void init(IWorkbench workbench) {
@@ -483,13 +469,7 @@ public class TargetPlatformPreferencePage extends PreferencePage implements IWor
 				return;
 			}
 		else { 
-			String value = fProfileCombo.getText().trim();
-			int beginIndex = value.lastIndexOf('[');
-			value = value.substring(beginIndex +1, value.length() - 1);
-			IConfigurationElement elem = PDECore.getDefault().getTargetProfileManager().getTarget(value);
-			String path = elem.getAttribute("path"); 
-			String symbolicName = elem.getDeclaringExtension().getNamespace();
-			URL url = getResourceURL(symbolicName, path);
+			URL url = getExternalTargetURL();
 			if (url == null)
 				return;
 			try {
@@ -502,37 +482,25 @@ public class TargetPlatformPreferencePage extends PreferencePage implements IWor
 		}
 		target = model.getTarget();
 		ILocationInfo info = target.getLocationInfo();
-		// TODO this is not sufficient
-		// if Target#useDefault() returns true, you should reset the target location to be 
-		// equal to the location of the host platform
-		if (!info.getPath().equals("")) {
+		if (!info.useDefault()) {
 			String path;
 			try {
 				path = VariablesPlugin.getDefault().getStringVariableManager().performStringSubstitution(info.getPath());
 			} catch (CoreException e) {
 				return;
 			}
-			fHomeText.setText(path);
-			fPluginsTab.handleReload();
+			// If Windows, ignore the case of the path
+			if ((java.io.File.separatorChar == '\\') ? !path.equalsIgnoreCase(getPlatformPath()) :
+				!path.equals(getPlatformPath())) {
+				fHomeText.setText(path);
+				fPluginsTab.handleReload();
+			}
 		}
 		
 		fPluginsTab.loadTargetProfile(target);
 		fEnvironmentTab.loadTargetProfile(target);
 		fArgumentsTab.loadTargetProfile(target);
 		fSourceTab.loadTargetProfile(target);
-	}
-	
-	private URL getResourceURL(String bundleID, String resourcePath) {
-		try {
-			Bundle bundle = Platform.getBundle(bundleID);
-			if (bundle != null) {
-				URL entry = bundle.getEntry(resourcePath);
-				if (entry != null)
-					return Platform.asLocalURL(entry);
-			}
-		} catch (IOException e) {
-		}
-		return null;
 	}
 	
 	public void performDefaults() {
@@ -572,14 +540,15 @@ public class TargetPlatformPreferencePage extends PreferencePage implements IWor
 	}
 	
 	private void saveTarget() {
-		String value = fProfileCombo.getText().trim();
-		int index = value.lastIndexOf('[');
-		value = value.substring(index + 1, value.length() - 1);
-		
-		if (fContainsWorkspaceProfile && fProfileCombo.getSelectionIndex() == 0) {
-			fPreferences.setValue(ICoreConstants.TARGET_PROFILE, "file:" + value);
+		if (fContainsWorkspaceProfile && (fProfileCombo.getSelectionIndex() < (fProfileCombo.getItemCount() - fElements.length))) {
+			String value = fProfileCombo.getText().trim();
+			int index = value.lastIndexOf('[');
+			value = value.substring(index + 1, value.length() - 1);
+			fPreferences.setValue(ICoreConstants.TARGET_PROFILE, "${workspace_loc:" + value + "}");
 		} else {
-			fPreferences.setValue(ICoreConstants.TARGET_PROFILE, "id:" + value);
+			int offSet = fProfileCombo.getItemCount() - fElements.length;
+			IConfigurationElement elem = fElements[fProfileCombo.getSelectionIndex() - offSet];
+			fPreferences.setValue(ICoreConstants.TARGET_PROFILE, "id:" + elem.getAttribute("id"));
 		}
 	}
 	

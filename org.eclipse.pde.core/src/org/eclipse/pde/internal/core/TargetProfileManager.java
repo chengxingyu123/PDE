@@ -1,5 +1,9 @@
 package org.eclipse.pde.internal.core;
 
+import java.io.IOException;
+import java.net.URL;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -10,6 +14,7 @@ import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.IRegistryChangeEvent;
 import org.eclipse.core.runtime.IRegistryChangeListener;
 import org.eclipse.core.runtime.Platform;
+import org.osgi.framework.Bundle;
 
 public class TargetProfileManager implements IRegistryChangeListener{
 	
@@ -40,6 +45,29 @@ public class TargetProfileManager implements IRegistryChangeListener{
 		return (IConfigurationElement[])fTargets.values().toArray(new IConfigurationElement[fTargets.size()]);
 	}
 	
+	public IConfigurationElement[] getSortedTargets() {
+		if (fTargets == null)
+			loadElements();
+		IConfigurationElement[] result = (IConfigurationElement[])fTargets.values().toArray(new IConfigurationElement[fTargets.size()]);
+		Arrays.sort(result, new Comparator() {
+
+			public int compare(Object o1, Object o2) {
+				String value1 = getString((IConfigurationElement)o1);
+				String value2 = getString((IConfigurationElement)o2);
+				return value1.compareTo(value2);
+			}
+			
+			private String getString(IConfigurationElement elem){
+				String name = elem.getAttribute("name"); //$NON-NLS-1$
+				String id = elem.getAttribute("id");
+				name = name + " [" + id + "]";
+				return name;
+			}
+			
+		});
+		return result;
+	}
+	
 	public IConfigurationElement getTarget(String id) {
 		if (fTargets == null)
 			loadElements();
@@ -61,7 +89,29 @@ public class TargetProfileManager implements IRegistryChangeListener{
 			if (value == null || value.equals("")) //$NON-NLS-1$
 				return false;
 		}
-		return true;
+		value = elem.getAttribute("path");
+		String symbolicName = elem.getDeclaringExtension().getNamespace();
+		URL url = getResourceURL(symbolicName, value);
+		try {
+			if (url != null && url.openStream().available() > 0)
+				return true;
+		} catch (IOException e) {
+			// file does not exist
+		}
+		return false;
+	}
+	
+	public static URL getResourceURL(String bundleID, String resourcePath) {
+		try {
+			Bundle bundle = Platform.getBundle(bundleID);
+			if (bundle != null) {
+				URL entry = bundle.getEntry(resourcePath);
+				if (entry != null)
+					return Platform.asLocalURL(entry);
+			}
+		} catch (IOException e) {
+		}
+		return null;
 	}
 	
 	private void add(IConfigurationElement[] elems) {
