@@ -260,6 +260,11 @@ public class TargetPluginsTab {
 		HashSet set = new HashSet();
 		ITargetFeature[] targetFeatures = target.getFeatures();
 		Stack features = new Stack();
+		//TODO Using FeatureModelManager is not sufficient.
+		// If the profile specifies a target that is different from the current target,
+		// you need to parse the features in that target.
+		// If the profile specifies a target that is the same as the current target,
+		// you could use FeatureModelManager directly.
 		FeatureModelManager manager = PDECore.getDefault().getFeatureModelManager();
 		for (int i = 0 ; i < targetFeatures.length; i++) {
 			features.push(manager.findFeatureModel(targetFeatures[i].getId()).getFeature());
