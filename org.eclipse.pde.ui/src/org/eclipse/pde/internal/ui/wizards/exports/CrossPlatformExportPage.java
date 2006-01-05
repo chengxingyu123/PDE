@@ -18,7 +18,7 @@ import java.util.StringTokenizer;
 import org.eclipse.jface.viewers.IStructuredContentProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.TableViewer;
-import org.eclipse.jface.wizard.IWizardPage;
+import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.pde.internal.core.PDECore;
 import org.eclipse.pde.internal.core.ifeature.IFeatureModel;
 import org.eclipse.pde.internal.ui.IHelpContextIds;
@@ -32,7 +32,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.ui.PlatformUI;
 
-public class CrossPlatformExportPage extends ExportWizardPage {
+public class CrossPlatformExportPage extends WizardPage {
 	
 	private static String CROSS_PLATFORM = "cross-platform"; //$NON-NLS-1$
 	
@@ -192,13 +192,5 @@ public class CrossPlatformExportPage extends ExportWizardPage {
 			targets[i] = combo;
 		}
 		return targets;
-	}
-	public IWizardPage getNextPage() {
-		BaseExportWizardPage firstPage = (BaseExportWizardPage) getWizard()
-				.getPages()[0];
-		if (firstPage != null && !firstPage.useJARFormat()) {
-			return null;
-		}
-		return super.getNextPage();
 	}
 }
