@@ -98,6 +98,7 @@ public class TargetPlatformPreferencePage extends PreferencePage implements IWor
 	private int fIndex;
 	private TabFolder fTabFolder;
 	private boolean fContainsWorkspaceProfile = false;
+	private TargetImplicitPluginsTab fExplicitPluginsTab;
 	
 	/**
 	 * MainPreferencePage constructor comment.
@@ -232,6 +233,7 @@ public class TargetPlatformPreferencePage extends PreferencePage implements IWor
 			createPluginsTab(fTabFolder);
 			createEnvironmentTab(fTabFolder);
 			createArgumentsTab(fTabFolder);
+			createExplicitTab(fTabFolder);
 			createSourceTab(fTabFolder);
 			fTabFolder.setSelection(fIndex);
 			}
@@ -271,6 +273,15 @@ public class TargetPlatformPreferencePage extends PreferencePage implements IWor
 		
 		TabItem tab = new TabItem(folder, SWT.NONE);
 		tab.setText(PDEUIMessages.TargetPlatformPreferencePage_sourceCode);  
+		tab.setControl(block);
+	}
+	
+	private void createExplicitTab(TabFolder folder) {
+		fExplicitPluginsTab = new TargetImplicitPluginsTab();
+		Control block = fExplicitPluginsTab.createContents(folder);
+		
+		TabItem tab = new TabItem(folder, SWT.NONE);
+		tab.setText("E&xplicit Plug-ins");
 		tab.setControl(block);
 	}
 	
@@ -511,6 +522,7 @@ public class TargetPlatformPreferencePage extends PreferencePage implements IWor
 		fPluginsTab.handleReload();
 		fEnvironmentTab.performDefaults();
 		fArgumentsTab.performDefaults();
+		fExplicitPluginsTab.performDefauls();
 		fSourceTab.performDefaults();
 		super.performDefaults();
 	}
@@ -538,6 +550,7 @@ public class TargetPlatformPreferencePage extends PreferencePage implements IWor
 		fSourceTab.performOk();
 		fPluginsTab.performOk();
 		fArgumentsTab.performOk();
+		fExplicitPluginsTab.performOk();
 		saveTarget();
 		return super.performOk();
 	}
