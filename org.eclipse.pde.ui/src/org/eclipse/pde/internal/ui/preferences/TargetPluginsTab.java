@@ -533,5 +533,11 @@ public class TargetPluginsTab {
 		}
 		return (IFragmentModel[]) result.toArray(new IFragmentModel[result.size()]);
 	}
+	
+	protected IPluginModelBase[] getCurrentModels() {
+		if (fCurrentState != null)
+			return fCurrentState.getModels();
+		return PDECore.getDefault().getModelManager().getAllPlugins();
+	}
 
 }

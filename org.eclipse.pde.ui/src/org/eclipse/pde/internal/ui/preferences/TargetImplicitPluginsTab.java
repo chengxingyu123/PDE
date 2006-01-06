@@ -7,8 +7,10 @@ import java.util.StringTokenizer;
 
 import org.eclipse.core.runtime.Preferences;
 import org.eclipse.jface.viewers.ArrayContentProvider;
+import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredContentProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerSorter;
@@ -18,11 +20,12 @@ import org.eclipse.pde.core.plugin.IPluginModelBase;
 import org.eclipse.pde.internal.core.ICoreConstants;
 import org.eclipse.pde.internal.core.PDECore;
 import org.eclipse.pde.internal.core.PluginModelManager;
-import org.eclipse.pde.internal.core.TargetPlatform;
 import org.eclipse.pde.internal.ui.PDEPlugin;
 import org.eclipse.pde.internal.ui.PDEUIMessages;
 import org.eclipse.pde.internal.ui.util.SWTUtil;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.KeyAdapter;
+import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
@@ -41,9 +44,13 @@ public class TargetImplicitPluginsTab {
 	
 	private Button fAddButton;
 	private Button fRemoveButton;
+	private Button fRemoveAllButton;
 	
-	public TargetImplicitPluginsTab() {
+	private TargetPlatformPreferencePage fPage;
+	
+	public TargetImplicitPluginsTab(TargetPlatformPreferencePage page) {
 		ROOT = "Wassim";
+		fPage = page;
 	}
 	
 	class SourceProvider implements IStructuredContentProvider {
@@ -90,6 +97,20 @@ public class TargetImplicitPluginsTab {
 		fElementViewer.setLabelProvider(PDEPlugin.getDefault().getLabelProvider());
 		fElementViewer.setInput(ROOT);
 		fElementViewer.setSorter(new ViewerSorter());
+		fElementViewer.addSelectionChangedListener(new ISelectionChangedListener() {
+
+			public void selectionChanged(SelectionChangedEvent event) {
+				updateButtons();
+			}
+			
+		});
+		fElementViewer.getTable().addKeyListener(new KeyAdapter() {
+			public void keyPressed(KeyEvent e) {
+				if (e.character == SWT.DEL && e.stateMask == 0) {
+					handleRemove();
+				}
+			}
+		});
 		loadTable();
 	}
 	
@@ -134,8 +155,26 @@ public class TargetImplicitPluginsTab {
 				handleRemove();
 			}
 		});
-		if (fElements.size() == 0)
+		
+		fRemoveAllButton = new Button(buttonContainer, SWT.PUSH);
+		fRemoveAllButton.setText("RemoveAll");
+		fRemoveAllButton.setLayoutData(new GridData(GridData.FILL | GridData.VERTICAL_ALIGN_BEGINNING));
+		SWTUtil.setButtonDimensionHint(fRemoveAllButton);
+		fRemoveAllButton.addSelectionListener(new SelectionAdapter() {
+			public void widgetSelected(SelectionEvent e) {
+				handleRemoveAll();
+			}
+		});
+		if (fElements.size() == 0) {
 			fRemoveButton.setEnabled(false);
+			fRemoveAllButton.setEnabled(false);
+		}
+	}
+	
+	private void updateButtons() {
+		boolean empty = fElementViewer.getSelection().isEmpty();
+		fRemoveButton.setEnabled(!empty);
+		fRemoveAllButton.setEnabled(fElementViewer.getElementAt(0) != null);
 	}
 	
 	private void handleAdd() {
@@ -148,24 +187,18 @@ public class TargetImplicitPluginsTab {
 		dialog.setMessage(PDEUIMessages.PluginSelectionDialog_message);
 		dialog.setMultipleSelection(true);
 		if (dialog.open() == Window.OK) {
-			Object[] bundles = dialog.getResult();
-			//TODO this is incorrect.
-			// the list of available plugins should be those on the Plugins tab, whatever they may be
-			// they are not necessarily the plugins in the PluginModelManager
-			PluginModelManager manager = PDECore.getDefault().getModelManager();
-			for (int i = 0; i < bundles.length; i++) {
-				IPluginModelBase base = manager.findModel((BundleDescription)bundles[i]);
-				if (base != null) {
-					fElementViewer.add(base);
-					fElements.add(base);
-				}
+			Object[] models = dialog.getResult();
+			for (int i = 0; i < models.length; i++) {
+				IPluginModelBase base = (IPluginModelBase) models[i];
+				fElementViewer.add(base);
+				fElements.add(base);
 			}
-			if (fElements.size() > 0)
-				fRemoveButton.setEnabled(true);
+			updateButtons();
 		}
 	}
 	
 	protected Object[] getValidBundles() {
+		
 		Set currentPlugins = new HashSet((4/3) * fElements.size() + 1);
 		Iterator it = fElements.iterator();
 		while (it.hasNext()) {
@@ -173,18 +206,20 @@ public class TargetImplicitPluginsTab {
 			currentPlugins.add(getSymbolicName(base));
 		}
 		
-		BundleDescription[] bundles = TargetPlatform.getState().getBundles();
-		Set result = new HashSet((4/3) * bundles.length + 1);
-		for (int i = 0; i < bundles.length; i++) {
-			if (!currentPlugins.contains(bundles[i].getSymbolicName()))
-				result.add(bundles[i]);
+		//BundleDescription[] bundles = TargetPlatform.getState().getBundles();
+		IPluginModelBase[] models = fPage.getCurrentModels();
+		Set result = new HashSet((4/3) * models.length + 1);
+		for (int i = 0; i < models.length; i++) {
+			BundleDescription desc = models[i].getBundleDescription();
+			if (desc != null) {
+				if (!currentPlugins.contains(desc.getSymbolicName()))
+					result.add(models[i]);
+			}
 		}
 		return result.toArray();
 	}
 	
 	private void handleRemove() {
-		//TODO remove button should only be selected if there is a selection in the table
-		// TODO since this is a flat table, a "Remove All" button wouldn't hurt
 		IStructuredSelection ssel = (IStructuredSelection)fElementViewer.getSelection();
 		Iterator it = ssel.iterator();
 		while (it.hasNext()) {
@@ -194,6 +229,13 @@ public class TargetImplicitPluginsTab {
 		}
 		if (fElements.size() == 0) 
 			fRemoveButton.setEnabled(false);
+		updateButtons();
+	}
+	
+	private void handleRemoveAll(){
+		fElementViewer.remove(fElements.toArray());
+		fElements.clear();
+		updateButtons();
 	}
 
 	public void performDefauls() {

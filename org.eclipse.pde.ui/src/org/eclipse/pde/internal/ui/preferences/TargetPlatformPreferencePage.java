@@ -31,6 +31,7 @@ import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.preference.PreferencePage;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.StructuredSelection;
+import org.eclipse.pde.core.plugin.IPluginModelBase;
 import org.eclipse.pde.internal.core.ExternalModelManager;
 import org.eclipse.pde.internal.core.ICoreConstants;
 import org.eclipse.pde.internal.core.PDECore;
@@ -277,7 +278,7 @@ public class TargetPlatformPreferencePage extends PreferencePage implements IWor
 	}
 	
 	private void createExplicitTab(TabFolder folder) {
-		fExplicitPluginsTab = new TargetImplicitPluginsTab();
+		fExplicitPluginsTab = new TargetImplicitPluginsTab(this);
 		Control block = fExplicitPluginsTab.createContents(folder);
 		
 		TabItem tab = new TabItem(folder, SWT.NONE);
@@ -581,5 +582,9 @@ public class TargetPlatformPreferencePage extends PreferencePage implements IWor
 	
 	public TargetSourceTab getSourceBlock() {
 		return fSourceTab;
+	}
+	
+	protected IPluginModelBase[] getCurrentModels() {
+		return fPluginsTab.getCurrentModels();
 	}
 }
