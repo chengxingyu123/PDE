@@ -170,7 +170,7 @@ public class ProductConfigurationSection {
 	}
 	
 	protected IFile getProductFile(String path) {
-		if (path == null)
+		if (path == null || path.length() == 0)
 			return null;
 		return PDEPlugin.getWorkspace().getRoot().getFile(new Path(path));		
 	}

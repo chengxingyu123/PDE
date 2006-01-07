@@ -64,7 +64,10 @@ public class ProductDestinationGroup extends ExportDestinationTab {
 	
 	protected void initialize(IDialogSettings settings, IFile file) {
 		try {
-			String toDirectory = file.getPersistentProperty(IPDEUIConstants.DEFAULT_PRODUCT_EXPORT_DIR);
+			String toDirectory = 
+					file != null 
+					? file.getPersistentProperty(IPDEUIConstants.DEFAULT_PRODUCT_EXPORT_DIR)
+					: null;
 			if (toDirectory == null)
 				toDirectory = settings.get(S_EXPORT_DIRECTORY);
 			boolean useDirectory = toDirectory == null || Boolean.getBoolean(toDirectory);
@@ -81,9 +84,10 @@ public class ProductDestinationGroup extends ExportDestinationTab {
 		}
 	}
 	
-
 	protected void updateDestination(IFile file) {
 		try {
+			if (file == null)
+				return;
 			Combo combo = doExportToDirectory() ? fDirectoryCombo : fArchiveCombo;
 			String destination = file.getPersistentProperty(IPDEUIConstants.DEFAULT_PRODUCT_EXPORT_LOCATION);
 			if (destination != null) {

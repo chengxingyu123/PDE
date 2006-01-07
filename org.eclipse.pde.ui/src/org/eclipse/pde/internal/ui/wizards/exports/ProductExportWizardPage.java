@@ -51,7 +51,9 @@ public class ProductExportWizardPage extends AbstractExportWizardPage {
 
 	public void createControl(Composite parent) {
 		Composite container = new Composite(parent, SWT.NONE);
-		container.setLayout(new GridLayout());
+		GridLayout layout = new GridLayout();
+		layout.verticalSpacing = 10;
+		container.setLayout(layout);
 		
 		createConfigurationSection(container);
 		createSynchronizationSection(container);
