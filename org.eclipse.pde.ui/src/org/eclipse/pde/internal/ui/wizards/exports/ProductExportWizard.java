@@ -126,7 +126,7 @@ public class ProductExportWizard extends BaseExportWizard {
 			try {
 				getContainer().run(false, false, new SynchronizationOperation(fProductModel.getProduct(), getContainer().getShell()));
 			} catch (InvocationTargetException e) {
-				MessageDialog.openError(getContainer().getShell(), "Synchronize", e.getTargetException().getMessage()); //$NON-NLS-1$
+				MessageDialog.openError(getContainer().getShell(), "Synchronize", e.getTargetException().getMessage()); 
 				return false;
 			} catch (InterruptedException e) {
 				return false;
@@ -147,6 +147,10 @@ public class ProductExportWizard extends BaseExportWizard {
 			}
 		}
 		return true;
+	}
+	
+	public boolean canFinish() {
+		return (fPage.getNextPage() != null) ? super.canFinish() : fPage.isPageComplete();
 	}
 
 }

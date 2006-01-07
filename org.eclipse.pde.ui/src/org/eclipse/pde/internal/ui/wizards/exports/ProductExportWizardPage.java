@@ -61,6 +61,11 @@ public class ProductExportWizardPage extends AbstractExportWizardPage {
 		createOptionsSection(container);
 		
 		initialize();
+		pageChanged();
+		if (getErrorMessage() != null) {
+			setMessage(getErrorMessage());
+			setErrorMessage(null);
+		}
 		setControl(container);
 		hookHelpContext(container);
 		Dialog.applyDialogFont(container);				
@@ -109,6 +114,11 @@ public class ProductExportWizardPage extends AbstractExportWizardPage {
 		if (getWizard().getPages().length > 1) {
 			fMultiPlatform = new Button(group, SWT.CHECK);
 			fMultiPlatform.setText(PDEUIMessages.ExportWizard_multi_platform);
+			fMultiPlatform.addSelectionListener(new SelectionAdapter() {
+				public void widgetSelected(SelectionEvent e) {
+					getContainer().updateButtons();
+				}
+			});
 		}
 	}
 
@@ -124,18 +134,6 @@ public class ProductExportWizardPage extends AbstractExportWizardPage {
 		fExportSource.setSelection(settings.getBoolean(S_EXPORT_SOURCE));
 		if (fMultiPlatform != null)
 			fMultiPlatform.setSelection(settings.getBoolean(S_MULTI_PLATFORM));
-	}
-	
-	protected void hookListeners() {
-		fConfigurationGroup.hookListeners();
-		fExportGroup.hookListeners();
-    	if (fMultiPlatform != null) {
-			fMultiPlatform.addSelectionListener(new SelectionAdapter() {
-				public void widgetSelected(SelectionEvent e) {
-					pageChanged();
-				}
-			});
-    	}
 	}
 	
 	protected void updateProductFields() {

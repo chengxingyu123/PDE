@@ -12,6 +12,7 @@ package org.eclipse.pde.internal.ui.wizards.exports;
 
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.pde.internal.ui.IHelpContextIds;
+import org.eclipse.pde.internal.ui.PDEPlugin;
 import org.eclipse.pde.internal.ui.PDEUIMessages;
 import org.eclipse.pde.internal.ui.util.SWTUtil;
 import org.eclipse.swt.SWT;
@@ -24,6 +25,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.PlatformUI;
@@ -76,7 +78,19 @@ public class JARSigningTab {
 		fBrowseButton.setText(PDEUIMessages.ExportWizard_browse);
 		fBrowseButton.setLayoutData(new GridData());
 		SWTUtil.setButtonDimensionHint(fBrowseButton);
-		fBrowseButton.addSelectionListener(new SelectionAdapter() {});
+		fBrowseButton.addSelectionListener(new SelectionAdapter() {
+			public void widgetSelected(SelectionEvent e) {
+				FileDialog dialog = new FileDialog(fPage.getShell(), SWT.OPEN);
+				String path = fKeystoreText.getText();
+				if (path.trim().length() == 0)
+					path = PDEPlugin.getWorkspace().getRoot().getLocation().toString();
+				dialog.setFileName(path);
+				String res = dialog.open();
+				if (res != null) {
+					fKeystoreText.setText(res);
+				}
+			}
+		});
 		
 		fAliasLabel = createLabel(comp, PDEUIMessages.AdvancedPluginExportPage_alias); 
 		fAliasText = createText(comp, 2);

@@ -260,6 +260,9 @@
                name="*.product"
                class="org.eclipse.core.resources.IFile">
          </selection>
+         <selection
+               class="org.eclipse.core.resources.IContainer">
+         </selection>
       </wizard>
       <category
             id="org.eclipse.pde.ui.PluginDevelopment"

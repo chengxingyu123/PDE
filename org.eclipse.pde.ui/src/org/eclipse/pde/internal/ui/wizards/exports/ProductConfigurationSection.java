@@ -163,6 +163,7 @@ public class ProductConfigurationSection {
 			fProductCombo.setText(fProductCombo.getItem(0));
 		
 		setRoot(settings);
+		hookListeners();
 	}
 	
 	protected IFile getProductFile() {
