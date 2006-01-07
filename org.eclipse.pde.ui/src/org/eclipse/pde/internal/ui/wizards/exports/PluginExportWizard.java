@@ -25,7 +25,6 @@ import org.w3c.dom.Element;
 
 public class PluginExportWizard extends AntGeneratingExportWizard {
 	private static final String STORE_SECTION = "PluginExportWizard"; //$NON-NLS-1$
-	private JARSigningTab fPage2;
 
 	public PluginExportWizard() {
 		setDefaultPageImageDescriptor(PDEPluginImages.DESC_PLUGIN_EXPORT_WIZ);
@@ -47,7 +46,7 @@ public class PluginExportWizard extends AntGeneratingExportWizard {
 		info.destinationDirectory = fPage.getDestination();
 		info.zipFileName = fPage.getFileName();
 		info.items = fPage.getSelectedItems();
-		info.signingInfo = fPage.useJARFormat() ? fPage2.getSigningInfo() : null;
+		info.signingInfo = fPage.useJARFormat() ? fPage.getSigningInfo() : null;
 		
 		PluginExportJob job = new PluginExportJob(info);
 		job.setUser(true);

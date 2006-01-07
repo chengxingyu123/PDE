@@ -70,7 +70,7 @@ public class ProductDestinationGroup extends ExportDestinationTab {
 					: null;
 			if (toDirectory == null)
 				toDirectory = settings.get(S_EXPORT_DIRECTORY);
-			boolean useDirectory = toDirectory == null || Boolean.toString(true).equals(toDirectory);
+			boolean useDirectory = toDirectory == null || "true".equals(toDirectory);
 			fDirectoryButton.setSelection(useDirectory);			
 			fArchiveFileButton.setSelection(!useDirectory);
 			toggleDestinationGroup(useDirectory);
@@ -91,7 +91,7 @@ public class ProductDestinationGroup extends ExportDestinationTab {
 			String toDirectory = file.getPersistentProperty(IPDEUIConstants.DEFAULT_PRODUCT_EXPORT_DIR);
 			if (toDirectory == null)
 				return;
-			boolean useDirectory = Boolean.toString(true).equals(toDirectory);
+			boolean useDirectory = "true".equals(toDirectory);
 			fArchiveFileButton.setSelection(!useDirectory);
 			fDirectoryButton.setSelection(useDirectory);
 			toggleDestinationGroup(useDirectory);

@@ -91,7 +91,7 @@ public class ExportDestinationTab extends AbstractExportTab {
 
 	protected void initialize(IDialogSettings settings) {
 		String toDirectory = settings.get(S_EXPORT_DIRECTORY);
-		boolean useDirectory = toDirectory == null || Boolean.getBoolean(toDirectory);
+		boolean useDirectory = toDirectory == null || "true".equals(toDirectory);
 		fDirectoryButton.setSelection(useDirectory);
 		fArchiveFileButton.setSelection(!useDirectory);
 		toggleDestinationGroup(useDirectory);

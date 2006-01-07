@@ -121,12 +121,15 @@ public class ExportOptionsTab extends AbstractExportTab {
 	}
 	
 	protected boolean getInitialJarButtonSelection(IDialogSettings settings){
-		Object[] selectedPlugins = ((PluginExportWizardPage)fPage).getSelectedItems();
-		if (selectedPlugins.length == 1) {
-			BundleDescription bundle = ((IPluginModelBase) selectedPlugins[0]).getBundleDescription();
-			return !CoreUtility.guessUnpack(bundle);
+		String selected = settings.get(S_JAR_FORMAT);
+		if (selected == null) {
+			Object[] selectedPlugins = ((PluginExportWizardPage)fPage).getSelectedItems();
+			if (selectedPlugins.length == 1) {
+				BundleDescription bundle = ((IPluginModelBase) selectedPlugins[0]).getBundleDescription();
+				return !CoreUtility.guessUnpack(bundle);
+			}
 		}
-        return settings.getBoolean(S_JAR_FORMAT);
+        return "true".equals(selected);
 	}
 	
 	protected void hookListeners() {
