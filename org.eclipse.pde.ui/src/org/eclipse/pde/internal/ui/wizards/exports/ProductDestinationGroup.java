@@ -65,12 +65,12 @@ public class ProductDestinationGroup extends ExportDestinationTab {
 	protected void initialize(IDialogSettings settings, IFile file) {
 		try {
 			String toDirectory = 
-					file != null 
+					(file != null)
 					? file.getPersistentProperty(IPDEUIConstants.DEFAULT_PRODUCT_EXPORT_DIR)
 					: null;
 			if (toDirectory == null)
 				toDirectory = settings.get(S_EXPORT_DIRECTORY);
-			boolean useDirectory = toDirectory == null || Boolean.getBoolean(toDirectory);
+			boolean useDirectory = toDirectory == null || Boolean.toString(true).equals(toDirectory);
 			fDirectoryButton.setSelection(useDirectory);			
 			fArchiveFileButton.setSelection(!useDirectory);
 			toggleDestinationGroup(useDirectory);
@@ -97,6 +97,20 @@ public class ProductDestinationGroup extends ExportDestinationTab {
 			}
 		} catch (CoreException e) {
 		}		
+	}
+	
+	protected void saveSettings(IDialogSettings settings) {
+		super.saveSettings(settings);
+		IFile file = ((ProductExportWizardPage)fPage).getProductFile();
+		try {
+			if (file != null && file.exists()) {
+				file.setPersistentProperty(IPDEUIConstants.DEFAULT_PRODUCT_EXPORT_DIR, 
+										Boolean.toString(doExportToDirectory()));
+				file.setPersistentProperty(IPDEUIConstants.DEFAULT_PRODUCT_EXPORT_LOCATION,
+						doExportToDirectory() ? fDirectoryCombo.getText().trim() : fArchiveCombo.getText().trim());
+			}
+		} catch (CoreException e) {
+		}
 	}
 	
 
