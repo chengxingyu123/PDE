@@ -48,7 +48,7 @@ public class FeatureOptionsTab extends ExportOptionsTab {
 		return PDEUIMessages.BaseExportWizardPage_fPackageJARs; 
 	}
 	
-	public void saveSettings(IDialogSettings settings) {
+	protected void saveSettings(IDialogSettings settings) {
 		super.saveSettings(settings);
         if (fMultiPlatform != null)
             settings.put(S_MULTI_PLATFORM, fMultiPlatform.getSelection());      
@@ -70,7 +70,7 @@ public class FeatureOptionsTab extends ExportOptionsTab {
     	}
     }
     
-    public boolean doMultiplePlatform() {
+    protected boolean doMultiplePlatform() {
     	return fMultiPlatform != null && fMultiPlatform.getSelection();
     }
 }

@@ -158,7 +158,7 @@ public class ProductExportWizardPage extends AbstractExportWizardPage {
 		PlatformUI.getWorkbench().getHelpSystem().setHelp(control, IHelpContextIds.PRODUCT_EXPORT_WIZARD);
 	}
 	
-	public void saveSettings(IDialogSettings settings) {
+	protected void saveSettings(IDialogSettings settings) {
 		fConfigurationGroup.saveSettings(settings);
 		settings.put(S_SYNC_PRODUCT, fSyncButton.getSelection());
 		fExportGroup.saveSettings(settings);
@@ -167,35 +167,35 @@ public class ProductExportWizardPage extends AbstractExportWizardPage {
 			settings.put(S_MULTI_PLATFORM, fMultiPlatform.getSelection());
 	}
 
-	public boolean doSync() {
+	protected boolean doSync() {
 		return fSyncButton.getSelection();
 	}
 	
-	public boolean doMultiPlatform() {
+	protected boolean doMultiPlatform() {
 		return fMultiPlatform != null && fMultiPlatform.getSelection();
 	}
 	
-	public boolean doExportSource() {
+	protected boolean doExportSource() {
 		return fExportSource.getSelection();
 	}
 
-	public boolean doExportToDirectory() {
+	protected boolean doExportToDirectory() {
 		return fExportGroup.doExportToDirectory();
 	}
 
-	public String getFileName() {
+	protected String getFileName() {
 		return fExportGroup.getFileName();
 	}
 
-	public String getDestination() {
+	protected String getDestination() {
 		return fExportGroup.getDestination();
 	}
 
-	public String getRootDirectory() {
+	protected String getRootDirectory() {
 		return fConfigurationGroup.getRootDirectory();
 	}
 
-	public IFile getProductFile() {
+	protected IFile getProductFile() {
 		return fConfigurationGroup.getProductFile();
 	}
 

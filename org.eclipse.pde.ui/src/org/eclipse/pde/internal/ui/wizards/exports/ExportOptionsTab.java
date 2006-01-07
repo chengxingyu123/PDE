@@ -103,7 +103,7 @@ public class ExportOptionsTab extends AbstractExportTab {
 		SWTUtil.setButtonDimensionHint(fBrowseAnt);		
 	}
 
-	public void initialize(IDialogSettings settings) {
+	protected void initialize(IDialogSettings settings) {
 		fIncludeSource.setSelection(settings.getBoolean(S_EXPORT_SOURCE));
         fJarButton.setSelection(getInitialJarButtonSelection(settings));
 		fSaveAsAntButton.setSelection(settings.getBoolean(S_SAVE_AS_ANT));
@@ -113,7 +113,7 @@ public class ExportOptionsTab extends AbstractExportTab {
 		hookListeners();
 	}
 
-	public void saveSettings(IDialogSettings settings) {
+	protected void saveSettings(IDialogSettings settings) {
         settings.put(S_JAR_FORMAT, fJarButton.getSelection());
 		settings.put(S_EXPORT_SOURCE, fIncludeSource.getSelection());
         settings.put(S_SAVE_AS_ANT, fSaveAsAntButton.getSelection());
@@ -157,7 +157,7 @@ public class ExportOptionsTab extends AbstractExportTab {
 		});	
  	}
 	
-	public String validate() {
+	protected String validate() {
 		String message = null;
 		if (fSaveAsAntButton.getSelection() && fAntCombo.getText().trim().length() == 0) {
 			message = PDEUIMessages.ExportWizard_status_noantfile; 
@@ -165,19 +165,19 @@ public class ExportOptionsTab extends AbstractExportTab {
 		return message;		
 	}
 	
-	public boolean doExportSource() {
+	protected boolean doExportSource() {
 		return fIncludeSource.getSelection();
 	}
 	
-	public boolean useJARFormat() {
+	protected boolean useJARFormat() {
 		return fJarButton.getSelection();
 	}
 	
-	public boolean doGenerateAntFile() {
+	protected boolean doGenerateAntFile() {
 		return fSaveAsAntButton.getSelection();
 	}
 
-	public String getAntBuildFileName() {
+	protected String getAntBuildFileName() {
 		return fSaveAsAntButton.getSelection() ? fAntCombo.getText() : null;
 	}
 

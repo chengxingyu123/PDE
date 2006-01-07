@@ -89,7 +89,7 @@ public class ExportDestinationTab extends AbstractExportTab {
 		return composite;
 	}
 
-	public void initialize(IDialogSettings settings) {
+	protected void initialize(IDialogSettings settings) {
 		String toDirectory = settings.get(S_EXPORT_DIRECTORY);
 		boolean useDirectory = toDirectory == null || Boolean.getBoolean(toDirectory);
 		fDirectoryButton.setSelection(useDirectory);
@@ -156,13 +156,13 @@ public class ExportDestinationTab extends AbstractExportTab {
 		}
 	}
 	
-	public void saveSettings(IDialogSettings settings) {
+	protected void saveSettings(IDialogSettings settings) {
 		settings.put(S_EXPORT_DIRECTORY, fDirectoryButton.getSelection());		
 		saveCombo(settings, S_DESTINATION, fDirectoryCombo);
 		saveCombo(settings, S_ZIP_FILENAME, fArchiveCombo);
 	}
 
-	public String validate() {
+	protected String validate() {
 		if (fArchiveFileButton.getSelection()
 				&& fArchiveCombo.getText().trim().length() == 0)
 			return PDEUIMessages.ExportWizard_status_nofile;
@@ -172,7 +172,7 @@ public class ExportDestinationTab extends AbstractExportTab {
 		return null;
 	}
 
-	public String getFileName() {
+	protected String getFileName() {
 		if (fArchiveFileButton.getSelection()) {
 			String path = fArchiveCombo.getText();
 			if (path != null && path.length() > 0) {
@@ -186,7 +186,7 @@ public class ExportDestinationTab extends AbstractExportTab {
 		return null;
 	}
 
-	public String getDestination() {
+	protected String getDestination() {
 		if (fArchiveFileButton.getSelection()) {
 			String path = fArchiveCombo.getText();
 			if (path.length() > 0) {
@@ -200,7 +200,7 @@ public class ExportDestinationTab extends AbstractExportTab {
 		return dir.getAbsolutePath();
 	}
 
-	public boolean doExportToDirectory() {
+	protected boolean doExportToDirectory() {
 		return fDirectoryButton.getSelection();
 	}
 

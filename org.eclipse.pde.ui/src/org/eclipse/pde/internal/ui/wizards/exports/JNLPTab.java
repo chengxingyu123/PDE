@@ -89,7 +89,7 @@ public class JNLPTab {
 		return text;
 	}
 	
-	public void initialize(IDialogSettings settings) {
+	protected void initialize(IDialogSettings settings) {
 		fURLText.setText(getString(settings, S_URL));
 		fVersionText.setText(getString(settings, S_JRE));		
 		fButton.setSelection(settings.getBoolean(S_JNLP));
@@ -108,7 +108,7 @@ public class JNLPTab {
 		fVersionText.setEnabled(enabled);
 	}
 	
-	public String validate() {
+	protected String validate() {
 		String error = null;		
 		if (fButton.getSelection()) {
 			if (fURLText.getText().trim().length() == 0) {
@@ -120,13 +120,13 @@ public class JNLPTab {
 		return error;
 	}
 	
-	public void saveSettings(IDialogSettings settings) {
+	protected void saveSettings(IDialogSettings settings) {
 		settings.put(S_JNLP, fButton.getSelection());
 		settings.put(S_URL, fURLText.getText());
 		settings.put(S_JRE, fVersionText.getText());
 	}
 	
-	public String[] getJNLPInfo() {
+	protected String[] getJNLPInfo() {
 		if (fButton.getSelection()) {
 			return new String[] { 
 					fURLText.getText().trim(),

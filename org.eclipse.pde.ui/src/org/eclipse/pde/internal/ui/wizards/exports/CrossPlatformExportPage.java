@@ -15,10 +15,10 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.StringTokenizer;
 
+import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.viewers.IStructuredContentProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.TableViewer;
-import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.pde.internal.core.PDECore;
 import org.eclipse.pde.internal.core.ifeature.IFeatureModel;
 import org.eclipse.pde.internal.ui.IHelpContextIds;
@@ -32,7 +32,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.ui.PlatformUI;
 
-public class CrossPlatformExportPage extends WizardPage {
+public class CrossPlatformExportPage extends AbstractExportWizardPage {
 	
 	private static String CROSS_PLATFORM = "cross-platform"; //$NON-NLS-1$
 	
@@ -128,7 +128,7 @@ public class CrossPlatformExportPage extends WizardPage {
 		pageChanged();		
 	}
 	
-	public void saveSettings() {
+	public void saveSettings(IDialogSettings settings) {
 		Object[] objects = fPlatformPart.getSelection();
 		StringBuffer buffer = new StringBuffer();
 		for (int i = 0; i < objects.length; i++) {
@@ -136,7 +136,7 @@ public class CrossPlatformExportPage extends WizardPage {
 				buffer.append(","); //$NON-NLS-1$
 			buffer.append(objects[i].toString());
 		}
-		getDialogSettings().put(CROSS_PLATFORM, buffer.toString());
+		settings.put(CROSS_PLATFORM, buffer.toString());
 	}
 	
 	private Configuration[] getListElements() {
@@ -175,7 +175,7 @@ public class CrossPlatformExportPage extends WizardPage {
 		}	
 	}
 	
-	private void pageChanged() {
+	protected void pageChanged() {
 		setPageComplete(fPlatformPart.getSelectionCount() > 0);
 	}
 	

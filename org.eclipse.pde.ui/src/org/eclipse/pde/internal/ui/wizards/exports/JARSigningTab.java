@@ -89,7 +89,7 @@ public class JARSigningTab {
 		return comp;
 	}
 	
-	public void initialize(IDialogSettings settings) {
+	protected void initialize(IDialogSettings settings) {
 		fKeystoreText.setText(getString(settings, S_KEYSTORE));
 		fAliasText.setText(getString(settings, S_ALIAS));
 		fPasswordText.setText(getString(settings, S_PASSWORD));
@@ -124,7 +124,7 @@ public class JARSigningTab {
 		return text;
 	}
 	
-	public String validate() {
+	protected String validate() {
 		String error = null;
 		if (fButton.getSelection()) {
 			if (fKeystoreText.getText().trim().length() == 0) {
@@ -148,14 +148,14 @@ public class JARSigningTab {
 		fPasswordText.setEnabled(enabled);
 	}
 	
-	public void saveSettings(IDialogSettings settings) {
+	protected void saveSettings(IDialogSettings settings) {
 		settings.put(S_SIGN_JARS, fButton.getSelection());
 		settings.put(S_KEYSTORE, fKeystoreText.getText().trim());
 		settings.put(S_ALIAS, fAliasText.getText().trim());
 		settings.put(S_PASSWORD, fPasswordText.getText().trim());
 	}
 	
-	public String[] getSigningInfo() {
+	protected String[] getSigningInfo() {
 		if (fButton.getSelection()) {
 			return new String[] { 
 					fAliasText.getText().trim(),

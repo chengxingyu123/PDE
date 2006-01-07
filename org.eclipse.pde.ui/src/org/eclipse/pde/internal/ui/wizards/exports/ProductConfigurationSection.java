@@ -204,11 +204,11 @@ public class ProductConfigurationSection {
 		fProductRootText.setText(root);
 	}
 	
-	public String getRootDirectory() {
+	protected String getRootDirectory() {
 		return fProductRootText.getText().trim();
 	}
 	
-	public void saveSettings(IDialogSettings settings) {
+	protected void saveSettings(IDialogSettings settings) {
 		saveCombo(settings);
 		settings.put(S_PRODUCT_ROOT, fProductRootText.getText().trim());
 		IFile file = getProductFile();
@@ -231,7 +231,7 @@ public class ProductConfigurationSection {
 		}	
 	}
 	
-	public String validate() {
+	protected String validate() {
 		String configLocation = fProductCombo.getText().trim();
 		if (configLocation.length() == 0)
 			return PDEUIMessages.ProductExportWizardPage_noProduct; 

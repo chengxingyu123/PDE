@@ -28,9 +28,9 @@ public abstract class AbstractExportTab {
 	
 	protected abstract Control createControl(Composite parent);
 
-	public abstract void initialize(IDialogSettings settings);
+	protected abstract void initialize(IDialogSettings settings);
 	
-	public abstract void saveSettings(IDialogSettings settings);
+	protected abstract void saveSettings(IDialogSettings settings);
 
 	protected void initializeCombo(IDialogSettings settings, String key, Combo combo) {
 		for (int i = 0; i < 6; i++) {

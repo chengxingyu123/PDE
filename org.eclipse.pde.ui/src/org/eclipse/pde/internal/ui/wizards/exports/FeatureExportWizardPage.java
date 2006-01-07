@@ -120,11 +120,11 @@ public class FeatureExportWizardPage extends BaseExportWizardPage {
 		pageChanged();
 	}
 	
-	public boolean doMultiPlatform() {
+	protected boolean doMultiPlatform() {
 		return ((FeatureOptionsTab)fOptionsTab).doMultiplePlatform();
 	}
 	
-	public String[] getJNLPInfo() {
+	protected String[] getJNLPInfo() {
 		if (fJNLPTab == null || fTabFolder.getItemCount() < JNLP_INDEX + 1)
 			return null;
 		return fJNLPTab.getJNLPInfo();

@@ -91,7 +91,4 @@ public class PluginExportWizardPage extends BaseExportWizardPage {
 	protected boolean isEnableJarButton() {
 		return getSelectedItems().length <= 1;
 	}
-	
-	public void saveSettings() {
-	}
 }

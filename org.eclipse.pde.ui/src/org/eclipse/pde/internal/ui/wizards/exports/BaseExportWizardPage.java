@@ -225,7 +225,7 @@ public abstract class BaseExportWizardPage extends AbstractExportWizardPage {
 		return fExportPart.getSelection();
 	}
 	
-	public void pageChanged() {
+	protected void pageChanged() {
 		String error = fExportPart.getSelectionCount() > 0 ? null
 				: PDEUIMessages.ExportWizard_status_noselection;
 		if (error == null)
@@ -259,35 +259,35 @@ public abstract class BaseExportWizardPage extends AbstractExportWizardPage {
 		fJARSiginingTab.saveSettings(settings);
 	}
 
-	public boolean doExportToDirectory() {
+	protected boolean doExportToDirectory() {
 		return fDestinationTab.doExportToDirectory();
 	}
 
-	public String getFileName() {
+	protected String getFileName() {
 		return fDestinationTab.getFileName();
 	}
 
-	public String getDestination() {
+	protected String getDestination() {
 		return fDestinationTab.getDestination();
 	}
 
-	public boolean doExportSource() {
+	protected boolean doExportSource() {
 		return fOptionsTab.doExportSource();
 	}
 
-	public boolean useJARFormat() {
+	protected boolean useJARFormat() {
 		return fOptionsTab.useJARFormat();
 	}
 
-	public boolean doGenerateAntFile() {
+	protected boolean doGenerateAntFile() {
 		return fOptionsTab.doGenerateAntFile();
 	}
 
-	public String getAntBuildFileName() {
+	protected String getAntBuildFileName() {
 		return fOptionsTab.getAntBuildFileName();
 	}
 
-	public String[] getSigningInfo() {
+	protected String[] getSigningInfo() {
 		return fJARSiginingTab.getSigningInfo();
 	}
 
