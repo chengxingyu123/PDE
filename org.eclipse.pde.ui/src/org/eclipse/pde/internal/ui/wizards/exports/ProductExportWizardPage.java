@@ -117,7 +117,7 @@ public class ProductExportWizardPage extends AbstractExportWizardPage {
 		String value = settings.get(S_SYNC_PRODUCT);
 		fSyncButton.setSelection(value == null ? true : settings.getBoolean(S_SYNC_PRODUCT));
 		
-		fExportGroup.initialize(settings);
+		fExportGroup.initialize(settings, fConfigurationGroup.getProductFile());
 		
 		fExportSource.setSelection(settings.getBoolean(S_EXPORT_SOURCE));
 		if (fMultiPlatform != null)

@@ -11,6 +11,9 @@
 package org.eclipse.pde.internal.ui.wizards.exports;
 
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.jface.dialogs.IDialogSettings;
+import org.eclipse.pde.internal.ui.IPDEUIConstants;
 import org.eclipse.pde.internal.ui.PDEUIMessages;
 import org.eclipse.pde.internal.ui.util.SWTUtil;
 import org.eclipse.swt.SWT;
@@ -58,9 +61,38 @@ public class ProductDestinationGroup extends ExportDestinationTab {
 
 		return group;
 	}
+	
+	protected void initialize(IDialogSettings settings, IFile file) {
+		try {
+			String toDirectory = file.getPersistentProperty(IPDEUIConstants.DEFAULT_PRODUCT_EXPORT_DIR);
+			if (toDirectory == null)
+				toDirectory = settings.get(S_EXPORT_DIRECTORY);
+			boolean useDirectory = toDirectory == null || Boolean.getBoolean(toDirectory);
+			fDirectoryButton.setSelection(useDirectory);			
+			fArchiveFileButton.setSelection(!useDirectory);
+			toggleDestinationGroup(useDirectory);
+			
+			initializeCombo(settings, S_DESTINATION, fDirectoryCombo);
+			initializeCombo(settings, S_ZIP_FILENAME, fArchiveCombo);
+			
+			updateDestination(file);
+			hookListeners();
+		} catch (CoreException e) {
+		}
+	}
+	
 
 	protected void updateDestination(IFile file) {
-		
+		try {
+			Combo combo = doExportToDirectory() ? fDirectoryCombo : fArchiveCombo;
+			String destination = file.getPersistentProperty(IPDEUIConstants.DEFAULT_PRODUCT_EXPORT_LOCATION);
+			if (destination != null) {
+				if (combo.indexOf(destination) == -1)
+					combo.add(destination, 0);
+				combo.setText(destination);
+			}
+		} catch (CoreException e) {
+		}		
 	}
 	
 
