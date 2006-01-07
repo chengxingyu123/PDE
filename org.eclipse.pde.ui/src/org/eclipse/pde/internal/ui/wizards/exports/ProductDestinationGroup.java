@@ -88,7 +88,15 @@ public class ProductDestinationGroup extends ExportDestinationTab {
 		try {
 			if (file == null)
 				return;
-			Combo combo = doExportToDirectory() ? fDirectoryCombo : fArchiveCombo;
+			String toDirectory = file.getPersistentProperty(IPDEUIConstants.DEFAULT_PRODUCT_EXPORT_DIR);
+			if (toDirectory == null)
+				return;
+			boolean useDirectory = Boolean.toString(true).equals(toDirectory);
+			fArchiveFileButton.setSelection(!useDirectory);
+			fDirectoryButton.setSelection(useDirectory);
+			toggleDestinationGroup(useDirectory);
+			
+			Combo combo =  useDirectory? fDirectoryCombo : fArchiveCombo;
 			String destination = file.getPersistentProperty(IPDEUIConstants.DEFAULT_PRODUCT_EXPORT_LOCATION);
 			if (destination != null) {
 				if (combo.indexOf(destination) == -1)
