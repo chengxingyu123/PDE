@@ -140,6 +140,7 @@ public class ProductConfigurationSection {
 					String entry = file.getFullPath().toString();
 					if (fProductCombo.indexOf(entry) == -1)
 						fProductCombo.add(entry, 0);
+					fProductCombo.setText(entry);
 				}
 			} else if (object instanceof IContainer) {
 				IContainer container = (IContainer)object;
@@ -155,12 +156,14 @@ public class ProductConfigurationSection {
 							}
 						}
 					}
+					if (fProductCombo.getItemCount() > 0)
+						fProductCombo.setText(fProductCombo.getItem(0));
 				} catch (CoreException e) {
 				}
 			}
-		}
-		if (fProductCombo.getItemCount() > 0)
+		} else if (fProductCombo.getItemCount() > 0) {
 			fProductCombo.setText(fProductCombo.getItem(0));
+		}
 		
 		setRoot(settings);
 		hookListeners();
