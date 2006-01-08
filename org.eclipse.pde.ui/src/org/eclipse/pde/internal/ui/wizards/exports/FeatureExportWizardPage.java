@@ -115,9 +115,10 @@ public class FeatureExportWizardPage extends BaseExportWizardPage {
 				fJNLPTab.initialize(settings);
 			}
 		} else {
-			if (fTabFolder.getItemCount() >= 4) {
-				fJARSiginingTab.saveSettings(settings);
-				fTabFolder.getItem(3).dispose();
+			int count = fTabFolder.getItemCount();
+			if (count >= 3) {
+				fJNLPTab.saveSettings(settings);
+				fTabFolder.getItem(count-1).dispose();
 			}			
 		}
 	}
