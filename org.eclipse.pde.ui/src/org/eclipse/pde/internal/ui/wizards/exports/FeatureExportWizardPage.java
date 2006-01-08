@@ -101,15 +101,15 @@ public class FeatureExportWizardPage extends BaseExportWizardPage {
 		return message;
 	}
 	
-	protected void adjustAdvancedTabsVisibility(boolean show) {
-		adjustJARSigningTabVisibility(show);
-		adjustJNLPTabVisibility(show);
+	protected void adjustAdvancedTabsVisibility() {
+		adjustJARSigningTabVisibility();
+		adjustJNLPTabVisibility();
 		pageChanged();
 	}
 	
-	private void adjustJNLPTabVisibility(boolean show) {
+	protected void adjustJNLPTabVisibility() {
 		IDialogSettings settings = getDialogSettings();
-		if (show) {
+		if (useJARFormat() && doExportToDirectory()) {
 			if (fTabFolder.getItemCount() < 4) {
 				createJNLPTab(fTabFolder);
 				fJNLPTab.initialize(settings);

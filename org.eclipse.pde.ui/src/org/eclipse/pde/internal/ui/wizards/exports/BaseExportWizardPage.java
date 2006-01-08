@@ -296,11 +296,11 @@ public abstract class BaseExportWizardPage extends AbstractExportWizardPage {
 		return fJARSiginingTab.getSigningInfo();
 	}
 
-	protected abstract void adjustAdvancedTabsVisibility(boolean show);
+	protected abstract void adjustAdvancedTabsVisibility();
 	
-	protected void adjustJARSigningTabVisibility(boolean show) {
+	protected void adjustJARSigningTabVisibility() {
 		IDialogSettings settings = getDialogSettings();
-		if (show) {
+		if (useJARFormat()) {
 			if (fTabFolder.getItemCount() < 3) {
 				createJARSigningTab(fTabFolder);
 				fJARSiginingTab.initialize(settings);
