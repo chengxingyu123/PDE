@@ -67,11 +67,11 @@ public class FeatureExportWizardPage extends BaseExportWizardPage {
 			fJNLPTab.initialize(settings);
 	}
 	
-	private void createJNLPTab(TabFolder folder) {
-		fJNLPTab = new JNLPTab(this);
+	protected void createDestinationTab(TabFolder folder) {
+		fDestinationTab = new FeatureDestinationTab(this);
 		TabItem item = new TabItem(folder, SWT.NONE);
-		item.setControl(fJNLPTab.createControl(folder));
-		item.setText(PDEUIMessages.AdvancedFeatureExportPage_jnlp); 
+		item.setControl(fDestinationTab.createControl(folder));
+		item.setText(PDEUIMessages.ExportWizard_destination); 
 	}
 
 	protected void createOptionsTab(TabFolder folder) {
@@ -79,6 +79,13 @@ public class FeatureExportWizardPage extends BaseExportWizardPage {
 		TabItem item = new TabItem(folder, SWT.NONE);
 		item.setControl(fOptionsTab.createControl(folder));
 		item.setText(PDEUIMessages.ExportWizard_options); 		
+	}
+	
+	private void createJNLPTab(TabFolder folder) {
+		fJNLPTab = new JNLPTab(this);
+		TabItem item = new TabItem(folder, SWT.NONE);
+		item.setControl(fJNLPTab.createControl(folder));
+		item.setText(PDEUIMessages.AdvancedFeatureExportPage_jnlp); 
 	}
 	
 	protected IModel findModelFor(IAdaptable object) {
