@@ -133,6 +133,11 @@ public class ExportOptionsTab extends AbstractExportTab {
 	}
 	
 	protected void hookListeners() {
+    	fJarButton.addSelectionListener(new SelectionAdapter() {
+    		public void widgetSelected(SelectionEvent e) {
+    			((BaseExportWizardPage)fPage).adjustAdvancedTabsVisibility(fJarButton.getSelection());
+    		}
+    	});
         fSaveAsAntButton.addSelectionListener(new SelectionAdapter() {
             public void widgetSelected(SelectionEvent e) {
                 fAntCombo.setEnabled(fSaveAsAntButton.getSelection());

@@ -56,11 +56,6 @@ public class FeatureOptionsTab extends ExportOptionsTab {
 
     protected void hookListeners() {
     	super.hookListeners();
-    	fJarButton.addSelectionListener(new SelectionAdapter() {
-    		public void widgetSelected(SelectionEvent e) {
-    			((FeatureExportWizardPage)fPage).showJNLPTab(fJarButton.getSelection());
-    		}
-    	});
     	if (fMultiPlatform != null) {
 			fMultiPlatform.addSelectionListener(new SelectionAdapter() {
 				public void widgetSelected(SelectionEvent e) {

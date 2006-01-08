@@ -91,4 +91,9 @@ public class PluginExportWizardPage extends BaseExportWizardPage {
 	protected boolean isEnableJarButton() {
 		return getSelectedItems().length <= 1;
 	}
+	
+	protected void adjustAdvancedTabsVisibility(boolean show) {
+		adjustJARSigningTabVisibility(show);
+		pageChanged();
+	}
 }

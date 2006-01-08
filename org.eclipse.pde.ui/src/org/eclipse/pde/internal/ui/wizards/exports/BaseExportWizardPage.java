@@ -48,7 +48,7 @@ public abstract class BaseExportWizardPage extends AbstractExportWizardPage {
 	private IStructuredSelection fSelection;
 	protected ExportDestinationTab fDestinationTab;
 	protected ExportOptionsTab fOptionsTab;
-	private JARSigningTab fJARSiginingTab;
+	protected JARSigningTab fJARSiginingTab;
 	protected TabFolder fTabFolder;
 
 	class ExportListProvider extends DefaultContentProvider implements
@@ -108,8 +108,8 @@ public abstract class BaseExportWizardPage extends AbstractExportWizardPage {
 		createTabs(fTabFolder);
 		
 		// load settings
-		initializeViewer();
 		initializeTabs(getDialogSettings());
+		initializeViewer();
 		if (getErrorMessage() != null) {
 			setMessage(getErrorMessage());
 			setErrorMessage(null);
@@ -122,13 +122,15 @@ public abstract class BaseExportWizardPage extends AbstractExportWizardPage {
 	protected void initializeTabs(IDialogSettings settings) {
 		fDestinationTab.initialize(settings);
 		fOptionsTab.initialize(settings);
-		fJARSiginingTab.initialize(settings);
+		if (fJARSiginingTab != null)
+			fJARSiginingTab.initialize(settings);
 	}
 	
 	protected void createTabs(TabFolder folder) {
 		createDestinationTab(folder);
 		createOptionsTab(folder);
-		createJARSigningTab(folder);
+		if (getDialogSettings().getBoolean(ExportOptionsTab.S_JAR_FORMAT))
+			createJARSigningTab(folder);
 	}
 	
 	protected void createDestinationTab(TabFolder folder) {
@@ -240,7 +242,7 @@ public abstract class BaseExportWizardPage extends AbstractExportWizardPage {
 		String message = fDestinationTab.validate();
 		if (message == null)
 			message = fOptionsTab.validate();
-		if (message == null)
+		if (message == null && fTabFolder.getItemCount() > 2)
 			message = fJARSiginingTab.validate();
 		return message;
 	}
@@ -256,7 +258,8 @@ public abstract class BaseExportWizardPage extends AbstractExportWizardPage {
 	protected void saveSettings(IDialogSettings settings) {
 		fDestinationTab.saveSettings(settings);
 		fOptionsTab.saveSettings(settings);
-		fJARSiginingTab.saveSettings(settings);
+		if (fJARSiginingTab != null)
+			fJARSiginingTab.saveSettings(settings);
 	}
 
 	protected boolean doExportToDirectory() {
@@ -288,7 +291,26 @@ public abstract class BaseExportWizardPage extends AbstractExportWizardPage {
 	}
 
 	protected String[] getSigningInfo() {
+		if (fJARSiginingTab == null || fTabFolder.getItemCount() < 3)
+			return null;
 		return fJARSiginingTab.getSigningInfo();
+	}
+
+	protected abstract void adjustAdvancedTabsVisibility(boolean show);
+	
+	protected void adjustJARSigningTabVisibility(boolean show) {
+		IDialogSettings settings = getDialogSettings();
+		if (show) {
+			if (fTabFolder.getItemCount() < 3) {
+				createJARSigningTab(fTabFolder);
+				fJARSiginingTab.initialize(settings);
+			}
+		} else {
+			if (fTabFolder.getItemCount() >= 3) {
+				fJARSiginingTab.saveSettings(settings);
+				fTabFolder.getItem(2).dispose();
+			}			
+		}
 	}
 
 }

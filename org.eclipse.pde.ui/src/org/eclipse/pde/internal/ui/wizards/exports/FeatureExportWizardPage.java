@@ -29,10 +29,7 @@ import org.eclipse.ui.PlatformUI;
 
 public class FeatureExportWizardPage extends BaseExportWizardPage {
 	
-	private static int JNLP_INDEX = 3;
-	
 	private JNLPTab fJNLPTab;
-	private Control control;
 
 	public FeatureExportWizardPage(IStructuredSelection selection) {
 		super(
@@ -73,8 +70,7 @@ public class FeatureExportWizardPage extends BaseExportWizardPage {
 	private void createJNLPTab(TabFolder folder) {
 		fJNLPTab = new JNLPTab(this);
 		TabItem item = new TabItem(folder, SWT.NONE);
-		control = fJNLPTab.createControl(folder);
-		item.setControl(control);
+		item.setControl(fJNLPTab.createControl(folder));
 		item.setText(PDEUIMessages.AdvancedFeatureExportPage_jnlp); 
 	}
 
@@ -100,24 +96,30 @@ public class FeatureExportWizardPage extends BaseExportWizardPage {
 	
 	protected String validateTabs() {
 		String message = super.validateTabs();
-		if (message == null && fTabFolder.getItemCount() >= JNLP_INDEX + 1)
+		if (message == null && fTabFolder.getItemCount() > 3)
 			message = fJNLPTab.validate();
 		return message;
 	}
 	
-	protected void showJNLPTab(boolean show) {
-		if (show) {
-			if (fTabFolder.getItemCount() < JNLP_INDEX + 1) {
-				createJNLPTab(fTabFolder);
-				fJNLPTab.initialize(getDialogSettings());
-			}			
-		} else {
-			if (fJNLPTab != null && fTabFolder.getItemCount() >= JNLP_INDEX + 1) {
-				fJNLPTab.saveSettings(getDialogSettings());
-				fTabFolder.getItem(JNLP_INDEX).dispose();
-			}
-		}
+	protected void adjustAdvancedTabsVisibility(boolean show) {
+		adjustJARSigningTabVisibility(show);
+		adjustJNLPTabVisibility(show);
 		pageChanged();
+	}
+	
+	private void adjustJNLPTabVisibility(boolean show) {
+		IDialogSettings settings = getDialogSettings();
+		if (show) {
+			if (fTabFolder.getItemCount() < 4) {
+				createJNLPTab(fTabFolder);
+				fJNLPTab.initialize(settings);
+			}
+		} else {
+			if (fTabFolder.getItemCount() >= 4) {
+				fJARSiginingTab.saveSettings(settings);
+				fTabFolder.getItem(3).dispose();
+			}			
+		}
 	}
 	
 	protected boolean doMultiPlatform() {
@@ -125,7 +127,7 @@ public class FeatureExportWizardPage extends BaseExportWizardPage {
 	}
 	
 	protected String[] getJNLPInfo() {
-		if (fJNLPTab == null || fTabFolder.getItemCount() < JNLP_INDEX + 1)
+		if (fJNLPTab == null || fTabFolder.getItemCount() < 4)
 			return null;
 		return fJNLPTab.getJNLPInfo();
 	}
