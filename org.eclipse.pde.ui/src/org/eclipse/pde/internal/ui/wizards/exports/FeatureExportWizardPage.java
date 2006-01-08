@@ -14,6 +14,7 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.wizard.IWizardPage;
 import org.eclipse.pde.core.IModel;
 import org.eclipse.pde.internal.core.PDECore;
 import org.eclipse.pde.internal.core.WorkspaceModelManager;
@@ -138,6 +139,10 @@ public class FeatureExportWizardPage extends BaseExportWizardPage {
 		if (fJNLPTab == null || fTabFolder.getItemCount() < 4)
 			return null;
 		return fJNLPTab.getJNLPInfo();
+	}
+	
+	public IWizardPage getNextPage() {
+		return doMultiPlatform() ? getWizard().getNextPage(this) : null;
 	}
 	
 }

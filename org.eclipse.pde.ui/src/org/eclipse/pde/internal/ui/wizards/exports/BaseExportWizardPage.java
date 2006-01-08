@@ -24,6 +24,7 @@ import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.window.Window;
 import org.eclipse.pde.core.IModel;
 import org.eclipse.pde.internal.core.PDECore;
+import org.eclipse.pde.internal.core.TargetPlatform;
 import org.eclipse.pde.internal.ui.PDEPlugin;
 import org.eclipse.pde.internal.ui.PDEUIMessages;
 import org.eclipse.pde.internal.ui.elements.DefaultContentProvider;
@@ -129,7 +130,11 @@ public abstract class BaseExportWizardPage extends AbstractExportWizardPage {
 	protected void createTabs(TabFolder folder) {
 		createDestinationTab(folder);
 		createOptionsTab(folder);
-		if (getDialogSettings().getBoolean(ExportOptionsTab.S_JAR_FORMAT))
+		String useJAR = getDialogSettings().get(ExportOptionsTab.S_JAR_FORMAT);
+		boolean showTab = useJAR == null 
+								? TargetPlatform.getTargetVersion() >= 3.1 
+								: "true".equals(useJAR);
+		if (showTab)
 			createJARSigningTab(folder);
 	}
 	

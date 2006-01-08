@@ -11,9 +11,7 @@
 package org.eclipse.pde.internal.ui.wizards.exports;
 
 import org.eclipse.jface.dialogs.IDialogSettings;
-import org.eclipse.osgi.service.resolver.BundleDescription;
-import org.eclipse.pde.core.plugin.IPluginModelBase;
-import org.eclipse.pde.internal.core.util.CoreUtility;
+import org.eclipse.pde.internal.core.TargetPlatform;
 import org.eclipse.pde.internal.ui.PDEUIMessages;
 import org.eclipse.pde.internal.ui.util.SWTUtil;
 import org.eclipse.swt.SWT;
@@ -122,14 +120,9 @@ public class ExportOptionsTab extends AbstractExportTab {
 	
 	protected boolean getInitialJarButtonSelection(IDialogSettings settings){
 		String selected = settings.get(S_JAR_FORMAT);
-		if (selected == null) {
-			Object[] selectedPlugins = ((PluginExportWizardPage)fPage).getSelectedItems();
-			if (selectedPlugins.length == 1) {
-				BundleDescription bundle = ((IPluginModelBase) selectedPlugins[0]).getBundleDescription();
-				return !CoreUtility.guessUnpack(bundle);
-			}
-		}
-        return "true".equals(selected);
+		return selected == null
+					? TargetPlatform.getTargetVersion() >= 3.1
+					: "true".equals(selected);
 	}
 	
 	protected void hookListeners() {
