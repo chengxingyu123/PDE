@@ -100,6 +100,7 @@ public class TargetPlatformPreferencePage extends PreferencePage implements IWor
 	private TabFolder fTabFolder;
 	private boolean fContainsWorkspaceProfile = false;
 	private TargetImplicitPluginsTab fExplicitPluginsTab;
+	private boolean fFirstClick = true;
 	
 	/**
 	 * MainPreferencePage constructor comment.
@@ -208,8 +209,12 @@ public class TargetPlatformPreferencePage extends PreferencePage implements IWor
 		});
 		fHomeText.addSelectionListener(new SelectionAdapter() {
 			public void widgetSelected(SelectionEvent e) {
-				fPluginsTab.handleReload();
-				fNeedsReload = false;
+				if (fFirstClick)
+					fFirstClick = false;
+				else {
+					fPluginsTab.handleReload();
+					fNeedsReload = false;
+				}
 			}
 		});
 		
@@ -494,10 +499,7 @@ public class TargetPlatformPreferencePage extends PreferencePage implements IWor
 		}
 		target = model.getTarget();
 		ILocationInfo info = target.getLocationInfo();
-		//TODO this is not sufficient.
-		// you may also need to reset the location even if info.useDefault() is true
-		// when info.useDefault() is true, you set the location to be that of the host platform.
-		if (!info.useDefault()) {
+		if (!info.useDefault() ||  !ExternalModelManager.isTargetEqualToHost(getPlatformPath())) {
 			String path;
 			try {
 				path = VariablesPlugin.getDefault().getStringVariableManager().performStringSubstitution(info.getPath());

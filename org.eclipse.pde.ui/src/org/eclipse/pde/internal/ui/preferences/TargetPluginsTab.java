@@ -13,8 +13,10 @@ package org.eclipse.pde.internal.ui.preferences;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Stack;
 import java.util.Vector;
 
@@ -40,6 +42,7 @@ import org.eclipse.pde.core.plugin.IPluginImport;
 import org.eclipse.pde.core.plugin.IPluginModel;
 import org.eclipse.pde.core.plugin.IPluginModelBase;
 import org.eclipse.pde.internal.core.EclipseHomeInitializer;
+import org.eclipse.pde.internal.core.ExternalFeatureModelManager;
 import org.eclipse.pde.internal.core.ExternalModelManager;
 import org.eclipse.pde.internal.core.FeatureModelManager;
 import org.eclipse.pde.internal.core.ICoreConstants;
@@ -49,6 +52,7 @@ import org.eclipse.pde.internal.core.PDEState;
 import org.eclipse.pde.internal.core.PluginPathFinder;
 import org.eclipse.pde.internal.core.ifeature.IFeature;
 import org.eclipse.pde.internal.core.ifeature.IFeatureChild;
+import org.eclipse.pde.internal.core.ifeature.IFeatureModel;
 import org.eclipse.pde.internal.core.ifeature.IFeaturePlugin;
 import org.eclipse.pde.internal.core.itarget.ITarget;
 import org.eclipse.pde.internal.core.itarget.ITargetFeature;
@@ -83,6 +87,7 @@ public class TargetPluginsTab {
 	private IPluginModelBase[] fInitialModels;
 	private IPluginModelBase[] fModels;
 	private PDEState fCurrentState;
+	private Map fCurrentFeatures;
 	
 	class ReloadOperation implements IRunnableWithProgress {
 		private String location;
@@ -95,7 +100,29 @@ public class TargetPluginsTab {
 			throws InvocationTargetException, InterruptedException {	
 			URL[] pluginPaths = PluginPathFinder.getPluginPaths(location);
 			fCurrentState = new PDEState(pluginPaths, true, monitor);
-			fModels = fCurrentState.getModels();		
+			fModels = fCurrentState.getModels();
+			//TODO creating the state is getting the full progress monitor,
+			// while reloading features get no monitor.
+			// so you are ending up with a progress monitor going to completion
+			// then having to inexplicably wait for the progress dialog to go away
+			// while features are being parsed.
+			// I suggest splitting the monitor into two SubProgressMonitors (90%-10% split),
+			// with the 90% portion going to parsing the plug-ins
+			loadFeatures();
+		}
+		
+		private void loadFeatures() {
+			ExternalFeatureModelManager manager = new ExternalFeatureModelManager();
+			manager.loadModels(fPage.getPlatformPath());
+			IFeatureModel[] externalModels = manager.getModels();
+			IFeatureModel[] workspaceModels = PDECore.getDefault().getFeatureModelManager().getWorkspaceModels();
+			fCurrentFeatures = new HashMap((4/3) * (externalModels.length + workspaceModels.length) + 1);
+			for (int i = 0; i < externalModels.length; i++) {
+				fCurrentFeatures.put(externalModels[i].getFeature().getId(), externalModels[i]);
+			}
+			for (int i = 0; i < workspaceModels.length; i++) {
+				fCurrentFeatures.put(workspaceModels[i].getFeature().getId(), workspaceModels[i]);
+			}
 		}
 		
 	}
@@ -260,14 +287,15 @@ public class TargetPluginsTab {
 		HashSet set = new HashSet();
 		ITargetFeature[] targetFeatures = target.getFeatures();
 		Stack features = new Stack();
-		//TODO Using FeatureModelManager is not sufficient.
-		// If the profile specifies a target that is different from the current target,
-		// you need to parse the features in that target.
-		// If the profile specifies a target that is the same as the current target,
-		// you could use FeatureModelManager directly.
-		FeatureModelManager manager = PDECore.getDefault().getFeatureModelManager();
+		
+		FeatureModelManager featureManager = null;
+		if (fCurrentFeatures == null)
+			featureManager = PDECore.getDefault().getFeatureModelManager();
 		for (int i = 0 ; i < targetFeatures.length; i++) {
-			features.push(manager.findFeatureModel(targetFeatures[i].getId()).getFeature());
+			IFeatureModel model = (featureManager != null) ? featureManager.findFeatureModel(targetFeatures[i].getId()) :
+				(IFeatureModel)fCurrentFeatures.get(targetFeatures[i].getId());
+			if (model != null)
+				features.push(model.getFeature());
 		}
 		while (!features.isEmpty()) {
 			IFeature feature = (IFeature) features.pop();
@@ -277,7 +305,9 @@ public class TargetPluginsTab {
 			}
 			IFeatureChild[] children = feature.getIncludedFeatures();
 			for (int j = 0; j < children.length; j++) {
-				features.push(manager.findFeatureModel(children[j].getId()).getFeature());
+				IFeatureModel model = (featureManager != null) ? featureManager.findFeatureModel(children[j].getId()) :
+					(IFeatureModel)fCurrentFeatures.get(children[j].getId());
+				features.push(model);
 			}
 		}
 
