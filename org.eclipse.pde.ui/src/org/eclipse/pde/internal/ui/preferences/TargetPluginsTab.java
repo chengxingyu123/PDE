@@ -26,6 +26,7 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Preferences;
+import org.eclipse.core.runtime.SubProgressMonitor;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.viewers.CheckboxTableViewer;
@@ -99,30 +100,35 @@ public class TargetPluginsTab {
 		public void run(IProgressMonitor monitor)
 			throws InvocationTargetException, InterruptedException {	
 			URL[] pluginPaths = PluginPathFinder.getPluginPaths(location);
-			fCurrentState = new PDEState(pluginPaths, true, monitor);
+			monitor.beginTask(PDEUIMessages.TargetPluginsTab_readingPlatform, 10);
+			SubProgressMonitor parsePluginMonitor = new SubProgressMonitor(monitor, 9);
+			fCurrentState = new PDEState(pluginPaths, true, parsePluginMonitor);
 			fModels = fCurrentState.getModels();
-			//TODO creating the state is getting the full progress monitor,
-			// while reloading features get no monitor.
-			// so you are ending up with a progress monitor going to completion
-			// then having to inexplicably wait for the progress dialog to go away
-			// while features are being parsed.
-			// I suggest splitting the monitor into two SubProgressMonitors (90%-10% split),
-			// with the 90% portion going to parsing the plug-ins
-			loadFeatures();
+			loadFeatures(new SubProgressMonitor(monitor, 1));
+			monitor.done();
 		}
 		
-		private void loadFeatures() {
+		private void loadFeatures(IProgressMonitor monitor) {
 			ExternalFeatureModelManager manager = new ExternalFeatureModelManager();
-			manager.loadModels(fPage.getPlatformPath());
+			manager.loadModels(location);
 			IFeatureModel[] externalModels = manager.getModels();
 			IFeatureModel[] workspaceModels = PDECore.getDefault().getFeatureModelManager().getWorkspaceModels();
-			fCurrentFeatures = new HashMap((4/3) * (externalModels.length + workspaceModels.length) + 1);
+			int numFeatures = externalModels.length + workspaceModels.length;
+			monitor.beginTask(PDEUIMessages.TargetPluginsTab_readingFeatures, numFeatures);
+			fCurrentFeatures = new HashMap((4/3) * (numFeatures) + 1);
 			for (int i = 0; i < externalModels.length; i++) {
-				fCurrentFeatures.put(externalModels[i].getFeature().getId(), externalModels[i]);
+				String id = externalModels[i].getFeature().getId();
+				monitor.subTask(id);
+				fCurrentFeatures.put(id, externalModels[i]);
+				monitor.worked(1);
 			}
 			for (int i = 0; i < workspaceModels.length; i++) {
-				fCurrentFeatures.put(workspaceModels[i].getFeature().getId(), workspaceModels[i]);
+				String id = workspaceModels[i].getFeature().getId();
+				monitor.subTask(id);
+				fCurrentFeatures.put(id, workspaceModels[i]);
+				monitor.worked(1);
 			}
+			monitor.done();
 		}
 		
 	}

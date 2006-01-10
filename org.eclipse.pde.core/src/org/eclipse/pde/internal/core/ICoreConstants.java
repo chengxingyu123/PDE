@@ -26,7 +26,7 @@ public interface ICoreConstants {
 	String P_EXT_LOCATIONS = "ext_locations"; //$NON-NLS-1$
 	String PROGRAM_ARGS = "program_args"; //$NON-NLS-1$
 	String VM_ARGS = "vm_args"; //$NON-NLS-1$
-	String IMPLICIT_DEPENDENCIES = "implicit_dependencies";
+	String IMPLICIT_DEPENDENCIES = "implicit_dependencies"; //$NON-NLS-1$
 	
 	// Target JRE
 	String TARGET_JRE = "targetJRE"; //$NON-NLS-1$

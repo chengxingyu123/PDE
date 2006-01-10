@@ -49,7 +49,7 @@ public class TargetImplicitPluginsTab {
 	private TargetPlatformPreferencePage fPage;
 	
 	public TargetImplicitPluginsTab(TargetPlatformPreferencePage page) {
-		ROOT = "Wassim";
+		ROOT = ""; //$NON-NLS-1$
 		fPage = page;
 	}
 	
@@ -83,7 +83,7 @@ public class TargetImplicitPluginsTab {
 	
 	private void createLabel(Composite container) {
 		Label label = new Label(container, SWT.NONE);
-		label.setText("The plug-ins selected will be included as required bundles during dependency checking:");
+		label.setText(PDEUIMessages.TargetImplicitPluginsTab_removeAllDescription);
 		GridData gd = new GridData(GridData.FILL_HORIZONTAL);
 		gd.horizontalSpan = 2;
 		label.setLayoutData(gd);
@@ -117,7 +117,7 @@ public class TargetImplicitPluginsTab {
 	protected void loadTable() {
 		Preferences preferences = PDECore.getDefault().getPluginPreferences();
 		String value = preferences.getString(ICoreConstants.IMPLICIT_DEPENDENCIES);
-		StringTokenizer tokens = new StringTokenizer(value,",");
+		StringTokenizer tokens = new StringTokenizer(value,","); //$NON-NLS-1$
 		fElements = new HashSet((4/3) * tokens.countTokens() + 1);
 		PluginModelManager manager = PDECore.getDefault().getModelManager();
 		while (tokens.hasMoreElements()) {
@@ -157,7 +157,7 @@ public class TargetImplicitPluginsTab {
 		});
 		
 		fRemoveAllButton = new Button(buttonContainer, SWT.PUSH);
-		fRemoveAllButton.setText("RemoveAll");
+		fRemoveAllButton.setText(PDEUIMessages.TargetImplicitPluginsTab_removeAll3);
 		fRemoveAllButton.setLayoutData(new GridData(GridData.FILL | GridData.VERTICAL_ALIGN_BEGINNING));
 		SWTUtil.setButtonDimensionHint(fRemoveAllButton);
 		fRemoveAllButton.addSelectionListener(new SelectionAdapter() {
@@ -249,7 +249,7 @@ public class TargetImplicitPluginsTab {
 		Iterator it = fElements.iterator();
 		while (it.hasNext()) {
 			if (buffer.length() > 0)
-				buffer.append(",");
+				buffer.append(PDEUIMessages.TargetImplicitPluginsTab_removeAll4);
 			IPluginModelBase base = (IPluginModelBase) it.next();
 			buffer.append(getSymbolicName(base));
 		}

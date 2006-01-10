@@ -59,8 +59,8 @@ public class TargetProfileManager implements IRegistryChangeListener{
 			
 			private String getString(IConfigurationElement elem){
 				String name = elem.getAttribute("name"); //$NON-NLS-1$
-				String id = elem.getAttribute("id");
-				name = name + " [" + id + "]";
+				String id = elem.getAttribute("id"); //$NON-NLS-1$
+				name = name + " [" + id + "]"; //$NON-NLS-1$ //$NON-NLS-2$
 				return name;
 			}
 			
@@ -89,7 +89,7 @@ public class TargetProfileManager implements IRegistryChangeListener{
 			if (value == null || value.equals("")) //$NON-NLS-1$
 				return false;
 		}
-		value = elem.getAttribute("path");
+		value = elem.getAttribute("path"); //$NON-NLS-1$
 		String symbolicName = elem.getDeclaringExtension().getNamespace();
 		URL url = getResourceURL(symbolicName, value);
 		try {
@@ -118,7 +118,7 @@ public class TargetProfileManager implements IRegistryChangeListener{
 		for (int i = 0; i < elems.length; i++) {
 			IConfigurationElement elem = elems[i];
 			if (isValid(elem)) {
-				String id = elem.getAttribute("id");
+				String id = elem.getAttribute("id"); //$NON-NLS-1$
 				fTargets.put(id, elem);
 			}
 		}
@@ -126,7 +126,7 @@ public class TargetProfileManager implements IRegistryChangeListener{
 	
 	private void remove(IConfigurationElement[] elems) {
 		for (int i = 0 ; i < elems.length; i++) {
-			fTargets.remove(elems[i].getAttribute("id"));
+			fTargets.remove(elems[i].getAttribute("id")); //$NON-NLS-1$
 		}
 	}
 	

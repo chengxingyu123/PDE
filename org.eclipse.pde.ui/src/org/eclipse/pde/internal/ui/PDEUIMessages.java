@@ -2485,4 +2485,30 @@ public class PDEUIMessages extends NLS {
 
 	public static String TargetPlatformPreferencePage_FileSelectionMessage;
 
+	public static String ImplicitDependenicesSection_Add;
+
+	public static String ImplicitDependenicesSection_Remove;
+
+	public static String ImplicitDependenicesSection_RemoveAll;
+
+	public static String ImplicitDependenicesSection_Title;
+
+	public static String ImplicitDependenicesSection_Description;
+
+	public static String TargetImplicitPluginsTab_removeAllDescription;
+
+	public static String TargetImplicitPluginsTab_removeAll3;
+
+	public static String TargetImplicitPluginsTab_removeAll4;
+
+	public static String TargetPluginsTab_readingPlatform;
+
+	public static String TargetPluginsTab_readingFeatures;
+
+	public static String TargetPlatformPreferencePage_implicitTab;
+
+	public static String TargetPlatformPreferencePage_profileNotFoundTitle;
+
+	public static String TargetPlatformPreferencePage_profileNotFoundDesc;
+
 }

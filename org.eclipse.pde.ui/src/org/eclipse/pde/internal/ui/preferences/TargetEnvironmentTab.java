@@ -225,25 +225,25 @@ public class TargetEnvironmentTab implements IEnvironmentVariables {
 		String nl = info.getNL();
 		nl = expandLocaleName(nl);
 		
-		if (!os.equals("")) {
+		if (!os.equals("")) { //$NON-NLS-1$
 			if (fOSCombo.indexOf(os) == -1)
 				fOSCombo.add(os);
 			fOSCombo.setText(os);
 		}
 		
-		if (!ws.equals("")) {
+		if (!ws.equals("")) { //$NON-NLS-1$
 			if (fWSCombo.indexOf(ws) == -1)
 				fWSCombo.add(ws);
 			fWSCombo.setText(ws);
 		}
 		
-		if (!arch.equals("")) {
+		if (!arch.equals("")) { //$NON-NLS-1$
 			if (fArchCombo.indexOf(arch) == -1)
 				fArchCombo.add(arch);
 			fArchCombo.setText(arch);
 		}
 		
-		if (!nl.equals("")) {
+		if (!nl.equals("")) { //$NON-NLS-1$
 			if (fNLCombo.indexOf(nl) == -1)
 				fNLCombo.add(nl);
 			fNLCombo.setText(nl);

@@ -111,13 +111,13 @@ public class JavaArgumentsTab {
 	protected void loadTargetProfile(ITarget target) {
 		IArgumentsInfo info = target.getArguments();
 		if (info == null) {
-			fProgramArgs.setText("");
-			fVMArgs.setText("");
+			fProgramArgs.setText(""); //$NON-NLS-1$
+			fVMArgs.setText(""); //$NON-NLS-1$
 			return;
 		}
-		String progArgs = (info.getProgramArguments() == null) ? "" : info.getProgramArguments();
+		String progArgs = (info.getProgramArguments() == null) ? "" : info.getProgramArguments(); //$NON-NLS-1$
 		fProgramArgs.setText(progArgs);
-		String vmArgs = (info.getVMArguments() == null) ? "" : info.getVMArguments();
+		String vmArgs = (info.getVMArguments() == null) ? "" : info.getVMArguments(); //$NON-NLS-1$
 		fVMArgs.setText(vmArgs);
 	}
 }

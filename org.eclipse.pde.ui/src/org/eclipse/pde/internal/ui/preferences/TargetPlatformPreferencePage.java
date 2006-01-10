@@ -287,7 +287,7 @@ public class TargetPlatformPreferencePage extends PreferencePage implements IWor
 		Control block = fExplicitPluginsTab.createContents(folder);
 		
 		TabItem tab = new TabItem(folder, SWT.NONE);
-		tab.setText("E&xplicit Plug-ins");
+		tab.setText(PDEUIMessages.TargetPlatformPreferencePage_implicitTab);
 		tab.setControl(block);
 	}
 	
@@ -346,7 +346,7 @@ public class TargetPlatformPreferencePage extends PreferencePage implements IWor
 						}
 						IFile[] files;
 						try {
-							URI uri = new URI("file", url.getPath(), null);
+							URI uri = new URI("file", url.getPath(), null); //$NON-NLS-1$
 							files = ResourcesPlugin.getWorkspace().getRoot().findFilesForLocationURI(uri);
 						} catch (URISyntaxException e) {
 							error = true;
@@ -369,7 +369,7 @@ public class TargetPlatformPreferencePage extends PreferencePage implements IWor
 					}
 				} finally {
 					if (error) {
-						MessageDialog.openError(getShell(), "Cannot open target profile", "Target profile could not be found");
+						MessageDialog.openError(getShell(), PDEUIMessages.TargetPlatformPreferencePage_profileNotFoundTitle, PDEUIMessages.TargetPlatformPreferencePage_profileNotFoundDesc);
 					}
 				}
 			}
@@ -467,7 +467,7 @@ public class TargetPlatformPreferencePage extends PreferencePage implements IWor
 		if (offSet > fProfileCombo.getSelectionIndex())
 			return null;
 		IConfigurationElement elem = fElements[fProfileCombo.getSelectionIndex() - offSet];
-		String path = elem.getAttribute("path"); 
+		String path = elem.getAttribute("path");  //$NON-NLS-1$
 		String symbolicName = elem.getDeclaringExtension().getNamespace();
 		return TargetProfileManager.getResourceURL(symbolicName, path);
 	}
@@ -563,11 +563,11 @@ public class TargetPlatformPreferencePage extends PreferencePage implements IWor
 			String value = fProfileCombo.getText().trim();
 			int index = value.lastIndexOf('[');
 			value = value.substring(index + 1, value.length() - 1);
-			fPreferences.setValue(ICoreConstants.TARGET_PROFILE, "${workspace_loc:" + value + "}");
+			fPreferences.setValue(ICoreConstants.TARGET_PROFILE, "${workspace_loc:" + value + "}"); //$NON-NLS-1$ //$NON-NLS-2$
 		} else {
 			int offSet = fProfileCombo.getItemCount() - fElements.length;
 			IConfigurationElement elem = fElements[fProfileCombo.getSelectionIndex() - offSet];
-			fPreferences.setValue(ICoreConstants.TARGET_PROFILE, "id:" + elem.getAttribute("id"));
+			fPreferences.setValue(ICoreConstants.TARGET_PROFILE, "id:" + elem.getAttribute("id")); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 	}
 	
