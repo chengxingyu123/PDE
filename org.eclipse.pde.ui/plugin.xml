@@ -1759,6 +1759,13 @@
       <contentTypeBinding
             contentTypeId="org.eclipse.pde.bundleManifest"
             structureMergeViewerId="org.eclipse.pde.internal.ui.compare.ManifestStructureMergeViewerCreator"/>
+      <viewer
+            extensions="xml,exsd"
+            class="org.eclipse.pde.internal.ui.compare.XMLStructureViewerCreator"
+            id="org.eclipse.pde.internal.ui.compare.XMLStructureViewerCreator" />
+      <contentTypeBinding
+            structureMergeViewerId="org.eclipse.pde.internal.ui.compare.XMLStructureViewerCreator"
+            contentTypeId="org.eclipse.pde.pluginManifest" />
    </extension>
    <extension
          point="org.eclipse.compare.contentMergeViewers">
@@ -1769,6 +1776,13 @@
       <contentTypeBinding
             contentMergeViewerId="org.eclipse.pde.internal.ui.compare.ManifestContentMergeViewerCreator"
             contentTypeId="org.eclipse.pde.bundleManifest"/>
+      <viewer
+            class="org.eclipse.pde.internal.ui.compare.XMLContentMergeViewerCreator"
+            extensions="xml,exsd"
+            id="org.eclipse.pde.internal.ui.compare.XMLContentMergeViewerCreator"/>
+      <contentTypeBinding
+            contentMergeViewerId="org.eclipse.pde.internal.ui.compare.XMLContentMergeViewerCreator"
+            contentTypeId="org.eclipse.pde.pluginManifest" />
    </extension>
    <extension
          point="org.eclipse.ui.themes">
