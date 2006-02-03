@@ -370,15 +370,16 @@ public class TargetPlatform implements IEnvironmentVariables {
 				continue;
 			Long id = new Long(desc.getBundleId());
 			if (ClasspathUtilCore.hasExtensibleAPI(models[i])) {
-				properties.put(id, ICoreConstants.EXTENSIBLE_API + ": true"); //$NON-NLS-1$
+				properties.put(id, ICoreConstants.EXTENSIBLE_API + ": true");
 			} else if (ClasspathUtilCore.isPatchFragment(models[i])) {
-				properties.put(id, ICoreConstants.PATCH_FRAGMENT + ": true"); //$NON-NLS-1$
+				properties.put(id, ICoreConstants.PATCH_FRAGMENT + ": true");
 			}
 		}		
 		return properties;		
 	}
 	
 	public static HashMap getBundleClasspaths(PDEState state) {
+		TargetPlatform.getPatchMap(state);
 		HashMap properties = new HashMap();
 		BundleDescription[] bundles = state.getState().getBundles();
 		for (int i = 0; i < bundles.length; i++) {
