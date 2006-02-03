@@ -360,6 +360,24 @@ public class TargetPlatform implements IEnvironmentVariables {
 		return getPDEState().getState();
 	}
 	
+	public static Map getPatchMap(PDEState state) {
+		HashMap properties = new HashMap();
+		PluginModelManager manager = PDECore.getDefault().getModelManager();
+		IPluginModelBase[] models = manager.getAllPlugins();
+		for (int i = 0; i < models.length; i++) {
+			BundleDescription desc = models[i].getBundleDescription();
+			if (desc == null)
+				continue;
+			Long id = new Long(desc.getBundleId());
+			if (ClasspathUtilCore.hasExtensibleAPI(models[i])) {
+				properties.put(id, ICoreConstants.EXTENSIBLE_API + ": true"); //$NON-NLS-1$
+			} else if (ClasspathUtilCore.isPatchFragment(models[i])) {
+				properties.put(id, ICoreConstants.PATCH_FRAGMENT + ": true"); //$NON-NLS-1$
+			}
+		}		
+		return properties;		
+	}
+	
 	public static HashMap getBundleClasspaths(PDEState state) {
 		HashMap properties = new HashMap();
 		BundleDescription[] bundles = state.getState().getBundles();
