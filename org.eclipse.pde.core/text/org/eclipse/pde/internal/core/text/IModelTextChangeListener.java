@@ -8,7 +8,7 @@
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
-package org.eclipse.pde.internal.core.text.bundle;
+package org.eclipse.pde.internal.core.text;
 
 import org.eclipse.pde.core.IModelChangedListener;
 import org.eclipse.text.edits.TextEdit;
