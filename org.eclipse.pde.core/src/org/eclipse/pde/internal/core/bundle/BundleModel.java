@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2005 IBM Corporation and others.
+ * Copyright (c) 2000, 2006 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -86,7 +86,7 @@ public abstract class BundleModel
 		if (state.hasExtensibleAPI(id))
 			properties.put(ICoreConstants.EXTENSIBLE_API, "true"); //$NON-NLS-1$
 		if (state.isPatchFragment(id))
-			properties.put(ICoreConstants.PATCH_FRAGMENT, "true");
+			properties.put(ICoreConstants.PATCH_FRAGMENT, "true"); //$NON-NLS-1$
 		String[] libraries = state.getLibraryNames(id);
 		if (libraries.length > 0) {
 			StringBuffer buffer = new StringBuffer();
