@@ -34,13 +34,13 @@ import org.eclipse.pde.internal.ui.PDEPlugin;
 import org.eclipse.pde.internal.ui.PDEPluginImages;
 import org.eclipse.pde.internal.ui.PDEUIMessages;
 import org.eclipse.pde.internal.ui.editor.PDEFormEditor;
-import org.eclipse.pde.internal.ui.editor.XMLProjectionSourcePage;
+import org.eclipse.pde.internal.ui.editor.XMLSourcePage;
 import org.eclipse.pde.internal.ui.editor.text.XMLConfiguration;
 import org.eclipse.pde.internal.ui.elements.DefaultContentProvider;
 import org.eclipse.pde.internal.ui.util.SharedLabelProvider;
 import org.eclipse.swt.graphics.Image;
 
-public class ManifestSourcePage extends XMLProjectionSourcePage {
+public class ManifestSourcePage extends XMLSourcePage {
 	
 	private Object fLibraries = new Object();
 	private Object fImports = new Object();

@@ -19,82 +19,44 @@ import java.util.Map;
 import java.util.Set;
 
 import org.eclipse.jface.text.BadLocationException;
-import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.Position;
 import org.eclipse.jface.text.source.Annotation;
 import org.eclipse.jface.text.source.projection.ProjectionAnnotation;
 import org.eclipse.jface.text.source.projection.ProjectionAnnotationModel;
-import org.eclipse.pde.core.IBaseModel;
-import org.eclipse.pde.core.plugin.IExtensions;
-import org.eclipse.pde.core.plugin.IPluginExtension;
-import org.eclipse.pde.internal.core.text.IDocumentNode;
-import org.eclipse.pde.internal.core.text.plugin.PluginModel;
+import org.eclipse.pde.core.IModelChangedEvent;
+import org.eclipse.pde.core.IModelChangedListener;
+import org.eclipse.pde.internal.core.text.IEditingModel;
 
-public class PDEFoldingStructureProvider {
+public abstract class AbstractFoldingStructureProvider implements
+IFoldingStructureProvider, IModelChangedListener {
 
-	private XMLSourcePage fEditor;
-	private IDocument fDocument;
+	private PDESourcePage fEditor;
+	private IEditingModel fModel;
 
-	private Map fPositionToElement = new HashMap();
-
-	public PDEFoldingStructureProvider(XMLSourcePage editor) {
-		super();
+	public AbstractFoldingStructureProvider(PDESourcePage editor, IEditingModel model) {
 		this.fEditor = editor;
+		this.fModel = model;
 	}
 
-	public void setDocument(IDocument document) {
-		this.fDocument = document;
-	}
-
-	public void updateFoldingRegions(IBaseModel model) {
-		fPositionToElement = new HashMap();
+	public void update() {
 		ProjectionAnnotationModel annotationModel = 
 			(ProjectionAnnotationModel) fEditor.getAdapter(ProjectionAnnotationModel.class);
 		if (annotationModel == null)
 			return;
 
-		if(model instanceof PluginModel) {
-			updateFoldingRegions(annotationModel, (PluginModel) model);
-		}
-	}
-	
-	public void updateFoldingRegions(ProjectionAnnotationModel annotationModel, PluginModel model) {
-		IExtensions extensions = model.getExtensions();
-		IPluginExtension[] pluginExtensions = extensions.getExtensions();
-		
 		Set currentRegions = new HashSet();
 		try {
-			addFoldingRegions(currentRegions, pluginExtensions);
+			addFoldingRegions(currentRegions, fModel);
 			updateFoldingRegions(annotationModel, currentRegions);
 		} catch (BadLocationException e) {}
 	}
-	
-	private void addFoldingRegions(Set regions, IPluginExtension[] nodes) throws BadLocationException  {
-		for(int i = 0; i < nodes.length; i++) {
-			IDocumentNode element = (IDocumentNode) nodes[i];
-			int startLine= fDocument.getLineOfOffset(element.getOffset());
-			int endLine= fDocument.getLineOfOffset(element.getOffset() + element.getLength());
-			if (startLine < endLine) {
-				int start= fDocument.getLineOffset(startLine);
-				int end= fDocument.getLineOffset(endLine) + fDocument.getLineLength(endLine);
-				Position position= new Position(start, end - start);
-				regions.add(position);
-				fPositionToElement.put(position, element);
-			}
-//			children = element.getChildNodes();
-//			if (children != null) {
-//			addFoldingRegions(regions, children);
-//			}
 
-		}
-	}
-	
-	private void updateFoldingRegions(ProjectionAnnotationModel model, Set currentRegions) {
+	public void updateFoldingRegions(ProjectionAnnotationModel model, Set currentRegions) {
 		Annotation[] deletions = computeDifferences(model, currentRegions);
 
 		Map additionsMap = new HashMap();
 		for (Iterator iter = currentRegions.iterator(); iter.hasNext();) {
-			Object position= iter.next();
+			Object position = iter.next();
 			additionsMap.put(new ProjectionAnnotation(false), position);
 		}
 
@@ -117,6 +79,15 @@ public class PDEFoldingStructureProvider {
 			}
 		}
 		return (Annotation[]) deletions.toArray(new Annotation[deletions.size()]);
+	}
+
+	public void initialize() {
+		fModel.addModelChangedListener(this);
+		update();
+	}
+
+	public void modelChanged(IModelChangedEvent event) {
+		update();
 	}
 
 }
