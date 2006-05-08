@@ -19,6 +19,7 @@ import org.eclipse.jface.text.source.projection.ProjectionViewer;
 import org.eclipse.pde.core.IBaseModel;
 import org.eclipse.pde.internal.core.text.IEditingModel;
 import org.eclipse.pde.internal.ui.IPreferenceConstants;
+import org.eclipse.pde.internal.ui.PDEPlugin;
 import org.eclipse.swt.widgets.Composite;
 
 
@@ -88,7 +89,7 @@ public abstract class PDEProjectionSourcePage extends PDESourcePage implements I
 	}
 
 	private boolean isFoldingEnabled() {
-		IPreferenceStore store = getPreferenceStore();
+		IPreferenceStore store = PDEPlugin.getDefault().getPreferenceStore();
 		return store.getBoolean(IPreferenceConstants.EDITOR_FOLDING_ENABLED);
 	}
 

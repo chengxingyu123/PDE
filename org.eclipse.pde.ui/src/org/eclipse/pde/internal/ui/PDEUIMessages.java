@@ -2871,4 +2871,6 @@ public class PDEUIMessages extends NLS {
 	public static String NewExtensionPointMainPage_malformedId;
 
 	public static String NewExtensionPointMainPage_namespaceNotFound;
+	
+	public static String EditorPreferencePage_folding;
 }
