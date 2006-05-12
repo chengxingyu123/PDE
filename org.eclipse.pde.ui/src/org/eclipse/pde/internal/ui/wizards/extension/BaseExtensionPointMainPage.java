@@ -399,7 +399,7 @@ public abstract class BaseExtensionPointMainPage extends WizardPage {
 				message = PDEUIMessages.BaseExtensionPoint_noPlugin_missingId;
 		}
 		setPageComplete(isFilled && isComplete());
-		setMessage(message, IMessageProvider.WARNING);
+		setMessage(message, IMessageProvider.ERROR);
 	}
 	private boolean validateContainer() {
 		if (isPluginIdNeeded() && !isPluginIdFinal()){
