@@ -16,16 +16,29 @@ import java.net.URL;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.pde.core.plugin.IPluginBase;
 import org.eclipse.pde.internal.core.TargetPlatform;
 import org.eclipse.pde.internal.core.plugin.PluginBase;
 import org.eclipse.pde.internal.ui.PDEPlugin;
+import org.eclipse.pde.internal.ui.PDEUIMessages;
+import org.eclipse.pde.ui.templates.BooleanOption;
 import org.eclipse.pde.ui.templates.OptionTemplateSection;
+import org.eclipse.pde.ui.templates.TemplateOption;
 import org.osgi.framework.Bundle;
 
 public abstract class PDETemplateSection extends OptionTemplateSection {
 
+	public static final String KEY_PRODUCT_BRANDING = "productBranding"; //$NON-NLS-1$
+	public static final String KEY_PRODUCT_ID = "productID"; //$NON-NLS-1$
+	public static final String KEY_PRODUCT_NAME = "productName"; //$NON-NLS-1$
+	
+	protected TemplateOption fPIDOption;
+	protected TemplateOption fPNameOption;
+	protected BooleanOption fPBrandingOption;
+	
 	protected ResourceBundle getPluginResourceBundle() {
 		Bundle bundle = Platform.getBundle(PDEPlugin.getPluginId());
 		return Platform.getResourceBundle(bundle);
@@ -88,5 +101,28 @@ public abstract class PDETemplateSection extends OptionTemplateSection {
 			}
 		}
 		return buffer.toString().toLowerCase(Locale.ENGLISH);
+	}
+	
+	protected void generateFiles(IProgressMonitor monitor) throws CoreException {
+		super.generateFiles(monitor);
+		if (copyBrandingDirectory())
+			super.generateFiles(monitor, PDEPlugin.getDefault().getBundle().getEntry("branding/"));
+	}
+	
+	protected boolean copyBrandingDirectory() {
+		return getBooleanOption(KEY_PRODUCT_BRANDING);
+	}
+	
+	protected void createBrandingOptions() {
+		fPBrandingOption = (BooleanOption)addOption(KEY_PRODUCT_BRANDING, PDEUIMessages.HelloRCPTemplate_productBranding, false, 0);
+		fPIDOption = addOption(KEY_PRODUCT_ID, PDEUIMessages.MailTemplate_productID, "product", 0); //$NON-NLS-1$
+		fPIDOption.setEnabled(false);
+		fPNameOption = addOption(KEY_PRODUCT_NAME, PDEUIMessages.MailTemplate_productName, "RCP Product", 0); //$NON-NLS-1$
+		fPNameOption.setEnabled(false);
+	}
+	
+	protected void updateBrandingEnablement() {
+		fPIDOption.setEnabled(fPBrandingOption.isSelected());
+		fPNameOption.setEnabled(fPBrandingOption.isSelected());
 	}
 }

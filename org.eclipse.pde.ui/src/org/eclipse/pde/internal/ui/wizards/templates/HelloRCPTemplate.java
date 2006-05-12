@@ -55,7 +55,9 @@ public class HelloRCPTemplate extends PDETemplateSection {
 		
 		addOption(KEY_APPLICATION_CLASS, PDEUIMessages.HelloRCPTemplate_appClass, "Application", 0); //$NON-NLS-1$ 
 		
-		addOption(KEY_PERSPECTIVE_NAME, PDEUIMessages.HelloRCPTemplate_perspective, (String) null, 0); 	
+		addOption(KEY_PERSPECTIVE_NAME, PDEUIMessages.HelloRCPTemplate_perspective, (String) null, 0);
+		
+		createBrandingOptions();
 	}
 	
 	protected void initializeFields(IFieldData data) {
@@ -96,6 +98,8 @@ public class HelloRCPTemplate extends PDETemplateSection {
 		} else {
 			validateContainerPage(source);
 		}
+		if (source == fPBrandingOption)
+			updateBrandingEnablement();
 	}
 	
 	private void validateContainerPage(TemplateOption source) {
@@ -116,6 +120,8 @@ public class HelloRCPTemplate extends PDETemplateSection {
 	protected void updateModel(IProgressMonitor monitor) throws CoreException {
 		createApplicationExtension();
 		createPerspectiveExtension();
+		if (getBooleanOption(KEY_PRODUCT_BRANDING))
+			createProductExtension();
 	}
 	
 	private void createApplicationExtension() throws CoreException {
@@ -146,6 +152,30 @@ public class HelloRCPTemplate extends PDETemplateSection {
 		element.setAttribute("class", getStringOption(KEY_PACKAGE_NAME) + ".Perspective"); //$NON-NLS-1$ //$NON-NLS-2$
 		element.setAttribute("name", getStringOption(KEY_PERSPECTIVE_NAME)); //$NON-NLS-1$
 		element.setAttribute("id", plugin.getId() + ".perspective"); //$NON-NLS-1$ //$NON-NLS-2$
+		extension.add(element);
+		
+		if (!extension.isInTheModel())
+			plugin.add(extension);
+	}
+	
+	private void createProductExtension() throws CoreException {
+		IPluginBase plugin = model.getPluginBase();
+		IPluginExtension extension = createExtension("org.eclipse.core.runtime.products", true); //$NON-NLS-1$
+		extension.setId(getStringOption(KEY_PRODUCT_ID));
+		
+		IPluginElement element = model.getFactory().createElement(extension);
+		element.setName("product"); //$NON-NLS-1$
+		element.setAttribute("name", getStringOption(KEY_PRODUCT_NAME)); //$NON-NLS-1$
+		element.setAttribute("application", plugin.getId() + "." + getStringOption(KEY_APPLICATION_ID)); //$NON-NLS-1$ //$NON-NLS-2$
+
+		IPluginElement property = model.getFactory().createElement(element);
+		
+		property = model.getFactory().createElement(element);
+		property.setName("property"); //$NON-NLS-1$
+		property.setAttribute("name", "windowImages"); //$NON-NLS-1$ //$NON-NLS-2$
+		property.setAttribute("value", "icons/alt_window_16.gif,icons/alt_window_32.gif"); //$NON-NLS-1$ //$NON-NLS-2$
+		element.add(property);
+
 		extension.add(element);
 		
 		if (!extension.isInTheModel())
@@ -183,4 +213,9 @@ public class HelloRCPTemplate extends PDETemplateSection {
 		return dep;
 	}
 	
+	public String[] getNewFiles() {
+		if (copyBrandingDirectory())
+			return new String[] { "icons/" }; //$NON-NLS-1$
+		return super.getNewFiles();
+	}
 }

@@ -30,7 +30,6 @@ public class ViewRCPTemplate extends PDETemplateSection {
 	public static final String KEY_APPLICATION_CLASS = "applicationClass"; //$NON-NLS-1$
 	public static final String KEY_APPLICATION_ID = "applicationID"; //$NON-NLS-1$
 	public static final String KEY_WINDOW_TITLE = "windowTitle"; //$NON-NLS-1$
-	
 	public ViewRCPTemplate() {
 		setPageCount(1);
 		createOptions();
@@ -52,7 +51,9 @@ public class ViewRCPTemplate extends PDETemplateSection {
 
 		addOption(KEY_PACKAGE_NAME, PDEUIMessages.ViewRCPTemplate_packageName, (String) null, 0); 
 		
-		addOption(KEY_APPLICATION_CLASS, PDEUIMessages.ViewRCPTemplate_appClass, "Application", 0); //$NON-NLS-1$ 
+		addOption(KEY_APPLICATION_CLASS, PDEUIMessages.ViewRCPTemplate_appClass, "Application", 0); //$NON-NLS-1$
+		
+		createBrandingOptions();
 	}
 	
 	protected void initializeFields(IFieldData data) {
@@ -87,6 +88,8 @@ public class ViewRCPTemplate extends PDETemplateSection {
 		} else {
 			validateContainerPage(source);
 		}
+		if (source == fPBrandingOption)
+			updateBrandingEnablement();
 	}
 	
 	private void validateContainerPage(TemplateOption source) {
@@ -108,6 +111,8 @@ public class ViewRCPTemplate extends PDETemplateSection {
 		createApplicationExtension();
 		createPerspectiveExtension();
 		createViewExtension();
+		if (getBooleanOption(KEY_PRODUCT_BRANDING))
+			createProductExtension();
 	}
 	
 	private void createApplicationExtension() throws CoreException {
@@ -160,7 +165,33 @@ public class ViewRCPTemplate extends PDETemplateSection {
 			plugin.add(extension);
 	}
 	
-	/* (non-Javadoc)
+	private void createProductExtension() throws CoreException {
+		IPluginBase plugin = model.getPluginBase();
+		IPluginExtension extension = createExtension("org.eclipse.core.runtime.products", true); //$NON-NLS-1$
+		extension.setId(getStringOption(KEY_PRODUCT_ID));
+
+		IPluginElement element = model.getFactory().createElement(extension);
+		element.setName("product"); //$NON-NLS-1$
+		element.setAttribute("name", getStringOption(KEY_PRODUCT_NAME)); //$NON-NLS-1$
+		element.setAttribute("application", plugin.getId() + "." + getStringOption(KEY_APPLICATION_ID)); //$NON-NLS-1$ //$NON-NLS-2$
+
+		IPluginElement property = model.getFactory().createElement(element);
+
+		property = model.getFactory().createElement(element);
+		property.setName("property"); //$NON-NLS-1$
+		property.setAttribute("name", "windowImages"); //$NON-NLS-1$ //$NON-NLS-2$
+		property.setAttribute("value", "icons/alt_window_16.gif,icons/alt_window_32.gif"); //$NON-NLS-1$ //$NON-NLS-2$
+		element.add(property);
+
+		extension.add(element);
+
+		if (!extension.isInTheModel())
+			plugin.add(extension);
+	}
+   
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see org.eclipse.pde.ui.templates.ITemplateSection#getUsedExtensionPoint()
 	 */
 	public String getUsedExtensionPoint() {
@@ -191,4 +222,9 @@ public class ViewRCPTemplate extends PDETemplateSection {
 		return dep;
 	}
 	
+	public String[] getNewFiles() {
+		if (copyBrandingDirectory())
+			return new String[] { "icons/" }; //$NON-NLS-1$
+		return super.getNewFiles();
+	}
 }
