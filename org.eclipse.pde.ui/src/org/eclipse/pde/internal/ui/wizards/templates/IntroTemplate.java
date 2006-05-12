@@ -330,9 +330,9 @@ public class IntroTemplate extends PDETemplateSection {
 
     public String[] getNewFiles() {
 		if (getValue(KEY_GENERATE_DYNAMIC_CONTENT).toString().equals(STATIC_SELECTED)) {
-			return new String[] {"icons/", "content/", "splash.bmp", "introContent.xml" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+			return new String[] {"icons/", "content/", "splash.bmp", "introContent.xml" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 		}
-		return new String[] {"icons/", "content/", "splash.bmp", "introContent.xml", "ext.xml" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+		return new String[] {"icons/", "content/", "splash.bmp", "introContent.xml", "ext.xml" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
 	}
     
 	protected boolean copyBrandingDirectory() {
