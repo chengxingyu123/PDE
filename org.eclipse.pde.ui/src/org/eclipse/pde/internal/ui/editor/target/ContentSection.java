@@ -69,6 +69,7 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.ui.IWorkingSet;
 import org.eclipse.ui.IWorkingSetManager;
@@ -550,12 +551,29 @@ public class ContentSection extends TableSection {
 				}
 			}
 		} else if (e.getChangeType() == IModelChangedEvent.REMOVE) {
+			
+			Table table = fContentViewer.getTable();
+			int index = table.getSelectionIndex();			
+			
 			for (int i = 0; i < objects.length; i++) {
 				if ((objects[i] instanceof ITargetPlugin && fLastTab == 0) ||
 						(objects[i] instanceof ITargetFeature && fLastTab == 1)) {
 					fContentViewer.remove(objects[i]);
 				}
 			}
+			
+			// Update Selection
+
+			int count = table.getItemCount();
+				
+			if ( count == 0 ) {
+				// Nothing to select
+			} else if ( index < count ) {
+				table.setSelection( index );
+			} else {
+				table.setSelection( count - 1 );
+			}	
+			
 		}
 		if (e.getChangedProperty() == ITarget.P_ALL_PLUGINS)
 			refresh();
