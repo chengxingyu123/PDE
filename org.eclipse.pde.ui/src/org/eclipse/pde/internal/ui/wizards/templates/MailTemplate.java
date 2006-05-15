@@ -357,5 +357,9 @@ public class MailTemplate extends PDETemplateSection {
 	public String[] getNewFiles() {
 		return new String[] {"icons/", "plugin.properties", "product_lg.gif", "splash.bmp"}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 	}
+	
+	protected boolean copyBrandingDirectory() {
+		return true;
+	}
 
 }
