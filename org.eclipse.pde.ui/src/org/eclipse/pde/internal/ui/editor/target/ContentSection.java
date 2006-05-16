@@ -37,7 +37,6 @@ import org.eclipse.pde.core.IModelChangedEvent;
 import org.eclipse.pde.core.plugin.IPluginModelBase;
 import org.eclipse.pde.internal.core.PDECore;
 import org.eclipse.pde.internal.core.TargetPlatform;
-import org.eclipse.pde.internal.core.ibundle.IBundlePluginModelBase;
 import org.eclipse.pde.internal.core.ifeature.IFeature;
 import org.eclipse.pde.internal.core.ifeature.IFeatureModel;
 import org.eclipse.pde.internal.core.itarget.ITarget;
@@ -329,12 +328,10 @@ public class ContentSection extends TableSection {
 		ITarget target = getTarget();
 		IPluginModelBase[] models = PDECore.getDefault().getModelManager().getWorkspaceModels();
 		for (int i = 0; i < models.length; i++) {
-			if (models[i] instanceof IBundlePluginModelBase) {
-				BundleDescription desc = ((IBundlePluginModelBase)models[i]).getBundleDescription();
-				String id = desc.getSymbolicName();
-				if (!target.containsPlugin(id) && !used.containsKey(id))
-					map.put(id, desc);
-			}
+			BundleDescription desc = models[i].getBundleDescription();
+			String id = desc.getSymbolicName();
+			if (!target.containsPlugin(id) && !used.containsKey(id))
+				map.put(id, desc);
 		}
 		return map;
 	}
