@@ -931,9 +931,7 @@ public class PDEUIMessages extends NLS {
 	public static String BaseExtensionPoint_pluginId;
 	public static String BaseExtensionPoint_id;
 	public static String BaseExtensionPoint_name;
-	public static String BaseExtensionPoint_missingId;
-	public static String BaseExtensionPoint_noPlugin_missingId;
-	public static String BaseExtensionPoint_malformedId;
+
 	public static String BaseExtensionPoint_schema;
 	public static String BaseExtensionPoint_schemaLocation;
 	public static String BaseExtensionPoint_edit;
@@ -993,6 +991,19 @@ public class PDEUIMessages extends NLS {
 	public static String NewSchemaFileWizard_title;
 	public static String NewSchemaFileWizard_desc;
 
+	public static String BaseExtensionPointMainPage_missingExtensionPointID;
+	public static String BaseExtensionPointMainPage_invalidCompositeID;
+	public static String BaseExtensionPointMainPage_invalidSimpleID;
+	public static String BaseExtensionPointMainPage_missingExtensionPointName;
+	public static String BaseExtensionPointMainPage_missingExtensionPointSchema;
+	
+	public static String NewSchemaFileMainPage_missingPluginID;
+	public static String NewSchemaFileMainPage_nonExistingPluginID;
+	public static String NewSchemaFileMainPage_externalPluginID;
+	public static String NewSchemaFileMainPage_missingContainer;
+	public static String NewSchemaFileMainPage_invalidContainer;
+	public static String NewSchemaFileMainPage_nonExistingContainer;	
+	
 	public static String ConvertedProjectWizard_title;
 	public static String ConvertedProjectWizard_desc;
 	public static String ConvertedProjectWizard_projectList;
@@ -1351,7 +1362,6 @@ public class PDEUIMessages extends NLS {
 	public static String RuntimeWorkbenchShortcut_name;
 	public static String RuntimeInfoSection_addEntry;
 	public static String RuntimeInfoSection_rename;
-	public static String BaseExtensionPointMainPage_noContainer;
 	public static String BaseExtensionPointMainPage_pluginId_tooltip;
 	public static String BaseExtensionPointMainPage_schemaLocation_tooltip;
 	public static String BaseExtensionPointMainPage_pluginBrowse;
@@ -2869,10 +2879,6 @@ public class PDEUIMessages extends NLS {
 	public static String RemoveInternalDirective_desc;
 
 	public static String ImportPackageSection_dialogButtonLabel;
-	
-	public static String NewExtensionPointMainPage_malformedId;
-
-	public static String NewExtensionPointMainPage_namespaceNotFound;
 	
 	public static String EditorPreferencePage_folding;
 }
