@@ -448,7 +448,6 @@ public class PDEUIMessages extends NLS {
 
 	public static String ManifestEditor_noPlatformHome;
 	public static String ManifestSourcePage_libraries;
-	public static String MailTemplate_perspectiveName;
 	public static String ManifestSourcePage_extensions;
 	public static String MainMethodSearchEngine_search;
 	public static String ManifestEditor_ManifestPropertySheet_gotoAction_label;
@@ -1033,7 +1032,6 @@ public class PDEUIMessages extends NLS {
 	public static String HelloRCPNewWizard_title;
 	public static String HelloRCPTemplate_title;
 	public static String HelloRCPTemplate_desc;
-	public static String HelloRCPTemplate_appId;
 	public static String HelloRCPTemplate_appClass;
 	public static String HelloNonUIRCPNewWizard_title;
 	public static String HelloNonUIRCPTemplate_title;
@@ -1053,9 +1051,7 @@ public class PDEUIMessages extends NLS {
 	public static String IntroNewWizard_wtitle;
 	public static String IntroTemplate_title;
 	public static String IntroTemplate_desc;
-	public static String IntroTemplate_productID;
 	public static String IntroTemplate_productName;
-	public static String IntroTemplate_application;
     public static String IntroTemplate_generate;
     public static String IntroTemplate_generateDynamicContent;
     public static String IntroTemplate_generateStaticContent;
@@ -1063,10 +1059,8 @@ public class PDEUIMessages extends NLS {
 	public static String ViewRCPNewWizard_title;
 	public static String ViewRCPTemplate_title;
 	public static String ViewRCPTemplate_desc;
-	public static String ViewRCPTemplate_appId;
 	public static String ViewRCPTemplate_appClass;
 	public static String ViewRCPTemplate_packageName;
-	public static String ViewRCPTemplate_className;
 	public static String ViewRCPTemplate_windowTitle;
 
 	public static String MultiPageEditorNewWizard_wtitle;
@@ -1732,7 +1726,6 @@ public class PDEUIMessages extends NLS {
 	public static String LoopDialog_title;
 	public static String MatchSection_title;
 	public static String MailTemplate_title;
-	public static String MailTemplate_appId;
 	public static String MailNewWizard_title;
 	public static String MatchSection_desc;
 	public static String MailTemplate_desc;
@@ -1802,7 +1795,6 @@ public class PDEUIMessages extends NLS {
 	public static String EnvironmentBlock_jreNote;
 	public static String EnvironmentBlock_targetEnv;
 	public static String MailTemplate_productName;
-	public static String MailTemplate_productID;
 	public static String MailTemplate_appClass;
 	public static String MailTemplate_packageName;
 
@@ -2003,8 +1995,6 @@ public class PDEUIMessages extends NLS {
 
 	public static String ExtensionPointsSection_showDescription;
 
-	public static String HelloRCPTemplate_perspective;
-	
 	public static String HelloRCPTemplate_productBranding;
 	
 	public static String OverviewPage_buildTitle;

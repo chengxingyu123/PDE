@@ -24,20 +24,18 @@ import org.eclipse.pde.internal.core.TargetPlatform;
 import org.eclipse.pde.internal.core.plugin.PluginBase;
 import org.eclipse.pde.internal.ui.PDEPlugin;
 import org.eclipse.pde.internal.ui.PDEUIMessages;
-import org.eclipse.pde.ui.templates.BooleanOption;
 import org.eclipse.pde.ui.templates.OptionTemplateSection;
-import org.eclipse.pde.ui.templates.TemplateOption;
 import org.osgi.framework.Bundle;
 
 public abstract class PDETemplateSection extends OptionTemplateSection {
 
 	public static final String KEY_PRODUCT_BRANDING = "productBranding"; //$NON-NLS-1$
-	public static final String KEY_PRODUCT_ID = "productID"; //$NON-NLS-1$
 	public static final String KEY_PRODUCT_NAME = "productName"; //$NON-NLS-1$
 	
-	protected TemplateOption fPIDOption;
-	protected TemplateOption fPNameOption;
-	protected BooleanOption fPBrandingOption;
+	public static final String VALUE_PRODUCT_ID = "product"; //$NON-NLS-1$
+	public static final String VALUE_PRODUCT_NAME = "RCP Product"; //$NON-NLS-1$
+	public static final String VALUE_PERSPECTIVE_NAME = "RCP Perspective"; //$NON-NLS-1$
+	public static final String VALUE_APPLICATION_ID = "application"; //$NON-NLS-1$
 	
 	protected ResourceBundle getPluginResourceBundle() {
 		Bundle bundle = Platform.getBundle(PDEPlugin.getPluginId());
@@ -114,15 +112,8 @@ public abstract class PDETemplateSection extends OptionTemplateSection {
 	}
 	
 	protected void createBrandingOptions() {
-		fPBrandingOption = (BooleanOption)addOption(KEY_PRODUCT_BRANDING, PDEUIMessages.HelloRCPTemplate_productBranding, false, 0);
-		fPIDOption = addOption(KEY_PRODUCT_ID, PDEUIMessages.MailTemplate_productID, "product", 0); //$NON-NLS-1$
-		fPIDOption.setEnabled(false);
-		fPNameOption = addOption(KEY_PRODUCT_NAME, PDEUIMessages.MailTemplate_productName, "RCP Product", 0); //$NON-NLS-1$
-		fPNameOption.setEnabled(false);
+		addOption(KEY_PRODUCT_BRANDING, PDEUIMessages.HelloRCPTemplate_productBranding, false, 0);
 	}
 	
-	protected void updateBrandingEnablement() {
-		fPIDOption.setEnabled(fPBrandingOption.isSelected());
-		fPNameOption.setEnabled(fPBrandingOption.isSelected());
-	}
+
 }
