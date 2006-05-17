@@ -1098,7 +1098,6 @@ public class PDEUIMessages extends NLS {
 	public static String PointSelectionPage_tab2;
 	public static String PopupMenuTemplate_desc;
 	public static String PopupMenuTemplate_targetClass;
-	public static String PopupMenuTemplate_nameFilter;
 	public static String PopupMenuTemplate_newAction;
 	public static String PopupMenuTemplate_submenuName;
 	public static String PopupMenuTemplate_defaultSubmenuName;
