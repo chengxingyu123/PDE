@@ -128,7 +128,7 @@ public class EclipseApplicationLaunchConfiguration extends AbstractPDELaunchConf
 				programArgs.add(0, "-launcher");  //$NON-NLS-1$
 				
 				IPath path = null;
-				if (TargetPlatform.getOS().equals("macosx") ) {
+				if (TargetPlatform.getOS().equals("macosx") ) { //$NON-NLS-1$
 					path = ExternalModelManager.getEclipseHome().append("Eclipse.app/Contents/Resources/Splash.app/Contents/MacOS/eclipse"); //$NON-NLS-1$
 				} else {
 					path = ExternalModelManager.getEclipseHome().append("eclipse"); //$NON-NLS-1$	
