@@ -130,6 +130,9 @@ public class ExtensionPointsSection extends TableSection {
 	}
 
 	public boolean doGlobalAction(String actionId) {
+		
+		if (!isEditable()) { return false; }
+		
 		if (actionId.equals(ActionFactory.DELETE.getId())) {
 			handleDelete();
 			return true;

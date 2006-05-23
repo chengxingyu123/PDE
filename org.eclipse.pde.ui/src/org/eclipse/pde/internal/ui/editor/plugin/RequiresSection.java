@@ -191,6 +191,9 @@ public class RequiresSection
 		super.dispose();
 	}
 	public boolean doGlobalAction(String actionId) {
+		
+		if (!isEditable()) { return false; }
+		
 		if (actionId.equals(ActionFactory.DELETE.getId())) {
 			handleRemove();
 			return true;
