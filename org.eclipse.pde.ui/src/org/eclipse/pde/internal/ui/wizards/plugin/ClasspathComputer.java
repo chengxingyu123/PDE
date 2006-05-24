@@ -267,6 +267,7 @@ public class ClasspathComputer {
 	private static void updateSeverityComplianceOption(Map map, String key, String value) {
 		Integer current_value = null;
 		Integer new_value = null;
+		String current_string_value = null;
 		int current_int_value = 0;
 		int new_int_value = 0;
 		// Initialize the severity table (only once)
@@ -277,9 +278,12 @@ public class ClasspathComputer {
 			fSeverityTable.put(JavaCore.ERROR, new Integer(SEVERITY_ERROR));
 		}		
 		// Get the current severity
-		current_value = (Integer)fSeverityTable.get(map.get(key));
-		if (current_value != null) {
-			current_int_value = current_value.intValue();
+		current_string_value = (String)map.get(key);
+		if (current_string_value != null) {
+			current_value = (Integer)fSeverityTable.get(current_string_value);
+			if (current_value != null) {
+				current_int_value = current_value.intValue();
+			}
 		}
 		// Get the new severity
 		new_value = (Integer)fSeverityTable.get(value);
