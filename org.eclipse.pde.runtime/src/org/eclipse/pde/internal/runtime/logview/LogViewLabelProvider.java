@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2005 IBM Corporation and others.
+ * Copyright (c) 2000, 2006 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -13,6 +13,7 @@ package org.eclipse.pde.internal.runtime.logview;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
+import org.eclipse.pde.internal.runtime.PDERuntimeMessages;
 import org.eclipse.pde.internal.runtime.PDERuntimePluginImages;
 import org.eclipse.swt.graphics.Image;
 
@@ -22,6 +23,9 @@ import com.ibm.icu.text.SimpleDateFormat;
 public class LogViewLabelProvider
 	extends LabelProvider
 	implements ITableLabelProvider {
+	
+	private static int MAX_LABEL_LENGTH = 125;
+	
 	private Image infoImage;
 	private Image okImage;
 	private Image errorImage;
@@ -64,8 +68,16 @@ public class LogViewLabelProvider
 		LogEntry entry = (LogEntry) element;
 		switch (columnIndex) {
 		case 0:
-			if (entry.getMessage() != null)
+			if (entry.getMessage() != null) {
+				String message = entry.getMessage();
+				if (message.length() > MAX_LABEL_LENGTH) {
+					String warning = PDERuntimeMessages.LogViewLabelProvider_truncatedMessage;
+					StringBuffer sb = new StringBuffer(message.substring(0, MAX_LABEL_LENGTH - warning.length()));
+					sb.append(warning);
+					return sb.toString();
+				}
 				return entry.getMessage();
+			}
 		case 1:
 			if (entry.getPluginId() != null)
 				return entry.getPluginId();
