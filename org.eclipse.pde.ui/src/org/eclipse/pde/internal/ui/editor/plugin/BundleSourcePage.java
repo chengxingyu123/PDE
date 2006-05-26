@@ -33,6 +33,7 @@ import org.eclipse.pde.internal.core.text.IDocumentRange;
 import org.eclipse.pde.internal.core.text.IReconcilingParticipant;
 import org.eclipse.pde.internal.core.text.bundle.Bundle;
 import org.eclipse.pde.internal.core.text.bundle.BundleModel;
+import org.eclipse.pde.internal.core.text.bundle.ExecutionEnvironment;
 import org.eclipse.pde.internal.core.text.bundle.ExportPackageObject;
 import org.eclipse.pde.internal.core.text.bundle.ImportPackageObject;
 import org.eclipse.pde.internal.core.text.bundle.ManifestHeader;
@@ -195,6 +196,11 @@ public class BundleSourcePage extends KeyValueSourcePage {
 						((IBundlePluginModelBase)base).getBundleModel(),
 						Constants.BUNDLE_CLASSPATH,
 						((IPluginLibrary)fSel).getName());
+		} else if (fSel instanceof ExecutionEnvironment) {
+			return getSpecificRange(
+					((ExecutionEnvironment)fSel).getModel(),
+					Constants.BUNDLE_REQUIREDEXECUTIONENVIRONMENT,
+					((ExecutionEnvironment)fSel).getValue());
 		}
 		return null;
 	}

@@ -397,6 +397,7 @@ public class ExecutionEnvironmentSection extends TableSection {
 	}
 	
     protected void selectionChanged(IStructuredSelection selection) {
+    	getPage().getPDEEditor().setSelection(selection);
 		if (getPage().getModel().isEditable())
 			updateButtons();
 	}
