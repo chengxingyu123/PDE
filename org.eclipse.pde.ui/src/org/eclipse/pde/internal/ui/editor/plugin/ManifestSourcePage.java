@@ -249,4 +249,8 @@ public class ManifestSourcePage extends XMLSourcePage {
 			return (IDocumentNode)fSel;
 		return null;
 	}
+	
+	protected boolean isSelectionListener() {
+		return true;
+	}
 }

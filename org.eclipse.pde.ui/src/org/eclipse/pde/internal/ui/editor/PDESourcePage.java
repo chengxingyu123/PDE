@@ -169,7 +169,8 @@ public abstract class PDESourcePage extends TextEditor implements IFormPage, IGo
 		stores[1] = EditorsUI.getPreferenceStore();
 		setPreferenceStore(new ChainedPreferenceStore(stores));
 		setRangeIndicator(new DefaultRangeIndicator());
-		getEditor().getSite().getSelectionProvider().addSelectionChangedListener(this);
+		if (isSelectionListener())
+			getEditor().getSite().getSelectionProvider().addSelectionChangedListener(this);
 	}
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.forms.editor.IFormPage#initialize(org.eclipse.ui.forms.editor.FormEditor)
@@ -186,7 +187,8 @@ public abstract class PDESourcePage extends TextEditor implements IFormPage, IGo
 			outlinePage.dispose();
 			outlinePage = null;
 		}
-		getEditor().getSite().getSelectionProvider().removeSelectionChangedListener(this);
+		if (isSelectionListener())
+			getEditor().getSite().getSelectionProvider().removeSelectionChangedListener(this);
 		super.dispose();
 	}
 
@@ -384,6 +386,11 @@ public abstract class PDESourcePage extends TextEditor implements IFormPage, IGo
 			fSel = null;
 	}
 	
+	/*
+	 * Locate an IDocumentRange, subclasses that want to 
+	 * highlight text components based on site selection
+	 * should override this method.
+	 */
 	protected IDocumentRange findRange() {
 		return null;
 	}
@@ -401,5 +408,13 @@ public abstract class PDESourcePage extends TextEditor implements IFormPage, IGo
 		}
 		setHighlightRange(range, true);
 		setSelectedRange(range, true);
+	}
+	
+	/*
+	 * Subclasses that wish to provide PDEFormPage -> PDESourcePage
+	 * selection persistence should override this and return true.
+	 */
+	protected boolean isSelectionListener() {
+		return false;
 	}
 }

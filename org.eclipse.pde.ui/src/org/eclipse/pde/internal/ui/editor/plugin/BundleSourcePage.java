@@ -264,4 +264,7 @@ public class BundleSourcePage extends KeyValueSourcePage {
 		return null;
 	}
 
+	protected boolean isSelectionListener() {
+		return true;
+	}
 }
