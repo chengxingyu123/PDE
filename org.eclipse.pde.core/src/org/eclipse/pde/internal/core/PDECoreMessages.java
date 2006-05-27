@@ -215,5 +215,6 @@ public class PDECoreMessages extends NLS {
 
 	public static String FeatureExportJob_taskName;
 
-
+	public static String XMLErrorReporter_ExternalEntityResolution;
+	
 }
