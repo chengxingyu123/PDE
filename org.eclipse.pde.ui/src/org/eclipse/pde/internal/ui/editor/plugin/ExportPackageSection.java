@@ -575,4 +575,5 @@ public class ExportPackageSection extends TableSection implements IModelChangedL
         return (manifestVersion < 2) ? ICoreConstants.PROVIDE_PACKAGE : Constants.EXPORT_PACKAGE;
     }
 
+	protected boolean createCount() { return true; }
 }

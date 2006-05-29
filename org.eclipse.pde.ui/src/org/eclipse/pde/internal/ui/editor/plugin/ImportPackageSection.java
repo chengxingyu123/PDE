@@ -820,4 +820,6 @@ public class ImportPackageSection extends TableSection implements IModelChangedL
             }
         }        
     }
+
+	protected boolean createCount() { return true; }
 }
