@@ -372,4 +372,5 @@ public class FeatureSection extends TableSection {
 			tablePart.setButtonEnabled(2, isEditable() && fFeatureTable.getTable().getItemCount() > 0);
 	}
 	
+	protected boolean createCount() { return true; }
 }

@@ -546,4 +546,5 @@ public class RequiresSection
 		}
 	}
 */
+	protected boolean createCount() { return true; }
 }

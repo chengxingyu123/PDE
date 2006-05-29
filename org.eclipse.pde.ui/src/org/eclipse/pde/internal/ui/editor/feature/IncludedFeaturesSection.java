@@ -460,4 +460,6 @@ public class IncludedFeaturesSection extends TableSection implements
 					fIncludesViewer.getElementAt(0)));
 		}
 	}
+	
+	protected boolean createCount() { return true; }
 }

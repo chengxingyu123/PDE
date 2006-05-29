@@ -91,6 +91,8 @@ public class PDEUIMessages extends NLS {
 
 	public static String ShowDescriptionAction_schemaNotAvail;
 
+	public static String TableSection_itemCount;
+
 	public static String UpdateClasspathResolution_label;
 
 	//

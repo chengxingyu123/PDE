@@ -444,4 +444,6 @@ public class PluginSection extends TableSection implements
 					.getElementAt(0)));
 		}
 	}
+	
+	protected boolean createCount() { return true; }
 }

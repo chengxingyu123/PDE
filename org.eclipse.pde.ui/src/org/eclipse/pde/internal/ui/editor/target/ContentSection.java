@@ -673,4 +673,6 @@ public class ContentSection extends TableSection {
 				fTabImages[i].dispose();
 		super.dispose();
 	}
+	
+	protected boolean createCount() { return true; }
 }
