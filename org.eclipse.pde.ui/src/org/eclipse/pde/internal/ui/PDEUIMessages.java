@@ -23,6 +23,12 @@ public class PDEUIMessages extends NLS {
 
 	public static String ExportOptionsTab_antReservedMessage;
 
+	public static String FormatManifestAction_actionText;
+
+	public static String FormatManifestOperation_subtask;
+
+	public static String FormatManifestOperation_task;
+
 	public static String HelpTemplate_sampleText;
 
 	public static String ImportActionGroup_binaryWithLinkedContent;

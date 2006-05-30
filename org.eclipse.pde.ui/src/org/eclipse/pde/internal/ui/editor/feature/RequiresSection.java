@@ -162,7 +162,7 @@ public class RequiresSection extends TableSection implements
 							try {
 								doAdd(models);
 							} catch (CoreException e) {
-								PDECore.log(e);
+								PDEPlugin.log(e);
 							}
 						}
 					}

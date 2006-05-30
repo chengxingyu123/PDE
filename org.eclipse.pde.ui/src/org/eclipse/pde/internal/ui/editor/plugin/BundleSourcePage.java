@@ -13,6 +13,8 @@ import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.Enumeration;
 
+import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.ITextSelection;
 import org.eclipse.jface.text.reconciler.IReconciler;
@@ -22,6 +24,7 @@ import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.jface.viewers.ILabelProvider;
 import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.LabelProvider;
+import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.pde.core.plugin.IPluginLibrary;
 import org.eclipse.pde.core.plugin.IPluginModelBase;
 import org.eclipse.pde.internal.core.ibundle.IBundleModel;
@@ -47,6 +50,7 @@ import org.eclipse.pde.internal.ui.editor.text.IColorManager;
 import org.eclipse.pde.internal.ui.editor.text.ManifestConfiguration;
 import org.eclipse.pde.internal.ui.editor.text.ReconcilingStrategy;
 import org.eclipse.pde.internal.ui.elements.DefaultContentProvider;
+import org.eclipse.pde.internal.ui.util.FormatManifestAction;
 import org.eclipse.swt.graphics.Image;
 import org.osgi.framework.Constants;
 
@@ -266,5 +270,13 @@ public class BundleSourcePage extends KeyValueSourcePage {
 
 	protected boolean isSelectionListener() {
 		return true;
+	}
+	
+	protected void editorContextMenuAboutToShow(IMenuManager menu) {
+		super.editorContextMenuAboutToShow(menu);
+		menu.add(new Separator());
+		FormatManifestAction action = new FormatManifestAction();
+		action.selectionChanged(null, new StructuredSelection(getEditorInput()));
+		menu.add(action);
 	}
 }

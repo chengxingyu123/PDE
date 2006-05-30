@@ -403,6 +403,10 @@ public class XMLTextChangeListener extends AbstractTextChangeListener {
 	}
 
 	public void modelChanged(IModelChangedEvent event) {
+		Object old = event.getOldValue();
+		if (event.getChangeType() == IModelChangedEvent.CHANGE &&
+				old != null && old.equals(event.getNewValue()))
+			return;
 		Object[] objects = event.getChangedObjects();
 		if (objects == null)
 			return;
