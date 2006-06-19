@@ -58,8 +58,9 @@ public class PDEFormEditorContributor extends MultiPageEditorActionBarContributo
 	private ClipboardAction pasteAction;
 	private Hashtable globalActions = new Hashtable();
 	private TextEditorActionContributor sourceContributor;
-	private RetargetTextEditorAction fCorrectionAssist ;
+	private RetargetTextEditorAction fCorrectionAssist;
 	private HyperlinkAction fHyperlinkAction;
+	private RetargetTextEditorAction fContentAssist;
 	class GlobalAction extends Action implements IUpdate {
 		private String id;
 		public GlobalAction(String id) {
@@ -150,6 +151,8 @@ public class PDEFormEditorContributor extends MultiPageEditorActionBarContributo
 		fCorrectionAssist.setActionDefinitionId(ITextEditorActionDefinitionIds.QUICK_ASSIST);
 		fHyperlinkAction = new HyperlinkAction();
 		fHyperlinkAction.setActionDefinitionId(IJavaEditorActionDefinitionIds.OPEN_EDITOR);
+		fContentAssist = new RetargetTextEditorAction(PDESourcePage.getBundleForConstructedKeys(), "ContentAssistProposal."); //$NON-NLS-1$
+		fContentAssist.setActionDefinitionId(ITextEditorActionDefinitionIds.CONTENT_ASSIST_PROPOSALS);
 		sourceContributor = new TextEditorActionContributor() {
 			public void contributeToMenu(IMenuManager mm) {
 				super.contributeToMenu(mm);
@@ -160,6 +163,7 @@ public class PDEFormEditorContributor extends MultiPageEditorActionBarContributo
 					editMenu.add(new Separator(IContextMenuConstants.GROUP_ADDITIONS));
 
 					editMenu.appendToGroup(IContextMenuConstants.GROUP_GENERATE, fCorrectionAssist);
+					editMenu.appendToGroup(IContextMenuConstants.GROUP_GENERATE, fContentAssist);
 				}
 			}
 			public void setActiveEditor(IEditorPart part) {
@@ -177,6 +181,7 @@ public class PDEFormEditorContributor extends MultiPageEditorActionBarContributo
 
 				fCorrectionAssist.setAction(getAction(textEditor, ITextEditorActionConstants.QUICK_ASSIST)); //$NON-NLS-1$
 				fHyperlinkAction.setTextEditor(textEditor);
+				fContentAssist.setAction(getAction(textEditor, "ContentAssist")); //$NON-NLS-1$
 			}
 			public void contributeToToolBar(IToolBarManager toolBarManager) {
 				super.contributeToToolBar(toolBarManager);

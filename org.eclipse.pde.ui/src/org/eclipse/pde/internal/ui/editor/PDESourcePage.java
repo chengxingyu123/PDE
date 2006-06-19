@@ -19,6 +19,7 @@ package org.eclipse.pde.internal.ui.editor;
 import java.util.ResourceBundle;
 
 import org.eclipse.core.resources.IMarker;
+import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.preference.IPreferenceStore;
@@ -58,8 +59,10 @@ import org.eclipse.ui.forms.editor.IFormPage;
 import org.eclipse.ui.ide.IDE;
 import org.eclipse.ui.ide.IGotoMarker;
 import org.eclipse.ui.texteditor.ChainedPreferenceStore;
+import org.eclipse.ui.texteditor.ContentAssistAction;
 import org.eclipse.ui.texteditor.DefaultRangeIndicator;
 import org.eclipse.ui.texteditor.ITextEditorActionConstants;
+import org.eclipse.ui.texteditor.ITextEditorActionDefinitionIds;
 
 public abstract class PDESourcePage extends TextEditor implements IFormPage, IGotoMarker, ISelectionChangedListener {
 	
@@ -383,6 +386,11 @@ public abstract class PDESourcePage extends TextEditor implements IFormPage, IGo
 		setAction(ITextEditorActionConstants.RULER_CLICK, action);
 		if (editor != null)
 			setAction(PDEActionConstants.OPEN, editor.getContributor().getHyperlinkAction());
+		IAction contentAssist = new ContentAssistAction(
+				getBundleForConstructedKeys(), "ContentAssistProposal.", this); //$NON-NLS-1$
+		contentAssist.setActionDefinitionId(ITextEditorActionDefinitionIds.CONTENT_ASSIST_PROPOSALS);
+		setAction("ContentAssist", contentAssist); //$NON-NLS-1$
+		markAsStateDependentAction("ContentAssist", true); //$NON-NLS-1$
 	}
 	
 	public final void selectionChanged(SelectionChangedEvent event) {
