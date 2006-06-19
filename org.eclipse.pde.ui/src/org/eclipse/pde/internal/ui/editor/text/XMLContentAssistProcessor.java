@@ -13,8 +13,6 @@ import org.eclipse.jface.text.contentassist.IContextInformation;
 import org.eclipse.jface.text.contentassist.IContextInformationValidator;
 import org.eclipse.pde.core.IBaseModel;
 import org.eclipse.pde.core.IIdentifiable;
-import org.eclipse.pde.core.plugin.IExtensionsModelFactory;
-import org.eclipse.pde.core.plugin.IPluginAttribute;
 import org.eclipse.pde.core.plugin.IPluginBase;
 import org.eclipse.pde.core.plugin.IPluginElement;
 import org.eclipse.pde.core.plugin.IPluginExtension;
@@ -32,6 +30,7 @@ import org.eclipse.pde.internal.core.ischema.ISchemaRestriction;
 import org.eclipse.pde.internal.core.text.IDocumentAttribute;
 import org.eclipse.pde.internal.core.text.IDocumentNode;
 import org.eclipse.pde.internal.core.text.IDocumentRange;
+import org.eclipse.pde.internal.ui.PDEPlugin;
 import org.eclipse.pde.internal.ui.PDEPluginImages;
 import org.eclipse.pde.internal.ui.editor.PDESourcePage;
 import org.eclipse.swt.graphics.Image;
@@ -83,14 +82,14 @@ public class XMLContentAssistProcessor implements IContentAssistProcessor {
 		public void apply(IDocument document) {
 			IBaseModel baseModel = fSourcePage.getInputContext().getModel();
 			if (baseModel instanceof IPluginModelBase) {
-				IExtensionsModelFactory factory = ((IPluginModelBase)baseModel).getFactory();
 				if (fSchemaObject instanceof ISchemaAttribute) {
 					if (fNode instanceof IPluginElement) {
-						IPluginAttribute attr = factory.createAttribute((IPluginElement)fNode);
 						try {
-							attr.setName(((ISchemaAttribute)fSchemaObject).getName());
-							attr.setValue("");
+							((IPluginElement)fNode).setAttribute(
+									((ISchemaAttribute)fSchemaObject).getName(),
+									"name");
 						} catch (CoreException e) {
+							PDEPlugin.log(e);
 						}
 					}
 				}
@@ -226,6 +225,9 @@ public class XMLContentAssistProcessor implements IContentAssistProcessor {
 					return null;
 				String eleValue = viewer.getDocument().get(node.getOffset(), node.getLength());
 				int beforeClose = eleValue.indexOf('>');
+				//TODO beforeClose should never be -1 - model needs to be reconciled sooner 
+				if (beforeClose <= 0)
+					return null;
 				if (eleValue.charAt(beforeClose - 1) == '/')
 					beforeClose -= 1;
 				ISchemaElement sElem = XMLUtil.getSchemaElement(node, ((IPluginExtension)obj).getPoint());
