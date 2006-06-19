@@ -98,7 +98,7 @@ public class BundleSourcePage extends KeyValueSourcePage {
 	protected ITreeContentProvider createOutlineContentProvider() {
 		return new BundleOutlineContentProvider();
 	}
-	public IDocumentRange getRangeElement(int offset) {
+	public IDocumentRange getRangeElement(int offset, boolean searchChildren) {
 		IBundleModel model = (IBundleModel) getInputContext().getModel();
 		Dictionary manifest = ((Bundle) model.getBundle()).getHeaders();
 

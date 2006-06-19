@@ -39,7 +39,7 @@ public class ManifestHyperlinkDetector implements IHyperlinkDetector {
 		if (region == null || canShowMultipleHyperlinks)
 			return null;
 
-		IDocumentRange element = fSourcePage.getRangeElement(region.getOffset());
+		IDocumentRange element = fSourcePage.getRangeElement(region.getOffset(), true);
 		if (!XMLUtil.withinRange(element, region.getOffset()))
 			return null;
 		

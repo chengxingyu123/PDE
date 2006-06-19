@@ -147,7 +147,7 @@ public class XMLContentAssistProcessor implements IContentAssistProcessor {
 	}
 
 	public ICompletionProposal[] computeCompletionProposals(ITextViewer viewer, int offset) {
-		IDocumentRange range = fSourcePage.getRangeElement(offset);
+		IDocumentRange range = fSourcePage.getRangeElement(offset, true);
 		if (range instanceof IDocumentAttribute) {
 			// if we are rigth AT (cursor before) the attribute, we want to contribute
 			// to its parent

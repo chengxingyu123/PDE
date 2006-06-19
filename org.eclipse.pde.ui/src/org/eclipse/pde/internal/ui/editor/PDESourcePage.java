@@ -107,7 +107,7 @@ public abstract class PDESourcePage extends TextEditor implements IFormPage, IGo
 		public void selectionChanged(SelectionChangedEvent event) {
 			ISelection selection = event.getSelection();
 			if (!selection.isEmpty() && selection instanceof ITextSelection) {
-				IDocumentRange rangeElement = getRangeElement(((ITextSelection) selection).getOffset());
+				IDocumentRange rangeElement = getRangeElement(((ITextSelection) selection).getOffset(), false);
 				if (rangeElement != null) {
 					setHighlightRange(rangeElement, false);
 				} else {
@@ -116,16 +116,12 @@ public abstract class PDESourcePage extends TextEditor implements IFormPage, IGo
 				// notify outline page
 				if (PDEPlugin.getDefault().getPreferenceStore().getBoolean(
 						"ToggleLinkWithEditorAction.isChecked")) { //$NON-NLS-1$
-					outlinePage
-							.removeSelectionChangedListener(outlineSelectionChangedListener);
-					if (rangeElement != null) {
-						outlinePage.setSelection(new StructuredSelection(
-								rangeElement));
-					} else {
+					outlinePage.removeSelectionChangedListener(outlineSelectionChangedListener);
+					if (rangeElement != null)
+						outlinePage.setSelection(new StructuredSelection(rangeElement));
+					else
 						outlinePage.setSelection(StructuredSelection.EMPTY);
-					}
-					outlinePage
-							.addSelectionChangedListener(outlineSelectionChangedListener);
+					outlinePage.addSelectionChangedListener(outlineSelectionChangedListener);
 				}
 			}
 		}
@@ -331,7 +327,7 @@ public abstract class PDESourcePage extends TextEditor implements IFormPage, IGo
 		return false;
 	}
 	
-	public IDocumentRange getRangeElement(int offset) {
+	public IDocumentRange getRangeElement(int offset, boolean searchChildren) {
 		return null;
 	}
 

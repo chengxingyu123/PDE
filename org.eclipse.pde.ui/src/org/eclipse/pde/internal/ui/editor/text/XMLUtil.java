@@ -1,5 +1,6 @@
 package org.eclipse.pde.internal.ui.editor.text;
 
+import org.eclipse.pde.core.plugin.IPluginElement;
 import org.eclipse.pde.core.plugin.IPluginExtension;
 import org.eclipse.pde.core.plugin.IPluginExtensionPoint;
 import org.eclipse.pde.core.plugin.IPluginObject;
@@ -22,9 +23,17 @@ public abstract class XMLUtil {
 	 * @param node
 	 * @return the IPluginExtension or IPluginExtensionPoint that contains <code>node</code>
 	 */
-	public static IPluginObject getTopLevelParent(IDocumentNode node) {
-		if (node instanceof IDocumentAttribute)
-			node = ((IDocumentAttribute)node).getEnclosingElement();
+	public static IPluginObject getTopLevelParent(IDocumentRange range) {
+		IDocumentNode node = null;
+		if (range instanceof IDocumentAttribute)
+			node = ((IDocumentAttribute)range).getEnclosingElement();
+		else if (range instanceof IDocumentTextNode)
+			node = ((IDocumentTextNode)range).getEnclosingElement();
+		else if (range instanceof IPluginElement)
+			node = (IDocumentNode)range;
+		else if (range instanceof IPluginObject)
+			// not an attribute/text node/element -> return direct node
+			return (IPluginObject)range; 
 		
 		while (node != null && 
 				!(node instanceof IPluginExtension) && 

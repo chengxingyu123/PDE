@@ -48,7 +48,7 @@ public class BundleHyperlinkDetector implements IHyperlinkDetector {
 		if (region == null || canShowMultipleHyperlinks)
 			return null;
 
-		IDocumentRange element = fSourcePage.getRangeElement(region.getOffset());
+		IDocumentRange element = fSourcePage.getRangeElement(region.getOffset(), true);
 		if (!(element instanceof ManifestHeader))
 			return null;
 		
