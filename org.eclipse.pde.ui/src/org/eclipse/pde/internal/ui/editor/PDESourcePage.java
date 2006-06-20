@@ -21,7 +21,6 @@ import java.util.ResourceBundle;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.action.IMenuManager;
-import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.ITextSelection;
@@ -440,10 +439,8 @@ public abstract class PDESourcePage extends TextEditor implements IFormPage, IGo
 	protected void editorContextMenuAboutToShow(IMenuManager menu) {
 		if (editor != null) {
 			HyperlinkAction action = editor.getContributor().getHyperlinkAction();
-			if (action.isEnabled()) {
-				menu.add(new Separator());
+			if (action.isEnabled())
 				menu.add(action);
-			}
 		}
 		super.editorContextMenuAboutToShow(menu);
 	}
