@@ -11,6 +11,9 @@
 package org.eclipse.pde.internal.ui.editor.text;
 
 import org.eclipse.jface.text.IDocument;
+import org.eclipse.jface.text.contentassist.ContentAssistant;
+import org.eclipse.jface.text.contentassist.IContentAssistProcessor;
+import org.eclipse.jface.text.contentassist.IContentAssistant;
 import org.eclipse.jface.text.presentation.IPresentationReconciler;
 import org.eclipse.jface.text.presentation.PresentationReconciler;
 import org.eclipse.jface.text.quickassist.IQuickAssistAssistant;
@@ -32,6 +35,7 @@ public class ManifestConfiguration extends ChangeAwareSourceViewerConfiguration 
 	private BasePDEScanner fPropertyKeyScanner;
 	private BasePDEScanner fPropertyValueScanner;
 	private PDEQuickAssistAssistant fQuickAssistant;
+	private ContentAssistant fContentAssistant;
 	
 	class ManifestHeaderScanner extends BasePDEScanner {
 		
@@ -239,5 +243,19 @@ public class ManifestConfiguration extends ChangeAwareSourceViewerConfiguration 
 	public void dispose() {
 		if (fQuickAssistant != null)
 			fQuickAssistant.dispose();
+	}
+	
+	public IContentAssistant getContentAssistant(ISourceViewer sourceViewer) {
+		if (fSourcePage != null && fSourcePage.isEditable()) {
+			if (fContentAssistant == null) {
+				fContentAssistant = new ContentAssistant();
+				fContentAssistant.setDocumentPartitioning(getConfiguredDocumentPartitioning(sourceViewer));
+				IContentAssistProcessor processor = new ManifestContentAssitProcessor(fSourcePage);
+				fContentAssistant.setContentAssistProcessor(processor, IDocument.DEFAULT_CONTENT_TYPE);
+				fContentAssistant.setContentAssistProcessor(processor, ManifestPartitionScanner.MANIFEST_HEADER_VALUE);
+			}
+			return fContentAssistant;
+		}
+		return null;
 	}
 }
