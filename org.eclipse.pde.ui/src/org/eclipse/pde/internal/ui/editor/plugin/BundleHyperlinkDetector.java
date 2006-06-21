@@ -122,7 +122,7 @@ public class BundleHyperlinkDetector implements IHyperlinkDetector {
 			
 			// scan forwards to find the end of the word
 			int upOffset = offset;
-			c = value.charAt(++upOffset);
+			c = value.charAt(upOffset);
 			int length = value.length();
 			while (c != ';' && c != ',' && upOffset < length - 1) {
 				if (!elementChar(c, false))
