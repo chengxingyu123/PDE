@@ -42,9 +42,7 @@ public class XMLCompletionProposal implements ICompletionProposal {
 			sb.append(((IDocumentNode)fRange).getXMLTagName());
 			sb.append('>');
 		} else if (fSchemaObject.getName().equals(XMLContentAssistProcessor.F_COMMENT)) {
-			sb.append('<');
 			sb.append(XMLContentAssistProcessor.F_COMMENT);
-			sb.append('>');
 			fSelOffset = fOffset + 5; // select "comment"
 			fSelLen = 7;
 		} else if (fSchemaObject instanceof ISchemaAttribute) {
@@ -98,8 +96,12 @@ public class XMLCompletionProposal implements ICompletionProposal {
 	public String getDisplayString() {
 		if (fSchemaObject instanceof ISchemaAttribute)
 			return fSchemaObject.getName();
-		if (fSchemaObject != null)
-			return '<' + fSchemaObject.getName() + '>';
+		if (fSchemaObject != null) {
+			String name = fSchemaObject.getName(); 
+			if (name.equals(XMLContentAssistProcessor.F_COMMENT))
+				return name;
+			return '<' + name + '>';
+		}
 		if (fRange instanceof IDocumentNode)
 			return NLS.bind("open up the <{0}> element", ((IDocumentNode)fRange).getXMLTagName());
 		return null;
