@@ -16,6 +16,7 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.pde.core.plugin.IFragment;
 import org.eclipse.pde.core.plugin.IPluginBase;
 import org.eclipse.pde.core.plugin.IPluginExtensionPoint;
+import org.eclipse.pde.core.plugin.IPluginModelBase;
 import org.w3c.dom.Node;
 
 public class PluginExtensionPoint extends IdentifiablePluginObject
@@ -30,14 +31,22 @@ public class PluginExtensionPoint extends IdentifiablePluginObject
 	}
 
 	public String getFullId() {
-		String pointId = getId();
-		if (pointId.indexOf('.') > 0)
-			return pointId;
-		
-		IPluginBase pluginBase = getPluginModel().getPluginBase();
-		if (pluginBase instanceof IFragment)
-			return ((IFragment) pluginBase).getPluginId() + '.' + pointId;
-		return pluginBase.getId() + '.' + pointId;
+		IPluginModelBase modelBase = getPluginModel();
+		IPluginBase pluginBase = modelBase.getPluginBase();
+		if ("3.2".equals(pluginBase.getSchemaVersion())) { //$NON-NLS-1$
+			String pointId = getId();
+			if (pointId.indexOf('.') > 0)
+				return pointId;
+		}
+		String id = pluginBase.getId();
+		if (pluginBase instanceof IFragment) {
+			id = ((IFragment) pluginBase).getPluginId();
+		}
+		String point_id = getId();
+		if (point_id.indexOf('.') == -1) {
+			return id + "." + point_id; //$NON-NLS-1$
+		}
+		return point_id;		
 	}
 	
 	public String getSchema() {
