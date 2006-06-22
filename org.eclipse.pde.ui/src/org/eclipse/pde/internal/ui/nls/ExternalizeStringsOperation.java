@@ -30,6 +30,7 @@ import org.eclipse.pde.core.IBaseModel;
 import org.eclipse.pde.core.plugin.IPluginModelBase;
 import org.eclipse.pde.internal.core.ibundle.IBundle;
 import org.eclipse.pde.internal.core.ibundle.IBundlePluginModel;
+import org.eclipse.pde.internal.ui.PDEPlugin;
 import org.eclipse.pde.internal.ui.PDEUIMessages;
 import org.eclipse.pde.internal.ui.util.ModelModification;
 import org.eclipse.pde.internal.ui.util.PDEModelUtility;
@@ -110,15 +111,19 @@ public class ExternalizeStringsOperation extends WorkspaceModifyOperation {
 		IPluginModelBase base = change.getParentModel();
 		IFile manifest = base.getUnderlyingResource().getProject().getFile(PDEModelUtility.F_MANIFEST_FP);
 		final String localiz = change.getBundleLocalization();
-		PDEModelUtility.modifyModel(new ModelModification(manifest) {
-			protected void modifyModel(IBaseModel model, IProgressMonitor monitor) throws CoreException {
-				if (model instanceof IBundlePluginModel) {
-					IBundlePluginModel bundleModel = (IBundlePluginModel) model;
-					IBundle bundle = bundleModel.getBundleModel().getBundle();
-					bundle.setLocalization(localiz);
+		try {
+			PDEModelUtility.modifyModel(new ModelModification(manifest) {
+				protected void modifyModel(IBaseModel model, IProgressMonitor monitor) throws CoreException {
+					if (model instanceof IBundlePluginModel) {
+						IBundlePluginModel bundleModel = (IBundlePluginModel) model;
+						IBundle bundle = bundleModel.getBundleModel().getBundle();
+						bundle.setLocalization(localiz);
+					}
 				}
-			}
-		}, mon);
+			}, mon);
+		} catch (CoreException e) {
+			PDEPlugin.log(e);
+		}
 	}
 	
 	public static InsertEdit getPropertiesInsertEdit(IDocument doc, ModelChangeElement element) {

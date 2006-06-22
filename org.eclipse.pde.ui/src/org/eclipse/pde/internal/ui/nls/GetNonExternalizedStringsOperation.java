@@ -42,6 +42,7 @@ import org.eclipse.pde.internal.core.ischema.ISchemaElement;
 import org.eclipse.pde.internal.core.schema.SchemaRegistry;
 import org.eclipse.pde.internal.core.text.IDocumentAttribute;
 import org.eclipse.pde.internal.core.text.IDocumentNode;
+import org.eclipse.pde.internal.ui.PDEPlugin;
 import org.eclipse.pde.internal.ui.PDEUIMessages;
 import org.eclipse.pde.internal.ui.util.ModelModification;
 import org.eclipse.pde.internal.ui.util.PDEModelUtility;
@@ -84,25 +85,29 @@ public class GetNonExternalizedStringsOperation implements IRunnableWithProgress
 	}
 	
 	private void getUnExternalizedStrings(IProject project, IProgressMonitor monitor) {
-		PDEModelUtility.modifyModel(new ModelModification(project) {
-			protected void modifyModel(IBaseModel model, IProgressMonitor monitor) throws CoreException {
-				if (model instanceof IBundlePluginModelBase)
-					inspectManifest((IBundlePluginModelBase)model, monitor);
-				
-				if (monitor.isCanceled()) {
-					fCanceled = true;
-					return;
+		try {
+			PDEModelUtility.modifyModel(new ModelModification(project) {
+				protected void modifyModel(IBaseModel model, IProgressMonitor monitor) throws CoreException {
+					if (model instanceof IBundlePluginModelBase)
+						inspectManifest((IBundlePluginModelBase)model, monitor);
+					
+					if (monitor.isCanceled()) {
+						fCanceled = true;
+						return;
+					}
+					
+					if (model instanceof IPluginModelBase)
+						inspectXML((IPluginModelBase)model, monitor);
+					
+					if (monitor.isCanceled()) {
+						fCanceled = true;
+						return;
+					}
 				}
-				
-				if (model instanceof IPluginModelBase)
-					inspectXML((IPluginModelBase)model, monitor);
-				
-				if (monitor.isCanceled()) {
-					fCanceled = true;
-					return;
-				}
-			}
-		}, monitor);
+			}, monitor);
+		} catch (CoreException e) {
+			PDEPlugin.log(e);
+		}
 		monitor.done();
 	}
 	
