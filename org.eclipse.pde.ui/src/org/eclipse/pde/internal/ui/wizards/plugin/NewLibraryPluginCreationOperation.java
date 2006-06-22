@@ -234,7 +234,9 @@ public class NewLibraryPluginCreationOperation extends
 		}
 	}
 
-	private void removeExportRoot(IFile file, IProgressMonitor monitor) {
+	private void removeExportRoot(IFile file, IProgressMonitor monitor)
+			throws CoreException {
+		
 		ModelModification mod = new ModelModification(file) {
 			protected void modifyModel(IBaseModel model, IProgressMonitor monitor) throws CoreException {
 				if (!(model instanceof IBundlePluginModelBase))
@@ -274,12 +276,12 @@ public class NewLibraryPluginCreationOperation extends
 			IBuildModelFactory factory) throws CoreException {
 		if (fData.isUnzipLibraries()) {
 			// SOURCE.<LIBRARY_NAME>
-			IBuildEntry entry = factory.createEntry(IBuildEntry.JAR_PREFIX + "."); //$NON-NLS-1$
+			IBuildEntry entry = factory.createEntry(IBuildEntry.JAR_PREFIX + ".");
 			entry.addToken("."); //$NON-NLS-1$
 			model.getBuild().add(entry);
 
 			// OUTPUT.<LIBRARY_NAME>
-			entry = factory.createEntry(IBuildEntry.OUTPUT_PREFIX + "."); //$NON-NLS-1$
+			entry = factory.createEntry(IBuildEntry.OUTPUT_PREFIX + ".");
 			entry.addToken("."); //$NON-NLS-1$
 			model.getBuild().add(entry);		
 		}
