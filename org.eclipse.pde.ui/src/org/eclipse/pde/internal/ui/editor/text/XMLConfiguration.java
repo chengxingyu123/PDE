@@ -181,6 +181,7 @@ public class XMLConfiguration extends ChangeAwareSourceViewerConfiguration {
 			fContentAssistant.setContentAssistProcessor(fContentAssistProcessor, IDocument.DEFAULT_CONTENT_TYPE);
 			
 			fContentAssistant.setShowEmptyList(false);
+			fContentAssistant.addCompletionListener(fContentAssistProcessor);
 		}
 		return fContentAssistant;
 	}
