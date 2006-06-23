@@ -1,5 +1,6 @@
 package org.eclipse.pde.internal.ui.editor.text;
 
+import java.util.HashSet;
 import java.util.Stack;
 
 import org.eclipse.core.runtime.CoreException;
@@ -218,7 +219,16 @@ public class XMLCompletionProposal implements ICompletionProposal {
 	
 	public void computeInsertionElement(ISchemaElement sElement, 
 			IPluginElement pElement) {
+		computeInsertionElement(sElement, pElement, new HashSet());
+	}
 	
+	
+	public void computeInsertionElement(ISchemaElement sElement, 
+			IPluginElement pElement, HashSet visited) {
+	
+		// TODO:  VERY IMPORTANT:  DETECT CYCLES - track visited using a 
+		// HashSet
+		
 		if (sElement == null) {
 			// If there is no corresponding schema information, then there is 
 			// nothing to augment
@@ -234,12 +244,15 @@ public class XMLCompletionProposal implements ICompletionProposal {
 		}
 		// We have a complex type
 		ISchemaComplexType type = (ISchemaComplexType)sElement.getType();
-		
+		// TODO:  Determine if we should always ignore mixed content types
+		//type.isMixed();
 
 		ISchemaAttribute[] attributes = type.getAttributes();
 		for (int i = 0; i < type.getAttributeCount(); i++) {
 			// TODO:  MP:  Check if attributes deprecated ?
 			attributes[i].isDeprecated();
+
+			// TODO: MP:  Check for enumerated values and pick one
 			if (attributes[i].getUse() == ISchemaAttribute.DEFAULT) {
 				// TODO:  MP:  Debug
 				System.out.println(
@@ -283,69 +296,158 @@ public class XMLCompletionProposal implements ICompletionProposal {
 			}
 		}
 		
-		ISchemaCompositor component = type.getCompositor();
+		ISchemaCompositor compositor = type.getCompositor();
 
 		// TODO:  MP:  Determine if this could be null
-		if (component == null) {
+		if (compositor == null) {
 			return;
 		}
 		
 		// Note:  Don't care about min occurences for root node
 		
-		if (component.getKind() == ISchemaCompositor.CHOICE) {
+		if (compositor.getKind() == ISchemaCompositor.CHOICE) {
 			// Do not process - too presumptious to choose for the
 			// user
 			// - let plugin manifest editor flag an error
 			// - could insert a comment indicating as such - phase #2
 			return;
-		} else if (component.getKind() == ISchemaCompositor.ALL) {
+		} else if (compositor.getKind() == ISchemaCompositor.ALL) {
 			// Not supported by PDE - should never get here
 			return;
-		} else if (component.getKind() == ISchemaCompositor.GROUP) {
+		} else if (compositor.getKind() == ISchemaCompositor.GROUP) {
 			// Not supported by PDE - should never get here
 			return;
 		} 
 		
 		// Assume SEQUENCE if got this far
 		
-		ISchemaObject[] schemaObject = component.getChildren();
-		for (int i = 0; i < component.getChildCount(); i++) {
-			// TODO: MP:  Do we really need this check?
-			if (schemaObject[i] instanceof ISchemaElement) {
-				ISchemaElement schemaElement = (ISchemaElement) schemaObject[i];
-				// TODO:  MP:  Check if elements deprecated ?
-				schemaElement.isDeprecated();
-				// TODO: MP:  Probably a more efficient way to do this
-				// Just insert the previously created node multiple times
-				for (int j = 0; j < schemaElement.getMinOccurs(); j++) {
-					System.out.println("ELEMENT:  "
-							+ schemaElement.getName());
-					// TODO: MP:  Recursion handles 
-					// SchemaType type = element.getType();
-	
-					// Update Model
-					IPluginElement childElement = null;
-					try {
-						childElement = pElement.getModel().getFactory()
-								.createElement(pElement);
-						childElement.setName(schemaElement.getName());
-						pElement.add(childElement);
-					} catch (CoreException e) {
-						// TODO: MP: Debug
-						e.printStackTrace();
+		// TODO: MP: Probably a more efficent way to do this
+   		// Just insert the previously created node multiple times
+		for (int k = 0; k < compositor.getMinOccurs(); k++) {
+		
+			ISchemaObject[] schemaObject = compositor.getChildren();
+			for (int i = 0; i < compositor.getChildCount(); i++) {
+				// TODO: MP:  Do we really need this check? YES
+				if (schemaObject[i] instanceof ISchemaElement) {
+					ISchemaElement schemaElement = (ISchemaElement) schemaObject[i];
+					// TODO:  MP:  Check if elements deprecated ?
+					schemaElement.isDeprecated();
+					// TODO: MP:  Probably a more efficient way to do this
+					// Just insert the previously created node multiple times
+					for (int j = 0; j < schemaElement.getMinOccurs(); j++) {
+						System.out.println("ELEMENT:  "
+								+ schemaElement.getName());
+						// TODO: MP:  Recursion handles 
+						// SchemaType type = element.getType();
+		
+						// Update Model
+						IPluginElement childElement = null;
+						try {
+							childElement = pElement.getModel().getFactory()
+									.createElement(pElement);
+							childElement.setName(schemaElement.getName());
+							pElement.add(childElement);
+						} catch (CoreException e) {
+							// TODO: MP: Debug
+							e.printStackTrace();
+						}
+						// TODO: MP: DO RECURSION HERE
+						
+						// Track visited
+						HashSet newSet = (HashSet)visited.clone();
+						// TODO: IMPORTANT: MERGE COMMON CODe
+						// TODO:  Will fix bug of immediate detection of cycle if merge
+						if (newSet.add(schemaElement.getName()))
+							computeInsertionElement(schemaElement, childElement, newSet);
 					}
-					// TODO: MP: DO RECURSION HERE
-					computeInsertionElement(schemaElement, childElement);
+				} else if (schemaObject[i] instanceof ISchemaCompositor) {
+					ISchemaCompositor sCompositor = (ISchemaCompositor)schemaObject[i];
+					computeInsertionSequence(sCompositor, pElement, (HashSet)visited.clone());
+				} else {
+					// TODO: MP: Debug
+					System.out.println("UNKNOWN:  " + schemaObject[i].getName());
 				}
-			} else {
-				// TODO: MP: Debug
-				System.out.println("UNKNOWN:  " + schemaObject[i].getName());
+	
 			}
+			
+		}
+	
+	}
+	
+	public void computeInsertionSequence(ISchemaCompositor compositor, 
+			IPluginElement pElement, HashSet visited) {
 
+		
+		// TODO:  MP:  Determine if this could be null
+		if (compositor == null) {
+			return;
 		}
 		
+		// Note:  Don't care about min occurences for root node
 		
-	
+		if (compositor.getKind() == ISchemaCompositor.CHOICE) {
+			// Do not process - too presumptious to choose for the
+			// user
+			// - let plugin manifest editor flag an error
+			// - could insert a comment indicating as such - phase #2
+			return;
+		} else if (compositor.getKind() == ISchemaCompositor.ALL) {
+			// Not supported by PDE - should never get here
+			return;
+		} else if (compositor.getKind() == ISchemaCompositor.GROUP) {
+			// Not supported by PDE - should never get here
+			return;
+		} 
+		
+		// Assume SEQUENCE if got this far
+		
+		// TODO: MP: Probably a more efficent way to do this
+   		// Just insert the previously created node multiple times
+		for (int k = 0; k < compositor.getMinOccurs(); k++) {
+		
+			ISchemaObject[] schemaObject = compositor.getChildren();
+			for (int i = 0; i < compositor.getChildCount(); i++) {
+				// TODO: MP:  Do we really need this check? YES
+				if (schemaObject[i] instanceof ISchemaElement) {
+					ISchemaElement schemaElement = (ISchemaElement) schemaObject[i];
+					// TODO:  MP:  Check if elements deprecated ?
+					schemaElement.isDeprecated();
+					// TODO: MP:  Probably a more efficient way to do this
+					// Just insert the previously created node multiple times
+					for (int j = 0; j < schemaElement.getMinOccurs(); j++) {
+						System.out.println("ELEMENT:  "
+								+ schemaElement.getName());
+						// TODO: MP:  Recursion handles 
+						// SchemaType type = element.getType();
+		
+						// Update Model
+						IPluginElement childElement = null;
+						try {
+							childElement = pElement.getModel().getFactory()
+									.createElement(pElement);
+							childElement.setName(schemaElement.getName());
+							pElement.add(childElement);
+						} catch (CoreException e) {
+							// TODO: MP: Debug
+							e.printStackTrace();
+						}
+						// TODO: MP: DO RECURSION HERE
+						// Track visited
+						HashSet newSet = (HashSet)visited.clone();
+						// TODO: IMPORTANT: MERGE COMMON CODe
+						// TODO:  Will fix bug of immediate detection of cycle if merge
+						if (newSet.add(schemaElement.getName()))
+							computeInsertionElement(schemaElement, childElement, newSet);
+					}
+				} else if (schemaObject[i] instanceof ISchemaCompositor) {
+					ISchemaCompositor sCompositor = (ISchemaCompositor)schemaObject[i];
+					computeInsertionSequence(sCompositor, pElement, (HashSet)visited.clone());
+				} else {
+					// TODO: MP: Debug
+					System.out.println("UNKNOWN:  " + schemaObject[i].getName());
+				}
+			}
+		}
 	}
 	
 }
