@@ -125,10 +125,22 @@ public class XMLCompletionProposal implements ICompletionProposal {
 			case XMLContentAssistProcessor.F_AT_EP:
 			case XMLContentAssistProcessor.F_AT_VAL:
 				if (fRange instanceof IDocumentAttribute) {
-					int currValLen = ((IDocumentAttribute)fRange).getValueLength();
-					String append = fSchemaObject.getName().substring(currValLen); 
-					sb.append(append);
-					fSelOffset = fOffset + append.length();
+					fOffset = ((IDocumentAttribute)fRange).getValueOffset();
+					String value = fSchemaObject.getName();
+					try {
+						// add indentation
+						int off = fOffset;
+						int docLen = document.getLength();
+						while (off < docLen) {
+							char c = document.getChar(off++);
+							if (c == '"')
+								break;
+							fLen += 1;
+						}
+					} catch (BadLocationException e) {
+					}
+					sb.append(value);
+					fSelOffset = fOffset - fLen;
 					doInternalWork = true;
 				}
 				break;

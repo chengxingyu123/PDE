@@ -3,8 +3,6 @@ package org.eclipse.pde.internal.ui.editor.text;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 
-import org.eclipse.core.runtime.IExtensionPoint;
-import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.ITextSelection;
@@ -21,7 +19,9 @@ import org.eclipse.pde.core.IIdentifiable;
 import org.eclipse.pde.core.plugin.IPluginBase;
 import org.eclipse.pde.core.plugin.IPluginExtension;
 import org.eclipse.pde.core.plugin.IPluginExtensionPoint;
+import org.eclipse.pde.core.plugin.IPluginModelBase;
 import org.eclipse.pde.core.plugin.IPluginObject;
+import org.eclipse.pde.internal.core.PDECore;
 import org.eclipse.pde.internal.core.ischema.IMetaAttribute;
 import org.eclipse.pde.internal.core.ischema.ISchema;
 import org.eclipse.pde.internal.core.ischema.ISchemaAttribute;
@@ -43,8 +43,6 @@ import org.eclipse.swt.graphics.Image;
 
 public class XMLContentAssistProcessor implements IContentAssistProcessor, ICompletionListener {
 
-	private static ISchemaObject[] F_POINTS;
-	
 	// specific assist types
 	protected static final int
 		F_EP = 0, // extension point
@@ -64,12 +62,19 @@ public class XMLContentAssistProcessor implements IContentAssistProcessor, IComp
 		F_OPEN_TAG = 3;
 	
 	
-	private static void init() {
+	private void init() {
 		if (F_POINTS == null) {
-			IExtensionPoint[] points = Platform.getExtensionRegistry().getExtensionPoints();
-			F_POINTS = new ISchemaObject[points.length];
+			ArrayList extPoints = new ArrayList();
+			IPluginModelBase[] plugins = PDECore.getDefault().getModelManager().getPlugins();
+			for (int i = 0; i < plugins.length; i++) {
+				IPluginExtensionPoint[] points = plugins[i].getPluginBase().getExtensionPoints();
+				for (int j = 0; j < points.length; j++)
+					extPoints.add(points[j]);
+			}
+			
+			F_POINTS = new ISchemaObject[extPoints.size()];
 			for (int i = 0; i < F_POINTS.length; i++)
-				F_POINTS[i] = new VSchemaObject(points[i].getUniqueIdentifier(), null, F_AT_EP);
+				F_POINTS[i] = new VSchemaObject(((IPluginExtensionPoint)extPoints.get(i)).getFullId(), null, F_AT_EP);
 		}
 	}
 	
@@ -127,6 +132,7 @@ public class XMLContentAssistProcessor implements IContentAssistProcessor, IComp
 	private PDESourcePage fSourcePage;
 	private boolean fReconcile = true;
 	private final Image[] F_IMAGES = new Image[F_TOTAL_TYPES];
+	private ISchemaObject[] F_POINTS;
 	
 	public XMLContentAssistProcessor(PDESourcePage sourcePage) {
 		init();
@@ -146,7 +152,7 @@ public class XMLContentAssistProcessor implements IContentAssistProcessor, IComp
 		if (range != null) {
 			range = verifyPosition(range, offset);
 			if (range instanceof IDocumentAttribute) 
-				return computeCompletionProposal((IDocumentAttribute)range, offset);
+				return computeCompletionProposal((IDocumentAttribute)range, offset, doc);
 			if (range instanceof IDocumentNode)
 				return computeCompletionProposal((IDocumentNode)range, offset, doc);
 		} else if (model instanceof PluginModelBase)
@@ -172,12 +178,20 @@ public class XMLContentAssistProcessor implements IContentAssistProcessor, IComp
 		return range;
 	}
 
-	private ICompletionProposal[] computeCompletionProposal(IDocumentAttribute attr, int offset) {
+	private ICompletionProposal[] computeCompletionProposal(IDocumentAttribute attr, int offset, IDocument doc) {
+		int[] offests = new int[] {offset, offset, offset};
+		String[] guess = guessContentRequest(offests, doc);
+		String element = guess[0];
+		String attribute = guess[1];
+		String attrValue = guess[2];
+		
+		System.out.println("element: " + element + ", attr: " + attribute + ", attrValue: " + attrValue);
+		
 		IPluginObject obj = XMLUtil.getTopLevelParent((IDocumentNode)attr);
 		if (obj instanceof IPluginExtension) {
 			if (attr.getAttributeName().equals(IPluginExtension.P_POINT) && 
 					offset >= attr.getValueOffset())
-				return computeExtensionPointProposal(attr, offset);
+				return computeExtensionPointProposal(attr, offset, attrValue);
 			ISchemaAttribute sAttr = XMLUtil.getSchemaAttribute(attr, ((IPluginExtension)obj).getPoint());
 			if (sAttr == null)
 				return null;
@@ -217,8 +231,7 @@ public class XMLContentAssistProcessor implements IContentAssistProcessor, IComp
 		return null;
 	}
 	
-	private ICompletionProposal[] computeExtensionPointProposal(IDocumentAttribute attr, int offset) {
-		String currValue = attr.getAttributeValue();
+	private ICompletionProposal[] computeExtensionPointProposal(IDocumentAttribute attr, int offset, String currValue) {
 		String filter = currValue.substring(0, offset - attr.getValueOffset());
 		ArrayList list = new ArrayList();
 		for (int i = 0; i < F_POINTS.length; i++)
@@ -442,6 +455,9 @@ public class XMLContentAssistProcessor implements IContentAssistProcessor, IComp
 				} else if (Character.isWhitespace(c)) {
 					if (attr == null) {
 						offset[1] = offset[0];
+						int attBuffLen = attrBuffer.length();
+						if (attBuffLen > 0 && attrBuffer.charAt(attBuffLen - 1) == '=')
+							attrBuffer.setLength(attBuffLen - 1);
 						attr = attrBuffer.toString();
 					}
 					nodeBuffer.setLength(0);
