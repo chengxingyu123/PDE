@@ -12,7 +12,6 @@ package org.eclipse.pde.internal.ui.editor.text;
 
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.contentassist.ContentAssistant;
-import org.eclipse.jface.text.contentassist.IContentAssistProcessor;
 import org.eclipse.jface.text.contentassist.IContentAssistant;
 import org.eclipse.jface.text.presentation.IPresentationReconciler;
 import org.eclipse.jface.text.presentation.PresentationReconciler;
@@ -250,9 +249,10 @@ public class ManifestConfiguration extends ChangeAwareSourceViewerConfiguration 
 			if (fContentAssistant == null) {
 				fContentAssistant = new ContentAssistant();
 				fContentAssistant.setDocumentPartitioning(getConfiguredDocumentPartitioning(sourceViewer));
-				IContentAssistProcessor processor = new ManifestContentAssitProcessor(fSourcePage);
+				ManifestContentAssitProcessor processor = new ManifestContentAssitProcessor(fSourcePage);
 				fContentAssistant.setContentAssistProcessor(processor, IDocument.DEFAULT_CONTENT_TYPE);
 				fContentAssistant.setContentAssistProcessor(processor, ManifestPartitionScanner.MANIFEST_HEADER_VALUE);
+				fContentAssistant.addCompletionListener(processor);
 			}
 			return fContentAssistant;
 		}
