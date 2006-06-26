@@ -32,13 +32,14 @@ import org.eclipse.pde.internal.core.text.IDocumentNode;
 import org.eclipse.pde.internal.core.text.IDocumentRange;
 import org.eclipse.pde.internal.core.text.IReconcilingParticipant;
 import org.eclipse.pde.internal.ui.PDEPlugin;
+import org.eclipse.pde.internal.ui.PDEUIMessages;
 import org.eclipse.pde.internal.ui.editor.text.XMLContentAssistProcessor.VSchemaObject;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 
 public class XMLCompletionProposal implements ICompletionProposal {
 	
-	private static final String F_DEF_ATTR_INDENT = "      ";
+	private static final String F_DEF_ATTR_INDENT = "      "; //$NON-NLS-1$
 	
 	private ISchemaObject fSchemaObject;
 	private IDocumentRange fRange;
@@ -65,13 +66,13 @@ public class XMLCompletionProposal implements ICompletionProposal {
 			fSelOffset = fOffset;
 			fOffset -= 1;
 			fLen = 2;
-			sb.append("></");
+			sb.append("></"); //$NON-NLS-1$
 			sb.append(((IDocumentNode)fRange).getXMLTagName());
 			sb.append('>');
 		} else if (fSchemaObject instanceof ISchemaAttribute) {
 			String attName = ((ISchemaAttribute)fSchemaObject).getName();
 			sb.append(attName);
-			sb.append("=\"");
+			sb.append("=\""); //$NON-NLS-1$
 			fSelOffset = fOffset + sb.length();
 			String value = generateDefaultAttributeValue((ISchemaAttribute)fSchemaObject);
 			sb.append(value);
@@ -80,7 +81,7 @@ public class XMLCompletionProposal implements ICompletionProposal {
 		} else if (fSchemaObject instanceof ISchemaElement) {
 			sb.append('<');
 			sb.append(((ISchemaElement)fSchemaObject).getName());
-			sb.append(" />");
+			sb.append(" />"); //$NON-NLS-1$
 			doInternalWork = true;
 		} else if (fSchemaObject instanceof VSchemaObject) {
 			int type = ((VSchemaObject)fSchemaObject).getVType();
@@ -88,11 +89,11 @@ public class XMLCompletionProposal implements ICompletionProposal {
 			case XMLContentAssistProcessor.F_CL:
 				fOffset = sel.getOffset();
 				fLen = 0;
-				sb.append(" />");
+				sb.append(" />"); //$NON-NLS-1$
 				break;
 			case XMLContentAssistProcessor.F_EX:
 				String delim = TextUtilities.getDefaultLineDelimiter(document);
-				sb.append("<extension");
+				sb.append("<extension"); //$NON-NLS-1$
 				sb.append(delim);
 				StringBuffer indBuff = new StringBuffer();
 				try {
@@ -108,19 +109,19 @@ public class XMLCompletionProposal implements ICompletionProposal {
 				}
 				sb.append(indBuff.toString());
 				sb.append(F_DEF_ATTR_INDENT);
-				sb.append("point=\"\">");
+				sb.append("point=\"\">"); //$NON-NLS-1$
 				fSelOffset = fOffset + sb.length() - 2; // position rigth inside new point="" attribute
 				sb.append(delim);
 				sb.append(indBuff.toString());
-				sb.append("</extension>");
+				sb.append("</extension>"); //$NON-NLS-1$
 				break;
 			case XMLContentAssistProcessor.F_EP:
-				String id = "id";
-				sb.append("<extension-point id=\"");
+				String id = "id"; //$NON-NLS-1$
+				sb.append("<extension-point id=\""); //$NON-NLS-1$
 				fSelOffset = fOffset + sb.length();
 				fSelLen = id.length();
 				sb.append(id);
-				sb.append("\" name=\"name\" />");
+				sb.append("\" name=\"name\" />"); //$NON-NLS-1$
 				break;
 			case XMLContentAssistProcessor.F_AT_EP:
 			case XMLContentAssistProcessor.F_AT_VAL:
@@ -216,7 +217,7 @@ public class XMLCompletionProposal implements ICompletionProposal {
 				}
 				
 				if (pluginParent != null && schemaElement != null) {
-					computeInsertionElement(schemaElement, pluginParent);
+					computeInsertion(schemaElement, pluginParent);
 					fProcessor.flushDocument();
 				}
 			}
@@ -224,7 +225,7 @@ public class XMLCompletionProposal implements ICompletionProposal {
 	}
 	
 	private String generateDefaultAttributeValue(ISchemaAttribute sAttr) {
-		return "TODO";
+		return "TODO"; //$NON-NLS-1$
 	}
 	
 	private void prepareBuffer(StringBuffer sb, IDocument document) throws BadLocationException {
@@ -258,7 +259,7 @@ public class XMLCompletionProposal implements ICompletionProposal {
 		if (fSchemaObject instanceof VSchemaObject) {
 			switch (((VSchemaObject)fSchemaObject).getVType()) {
 			case XMLContentAssistProcessor.F_CL:
-				return "... />";
+				return "... />"; //$NON-NLS-1$
 			case XMLContentAssistProcessor.F_AT_EP:
 				return fSchemaObject.getName();
 			}
@@ -268,7 +269,7 @@ public class XMLCompletionProposal implements ICompletionProposal {
 		if (fSchemaObject != null)
 			return '<' + fSchemaObject.getName() + '>';
 		if (fRange instanceof IDocumentNode)
-			return "...> </" + ((IDocumentNode)fRange).getXMLTagName() + ">";
+			return "...> </" + ((IDocumentNode)fRange).getXMLTagName() + ">"; //$NON-NLS-1$ //$NON-NLS-2$
 		return null;
 	}
 
@@ -292,9 +293,11 @@ public class XMLCompletionProposal implements ICompletionProposal {
 	 * @param sElement
 	 * @param pElement
 	 */
-	protected void computeInsertionElement(ISchemaElement sElement,
+	protected void computeInsertion(ISchemaElement sElement,
 			IPluginParent pElement) {
-		computeInsertionObject(sElement, pElement, new HashSet());
+		HashSet visited = new HashSet();
+		visited.add(sElement.getName());
+		computeInsertionType(sElement, pElement, visited);
 	}
 	
 	/**
@@ -302,129 +305,122 @@ public class XMLCompletionProposal implements ICompletionProposal {
 	 * @return
 	 */
 	protected String createCommentText(String comment) {
-		return "<!-- " + comment + " -->";
+		return "<!-- " + comment + " -->"; //$NON-NLS-1$ //$NON-NLS-2$
 	}
 	
-	
-	public void computeInsertionObject(ISchemaElement sElement,
+	/**
+	 * @param sElement
+	 * @param pElement
+	 * @param visited
+	 */
+	protected void computeInsertionType(ISchemaElement sElement,
 			IPluginParent pElement, HashSet visited) {
 
-		if (sElement == null) {
-			// If there is no corresponding schema information, then there is
-			// nothing to augment
-			return;
-		} else if (pElement == null) {
-			// This shouldn't happen
+		ISchemaComplexType type = null;
+		if ((sElement == null) ||
+				(pElement == null)) {
+			// If there is no corresponding schema information or plug-in 
+			// model, then there is nothing to augment
 			return;
 		} else if (sElement.getType() instanceof ISchemaSimpleType) {
-			// If the corresponding schema information is not complex, then
-			// there is nothing to augment
+			// For simple types, insert a comment informing the user to
+			// add element content text
 			try {
-				setText(pElement, createCommentText("Insert PCDATA"));
+				// TODO:  MP:  Make a preference:  Phase #2
+				setText(pElement, createCommentText(PDEUIMessages.XMLCompletionProposal_InfoElement));
 			} catch (CoreException e) {
-				// TODO:  MP:  Debug
-				e.printStackTrace();
+				PDEPlugin.logException(e);
 			}
 			return;
+		} else if (sElement.getType() instanceof ISchemaComplexType) {
+			type = (ISchemaComplexType) sElement.getType();
+			// Note:  Mixed content types do not affect auto-generation
+			// Note:  Deprecated elements do not affect auto-generation
+		} else {
+			// Unknown element type
+			return;
 		}
-		// We have a complex type
-		ISchemaComplexType type = (ISchemaComplexType) sElement.getType();
-		// Ignore mixed content types, PDE essentially ignores any text within
-		// complex types
-		
-
+		// Insert element attributes
 		computeInsertionAttribute(pElement, type);
-
+		// Get this element's compositor
 		ISchemaCompositor compositor = type.getCompositor();
-
-		// TODO: MP: Determine if this could be null
-		if (compositor == null) {
-			return;
-		}
-
-		// Note: Don't care about min occurences for root node
-
-		if (compositor.getKind() == ISchemaCompositor.CHOICE) {
-			// Do not process - too presumptious to choose for the
-			// user
-			// - let plugin manifest editor flag an error
-			try {
-				setText(pElement, createCommentText("Choice encountered:  Initiate content assist here"));
-			} catch (CoreException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			return;
-		} else if (compositor.getKind() == ISchemaCompositor.ALL) {
-			// Not supported by PDE - should never get here
-			return;
-		} else if (compositor.getKind() == ISchemaCompositor.GROUP) {
-			// Not supported by PDE - should never get here
-			return;
-		}
-
-		// Assume SEQUENCE if got this far
-
-		// TODO: MP: Probably a more efficent way to do this
-		// Just insert the previously created node multiple times
-		for (int k = 0; k < compositor.getMinOccurs(); k++) {
-
-			ISchemaObject[] schemaObject = compositor.getChildren();
-			for (int i = 0; i < compositor.getChildCount(); i++) {
-				// TODO: MP: Do we really need this check? YES
-				if (schemaObject[i] instanceof ISchemaElement) {
-					ISchemaElement schemaElement = (ISchemaElement) schemaObject[i];
-					computeInsertionElement2(pElement, visited, schemaElement);
-				} else if (schemaObject[i] instanceof ISchemaCompositor) {
-					ISchemaCompositor sCompositor = (ISchemaCompositor) schemaObject[i];
-					computeInsertionSequence(sCompositor, pElement,
-							(HashSet) visited.clone());
-				} else {
-					// TODO: MP: Debug
-					System.out
-							.println("UNKNOWN:  " + schemaObject[i].getName());
-				}
-
-			}
-
-		}
-
+		// Process the compositor
+		computeInsertionSequence(compositor, pElement, visited);
 	}
 
 	/**
 	 * @param pElement
 	 * @param visited
 	 * @param schemaObject
-	 * @param i
 	 */
-	protected void computeInsertionElement2(IPluginParent pElement, HashSet visited, ISchemaElement schemaElement) {
-		// Note:  If an element is deprecated, it does not affect
-		// auto-generation.
-		// TODO: MP: Probably a more efficient way to do this
-		// Just insert the previously created node multiple times
+	protected void computeInsertionObject(IPluginParent pElement, HashSet visited, ISchemaObject schemaObject) {
+		if (schemaObject instanceof ISchemaElement) {
+			ISchemaElement schemaElement = (ISchemaElement) schemaObject;
+			computeInsertionElement(pElement, visited, schemaElement);
+		} else if (schemaObject instanceof ISchemaCompositor) {
+			ISchemaCompositor sCompositor = (ISchemaCompositor) schemaObject;
+			computeInsertionSequence(sCompositor, pElement, visited);
+		} else {
+			// Unknown schema object
+		}
+	}
+
+	/**
+	 * @param pElement
+	 * @param compositor
+	 */
+	protected boolean computeInsertionCompositor(IPluginParent pElement, ISchemaCompositor compositor) {
+		if (compositor == null) {
+			return false;
+		} else if (compositor.getKind() == ISchemaCompositor.CHOICE) {
+			// Too presumption to choose for the user
+			// Avoid processing and generate a comment to inform the user that
+			// they need to update this element accordingly
+			try {
+				// TODO:  MP:  Make a preference:  Phase #2
+				setText(pElement, createCommentText(PDEUIMessages.XMLCompletionProposal_InfoChoice));
+			} catch (CoreException e) {
+				PDEPlugin.logException(e);
+			}
+			return false;
+		} else if (compositor.getKind() == ISchemaCompositor.ALL) {
+			// Not supported by PDE - should never get here
+			return false;
+		} else if (compositor.getKind() == ISchemaCompositor.GROUP) {
+			// Not supported by PDE - should never get here
+			return false;
+		} else if (compositor.getKind() == ISchemaCompositor.SEQUENCE) {
+			return true;
+		} else {
+			// Unknown compositor
+			return false;
+		}
+	}
+
+	/**
+	 * @param pElement
+	 * @param visited
+	 * @param schemaElement
+	 */
+	protected void computeInsertionElement(IPluginParent pElement, HashSet visited, ISchemaElement schemaElement) {
 		try {
 			for (int j = 0; j < schemaElement.getMinOccurs(); j++) {
 				// Update Model
 				IPluginElement childElement = null;
-					childElement = pElement.getModel().getFactory()
-							.createElement(pElement);
-					childElement.setName(schemaElement.getName());
-					pElement.add(childElement);
-	
+				childElement = 
+					pElement.getModel().getFactory().createElement(pElement);
+				childElement.setName(schemaElement.getName());
+				pElement.add(childElement);
 				// Track visited
 				HashSet newSet = (HashSet) visited.clone();
-				// TODO: Will fix bug of immediate detection of cycle if
-				// merge
 				if (newSet.add(schemaElement.getName())) {
-					computeInsertionObject(schemaElement,
-							childElement, newSet);
+					computeInsertionType(schemaElement, childElement, newSet);
 				} else {
-					childElement.setText(createCommentText("ERROR:  Cycle detected:  Extension point schema is invalid"));
+					childElement.setText(createCommentText(PDEUIMessages.XMLCompletionProposal_ErrorCycle));
 				}
 			}
 		} catch (CoreException e) {
-			// TODO:  MP:  Debug
-			e.printStackTrace();
+			PDEPlugin.logException(e);
 		}
 	}
 
@@ -440,23 +436,24 @@ public class XMLCompletionProposal implements ICompletionProposal {
 			// auto-generation.
 			try {
 				if (attributes[i].getUse() == ISchemaAttribute.REQUIRED) {
-					// Check for enumeration restrictions
-					// If there is one, just pick the first enumerated value
+					// Determine the attribute value based on the attribute
+					// kind
 					String value = null;
 					if (attributes[i].getKind() == IMetaAttribute.JAVA) {
-						value = "PlaceHolderClass";
+						value = PDEUIMessages.XMLCompletionProposal_PlaceHolderClass;
 					} else if (attributes[i].getKind() == IMetaAttribute.RESOURCE) {
-						value = "PlaceHolderResource";
+						value = PDEUIMessages.XMLCompletionProposal_PlaceHolderResource;
 					} else if (attributes[i].getKind() == IMetaAttribute.STRING) {
-						if (attributes[i].getType().getName().equals("boolean")) {
-							value = "false";
+						if (attributes[i].getType().getName().equals("boolean")) { //$NON-NLS-1$
+							value = "false"; //$NON-NLS-1$
 						} else {
-							value = "PlaceHolderString";
+							value = PDEUIMessages.XMLCompletionProposal_PlaceHolderString;
 						}
 					} else {
-						value = "Unknown";
+						value = PDEUIMessages.XMLCompletionProposal_UnknownKind;
 					} 
-					
+					// Check for enumeration restrictions, if there is one, 
+					// just pick the first enumerated value
 					ISchemaRestriction restriction = 
 						attributes[i].getType().getRestriction();
 					if (restriction != null) {
@@ -471,65 +468,30 @@ public class XMLCompletionProposal implements ICompletionProposal {
 				// Ignore optional attributes
 				// Ignore default attributes
 			} catch (CoreException e) {
-				// TODO: MP: Debug
-				e.printStackTrace();
+				PDEPlugin.logException(e);
 			}
 		}
 	}
 
-	public void computeInsertionSequence(ISchemaCompositor compositor,
+	/**
+	 * @param compositor
+	 * @param pElement
+	 * @param visited
+	 */
+	protected void computeInsertionSequence(ISchemaCompositor compositor,
 			IPluginParent pElement, HashSet visited) {
-
-		// TODO: MP: Determine if this could be null
-		if (compositor == null) {
-			return;
-		}
-
-		// Note: Don't care about min occurences for root node
-
-		if (compositor.getKind() == ISchemaCompositor.CHOICE) {
-			// Do not process - too presumptious to choose for the
-			// user
-			// - let plugin manifest editor flag an error
-			// - could insert a comment indicating as such - phase #2
-			try {
-				setText(pElement, "<!-- Choice encountered:  Initiate content assist here -->");
-			} catch (CoreException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			return;
-		} else if (compositor.getKind() == ISchemaCompositor.ALL) {
-			// Not supported by PDE - should never get here
-			return;
-		} else if (compositor.getKind() == ISchemaCompositor.GROUP) {
-			// Not supported by PDE - should never get here
-			return;
-		}
-
-		// Assume SEQUENCE if got this far
-
-		// TODO: MP: Probably a more efficent way to do this
-		// Just insert the previously created node multiple times
+		// Process the compositor the minimum number of times
 		for (int k = 0; k < compositor.getMinOccurs(); k++) {
-
+			// Only continue processing if the compositor is a sequence
+			if (computeInsertionCompositor(pElement, compositor) == false)
+				continue;
+			// We have a sequence
 			ISchemaObject[] schemaObject = compositor.getChildren();
+			// Process the compositors children
 			for (int i = 0; i < compositor.getChildCount(); i++) {
-				// TODO: MP: Do we really need this check? YES
-				if (schemaObject[i] instanceof ISchemaElement) {
-					ISchemaElement schemaElement = (ISchemaElement) schemaObject[i];
-					computeInsertionElement2(pElement, visited, schemaElement);
-				} else if (schemaObject[i] instanceof ISchemaCompositor) {
-					ISchemaCompositor sCompositor = (ISchemaCompositor) schemaObject[i];
-					computeInsertionSequence(sCompositor, pElement,
-							(HashSet) visited.clone());
-				} else {
-					// TODO: MP: Debug
-					System.out
-							.println("UNKNOWN:  " + schemaObject[i].getName());
-				}
+				computeInsertionObject(pElement, visited, schemaObject[i]);
 			}
-		}
+		}		
 	}
 	
 	private void setAttribute(IPluginParent parent, String attName, String attValue) throws CoreException {
