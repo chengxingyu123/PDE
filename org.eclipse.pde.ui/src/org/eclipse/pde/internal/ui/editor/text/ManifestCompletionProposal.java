@@ -12,13 +12,14 @@ import org.eclipse.swt.graphics.Point;
 
 public class ManifestCompletionProposal implements ICompletionProposal {
 	
-	static final Image[] fImages = new Image[6];
+	static final Image[] fImages = new Image[7];
 	static final int TYPE_HEADER = 0;
 	static final int TYPE_PACKAGE = 1;
 	static final int TYPE_CLASS = 2;
 	static final int TYPE_ATTRIBUTE = 3;
 	static final int TYPE_DIRECTIVE = 4;
 	static final int TYPE_BUNDLE = 5;
+	static final int TYPE_VALUE = 6;
 
 	String fValue; 
 	int fOffset;
@@ -85,8 +86,6 @@ public class ManifestCompletionProposal implements ICompletionProposal {
 		switch (fType) {
 		case TYPE_HEADER:
 			return fValue + ": ";
-		case TYPE_PACKAGE:
-			return fValue + ", ";
 		case TYPE_ATTRIBUTE:
 			return fValue + "= ";
 		case TYPE_DIRECTIVE:
