@@ -111,7 +111,7 @@ public class ManifestContentAssitProcessor implements IContentAssistProcessor, I
 				if (value.indexOf(':') != value.lastIndexOf(':')|| i == (numLines - 1)) {
 					value = doc.get(offset, line.getOffset() - offset - 1).trim();
 					int index = value.indexOf(':');
-					String header = value.substring(0, index);
+					String header = (index == -1) ? value : value.substring(0, index);
 					try {
 						if (value.endsWith(","))
 							value = value.substring(0, value.length() - 1);
