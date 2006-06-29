@@ -77,6 +77,18 @@ public class ManifestCompletionProposal implements ICompletionProposal {
 				image = PDEPluginImages.DESC_PLUGIN_OBJ.createImage();
 				fImages[TYPE_BUNDLE] = image;
 				return image;
+			case TYPE_CLASS:
+				image = PDEPluginImages.DESC_GENERATE_CLASS.createImage();
+				fImages[TYPE_CLASS] = image;
+				return image;
+			case TYPE_DIRECTIVE:
+				image = PDEPluginImages.DESC_EXT_POINT_OBJ.createImage();
+				fImages[TYPE_DIRECTIVE] = image;
+				return image;
+			case TYPE_ATTRIBUTE:
+				image = PDEPluginImages.DESC_EXT_POINT_OBJ.createImage();
+				fImages[TYPE_ATTRIBUTE] = image;
+				return image;
 			}
 		}
 		return image;
@@ -87,9 +99,9 @@ public class ManifestCompletionProposal implements ICompletionProposal {
 		case TYPE_HEADER:
 			return fValue + ": ";
 		case TYPE_ATTRIBUTE:
-			return fValue + "= ";
+			return fValue + "=";
 		case TYPE_DIRECTIVE:
-			return fValue + ":= ";
+			return fValue + ":=";
 		}
 		return fValue;
 	}

@@ -1,6 +1,7 @@
 package org.eclipse.pde.internal.ui.editor.text;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 
@@ -231,15 +232,23 @@ public class ManifestContentAssitProcessor implements IContentAssistProcessor, I
 		if (equals == -1 || equals < comma) {
 			String attribute = currentValue.substring(semicolon + 1);
 			attribute = removeLeadingSpaces(attribute);
-			return handleAttributeCompletion(attribute, new String[] {Constants.VERSION_ATTRIBUTE, ICoreConstants.FRIENDS_DIRECTIVE}, 
+			return matchValueCompletion(attribute, new String[] {Constants.VERSION_ATTRIBUTE, ICoreConstants.FRIENDS_DIRECTIVE}, 
 					new int[] {ManifestCompletionProposal.TYPE_ATTRIBUTE, ManifestCompletionProposal.TYPE_DIRECTIVE}, offset);
 		} else if (equals > semicolon) {
 			currentValue = removeLeadingSpaces(currentValue.substring(semicolon + 1));
 			if (ICoreConstants.FRIENDS_DIRECTIVE.regionMatches(true, 0, currentValue, 0, currentValue.length())) {
-				// TODO do something for friends directive
+				return handleXFriendsCompletion(currentValue.substring(equals + 1), offset);
 			}
 		}
 		return new ICompletionProposal[0];
+	}
+	
+	private ICompletionProposal[] handleXFriendsCompletion(String value, int offset) {
+		ManifestElement[] elems  = (ManifestElement[])fHeaders.get(Constants.BUNDLE_SYMBOLICNAME);
+		HashSet set = new HashSet(2);
+		if (elems.length > 0)
+			set.add(elems[0].getValue());
+		return handleBundleCompletions(value, set, ManifestCompletionProposal.TYPE_VALUE, offset);
 	}
 	
 	protected ICompletionProposal[] handleFragmentHostCompletion(String currentValue, int offset) {
@@ -264,29 +273,38 @@ public class ManifestContentAssitProcessor implements IContentAssistProcessor, I
 	protected ICompletionProposal[] handleRequireBundleCompletion(String currentValue, int offset) {
 		int comma = currentValue.lastIndexOf(',');
 		int semicolon = currentValue.lastIndexOf(';');
-		ArrayList completions = new ArrayList();
 		if (comma > semicolon || comma == semicolon) {
 			HashSet set = (HashSet) fHeaders.get(Constants.REQUIRE_BUNDLE);
 			if (set == null) set = new HashSet(0);
 			String value = comma != -1 ? currentValue.substring(comma + 1) : currentValue.substring(currentValue.indexOf(':') + 1);
-			value = removeLeadingSpaces(value);
-			int length = value.length();
-			set.remove(value);
-			BundleDescription [] descs = PDECore.getDefault().getModelManager().getState().getState().getResolvedBundles();
-			for (int i = 0; i < descs.length; i++) {
-				String bundleId = descs[i].getSymbolicName();
-				if (descs[i].getHost() == null && bundleId.regionMatches(true, 0, value, 0, value.length()) && 
-						!set.contains(bundleId))
-					completions.add(new ManifestCompletionProposal(bundleId, offset - length, offset, ManifestCompletionProposal.TYPE_BUNDLE));
-			}
-		} else {
-			int equals = currentValue.lastIndexOf('=');
-			if (equals == -1 || equals < comma) {
-				String value = removeLeadingSpaces(currentValue.substring(semicolon + 1));
-				return handleAttributeCompletion(value, new String[] {Constants.VERSION_ATTRIBUTE, Constants.VISIBILITY_DIRECTIVE}, 
-						new int[] {ManifestCompletionProposal.TYPE_ATTRIBUTE, ManifestCompletionProposal.TYPE_DIRECTIVE}, offset);
-			} 
-			// TODO do something about filling in attribute value
+			return handleBundleCompletions(value, set, ManifestCompletionProposal.TYPE_BUNDLE, offset);
+		}
+		int equals = currentValue.lastIndexOf('=');
+		if (equals == -1 || equals < comma) {
+			String value = removeLeadingSpaces(currentValue.substring(semicolon + 1));
+			return matchValueCompletion(value, new String[] {Constants.VERSION_ATTRIBUTE, Constants.VISIBILITY_DIRECTIVE}, 
+					new int[] {ManifestCompletionProposal.TYPE_ATTRIBUTE, ManifestCompletionProposal.TYPE_DIRECTIVE}, offset);
+		} 
+		String attributeValue = removeLeadingSpaces(currentValue.substring(semicolon + 1));
+			if (Constants.VISIBILITY_DIRECTIVE.regionMatches(true, 0, attributeValue, 0, ICoreConstants.FRIENDS_DIRECTIVE.length()))
+				return matchValueCompletion(currentValue.substring(equals + 1), new String[] {
+					Constants.VISIBILITY_PRIVATE, Constants.VISIBILITY_REEXPORT}, new int[] {
+					ManifestCompletionProposal.TYPE_VALUE, ManifestCompletionProposal.TYPE_VALUE}, offset);
+		
+		return new ICompletionProposal[0];
+	}
+	
+	private ICompletionProposal[] handleBundleCompletions(String value, Collection doNotInclude, int type, int offset) {
+		value = removeLeadingSpaces(value);
+		int length = value.length();
+		doNotInclude.remove(value);
+		ArrayList completions = new ArrayList();
+		BundleDescription [] descs = PDECore.getDefault().getModelManager().getState().getState().getResolvedBundles();
+		for (int i = 0; i < descs.length; i++) {
+			String bundleId = descs[i].getSymbolicName();
+			if (descs[i].getHost() == null && bundleId.regionMatches(true, 0, value, 0, value.length()) && 
+					!doNotInclude.contains(bundleId))
+				completions.add(new ManifestCompletionProposal(bundleId, offset - length, offset, type));
 		}
 		return (ICompletionProposal[]) completions.toArray(new ICompletionProposal[completions.size()]);
 	}
@@ -316,13 +334,16 @@ public class ManifestContentAssitProcessor implements IContentAssistProcessor, I
 			int equals = currentValue.lastIndexOf('=');
 			if (equals == -1 || equals < semicolon) {
 				String value = removeLeadingSpaces(currentValue.substring(semicolon + 1));
-				return handleAttributeCompletion(value, new String[] {Constants.VERSION_ATTRIBUTE, ICoreConstants.INTERNAL_DIRECTIVE, 
+				return matchValueCompletion(value, new String[] {Constants.VERSION_ATTRIBUTE, ICoreConstants.INTERNAL_DIRECTIVE, 
 						ICoreConstants.FRIENDS_DIRECTIVE}, new int[] {ManifestCompletionProposal.TYPE_ATTRIBUTE, 
 						ManifestCompletionProposal.TYPE_DIRECTIVE, ManifestCompletionProposal.TYPE_DIRECTIVE}, offset);
 			}
+			String attributeValue = removeLeadingSpaces(currentValue.substring(semicolon + 1));
+			if (ICoreConstants.FRIENDS_DIRECTIVE.regionMatches(true, 0, attributeValue, 0, ICoreConstants.FRIENDS_DIRECTIVE.length()))
+				return handleXFriendsCompletion(currentValue.substring(equals + 1), offset);
+			if (ICoreConstants.INTERNAL_DIRECTIVE.regionMatches(true, 0, attributeValue, 0, ICoreConstants.FRIENDS_DIRECTIVE.length()))
+				return handleTrueFalseValue(currentValue.substring(equals + 1), offset);
 		}
-		// TODO do completions for attribute values
-//		return (ICompletionProposal[]) map.values().toArray(new ICompletionProposal[map.size()]);
 		return (ICompletionProposal[]) list.toArray(new ICompletionProposal[list.size()]);
 	}
 	
@@ -425,7 +446,7 @@ public class ManifestContentAssitProcessor implements IContentAssistProcessor, I
 		return new ICompletionProposal[0];
 	}
 	
-	protected ICompletionProposal[] handleAttributeCompletion(String value, String[] attrs, int[] types, int offset) {
+	protected ICompletionProposal[] matchValueCompletion(String value, String[] attrs, int[] types, int offset) {
 		ArrayList list = new ArrayList();
 		int length = value.length();
 		for (int i = 0; i < attrs.length; i++) 
