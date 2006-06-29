@@ -61,6 +61,13 @@ public class XMLContentAssistProcessor implements IContentAssistProcessor, IComp
 		F_ADD_CHILD = 2,
 		F_OPEN_TAG = 3;
 	
+	private static final ISchemaObject[] F_V_BOOLS = new ISchemaObject[] {
+		new VSchemaObject(Boolean.toString(true), null, F_AT_VAL),
+		new VSchemaObject(Boolean.toString(false), null, F_AT_VAL)
+	};
+	
+	private static final String F_STR_EXT_PT = "extension-point"; //$NON-NLS-1$
+	private static final String F_STR_EXT = "extension"; //$NON-NLS-1$
 	
 	private void init() {
 		if (F_POINTS == null) {
@@ -130,9 +137,9 @@ public class XMLContentAssistProcessor implements IContentAssistProcessor, IComp
 	}
 	
 	private PDESourcePage fSourcePage;
-	private boolean fReconcile = true;
 	private final Image[] F_IMAGES = new Image[F_TOTAL_TYPES];
 	private ISchemaObject[] F_POINTS;
+	private int fSessionOffset = -1;
 	
 	public XMLContentAssistProcessor(PDESourcePage sourcePage) {
 		init();
@@ -142,20 +149,20 @@ public class XMLContentAssistProcessor implements IContentAssistProcessor, IComp
 	public ICompletionProposal[] computeCompletionProposals(ITextViewer viewer, int offset) {
 		IBaseModel model = getModel();
 		IDocument doc = viewer.getDocument();
-		// TODO shouldn't need to reconcile every time - can we check state?
-		if (model instanceof IReconcilingParticipant && fReconcile) {
+		if (model instanceof IReconcilingParticipant && fSessionOffset == -1) {
 			((IReconcilingParticipant)model).reconciled(doc);
-			fReconcile = false;
+			// reconciling every time... 
+//			fSessionOffset = offset;	
 		}
 		
 		IDocumentRange range = fSourcePage.getRangeElement(offset, true);
-		if (range != null) {
+		if (range != null)
 			range = verifyPosition(range, offset);
-			if (range instanceof IDocumentAttribute) 
-				return computeCompletionProposal((IDocumentAttribute)range, offset, doc);
-			if (range instanceof IDocumentNode)
-				return computeCompletionProposal((IDocumentNode)range, offset, doc);
-		} else if (model instanceof PluginModelBase)
+		if (range instanceof IDocumentAttribute) 
+			return computeCompletionProposal((IDocumentAttribute)range, offset, doc);
+		else if (range instanceof IDocumentNode)
+			return computeCompletionProposal((IDocumentNode)range, offset, doc);
+		else if (model instanceof PluginModelBase)
 			// broken model - infer from text content
 			return computeBrokenModelProposal(((PluginModelBase)model).getLastErrorNode(), offset, doc);
 		
@@ -179,19 +186,21 @@ public class XMLContentAssistProcessor implements IContentAssistProcessor, IComp
 	}
 
 	private ICompletionProposal[] computeCompletionProposal(IDocumentAttribute attr, int offset, IDocument doc) {
+		if (offset < attr.getValueOffset())
+			return null;
 		int[] offests = new int[] {offset, offset, offset};
 		String[] guess = guessContentRequest(offests, doc);
-		String element = guess[0];
-		String attribute = guess[1];
+		if (guess == null)
+			return null;
+//		String element = guess[0];
+//		String attribute = guess[1];
 		String attrValue = guess[2];
-		
-		System.out.println("element: " + element + ", attr: " + attribute + ", attrValue: " + attrValue);
 		
 		IPluginObject obj = XMLUtil.getTopLevelParent((IDocumentNode)attr);
 		if (obj instanceof IPluginExtension) {
 			if (attr.getAttributeName().equals(IPluginExtension.P_POINT) && 
 					offset >= attr.getValueOffset())
-				return computeExtensionPointProposal(attr, offset, attrValue);
+				return computeAttributeProposal(attr, offset, attrValue, F_POINTS);
 			ISchemaAttribute sAttr = XMLUtil.getSchemaAttribute(attr, ((IPluginExtension)obj).getPoint());
 			if (sAttr == null)
 				return null;
@@ -212,15 +221,19 @@ public class XMLContentAssistProcessor implements IContentAssistProcessor, IComp
 				if (sAttr.getType() == null)
 					return null;
 				ISchemaRestriction sRestr = (sAttr.getType()).getRestriction();
-				if (sRestr == null)
-					return null;
-				Object[] restrictions = sRestr.getChildren();
-				for (int i = 0; i < restrictions.length; i++) {
-					if (restrictions[i] instanceof ISchemaRestriction) {
-						((ISchemaRestriction)restrictions[i]).getName();
-					}
+				ISchemaObject[] objs = null;
+				if (sRestr == null) {
+					ISchemaSimpleType type = sAttr.getType();
+					if (type != null && type.getName().equals("boolean")) //$NON-NLS-1$
+						objs = F_V_BOOLS;
+				} else {
+					Object[] restrictions = sRestr.getChildren();
+					objs = new ISchemaObject[restrictions.length];
+					for (int i = 0; i < restrictions.length; i++)
+						if (restrictions[i] instanceof ISchemaObject)
+							objs[i] = new VSchemaObject(((ISchemaObject)restrictions[i]).getName(), null, F_AT_VAL);
 				}
-				restrictions.toString();
+				return computeAttributeProposal(attr, offset, attrValue, objs);
 			}
 		} else if (obj instanceof IPluginExtensionPoint) {
 			// provide proposals with all schama files in current plugin?
@@ -231,11 +244,12 @@ public class XMLContentAssistProcessor implements IContentAssistProcessor, IComp
 		return null;
 	}
 	
-	private ICompletionProposal[] computeExtensionPointProposal(IDocumentAttribute attr, int offset, String currValue) {
-		String filter = currValue.substring(0, offset - attr.getValueOffset());
+	private ICompletionProposal[] computeAttributeProposal(IDocumentAttribute attr, int offset, String currValue, ISchemaObject[] validValues) {
+		if (validValues == null)
+			return null;
 		ArrayList list = new ArrayList();
-		for (int i = 0; i < F_POINTS.length; i++)
-			addToList(list, filter, F_POINTS[i]);
+		for (int i = 0; i < validValues.length; i++)
+			addToList(list, currValue, validValues[i]);
 		
 		return convertListToProposal(list, (IDocumentRange)attr, offset);
 	}
@@ -243,8 +257,6 @@ public class XMLContentAssistProcessor implements IContentAssistProcessor, IComp
 	private ICompletionProposal[] computeCompletionProposal(IDocumentNode node, int offset, IDocument doc) {
 		int prop_type = determineAssistType(node, doc, offset);
 		switch (prop_type) {
-		case F_NO_ASSIST:
-			return null;
 		case F_ADD_ATTRIB:
 			return computeAddAttributeProposal(-1, node, offset, doc, null, node.getXMLTagName());
 		case F_OPEN_TAG:
@@ -279,7 +291,7 @@ public class XMLContentAssistProcessor implements IContentAssistProcessor, IComp
 				ind = eleValue.lastIndexOf('<');
 				if (ind == 0 && offset == len - 1)
 					return F_OPEN_TAG; // childless node - check if it can be cracked open
-				if (eleValue.charAt(ind + 1) == '/' && offset <= ind)
+				if (ind + 1 < len && eleValue.charAt(ind + 1) == '/' && offset <= ind)
 					return F_ADD_CHILD;
 			} catch (BadLocationException e) {
 			}
@@ -290,8 +302,8 @@ public class XMLContentAssistProcessor implements IContentAssistProcessor, IComp
 	private ICompletionProposal[] computeAddChildProposal(IDocumentNode node, int offset, IDocument doc, String filter) {
 		ArrayList propList = new ArrayList();
 		if (node instanceof IPluginBase) {
-			addToList(propList, filter, new VSchemaObject("extension-point", null, F_EP));
-			addToList(propList, filter, new VSchemaObject("extension", null, F_EX));
+			addToList(propList, filter, new VSchemaObject(F_STR_EXT_PT, null, F_EP));
+			addToList(propList, filter, new VSchemaObject(F_STR_EXT, null, F_EX));
 		} else if (node instanceof IPluginExtensionPoint) {
 			return null;
 		} else {
@@ -373,6 +385,8 @@ public class XMLContentAssistProcessor implements IContentAssistProcessor, IComp
 	}
 
 	private void addToList(ArrayList list, String filter, ISchemaObject object) {
+		if (object == null)
+			return;
 		if (filter == null || filter.length() == 0)
 			list.add(object);
 		else {
@@ -421,10 +435,10 @@ public class XMLContentAssistProcessor implements IContentAssistProcessor, IComp
 		} else if (parent instanceof IPluginBase) {
 			if (attr == null)
 				return computeAddChildProposal(parent, elRepOffset, doc, element);
-			if (element.equals("extension"))
-				return computeAddAttributeProposal(F_EX, null, atRepOffset, doc, attr, "extension");
-			if (element.equals("extension-point"))
-				return computeAddAttributeProposal(F_EP, null, atRepOffset, doc, attr, "extension-point");
+			if (element.equals(F_STR_EXT))
+				return computeAddAttributeProposal(F_EX, null, atRepOffset, doc, attr, F_STR_EXT);
+			if (element.equals(F_STR_EXT_PT))
+				return computeAddAttributeProposal(F_EP, null, atRepOffset, doc, attr, F_STR_EXT_PT);
 		}
 		return null;
 	}
@@ -446,10 +460,12 @@ public class XMLContentAssistProcessor implements IContentAssistProcessor, IComp
 			while (--offset[0] >= 0) {
 				char c = doc.getChar(offset[0]);
 				if (c == '"') {
-					if (attVal == null) {
-						offset[2] = offset[0];
-						attVal = attrValBuffer.toString();
+					if (attVal != null) { // ran into 2nd quotation mark, we are out of range
+						node = null;
+						break;
 					}
+					offset[2] = offset[0];
+					attVal = attrValBuffer.toString();
 					attrBuffer.setLength(0);
 					nodeBuffer.setLength(0);
 				} else if (Character.isWhitespace(c)) {
@@ -468,10 +484,8 @@ public class XMLContentAssistProcessor implements IContentAssistProcessor, IComp
 					// only enable content assist if user is inside an open tag
 					return null;
 				} else {
-					if (attVal == null)
-						attrValBuffer.insert(0, c);
-					if (attr == null)
-						attrBuffer.insert(0, c);
+					attrValBuffer.insert(0, c);
+					attrBuffer.insert(0, c);
 					nodeBuffer.insert(0, c);
 				}
 			}
@@ -533,7 +547,7 @@ public class XMLContentAssistProcessor implements IContentAssistProcessor, IComp
 	}
 
 	public void assistSessionEnded(ContentAssistEvent event) {
-		fReconcile = true;
+		fSessionOffset = -1;
 	}
 
 	public void assistSessionStarted(ContentAssistEvent event) {

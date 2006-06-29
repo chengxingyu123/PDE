@@ -124,6 +124,7 @@ public class XMLCompletionProposal implements ICompletionProposal {
 				sb.append("\" name=\"name\" />"); //$NON-NLS-1$
 				break;
 			case XMLContentAssistProcessor.F_AT_EP:
+				doInternalWork = true; // we will want to add required child nodes/attributes
 			case XMLContentAssistProcessor.F_AT_VAL:
 				if (fRange instanceof IDocumentAttribute) {
 					fOffset = ((IDocumentAttribute)fRange).getValueOffset();
@@ -132,6 +133,7 @@ public class XMLCompletionProposal implements ICompletionProposal {
 						// add indentation
 						int off = fOffset;
 						int docLen = document.getLength();
+						fLen = 0;
 						while (off < docLen) {
 							char c = document.getChar(off++);
 							if (c == '"')
@@ -141,8 +143,7 @@ public class XMLCompletionProposal implements ICompletionProposal {
 					} catch (BadLocationException e) {
 					}
 					sb.append(value);
-					fSelOffset = fOffset - fLen;
-					doInternalWork = true;
+					fSelOffset = fOffset + value.length();
 				}
 				break;
 			}
@@ -225,6 +226,20 @@ public class XMLCompletionProposal implements ICompletionProposal {
 	}
 	
 	private String generateDefaultAttributeValue(ISchemaAttribute sAttr) {
+		ISchemaSimpleType type = sAttr.getType();
+		if (type != null) {
+			if (type.getName().equals("boolean")) //$NON-NLS-1$
+				return "false"; //$NON-NLS-1$
+			
+			ISchemaRestriction sRestr = type.getRestriction();
+			if (sRestr != null) {
+				Object[] restrictions = sRestr.getChildren();
+				for (int i = 0; i < restrictions.length; i++)
+					if (restrictions[i] instanceof ISchemaObject)
+						return ((ISchemaObject)restrictions[i]).getName();
+			}
+		}
+		
 		return "TODO"; //$NON-NLS-1$
 	}
 	
@@ -261,6 +276,7 @@ public class XMLCompletionProposal implements ICompletionProposal {
 			case XMLContentAssistProcessor.F_CL:
 				return "... />"; //$NON-NLS-1$
 			case XMLContentAssistProcessor.F_AT_EP:
+			case XMLContentAssistProcessor.F_AT_VAL:
 				return fSchemaObject.getName();
 			}
 		}
@@ -480,6 +496,8 @@ public class XMLCompletionProposal implements ICompletionProposal {
 	 */
 	protected void computeInsertionSequence(ISchemaCompositor compositor,
 			IPluginParent pElement, HashSet visited) {
+		if (compositor == null)
+			return;
 		// Process the compositor the minimum number of times
 		for (int k = 0; k < compositor.getMinOccurs(); k++) {
 			// Only continue processing if the compositor is a sequence
