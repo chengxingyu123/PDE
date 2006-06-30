@@ -22,6 +22,7 @@ import org.eclipse.jface.text.source.IAnnotationHover;
 import org.eclipse.jface.text.source.ISourceViewer;
 import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.pde.internal.ui.editor.PDESourcePage;
+import org.eclipse.pde.internal.ui.editor.contentassist.XMLContentAssistProcessor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
 

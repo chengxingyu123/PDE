@@ -1,4 +1,4 @@
-package org.eclipse.pde.internal.ui.editor.text;
+package org.eclipse.pde.internal.ui.editor.contentassist;
 
 import java.util.HashSet;
 import java.util.Stack;
@@ -33,7 +33,8 @@ import org.eclipse.pde.internal.core.text.IDocumentRange;
 import org.eclipse.pde.internal.core.text.IReconcilingParticipant;
 import org.eclipse.pde.internal.ui.PDEPlugin;
 import org.eclipse.pde.internal.ui.PDEUIMessages;
-import org.eclipse.pde.internal.ui.editor.text.XMLContentAssistProcessor.VSchemaObject;
+import org.eclipse.pde.internal.ui.editor.contentassist.XMLContentAssistProcessor.VSchemaObject;
+import org.eclipse.pde.internal.ui.editor.text.XMLUtil;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 

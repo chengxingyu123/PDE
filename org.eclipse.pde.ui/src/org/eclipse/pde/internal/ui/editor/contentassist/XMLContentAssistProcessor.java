@@ -1,4 +1,4 @@
-package org.eclipse.pde.internal.ui.editor.text;
+package org.eclipse.pde.internal.ui.editor.contentassist;
 
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -39,6 +39,7 @@ import org.eclipse.pde.internal.core.text.IReconcilingParticipant;
 import org.eclipse.pde.internal.core.text.plugin.PluginModelBase;
 import org.eclipse.pde.internal.ui.PDEPluginImages;
 import org.eclipse.pde.internal.ui.editor.PDESourcePage;
+import org.eclipse.pde.internal.ui.editor.text.XMLUtil;
 import org.eclipse.swt.graphics.Image;
 
 public class XMLContentAssistProcessor implements IContentAssistProcessor, ICompletionListener {
