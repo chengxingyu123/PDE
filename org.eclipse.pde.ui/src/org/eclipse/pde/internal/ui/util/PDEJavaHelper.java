@@ -78,7 +78,7 @@ public class PDEJavaHelper {
 		return SearchEngine.createJavaSearchScope(getNonJRERoots(JavaCore.create(project)));
 	}
 
-	private static IPackageFragmentRoot[] getNonJRERoots(IJavaProject project) {
+	public static IPackageFragmentRoot[] getNonJRERoots(IJavaProject project) {
 		ArrayList result = new ArrayList();
 		try {
 			IPackageFragmentRoot[] roots = project.getPackageFragmentRoots();

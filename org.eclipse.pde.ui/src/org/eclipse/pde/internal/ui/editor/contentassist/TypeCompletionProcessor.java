@@ -50,8 +50,7 @@ public class TypeCompletionProcessor implements IContentAssistProcessor, ISubjec
 	 * @see org.eclipse.jface.text.contentassist.IContentAssistProcessor#getCompletionProposalAutoActivationCharacters()
 	 */
 	public char[] getCompletionProposalAutoActivationCharacters() {
-		// No auto-activation characters
-		return null;
+		return new char[] {TypeCompletionSearchRequestor.F_DOT};
 	}
 
 	/* (non-Javadoc)

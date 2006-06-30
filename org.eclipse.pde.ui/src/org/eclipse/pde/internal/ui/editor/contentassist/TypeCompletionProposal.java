@@ -82,4 +82,11 @@ public class TypeCompletionProposal implements ICompletionProposal {
 		return new Point(fDisplayString.length(), fDisplayString.length());
 	}
 	
+	/**
+	 * @return
+	 */
+	public String getReplacementString() {
+		return fReplacementString;
+	}
+	
 }
