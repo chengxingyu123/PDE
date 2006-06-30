@@ -2894,18 +2894,9 @@ public class PDEUIMessages extends NLS {
 	public static String HyperlinkActionOpenSchema;
 	public static String HyperlinkActionOpenTranslation;
 
+	// XMLCompletionProposal
 	public static String XMLCompletionProposal_ErrorCycle;
-
-	public static String XMLCompletionProposal_InfoChoice;
-
 	public static String XMLCompletionProposal_InfoElement;
 
-	public static String XMLCompletionProposal_PlaceHolderClass;
-
-	public static String XMLCompletionProposal_PlaceHolderResource;
-
-	public static String XMLCompletionProposal_PlaceHolderString;
-
-	public static String XMLCompletionProposal_UnknownKind;
 	
 }

@@ -46,6 +46,7 @@ public class XMLContentAssistProcessor implements IContentAssistProcessor, IComp
 
 	// specific assist types
 	protected static final int
+		F_XX = -1, // infer by passing object
 		F_EP = 0, // extension point
 		F_EX = 1, // extension
 		F_EL = 2, // element
@@ -55,6 +56,7 @@ public class XMLContentAssistProcessor implements IContentAssistProcessor, IComp
 		F_AT_EP = 6, // extension attribute "point" value
 		
 		F_TOTAL_TYPES = 7;
+	
 	// proposal generation type
 	private static final int 
 		F_NO_ASSIST = 0,
@@ -63,67 +65,14 @@ public class XMLContentAssistProcessor implements IContentAssistProcessor, IComp
 		F_OPEN_TAG = 3;
 	
 	private static final ISchemaObject[] F_V_BOOLS = new ISchemaObject[] {
-		new VSchemaObject(Boolean.toString(true), null, F_AT_VAL),
-		new VSchemaObject(Boolean.toString(false), null, F_AT_VAL)
+		new VSchemaObject("true", null, F_AT_VAL), //$NON-NLS-1$
+		new VSchemaObject("false", null, F_AT_VAL) //$NON-NLS-1$
 	};
 	
 	private static final String F_STR_EXT_PT = "extension-point"; //$NON-NLS-1$
 	private static final String F_STR_EXT = "extension"; //$NON-NLS-1$
 	
-	private void init() {
-		if (F_POINTS == null) {
-			ArrayList extPoints = new ArrayList();
-			IPluginModelBase[] plugins = PDECore.getDefault().getModelManager().getPlugins();
-			for (int i = 0; i < plugins.length; i++) {
-				IPluginExtensionPoint[] points = plugins[i].getPluginBase().getExtensionPoints();
-				for (int j = 0; j < points.length; j++)
-					extPoints.add(points[j]);
-			}
-			
-			F_POINTS = new ISchemaObject[extPoints.size()];
-			for (int i = 0; i < F_POINTS.length; i++)
-				F_POINTS[i] = new VSchemaObject(((IPluginExtensionPoint)extPoints.get(i)).getFullId(), null, F_AT_EP);
-		}
-	}
-	
-	public Image getImage(int type) {
-		if (F_IMAGES[type] == null) {
-			switch(type) {
-			case F_EP:
-			case F_AT_EP:
-				return F_IMAGES[type] = PDEPluginImages.DESC_EXT_POINT_OBJ.createImage();
-			case F_EX:
-				return F_IMAGES[type] = PDEPluginImages.DESC_EXTENSION_OBJ.createImage();
-			case F_EL:
-			case F_CL:
-				return F_IMAGES[type] = PDEPluginImages.DESC_XML_ELEMENT_OBJ.createImage();
-			case F_AT:
-			case F_AT_VAL:
-				return F_IMAGES[type] = PDEPluginImages.DESC_ATT_URI_OBJ.createImage();
-			}
-		}
-		return F_IMAGES[type];
-	}
-	
-	public void disposeImages() {
-		for (int i = 0; i < F_IMAGES.length; i++)
-			if (F_IMAGES[i] != null && !F_IMAGES[i].isDisposed())
-				F_IMAGES[i].dispose();
-	}
-	
-	static class VSchemaAttribute extends VSchemaObject implements ISchemaAttribute {
-		public VSchemaAttribute(String name, String description)
-			{ super(name, description, F_AT); }
-		public int getUse() {return 0;}
-		public Object getValue() {return null;}
-		public String getBasedOn() {return null;}
-		public int getKind() {return 0;}
-		public boolean isDeprecated() {return false;}
-		public boolean isTranslatable() {return false;}
-		public ISchemaSimpleType getType() {return null;}
-	}
-	
-	static class VSchemaObject implements ISchemaObject {
+	protected static class VSchemaObject implements ISchemaObject {
 		String vName, vDesc; int vType;
 		public VSchemaObject(String name, String description, int type)
 			{ vName = name; vDesc = description; vType = type; }
@@ -138,9 +87,10 @@ public class XMLContentAssistProcessor implements IContentAssistProcessor, IComp
 	}
 	
 	private PDESourcePage fSourcePage;
-	private final Image[] F_IMAGES = new Image[F_TOTAL_TYPES];
-	private ISchemaObject[] F_POINTS;
-	private int fSessionOffset = -1;
+	private final Image[] fImages = new Image[F_TOTAL_TYPES];
+	// TODO add a listener to add/remove extension points as they are added/removed from working models
+	private ISchemaObject[] fPoints; // available extension points
+	private IDocumentRange fRange;
 	
 	public XMLContentAssistProcessor(PDESourcePage sourcePage) {
 		init();
@@ -150,19 +100,21 @@ public class XMLContentAssistProcessor implements IContentAssistProcessor, IComp
 	public ICompletionProposal[] computeCompletionProposals(ITextViewer viewer, int offset) {
 		IBaseModel model = getModel();
 		IDocument doc = viewer.getDocument();
-		if (model instanceof IReconcilingParticipant && fSessionOffset == -1) {
+		if (model instanceof IReconcilingParticipant && fRange == null)
 			((IReconcilingParticipant)model).reconciled(doc);
-			// reconciling every time... 
-//			fSessionOffset = offset;	
+
+		if (fRange == null) {
+			fRange = fSourcePage.getRangeElement(offset, true);
+			if (fRange != null)
+				fRange = verifyPosition(fRange, offset);
+		} else {
+			
 		}
 		
-		IDocumentRange range = fSourcePage.getRangeElement(offset, true);
-		if (range != null)
-			range = verifyPosition(range, offset);
-		if (range instanceof IDocumentAttribute) 
-			return computeCompletionProposal((IDocumentAttribute)range, offset, doc);
-		else if (range instanceof IDocumentNode)
-			return computeCompletionProposal((IDocumentNode)range, offset, doc);
+		if (fRange instanceof IDocumentAttribute) 
+			return computeCompletionProposal((IDocumentAttribute)fRange, offset, doc);
+		else if (fRange instanceof IDocumentNode)
+			return computeCompletionProposal((IDocumentNode)fRange, offset, doc);
 		else if (model instanceof PluginModelBase)
 			// broken model - infer from text content
 			return computeBrokenModelProposal(((PluginModelBase)model).getLastErrorNode(), offset, doc);
@@ -201,7 +153,7 @@ public class XMLContentAssistProcessor implements IContentAssistProcessor, IComp
 		if (obj instanceof IPluginExtension) {
 			if (attr.getAttributeName().equals(IPluginExtension.P_POINT) && 
 					offset >= attr.getValueOffset())
-				return computeAttributeProposal(attr, offset, attrValue, F_POINTS);
+				return computeAttributeProposal(attr, offset, attrValue, fPoints);
 			ISchemaAttribute sAttr = XMLUtil.getSchemaAttribute(attr, ((IPluginExtension)obj).getPoint());
 			if (sAttr == null)
 				return null;
@@ -215,9 +167,7 @@ public class XMLContentAssistProcessor implements IContentAssistProcessor, IComp
 				
 			} else if (sAttr.getKind() == IMetaAttribute.RESOURCE) {
 				// provide proposals with all resources in current plugin?
-				if (attr.getAttributeValue().equals(IPluginExtensionPoint.P_SCHEMA)) {
-					
-				}
+				
 			} else { // we have an IMetaAttribute.STRING kind
 				if (sAttr.getType() == null)
 					return null;
@@ -237,8 +187,8 @@ public class XMLContentAssistProcessor implements IContentAssistProcessor, IComp
 				return computeAttributeProposal(attr, offset, attrValue, objs);
 			}
 		} else if (obj instanceof IPluginExtensionPoint) {
-			// provide proposals with all schama files in current plugin?
 			if (attr.getAttributeValue().equals(IPluginExtensionPoint.P_SCHEMA)) {
+				// provide proposals with all schama files in current plugin?
 				
 			}
 		}
@@ -259,7 +209,7 @@ public class XMLContentAssistProcessor implements IContentAssistProcessor, IComp
 		int prop_type = determineAssistType(node, doc, offset);
 		switch (prop_type) {
 		case F_ADD_ATTRIB:
-			return computeAddAttributeProposal(-1, node, offset, doc, null, node.getXMLTagName());
+			return computeAddAttributeProposal(F_XX, node, offset, doc, null, node.getXMLTagName());
 		case F_OPEN_TAG:
 			return computeOpenTagProposal(node, offset, doc);
 		case F_ADD_CHILD:
@@ -279,13 +229,10 @@ public class XMLContentAssistProcessor implements IContentAssistProcessor, IComp
 			try {
 				String eleValue = doc.get(off, len);
 				int ind = eleValue.indexOf('>');
-				if (eleValue.charAt(ind - 1) == '/')
+				if (ind > 0 && eleValue.charAt(ind - 1) == '/')
 					ind -= 1;
-				if (offset == ind)
-					return F_NO_ASSIST;
-				if (offset < ind) { 
-					if (Character.isWhitespace(eleValue.charAt(offset)) && offset - 1 >= 0 && 
-							Character.isWhitespace(eleValue.charAt(offset - 1)))
+				if (offset <= ind) { 
+					if (canInsertAttrib(eleValue, offset))
 						return F_ADD_ATTRIB;
 					return F_NO_ASSIST;
 				}
@@ -298,6 +245,14 @@ public class XMLContentAssistProcessor implements IContentAssistProcessor, IComp
 			}
 		}
 		return F_NO_ASSIST;		
+	}
+	
+	private boolean canInsertAttrib(String eleValue, int offset) {
+		// character before offset must be whitespace
+		// character on offset must be whitespace, '/' or '>'
+		char c = eleValue.charAt(offset);
+		return offset - 1 >= 0 && Character.isWhitespace(eleValue.charAt(offset - 1)) && 
+					(Character.isWhitespace(c) || c == '/' || c == '>');
 	}
 	
 	private ICompletionProposal[] computeAddChildProposal(IDocumentNode node, int offset, IDocument doc, String filter) {
@@ -361,16 +316,16 @@ public class XMLContentAssistProcessor implements IContentAssistProcessor, IComp
 			ISchemaObject[] sAttrs = sElem != null ?
 					sElem.getAttributes() :
 					new ISchemaObject[] {
-						new VSchemaAttribute(IIdentifiable.P_ID, "The ID of this extension."),
-						new VSchemaAttribute(IPluginObject.P_NAME, "The name of this extension."),
-						new VSchemaAttribute(IPluginExtension.P_POINT, "The ID of the extension-point this extension will contribute to.")
+						new VSchemaObject(IIdentifiable.P_ID, "The ID of this extension.", F_AT),
+						new VSchemaObject(IPluginObject.P_NAME, "The name of this extension.", F_AT),
+						new VSchemaObject(IPluginExtension.P_POINT, "The ID of the extension-point this extension will contribute to.", F_AT)
 					};
 			return computeAttributeProposals(sAttrs, node, offset, filter, nodeName);
 		} else if (type == F_EP || node instanceof IPluginExtensionPoint) {
 			ISchemaObject[] sAttrs = new ISchemaObject[] {
-						new VSchemaAttribute(IIdentifiable.P_ID, "The ID of this extension-point."),
-						new VSchemaAttribute(IPluginObject.P_NAME, "The name of this extension-point."),
-						new VSchemaAttribute(IPluginExtensionPoint.P_SCHEMA, "The location of this extension-point's schema file.")
+						new VSchemaObject(IIdentifiable.P_ID, "The ID of this extension-point.", F_AT),
+						new VSchemaObject(IPluginObject.P_NAME, "The name of this extension-point.", F_AT),
+						new VSchemaObject(IPluginExtensionPoint.P_SCHEMA, "The location of this extension-point's schema file.", F_AT)
 					};
 			return computeAttributeProposals(sAttrs, node, offset, filter, nodeName);
 		} else {
@@ -447,6 +402,7 @@ public class XMLContentAssistProcessor implements IContentAssistProcessor, IComp
 	private ICompletionProposal[] computeBrokenModelAttributeContentProposal(IDocumentNode parent, int offset, String element, String attr, String filter) {
 		// TODO use computeCompletionProposal(IDocumentAttribute attr, int offset) if possible
 		// or refactor above to be used here
+		// CURRENTLY: attribute completion only works in non-broken models
 		return null;
 	}
 	
@@ -457,19 +413,20 @@ public class XMLContentAssistProcessor implements IContentAssistProcessor, IComp
 		String node = null;
 		String attr = null;
 		String attVal = null;
+		int quoteCount = 0;
 		try {
 			while (--offset[0] >= 0) {
 				char c = doc.getChar(offset[0]);
 				if (c == '"') {
-					if (attVal != null) { // ran into 2nd quotation mark, we are out of range
-						node = null;
-						break;
-					}
+					quoteCount += 1;
+					nodeBuffer.setLength(0);
+					attrBuffer.setLength(0);
+					if (attVal != null) // ran into 2nd quotation mark, we are out of range
+						continue;
 					offset[2] = offset[0];
 					attVal = attrValBuffer.toString();
-					attrBuffer.setLength(0);
-					nodeBuffer.setLength(0);
 				} else if (Character.isWhitespace(c)) {
+					nodeBuffer.setLength(0);
 					if (attr == null) {
 						offset[1] = offset[0];
 						int attBuffLen = attrBuffer.length();
@@ -477,7 +434,6 @@ public class XMLContentAssistProcessor implements IContentAssistProcessor, IComp
 							attrBuffer.setLength(attBuffLen - 1);
 						attr = attrBuffer.toString();
 					}
-					nodeBuffer.setLength(0);
 				} else if (c == '<') {
 					node = nodeBuffer.toString();
 					break;
@@ -493,13 +449,15 @@ public class XMLContentAssistProcessor implements IContentAssistProcessor, IComp
 		} catch (BadLocationException e) {}
 		if (node == null)
 			return null;
+		if (quoteCount % 2 != 0)
+			return null; // open quotes - don't provide assist
 		return new String[] {node, attr, attVal};
 	}
 	
 	public IContextInformation[] computeContextInformation(ITextViewer viewer, int offset)
 		{ return null; }
 	public char[] getCompletionProposalAutoActivationCharacters() 
-		{ return new char[] {'<'}; }
+		{ return null; }
 	public char[] getContextInformationAutoActivationCharacters()
 		{ return null; }
 	public IContextInformationValidator getContextInformationValidator()
@@ -548,7 +506,7 @@ public class XMLContentAssistProcessor implements IContentAssistProcessor, IComp
 	}
 
 	public void assistSessionEnded(ContentAssistEvent event) {
-		fSessionOffset = -1;
+		fRange = null;
 	}
 
 	public void assistSessionStarted(ContentAssistEvent event) {
@@ -557,4 +515,45 @@ public class XMLContentAssistProcessor implements IContentAssistProcessor, IComp
 	public void selectionChanged(ICompletionProposal proposal, boolean smartToggle) {
 	}
 
+	private void init() {
+		if (fPoints == null) {
+			ArrayList extPoints = new ArrayList();
+			IPluginModelBase[] plugins = PDECore.getDefault().getModelManager().getPlugins();
+			for (int i = 0; i < plugins.length; i++) {
+				IPluginExtensionPoint[] points = plugins[i].getPluginBase().getExtensionPoints();
+				for (int j = 0; j < points.length; j++)
+					extPoints.add(points[j]);
+			}
+			
+			fPoints = new ISchemaObject[extPoints.size()];
+			for (int i = 0; i < fPoints.length; i++)
+				fPoints[i] = new VSchemaObject(((IPluginExtensionPoint)extPoints.get(i)).getFullId(), null, F_AT_EP);
+		}
+	}
+	
+	public Image getImage(int type) {
+		if (fImages[type] == null) {
+			switch(type) {
+			case F_EP:
+			case F_AT_EP:
+				return fImages[type] = PDEPluginImages.DESC_EXT_POINT_OBJ.createImage();
+			case F_EX:
+				return fImages[type] = PDEPluginImages.DESC_EXTENSION_OBJ.createImage();
+			case F_EL:
+			case F_CL:
+				return fImages[type] = PDEPluginImages.DESC_XML_ELEMENT_OBJ.createImage();
+			case F_AT:
+			case F_AT_VAL:
+				return fImages[type] = PDEPluginImages.DESC_ATT_URI_OBJ.createImage();
+			}
+		}
+		return fImages[type];
+	}
+	
+	public void disposeImages() {
+		for (int i = 0; i < fImages.length; i++)
+			if (fImages[i] != null && !fImages[i].isDisposed())
+				fImages[i].dispose();
+	}
+	
 }

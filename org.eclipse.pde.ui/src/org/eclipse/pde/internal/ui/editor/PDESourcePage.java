@@ -413,10 +413,11 @@ public abstract class PDESourcePage extends TextEditor implements IFormPage, IGo
 		IDocumentRange range = findRange();
 		if (range == null)
 			return;
-		if (range.getOffset() == -1) {
-			IBaseModel model = getInputContext().getModel();
-			if (!(model instanceof AbstractEditingModel))
-				return;
+		IBaseModel model = getInputContext().getModel();
+		if (!(model instanceof AbstractEditingModel))
+			return;
+		
+		if (range.getOffset() == -1 || isDirty()) {
 			((AbstractEditingModel)model).adjustOffsets(((AbstractEditingModel)model).getDocument());
 			range = findRange();
 		}

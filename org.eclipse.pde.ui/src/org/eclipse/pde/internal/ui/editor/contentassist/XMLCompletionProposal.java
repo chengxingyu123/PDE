@@ -3,6 +3,8 @@ package org.eclipse.pde.internal.ui.editor.contentassist;
 import java.util.HashSet;
 import java.util.Stack;
 
+import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
@@ -23,7 +25,6 @@ import org.eclipse.pde.internal.core.ischema.ISchemaAttribute;
 import org.eclipse.pde.internal.core.ischema.ISchemaComplexType;
 import org.eclipse.pde.internal.core.ischema.ISchemaCompositor;
 import org.eclipse.pde.internal.core.ischema.ISchemaElement;
-import org.eclipse.pde.internal.core.ischema.ISchemaEnumeration;
 import org.eclipse.pde.internal.core.ischema.ISchemaObject;
 import org.eclipse.pde.internal.core.ischema.ISchemaRestriction;
 import org.eclipse.pde.internal.core.ischema.ISchemaSimpleType;
@@ -60,6 +61,7 @@ public class XMLCompletionProposal implements ICompletionProposal {
 			return;
 		
 		fLen = sel.getLength() + sel.getOffset() - fOffset;
+		String delim = TextUtilities.getDefaultLineDelimiter(document);
 		StringBuffer sb = new StringBuffer();
 		boolean doInternalWork = false;
 		if (fSchemaObject == null && fRange instanceof IDocumentNode) {
@@ -75,45 +77,58 @@ public class XMLCompletionProposal implements ICompletionProposal {
 			sb.append(attName);
 			sb.append("=\""); //$NON-NLS-1$
 			fSelOffset = fOffset + sb.length();
-			String value = generateDefaultAttributeValue((ISchemaAttribute)fSchemaObject);
+			
+			String value = "";
+			IBaseModel baseModel = fProcessor.getModel();
+			if (baseModel instanceof IPluginModelBase) {
+				IResource resource = ((IPluginModelBase)baseModel).getUnderlyingResource();
+				if (resource != null) {
+					ISchemaElement sElement = null;
+					int counter = 1;
+					if (fSchemaObject.getParent() instanceof ISchemaElement) {
+						sElement = (ISchemaElement)fSchemaObject.getParent();
+						// Generate a unique number for IDs
+						counter = XMLUtil.getCounterValue(sElement);
+					}					
+					value = generateAttributeValue(resource.getProject(), counter,
+						(ISchemaAttribute) fSchemaObject);
+				}
+			}
+			
 			sb.append(value);
 			fSelLen = value.length();
 			sb.append('"');
 		} else if (fSchemaObject instanceof ISchemaElement) {
 			sb.append('<');
 			sb.append(((ISchemaElement)fSchemaObject).getName());
-			sb.append(" />"); //$NON-NLS-1$
+			sb.append('>'); //$NON-NLS-1$
+			sb.append(delim);
+			sb.append(getIndent(document));
+			sb.append('<');
+			sb.append('/');
+			sb.append(((ISchemaElement)fSchemaObject).getName());
+			sb.append('>');
 			doInternalWork = true;
 		} else if (fSchemaObject instanceof VSchemaObject) {
 			int type = ((VSchemaObject)fSchemaObject).getVType();
 			switch (type) {
+			case XMLContentAssistProcessor.F_AT:
+				break;
 			case XMLContentAssistProcessor.F_CL:
 				fOffset = sel.getOffset();
 				fLen = 0;
 				sb.append(" />"); //$NON-NLS-1$
 				break;
 			case XMLContentAssistProcessor.F_EX:
-				String delim = TextUtilities.getDefaultLineDelimiter(document);
 				sb.append("<extension"); //$NON-NLS-1$
 				sb.append(delim);
-				StringBuffer indBuff = new StringBuffer();
-				try {
-					// add indentation
-					int line = document.getLineOfOffset(fOffset);
-					int lineOffset = document.getLineOffset(line); 
-					int indent = fOffset - lineOffset;
-					char[] indentChars = document.get(lineOffset, indent).toCharArray();
-					// for every tab append a tab, for anything else append a space
-					for (int i = 0; i < indentChars.length; i++)
-						indBuff.append(indentChars[i] == '\t' ? '\t' : ' ');
-				} catch (BadLocationException e) {
-				}
-				sb.append(indBuff.toString());
+				String indent = getIndent(document);
+				sb.append(indent);
 				sb.append(F_DEF_ATTR_INDENT);
 				sb.append("point=\"\">"); //$NON-NLS-1$
 				fSelOffset = fOffset + sb.length() - 2; // position rigth inside new point="" attribute
 				sb.append(delim);
-				sb.append(indBuff.toString());
+				sb.append(indent);
 				sb.append("</extension>"); //$NON-NLS-1$
 				break;
 			case XMLContentAssistProcessor.F_EP:
@@ -152,7 +167,6 @@ public class XMLCompletionProposal implements ICompletionProposal {
 		if (sb.length() == 0)
 			return;
 		try {
-			prepareBuffer(sb, document);
 			document.replace(fOffset, fLen, sb.toString());
 		} catch (BadLocationException e) {
 			PDEPlugin.log(e);
@@ -226,42 +240,25 @@ public class XMLCompletionProposal implements ICompletionProposal {
 		}
 	}
 	
-	private String generateDefaultAttributeValue(ISchemaAttribute sAttr) {
-		ISchemaSimpleType type = sAttr.getType();
-		if (type != null) {
-			if (type.getName().equals("boolean")) //$NON-NLS-1$
-				return "false"; //$NON-NLS-1$
-			
-			ISchemaRestriction sRestr = type.getRestriction();
-			if (sRestr != null) {
-				Object[] restrictions = sRestr.getChildren();
-				for (int i = 0; i < restrictions.length; i++)
-					if (restrictions[i] instanceof ISchemaObject)
-						return ((ISchemaObject)restrictions[i]).getName();
-			}
+	private String getIndent(IDocument document) {
+		StringBuffer indBuff = new StringBuffer();
+		try {
+			// add indentation
+			int line = document.getLineOfOffset(fOffset);
+			int lineOffset = document.getLineOffset(line); 
+			int indent = fOffset - lineOffset;
+			char[] indentChars = document.get(lineOffset, indent).toCharArray();
+			// for every tab append a tab, for anything else append a space
+			for (int i = 0; i < indentChars.length; i++)
+				indBuff.append(indentChars[i] == '\t' ? '\t' : ' ');
+		} catch (BadLocationException e) {
 		}
-		
-		return "TODO"; //$NON-NLS-1$
-	}
-	
-	private void prepareBuffer(StringBuffer sb, IDocument document) throws BadLocationException {
-		if (fSchemaObject instanceof ISchemaAttribute) {
-			// must have whitespace before attribute insert
-			if (fOffset > 0 && 
-					!Character.isWhitespace(document.getChar(fOffset - 1))) {
-				// insert whitespace before
-				sb.insert(0, ' ');
-				fSelOffset += 1;
-			}
-			// must have whitespace, tag close or slash after attribute insert
-			char c = document.getChar(fOffset);
-			if (!Character.isWhitespace(c) && c != '>' && c != '/')
-				// insert whitespace after
-				sb.append(' ');
-		}
+		return indBuff.toString();
 	}
 	
 	public String getAdditionalProposalInfo() {
+		// TODO how / where does this show up?
+		// does something need to be enabled?
 		if (fSchemaObject == null)
 			return null;
 		return fSchemaObject.getDescription();
@@ -332,8 +329,7 @@ public class XMLCompletionProposal implements ICompletionProposal {
 	 */
 	protected void computeInsertionType(ISchemaElement sElement,
 			IPluginParent pElement, HashSet visited) {
-
-		ISchemaComplexType type = null;
+		
 		if ((sElement == null) ||
 				(pElement == null)) {
 			// If there is no corresponding schema information or plug-in 
@@ -343,26 +339,24 @@ public class XMLCompletionProposal implements ICompletionProposal {
 			// For simple types, insert a comment informing the user to
 			// add element content text
 			try {
-				// TODO:  MP:  Make a preference:  Phase #2
 				setText(pElement, createCommentText(PDEUIMessages.XMLCompletionProposal_InfoElement));
 			} catch (CoreException e) {
 				PDEPlugin.logException(e);
 			}
 			return;
 		} else if (sElement.getType() instanceof ISchemaComplexType) {
-			type = (ISchemaComplexType) sElement.getType();
 			// Note:  Mixed content types do not affect auto-generation
 			// Note:  Deprecated elements do not affect auto-generation
+			// Insert element attributes
+			computeInsertionAllAttributes(pElement, sElement);
+			// Get this element's compositor
+			ISchemaCompositor compositor = ((ISchemaComplexType)sElement.getType()).getCompositor();
+			// Process the compositor
+			computeInsertionSequence(compositor, pElement, visited);
 		} else {
 			// Unknown element type
 			return;
 		}
-		// Insert element attributes
-		computeInsertionAttribute(pElement, type);
-		// Get this element's compositor
-		ISchemaCompositor compositor = type.getCompositor();
-		// Process the compositor
-		computeInsertionSequence(compositor, pElement, visited);
 	}
 
 	/**
@@ -393,12 +387,6 @@ public class XMLCompletionProposal implements ICompletionProposal {
 			// Too presumption to choose for the user
 			// Avoid processing and generate a comment to inform the user that
 			// they need to update this element accordingly
-			try {
-				// TODO:  MP:  Make a preference:  Phase #2
-				setText(pElement, createCommentText(PDEUIMessages.XMLCompletionProposal_InfoChoice));
-			} catch (CoreException e) {
-				PDEPlugin.logException(e);
-			}
 			return false;
 		} else if (compositor.getKind() == ISchemaCompositor.ALL) {
 			// Not supported by PDE - should never get here
@@ -446,50 +434,69 @@ public class XMLCompletionProposal implements ICompletionProposal {
 	 * @param type
 	 * @param attributes
 	 */
-	protected void computeInsertionAttribute(IPluginParent pElement, ISchemaComplexType type) {
+	protected void computeInsertionAllAttributes(IPluginParent pElement, ISchemaElement sElement) {
+		// Has to be a complex type if there are attributes
+		ISchemaComplexType type = (ISchemaComplexType)sElement.getType();
+		// Get the underlying project
+		IResource resource = pElement.getModel().getUnderlyingResource();
+		IProject project = null;
+		if (resource != null)
+			project = resource.getProject();
+		// Get all the attributes
 		ISchemaAttribute[] attributes = type.getAttributes();
+		// Generate a unique number for IDs
+		int counter = XMLUtil.getCounterValue(sElement);
+		// Process all attributes
 		for (int i = 0; i < type.getAttributeCount(); i++) {
+			ISchemaAttribute attribute = attributes[i];
 			// Note:  If an attribute is deprecated, it does not affect
 			// auto-generation.
 			try {
-				if (attributes[i].getUse() == ISchemaAttribute.REQUIRED) {
-					// Determine the attribute value based on the attribute
-					// kind
-					String value = null;
-					if (attributes[i].getKind() == IMetaAttribute.JAVA) {
-						value = PDEUIMessages.XMLCompletionProposal_PlaceHolderClass;
-					} else if (attributes[i].getKind() == IMetaAttribute.RESOURCE) {
-						value = PDEUIMessages.XMLCompletionProposal_PlaceHolderResource;
-					} else if (attributes[i].getKind() == IMetaAttribute.STRING) {
-						if (attributes[i].getType().getName().equals("boolean")) { //$NON-NLS-1$
-							value = "false"; //$NON-NLS-1$
-						} else {
-							value = PDEUIMessages.XMLCompletionProposal_PlaceHolderString;
-						}
-					} else {
-						value = PDEUIMessages.XMLCompletionProposal_UnknownKind;
-					} 
-					// Check for enumeration restrictions, if there is one, 
-					// just pick the first enumerated value
-					ISchemaRestriction restriction = 
-						attributes[i].getType().getRestriction();
-					if (restriction != null) {
-						Object[] objects = restriction.getChildren();
-						if (objects[0] instanceof ISchemaEnumeration) {
-							value = ((ISchemaEnumeration)objects[0]).getName();
-						}
-					}
+				if (attribute.getUse() == ISchemaAttribute.REQUIRED || 
+						attribute.getUse() == ISchemaAttribute.DEFAULT) {
+					String value = generateAttributeValue(project, counter, attribute);
 					// Update Model
-					setAttribute(pElement, attributes[i].getName(), value);
+					setAttribute(pElement, attribute.getName(), value);
 				}
 				// Ignore optional attributes
-				// Ignore default attributes
 			} catch (CoreException e) {
 				PDEPlugin.logException(e);
 			}
 		}
 	}
 
+	/**
+	 * @param project
+	 * @param counter
+	 * @param attribute
+	 * @return
+	 */
+	protected String generateAttributeValue(IProject project, int counter, ISchemaAttribute attribute) {
+		String value = "";
+		ISchemaRestriction restriction = 
+			attribute.getType().getRestriction();
+
+		if (attribute.getKind() == IMetaAttribute.JAVA &&
+			project != null) {
+			value = XMLUtil.createDefaultClassName(project,
+					attribute, counter);
+		} else if ((attribute.getUse() == ISchemaAttribute.DEFAULT) &&
+					(attribute.getValue() != null)) {
+			value = attribute.getValue().toString();
+		} else if (restriction != null) {
+			// Check for enumeration restrictions, if there is one, 
+			// just pick the first enumerated value
+			value = restriction.getChildren()[0].toString();
+		} else if (project != null) {
+			// Cases:
+			// IMetaAttribute.STRING
+			// IMetaAttribute.RESOURCE
+			value = XMLUtil.createDefaultName(project,
+					attribute, counter);
+		}
+		return value;
+	}
+	
 	/**
 	 * @param compositor
 	 * @param pElement
