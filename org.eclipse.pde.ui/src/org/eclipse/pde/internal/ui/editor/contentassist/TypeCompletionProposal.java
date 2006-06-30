@@ -23,13 +23,17 @@ public class TypeCompletionProposal implements ICompletionProposal {
 	protected String fReplacementString;
 	protected Image fImage;
 	protected String fDisplayString;
-
+	protected int fBeginInsertPoint;
+	protected int fEndInsertPoint;
+	
 	public TypeCompletionProposal(String replacementString, Image image, String displayString) {
 		Assert.isNotNull(replacementString);
 		
 		fReplacementString = replacementString;
 		fImage = image;
 		fDisplayString = displayString;
+		fBeginInsertPoint = 0;
+		fEndInsertPoint = 0;
 	}
 
 	/* (non-Javadoc)
@@ -37,8 +41,10 @@ public class TypeCompletionProposal implements ICompletionProposal {
 	 */
 	public void apply(IDocument document) {
 		String current = document.get();
+		if (fEndInsertPoint == 0)
+			fEndInsertPoint = current.length();
 		try {
-			document.replace(0, current.length(), fReplacementString);
+			document.replace(fBeginInsertPoint, fEndInsertPoint, fReplacementString);
 		} catch (BadLocationException e) {
 			// DEBUG
 			// e.printStackTrace();
@@ -79,7 +85,7 @@ public class TypeCompletionProposal implements ICompletionProposal {
 	 * @see org.eclipse.jface.text.contentassist.ICompletionProposal#getSelection(org.eclipse.jface.text.IDocument)
 	 */
 	public Point getSelection(IDocument document) {
-		return new Point(fDisplayString.length(), fDisplayString.length());
+		return new Point(fBeginInsertPoint, fDisplayString.length());
 	}
 	
 	/**
@@ -87,6 +93,14 @@ public class TypeCompletionProposal implements ICompletionProposal {
 	 */
 	public String getReplacementString() {
 		return fReplacementString;
+	}
+	
+	public void setBeginInsertPoint(int point) {
+		fBeginInsertPoint = point;
+	}
+
+	public void setEndInsertPoint(int point) {
+		fEndInsertPoint = point;
 	}
 	
 }

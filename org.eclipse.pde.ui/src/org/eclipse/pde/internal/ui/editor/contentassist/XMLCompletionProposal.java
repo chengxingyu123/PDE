@@ -75,18 +75,19 @@ public class XMLCompletionProposal implements ICompletionProposal {
 			sb.append(((IDocumentNode)fRange).getXMLTagName());
 			sb.append('>');
 		} else if (fSchemaObject instanceof ISchemaAttribute) {
-			if (fRange instanceof IDocumentNode) {
-				String attName = ((ISchemaAttribute)fSchemaObject).getName();
-				sb.append(attName);
-				sb.append("=\""); //$NON-NLS-1$
-				fSelOffset = fOffset + sb.length();
-				String value = generateAttributeValue((ISchemaAttribute)fSchemaObject, fProcessor.getModel());
-				sb.append(value);
-				fSelLen = value.length();
-				sb.append('"');
-			} else {
-				sb.toString();
+			if (fRange == null) {
+				// hacky hacky need to modify offsets
+				fLen -= 1;
+				fOffset += 1;
 			}
+			String attName = ((ISchemaAttribute)fSchemaObject).getName();
+			sb.append(attName);
+			sb.append("=\""); //$NON-NLS-1$
+			fSelOffset = fOffset + sb.length();
+			String value = generateAttributeValue((ISchemaAttribute)fSchemaObject, fProcessor.getModel());
+			sb.append(value);
+			fSelLen = value.length();
+			sb.append('"');
 		} else if (fSchemaObject instanceof ISchemaElement) {
 			sb.append('<');
 			sb.append(((ISchemaElement)fSchemaObject).getName());
@@ -166,6 +167,9 @@ public class XMLCompletionProposal implements ICompletionProposal {
 	}
 	
 	private void modifyModel(IDocument document) {
+		// TODO requires
+		//  - refactoring
+		//  - better grouping of cases (if statements)
 		IBaseModel model = fProcessor.getModel();
 		if (model instanceof IReconcilingParticipant)
 			((IReconcilingParticipant)model).reconciled(document);

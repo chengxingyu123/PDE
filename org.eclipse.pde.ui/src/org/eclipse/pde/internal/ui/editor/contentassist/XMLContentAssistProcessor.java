@@ -3,6 +3,8 @@ package org.eclipse.pde.internal.ui.editor.contentassist;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 
+import org.eclipse.core.resources.IResource;
+import org.eclipse.jdt.core.search.IJavaSearchConstants;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.ITextSelection;
@@ -31,6 +33,7 @@ import org.eclipse.pde.internal.core.ischema.ISchemaElement;
 import org.eclipse.pde.internal.core.ischema.ISchemaObject;
 import org.eclipse.pde.internal.core.ischema.ISchemaRestriction;
 import org.eclipse.pde.internal.core.ischema.ISchemaSimpleType;
+import org.eclipse.pde.internal.core.text.AbstractEditingModel;
 import org.eclipse.pde.internal.core.text.IDocumentAttribute;
 import org.eclipse.pde.internal.core.text.IDocumentNode;
 import org.eclipse.pde.internal.core.text.IDocumentRange;
@@ -91,6 +94,7 @@ public class XMLContentAssistProcessor implements IContentAssistProcessor, IComp
 	// TODO add a listener to add/remove extension points as they are added/removed from working models
 	private ISchemaObject[] fPoints; // available extension points
 	private IDocumentRange fRange;
+	private int fDocLen = -1;
 	
 	public XMLContentAssistProcessor(PDESourcePage sourcePage) {
 		init();
@@ -100,21 +104,41 @@ public class XMLContentAssistProcessor implements IContentAssistProcessor, IComp
 	public ICompletionProposal[] computeCompletionProposals(ITextViewer viewer, int offset) {
 		IBaseModel model = getModel();
 		IDocument doc = viewer.getDocument();
-		if (model instanceof IReconcilingParticipant && fRange == null)
-			((IReconcilingParticipant)model).reconciled(doc);
+		int docLen = doc.getLength();
+		if (docLen == fDocLen)
+			return null; // left/right cursor has been pressed - cancel content assist
+		
+		fDocLen = docLen;
+		if (model instanceof AbstractEditingModel
+				&& fSourcePage.isDirty()
+				&& ((AbstractEditingModel)model).isStale()
+				&& fRange == null)
+			((AbstractEditingModel)model).reconciled(doc);
 
 		if (fRange == null) {
 			assignRange(offset);
 		} else {
-			// TODO - we may be looking at the wrong fRange (THIS IS GOING TO HAPPEN)
+			// TODO - we may be looking at the wrong fRange
 			// when this happens --> reset it and reconcile
 			// how can we tell if we are looking at the wrong one... ?
+			boolean resetAndReconcile = false;
+			if (!(fRange instanceof IDocumentAttribute))
+				// too easy to reconcile.. this is temporary
+				resetAndReconcile = true;
+				
+			if (resetAndReconcile) {
+				fRange = null;
+				if (model instanceof IReconcilingParticipant)
+					((IReconcilingParticipant)model).reconciled(doc);
+			}
 		}
 		
 		if (fRange instanceof IDocumentAttribute) 
 			return computeCompletionProposal((IDocumentAttribute)fRange, offset, doc);
 		else if (fRange instanceof IDocumentNode)
 			return computeCompletionProposal((IDocumentNode)fRange, offset, doc);
+		else if (fRange instanceof IDocumentTextNode)
+			return null;
 		else if (model instanceof PluginModelBase)
 			// broken model - infer from text content
 			return computeBrokenModelProposal(((PluginModelBase)model).getLastErrorNode(), offset, doc);
@@ -161,12 +185,19 @@ public class XMLContentAssistProcessor implements IContentAssistProcessor, IComp
 				return null;
 			
 			if (sAttr.getKind() == IMetaAttribute.JAVA) {
-				String basedOn = sAttr.getBasedOn();
-				if (basedOn == null)
+				IResource resource = obj.getModel().getUnderlyingResource();
+				if (resource == null)
 					return null;
-				// TODO basedOn story has to be finalized - too clostly to determine if
-				// this field is for extending or implementing during content proposal generation
 				
+				TypeCompletionSearchRequestor requestor = new TypeCompletionSearchRequestor(resource.getProject(), IJavaSearchConstants.CLASS_AND_INTERFACE);
+				ICompletionProposal[] proposals = requestor.computeCompletionProposals(attrValue);
+				if (proposals == null)
+					return null;
+				for (int i = 0; i < proposals.length; i++) {
+					((TypeCompletionProposal)proposals[i]).setBeginInsertPoint(offests[1] + attrValue.length());
+					((TypeCompletionProposal)proposals[i]).setEndInsertPoint(attrValue.length());
+				}
+				return proposals;
 			} else if (sAttr.getKind() == IMetaAttribute.RESOURCE) {
 				// provide proposals with all resources in current plugin?
 				
@@ -451,8 +482,9 @@ public class XMLContentAssistProcessor implements IContentAssistProcessor, IComp
 		} catch (BadLocationException e) {}
 		if (node == null)
 			return null;
+		
 		if (quoteCount % 2 == 0)
-			attr = attVal = null;
+			attVal = null;
 		else if (brokenModel)
 			return null; // open quotes - don't provide assist
 			
@@ -511,6 +543,7 @@ public class XMLContentAssistProcessor implements IContentAssistProcessor, IComp
 
 	public void assistSessionEnded(ContentAssistEvent event) {
 		fRange = null;
+		fDocLen = -1;
 	}
 
 	public void assistSessionStarted(ContentAssistEvent event) {
