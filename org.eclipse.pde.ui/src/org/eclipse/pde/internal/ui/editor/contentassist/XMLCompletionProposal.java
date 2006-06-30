@@ -12,8 +12,10 @@ import org.eclipse.jface.text.ITextSelection;
 import org.eclipse.jface.text.TextUtilities;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 import org.eclipse.jface.text.contentassist.IContextInformation;
+import org.eclipse.osgi.util.NLS;
 import org.eclipse.pde.core.IBaseModel;
 import org.eclipse.pde.core.IIdentifiable;
+import org.eclipse.pde.core.IModel;
 import org.eclipse.pde.core.plugin.IPluginBase;
 import org.eclipse.pde.core.plugin.IPluginElement;
 import org.eclipse.pde.core.plugin.IPluginExtension;
@@ -73,31 +75,18 @@ public class XMLCompletionProposal implements ICompletionProposal {
 			sb.append(((IDocumentNode)fRange).getXMLTagName());
 			sb.append('>');
 		} else if (fSchemaObject instanceof ISchemaAttribute) {
-			String attName = ((ISchemaAttribute)fSchemaObject).getName();
-			sb.append(attName);
-			sb.append("=\""); //$NON-NLS-1$
-			fSelOffset = fOffset + sb.length();
-			
-			String value = "";
-			IBaseModel baseModel = fProcessor.getModel();
-			if (baseModel instanceof IPluginModelBase) {
-				IResource resource = ((IPluginModelBase)baseModel).getUnderlyingResource();
-				if (resource != null) {
-					ISchemaElement sElement = null;
-					int counter = 1;
-					if (fSchemaObject.getParent() instanceof ISchemaElement) {
-						sElement = (ISchemaElement)fSchemaObject.getParent();
-						// Generate a unique number for IDs
-						counter = XMLUtil.getCounterValue(sElement);
-					}					
-					value = generateAttributeValue(resource.getProject(), counter,
-						(ISchemaAttribute) fSchemaObject);
-				}
+			if (fRange instanceof IDocumentNode) {
+				String attName = ((ISchemaAttribute)fSchemaObject).getName();
+				sb.append(attName);
+				sb.append("=\""); //$NON-NLS-1$
+				fSelOffset = fOffset + sb.length();
+				String value = generateAttributeValue((ISchemaAttribute)fSchemaObject, fProcessor.getModel());
+				sb.append(value);
+				fSelLen = value.length();
+				sb.append('"');
+			} else {
+				sb.toString();
 			}
-			
-			sb.append(value);
-			fSelLen = value.length();
-			sb.append('"');
 		} else if (fSchemaObject instanceof ISchemaElement) {
 			sb.append('<');
 			sb.append(((ISchemaElement)fSchemaObject).getName());
@@ -172,70 +161,73 @@ public class XMLCompletionProposal implements ICompletionProposal {
 			PDEPlugin.log(e);
 		}
 		
-		if (doInternalWork) {
-			IBaseModel model = fProcessor.getModel();
-			if (model instanceof IReconcilingParticipant)
-				((IReconcilingParticipant)model).reconciled(document);
+		if (doInternalWork)
+			modifyModel(document);
+	}
+	
+	private void modifyModel(IDocument document) {
+		IBaseModel model = fProcessor.getModel();
+		if (model instanceof IReconcilingParticipant)
+			((IReconcilingParticipant)model).reconciled(document);
+		
+		if (model instanceof IPluginModelBase) {
+			IPluginBase base = ((IPluginModelBase)model).getPluginBase();
 			
-			if (model instanceof IPluginModelBase) {
-				IPluginBase base = ((IPluginModelBase)model).getPluginBase();
-				
-				IPluginParent pluginParent = null;
-				ISchemaElement schemaElement = null;
-				
-				if (fSchemaObject instanceof VSchemaObject) {
-					switch (((VSchemaObject)fSchemaObject).getVType()) {
-					case XMLContentAssistProcessor.F_AT_EP:
-						if (!(fRange instanceof IDocumentAttribute))
+			IPluginParent pluginParent = null;
+			ISchemaElement schemaElement = null;
+			
+			if (fSchemaObject instanceof VSchemaObject) {
+				switch (((VSchemaObject)fSchemaObject).getVType()) {
+				case XMLContentAssistProcessor.F_AT_EP:
+					if (!(fRange instanceof IDocumentAttribute))
+						break;
+					int offset = ((IDocumentAttribute)fRange).getEnclosingElement().getOffset();
+					IPluginExtension[] extensions = base.getExtensions();
+					for (int i = 0; i < extensions.length; i++) {
+						if (((IDocumentNode)extensions[i]).getOffset() == offset) {
+							if (extensions[i].getChildCount() != 0)
+								break; // don't modify existing extensions
+							pluginParent = extensions[i];
+							schemaElement = XMLUtil.getSchemaElement(
+									(IDocumentNode)extensions[i],
+									extensions[i].getPoint());
 							break;
-						int offset = ((IDocumentAttribute)fRange).getEnclosingElement().getOffset();
-						IPluginExtension[] extensions = base.getExtensions();
-						for (int i = 0; i < extensions.length; i++) {
-							if (((IDocumentNode)extensions[i]).getOffset() == offset) {
-								if (extensions[i].getChildCount() != 0)
-									break; // don't modify existing extensions
-								pluginParent = extensions[i];
-								schemaElement = XMLUtil.getSchemaElement(
-										(IDocumentNode)extensions[i],
-										extensions[i].getPoint());
-								break;
-							}
 						}
+					}
+					break;
+				}
+			} else if (fRange instanceof IDocumentNode && base instanceof IDocumentNode) {
+				Stack s = new Stack();
+				IDocumentNode node = (IDocumentNode)fRange;
+				IDocumentNode newSearch = (IDocumentNode)base;
+				// traverse up old model, pushing all nodes onto the stack along the way
+				while (node != null && !(node instanceof IPluginBase)) {
+					s.push(node);
+					node = node.getParentNode();
+				}
+				
+				// traverse down new model to find new node, using stack as a guideline
+				while (!s.isEmpty()) {
+					node = (IDocumentNode)s.pop();
+					int nodeIndex = 0;
+					while ((node = node.getPreviousSibling()) != null)
+						nodeIndex += 1;
+					newSearch = newSearch.getChildAt(nodeIndex);
+				}
+				IDocumentNode[] children = newSearch.getChildNodes();
+				for (int i = 0; i < children.length; i++) {
+					if (children[i].getOffset() == fOffset && 
+							children[i] instanceof IPluginElement) {
+						pluginParent = (IPluginElement)children[i];
+						schemaElement = (ISchemaElement)fSchemaObject; 
 						break;
 					}
-				} else if (fRange instanceof IDocumentNode && base instanceof IDocumentNode) {
-					Stack s = new Stack();
-					IDocumentNode node = (IDocumentNode)fRange;
-					IDocumentNode newSearch = (IDocumentNode)base;
-					// traverse up old model, pushing all nodes onto the stack along the way
-					while (node != null && !(node instanceof IPluginBase)) {
-						s.push(node);
-						node = node.getParentNode();
-					}
-					
-					// traverse down new model to find new node, using stack as a guideline
-					while (!s.isEmpty()) {
-						node = (IDocumentNode)s.pop();
-						int nodeIndex = 0;
-						while ((node = node.getPreviousSibling()) != null)
-							nodeIndex += 1;
-						newSearch = newSearch.getChildAt(nodeIndex);
-					}
-					IDocumentNode[] children = newSearch.getChildNodes();
-					for (int i = 0; i < children.length; i++) {
-						if (children[i].getOffset() == fOffset && 
-								children[i] instanceof IPluginElement) {
-							pluginParent = (IPluginElement)children[i];
-							schemaElement = (ISchemaElement)fSchemaObject; 
-							break;
-						}
-					}
 				}
-				
-				if (pluginParent != null && schemaElement != null) {
-					computeInsertion(schemaElement, pluginParent);
-					fProcessor.flushDocument();
-				}
+			}
+			
+			if (pluginParent != null && schemaElement != null) {
+				computeInsertion(schemaElement, pluginParent);
+				fProcessor.flushDocument();
 			}
 		}
 	}
@@ -315,14 +307,6 @@ public class XMLCompletionProposal implements ICompletionProposal {
 	}
 	
 	/**
-	 * @param comment
-	 * @return
-	 */
-	protected String createCommentText(String comment) {
-		return "<!-- " + comment + " -->"; //$NON-NLS-1$ //$NON-NLS-2$
-	}
-	
-	/**
 	 * @param sElement
 	 * @param pElement
 	 * @param visited
@@ -339,7 +323,10 @@ public class XMLCompletionProposal implements ICompletionProposal {
 			// For simple types, insert a comment informing the user to
 			// add element content text
 			try {
-				setText(pElement, createCommentText(PDEUIMessages.XMLCompletionProposal_InfoElement));
+				if (pElement instanceof IPluginElement)
+					((IPluginElement)pElement).setText(NLS.bind(
+							PDEUIMessages.XMLCompletionProposal_InfoElement,
+							pElement.getName()));
 			} catch (CoreException e) {
 				PDEPlugin.logException(e);
 			}
@@ -421,7 +408,7 @@ public class XMLCompletionProposal implements ICompletionProposal {
 				if (newSet.add(schemaElement.getName())) {
 					computeInsertionType(schemaElement, childElement, newSet);
 				} else {
-					childElement.setText(createCommentText(PDEUIMessages.XMLCompletionProposal_ErrorCycle));
+					childElement.setText(PDEUIMessages.XMLCompletionProposal_ErrorCycle);
 				}
 			}
 		} catch (CoreException e) {
@@ -497,6 +484,22 @@ public class XMLCompletionProposal implements ICompletionProposal {
 		return value;
 	}
 	
+	protected String generateAttributeValue(ISchemaAttribute attribute, IBaseModel baseModel) {
+		if (baseModel instanceof IModel) {
+			IResource resource = ((IModel)baseModel).getUnderlyingResource();
+			if (resource != null) {
+				int counter = 1;
+				if (attribute.getParent() instanceof ISchemaElement) {
+					ISchemaElement sElement = (ISchemaElement)attribute.getParent();
+					// Generate a unique number for IDs
+					counter = XMLUtil.getCounterValue(sElement);
+				}					
+				return generateAttributeValue(resource.getProject(), counter, attribute);
+			}
+		}
+		return " ";
+	}
+	
 	/**
 	 * @param compositor
 	 * @param pElement
@@ -539,11 +542,6 @@ public class XMLCompletionProposal implements ICompletionProposal {
 					pe.setPoint(attValue);
 			}
 		}
-	}
-	
-	private void setText(IPluginParent parent, String text) throws CoreException {
-		if (parent instanceof IPluginElement)
-			((IPluginElement)parent).setText(text);
 	}
 	
 }

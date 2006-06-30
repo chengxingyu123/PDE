@@ -104,11 +104,11 @@ public class XMLContentAssistProcessor implements IContentAssistProcessor, IComp
 			((IReconcilingParticipant)model).reconciled(doc);
 
 		if (fRange == null) {
-			fRange = fSourcePage.getRangeElement(offset, true);
-			if (fRange != null)
-				fRange = verifyPosition(fRange, offset);
+			assignRange(offset);
 		} else {
-			
+			// TODO - we may be looking at the wrong fRange (THIS IS GOING TO HAPPEN)
+			// when this happens --> reset it and reconcile
+			// how can we tell if we are looking at the wrong one... ?
 		}
 		
 		if (fRange instanceof IDocumentAttribute) 
@@ -122,27 +122,29 @@ public class XMLContentAssistProcessor implements IContentAssistProcessor, IComp
 		return null;
 	}
 
-	private IDocumentRange verifyPosition(IDocumentRange range, int offset) {
+	private void assignRange(int offset) {
+		fRange = fSourcePage.getRangeElement(offset, true);
+		if (fRange == null)
+			return;
 		// if we are rigth AT (cursor before) the range, we want to contribute
 		// to its parent
-		if (range instanceof IDocumentAttribute) {
-			if (((IDocumentAttribute)range).getNameOffset() == offset)
-				return ((IDocumentAttribute)range).getEnclosingElement();
-		} else if (range instanceof IDocumentNode) {
-			if (((IDocumentNode)range).getOffset() == offset)
-				return ((IDocumentNode)range).getParentNode();
-		} else if (range instanceof IDocumentTextNode) {
-			if (((IDocumentTextNode)range).getOffset() == offset)
-				return ((IDocumentTextNode)range).getEnclosingElement();
+		if (fRange instanceof IDocumentAttribute) {
+			if (((IDocumentAttribute)fRange).getNameOffset() == offset)
+				fRange = ((IDocumentAttribute)fRange).getEnclosingElement();
+		} else if (fRange instanceof IDocumentNode) {
+			if (((IDocumentNode)fRange).getOffset() == offset)
+				fRange = ((IDocumentNode)fRange).getParentNode();
+		} else if (fRange instanceof IDocumentTextNode) {
+			if (((IDocumentTextNode)fRange).getOffset() == offset)
+				fRange = ((IDocumentTextNode)fRange).getEnclosingElement();
 		}
-		return range;
 	}
 
 	private ICompletionProposal[] computeCompletionProposal(IDocumentAttribute attr, int offset, IDocument doc) {
 		if (offset < attr.getValueOffset())
 			return null;
 		int[] offests = new int[] {offset, offset, offset};
-		String[] guess = guessContentRequest(offests, doc);
+		String[] guess = guessContentRequest(offests, doc, false);
 		if (guess == null)
 			return null;
 //		String element = guess[0];
@@ -163,7 +165,7 @@ public class XMLContentAssistProcessor implements IContentAssistProcessor, IComp
 				if (basedOn == null)
 					return null;
 				// TODO basedOn story has to be finalized - too clostly to determine if
-				// this field is for extending or implementing
+				// this field is for extending or implementing during content proposal generation
 				
 			} else if (sAttr.getKind() == IMetaAttribute.RESOURCE) {
 				// provide proposals with all resources in current plugin?
@@ -357,7 +359,7 @@ public class XMLContentAssistProcessor implements IContentAssistProcessor, IComp
 			return null;
 		
 		int[] offArr = new int[] {offset, offset, offset};
-		String[] guess = guessContentRequest(offArr, doc);
+		String[] guess = guessContentRequest(offArr, doc, true);
 		if (guess == null)
 			return null;
 		
@@ -406,7 +408,7 @@ public class XMLContentAssistProcessor implements IContentAssistProcessor, IComp
 		return null;
 	}
 	
-	private String[] guessContentRequest(int[] offset, IDocument doc) {
+	private String[] guessContentRequest(int[] offset, IDocument doc, boolean brokenModel) {
 		StringBuffer nodeBuffer = new StringBuffer();
 		StringBuffer attrBuffer = new StringBuffer();
 		StringBuffer attrValBuffer = new StringBuffer();
@@ -449,8 +451,11 @@ public class XMLContentAssistProcessor implements IContentAssistProcessor, IComp
 		} catch (BadLocationException e) {}
 		if (node == null)
 			return null;
-		if (quoteCount % 2 != 0)
+		if (quoteCount % 2 == 0)
+			attr = attVal = null;
+		else if (brokenModel)
 			return null; // open quotes - don't provide assist
+			
 		return new String[] {node, attr, attVal};
 	}
 	
@@ -479,8 +484,7 @@ public class XMLContentAssistProcessor implements IContentAssistProcessor, IComp
 	private ICompletionProposal[] computeAttributeProposals(ISchemaObject[] sAttrs, IDocumentNode node, int offset, String filter, String parentName) {
 		if (sAttrs == null || sAttrs.length == 0)
 			return null;
-		IDocumentAttribute[] attrs = node != null ?
-				node.getNodeAttributes() : new IDocumentAttribute[0];
+		IDocumentAttribute[] attrs = node != null ? node.getNodeAttributes() : new IDocumentAttribute[0];
 		
 		ArrayList list = new ArrayList();
 		for (int i = 0; i < sAttrs.length; i++) {
