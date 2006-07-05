@@ -291,8 +291,8 @@ public class XMLContentAssistProcessor implements IContentAssistProcessor, IComp
 	private ICompletionProposal[] computeAddChildProposal(IDocumentNode node, int offset, IDocument doc, String filter) {
 		ArrayList propList = new ArrayList();
 		if (node instanceof IPluginBase) {
-			addToList(propList, filter, new VSchemaObject(F_STR_EXT_PT, null, F_EP));
 			addToList(propList, filter, new VSchemaObject(F_STR_EXT, null, F_EX));
+			addToList(propList, filter, new VSchemaObject(F_STR_EXT_PT, null, F_EP));
 		} else if (node instanceof IPluginExtensionPoint) {
 			return null;
 		} else {
