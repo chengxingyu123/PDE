@@ -24,27 +24,32 @@ public class TypeCompletionProposal implements ICompletionProposal {
 	protected Image fImage;
 	protected String fDisplayString;
 	protected int fBeginInsertPoint;
-	protected int fEndInsertPoint;
+	protected int fLength;
 	
 	public TypeCompletionProposal(String replacementString, Image image, String displayString) {
+		this(replacementString, image, displayString, 0, 0);
+	}
+	
+	public TypeCompletionProposal(String replacementString, Image image, String displayString, int startOffset, int length) {
 		Assert.isNotNull(replacementString);
 		
 		fReplacementString = replacementString;
 		fImage = image;
 		fDisplayString = displayString;
-		fBeginInsertPoint = 0;
-		fEndInsertPoint = 0;
+		fBeginInsertPoint = startOffset;
+		fLength = length;
 	}
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.text.contentassist.ICompletionProposal#apply(org.eclipse.jface.text.IDocument)
 	 */
 	public void apply(IDocument document) {
-		String current = document.get();
-		if (fEndInsertPoint == 0)
-			fEndInsertPoint = current.length();
+		if (fLength == -1) {
+			String current = document.get();
+			fLength = current.length();
+		}
 		try {
-			document.replace(fBeginInsertPoint, fEndInsertPoint, fReplacementString);
+			document.replace(fBeginInsertPoint, fLength, fReplacementString);
 		} catch (BadLocationException e) {
 			// DEBUG
 			// e.printStackTrace();
@@ -85,7 +90,7 @@ public class TypeCompletionProposal implements ICompletionProposal {
 	 * @see org.eclipse.jface.text.contentassist.ICompletionProposal#getSelection(org.eclipse.jface.text.IDocument)
 	 */
 	public Point getSelection(IDocument document) {
-		return new Point(fBeginInsertPoint, fDisplayString.length());
+		return new Point(fBeginInsertPoint + fReplacementString.length(), 0);
 	}
 	
 	/**
@@ -94,13 +99,5 @@ public class TypeCompletionProposal implements ICompletionProposal {
 	public String getReplacementString() {
 		return fReplacementString;
 	}
-	
-	public void setBeginInsertPoint(int point) {
-		fBeginInsertPoint = point;
-	}
 
-	public void setEndInsertPoint(int point) {
-		fEndInsertPoint = point;
-	}
-	
 }

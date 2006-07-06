@@ -1,4 +1,4 @@
-package org.eclipse.pde.internal.ui.editor.text;
+package org.eclipse.pde.internal.ui.editor.contentassist;
 
 import org.eclipse.jdt.ui.ISharedImages;
 import org.eclipse.jdt.ui.JavaUI;
@@ -58,11 +58,13 @@ public class ManifestCompletionProposal implements ICompletionProposal {
 	}
 
 	public Point getSelection(IDocument document) {
+		if (fValue.equals("\"\""))
+			return new Point(fStartOffset + 1, 0);
 		return new Point(fStartOffset + getValue().length(), 0);
 	}
 	
 	Image getImage(int type) {
-		Image image = fImages[type];
+		Image image = (type > 0 && type < fImages.length) ? fImages[type] : null;
 		if (image == null) {
 			switch (type) {
 			case TYPE_HEADER:
@@ -86,7 +88,7 @@ public class ManifestCompletionProposal implements ICompletionProposal {
 				fImages[TYPE_DIRECTIVE] = image;
 				return image;
 			case TYPE_ATTRIBUTE:
-				image = PDEPluginImages.DESC_EXT_POINT_OBJ.createImage();
+				image = PDEPluginImages.DESC_ATT_URI_OBJ.createImage();
 				fImages[TYPE_ATTRIBUTE] = image;
 				return image;
 			}

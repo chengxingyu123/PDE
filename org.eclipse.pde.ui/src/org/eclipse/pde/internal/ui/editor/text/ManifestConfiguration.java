@@ -26,6 +26,7 @@ import org.eclipse.jface.text.source.ISourceViewer;
 import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.pde.internal.core.ICoreConstants;
 import org.eclipse.pde.internal.ui.editor.PDESourcePage;
+import org.eclipse.pde.internal.ui.editor.contentassist.ManifestContentAssistProcessor;
 import org.osgi.framework.Constants;
 
 public class ManifestConfiguration extends ChangeAwareSourceViewerConfiguration {
@@ -249,7 +250,7 @@ public class ManifestConfiguration extends ChangeAwareSourceViewerConfiguration 
 			if (fContentAssistant == null) {
 				fContentAssistant = new ContentAssistant();
 				fContentAssistant.setDocumentPartitioning(getConfiguredDocumentPartitioning(sourceViewer));
-				ManifestContentAssitProcessor processor = new ManifestContentAssitProcessor(fSourcePage);
+				ManifestContentAssistProcessor processor = new ManifestContentAssistProcessor(fSourcePage);
 				fContentAssistant.setContentAssistProcessor(processor, IDocument.DEFAULT_CONTENT_TYPE);
 				fContentAssistant.setContentAssistProcessor(processor, ManifestPartitionScanner.MANIFEST_HEADER_VALUE);
 				fContentAssistant.addCompletionListener(processor);

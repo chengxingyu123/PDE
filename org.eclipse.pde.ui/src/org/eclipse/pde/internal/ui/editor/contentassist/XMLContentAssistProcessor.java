@@ -45,9 +45,8 @@ import org.eclipse.pde.internal.ui.editor.PDESourcePage;
 import org.eclipse.pde.internal.ui.editor.text.XMLUtil;
 import org.eclipse.swt.graphics.Image;
 
-public class XMLContentAssistProcessor implements IContentAssistProcessor, ICompletionListener {
+public class XMLContentAssistProcessor extends TypePackageCompletionProcessor implements IContentAssistProcessor, ICompletionListener {
 
-	protected boolean fAssistSessionStarted;
 	// specific assist types
 	protected static final int
 		F_XX = -1, // infer by passing object
@@ -111,15 +110,10 @@ public class XMLContentAssistProcessor implements IContentAssistProcessor, IComp
 		
 		fDocLen = docLen;
 		if (model instanceof AbstractEditingModel
-				&& fSourcePage.isDirty() ) {
-			if (((AbstractEditingModel)model).isStale()
-					&& fRange == null) {
-				((AbstractEditingModel)model).reconciled(doc);
-			} else if (fAssistSessionStarted) {
-				((AbstractEditingModel)model).reconciled(doc);
-				fAssistSessionStarted = false;
-			}
-		}
+				&& fSourcePage.isDirty()
+				&& ((AbstractEditingModel)model).isStale()
+				&& fRange == null)
+			((AbstractEditingModel)model).reconciled(doc);
 
 		if (fRange == null) {
 			assignRange(offset);
@@ -194,16 +188,21 @@ public class XMLContentAssistProcessor implements IContentAssistProcessor, IComp
 				IResource resource = obj.getModel().getUnderlyingResource();
 				if (resource == null)
 					return null;
+				// Revisit: NEW CODE HERE
+				ArrayList list = new ArrayList();
+				ICompletionProposal[] proposals = null;
 				
-				TypeCompletionSearchRequestor requestor = new TypeCompletionSearchRequestor(resource.getProject(), IJavaSearchConstants.CLASS_AND_INTERFACE);
-				ICompletionProposal[] proposals = requestor.computeCompletionProposals(attrValue);
-				if (proposals == null)
-					return null;
-				for (int i = 0; i < proposals.length; i++) {
-					((TypeCompletionProposal)proposals[i]).setBeginInsertPoint(offests[1] + attrValue.length());
-					((TypeCompletionProposal)proposals[i]).setEndInsertPoint(attrValue.length());
+				generateTypePackageProposals(attrValue, resource.getProject(), 
+						list, offset - attrValue.length(), IJavaSearchConstants.CLASS_AND_INTERFACE);
+
+				if ((list != null) && (list.size() != 0)) {
+					// Convert the results array list into an array of completion
+					// proposals
+					proposals = (ICompletionProposal[]) list.toArray(new ICompletionProposal[list.size()]);
+					sortCompletions(proposals);
+					return proposals;
 				}
-				return proposals;
+				return null;
 			} else if (sAttr.getKind() == IMetaAttribute.RESOURCE) {
 				// provide proposals with all resources in current plugin?
 				
@@ -553,7 +552,6 @@ public class XMLContentAssistProcessor implements IContentAssistProcessor, IComp
 	}
 
 	public void assistSessionStarted(ContentAssistEvent event) {
-		fAssistSessionStarted = true;
 	}
 
 	public void selectionChanged(ICompletionProposal proposal, boolean smartToggle) {
