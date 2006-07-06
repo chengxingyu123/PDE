@@ -3,15 +3,10 @@ package org.eclipse.pde.internal.ui.editor.contentassist;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
-import java.util.HashSet;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.Flags;
-import org.eclipse.jdt.core.IJavaElement;
-import org.eclipse.jdt.core.IPackageFragmentRoot;
-import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.search.IJavaSearchConstants;
 import org.eclipse.jdt.core.search.IJavaSearchScope;
 import org.eclipse.jdt.core.search.SearchEngine;
@@ -76,7 +71,7 @@ public abstract class TypePackageCompletionProcessor implements IContentAssistPr
 			return;
 		int length = (replaceEntireContents) ? -1 : currentContent.length();
 		generateTypeProposals(currentContent, project, c, startOffset, length, typeScope);
-		generatePackageProposals(currentContent, project, c, startOffset, length);
+//		generatePackageProposals(currentContent, project, c, startOffset, length);
 	}
 	
 	private void generateTypeProposals(String currentContent, IProject project, final Collection c, 
@@ -141,39 +136,41 @@ public abstract class TypePackageCompletionProcessor implements IContentAssistPr
 		}
 	}
 
-	private void generatePackageProposals(String currentContent, IProject project, Collection c,
-			int startOffset, int length) {
-		// Get the package fragment roots
-		IPackageFragmentRoot[] packageFragments = 
-			PDEJavaHelper.getNonJRERoots(JavaCore.create(project));
-		// Use set to avoid duplicate proposals
-		HashSet set = new HashSet();
-		// Check all package fragments
-		for (int x = 0; x < packageFragments.length; x++) {
-			IJavaElement[] javaElements = null;
-			// Get packages
-			try {
-				javaElements = packageFragments[x].getChildren();
-			} catch (JavaModelException e) {
-				fErrorMessage = e.getMessage();
-				break;
-			}
-			// Search for matching packages
-			for (int j = 0; j < javaElements.length; j++) {
-				String pName = javaElements[j].getElementName();
-				if (pName.startsWith(currentContent, 0) && 
-						set.add(pName)) {
-					// Generate the proposal
-					TypeCompletionProposal proposal = 
-						new TypeCompletionProposal(pName, PDEPluginImages.get(PDEPluginImages.OBJ_DESC_PACKAGE),
-								pName, startOffset, length);
-
-					// Add it to the search results
-					c.add(proposal);
-				}
-			}
-		}
-	}
+//  Commented out function until we can improve package search performance
+	
+//	private void generatePackageProposals(String currentContent, IProject project, Collection c,
+//			int startOffset, int length) {
+//		// Get the package fragment roots
+//		IPackageFragmentRoot[] packageFragments = 
+//			PDEJavaHelper.getNonJRERoots(JavaCore.create(project));
+//		// Use set to avoid duplicate proposals
+//		HashSet set = new HashSet();
+//		// Check all package fragments
+//		for (int x = 0; x < packageFragments.length; x++) {
+//			IJavaElement[] javaElements = null;
+//			// Get packages
+//			try {
+//				javaElements = packageFragments[x].getChildren();
+//			} catch (JavaModelException e) {
+//				fErrorMessage = e.getMessage();
+//				break;
+//			}
+//			// Search for matching packages
+//			for (int j = 0; j < javaElements.length; j++) {
+//				String pName = javaElements[j].getElementName();
+//				if (pName.startsWith(currentContent, 0) && 
+//						set.add(pName)) {
+//					// Generate the proposal
+//					TypeCompletionProposal proposal = 
+//						new TypeCompletionProposal(pName, PDEPluginImages.get(PDEPluginImages.OBJ_DESC_PACKAGE),
+//								pName, startOffset, length);
+//
+//					// Add it to the search results
+//					c.add(proposal);
+//				}
+//			}
+//		}
+//	}
 	
 	public void sortCompletions(ICompletionProposal[] proposals) {
 		Arrays.sort(proposals, getComparator());
