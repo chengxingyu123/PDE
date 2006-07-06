@@ -146,7 +146,7 @@ public abstract class TypePackageCompletionProcessor implements IContentAssistPr
 //		// Use set to avoid duplicate proposals
 //		HashSet set = new HashSet();
 //		// Do not allow an empty package proposals
-//		set.add("");
+//		set.add("");  //$NON-NLS-1$
 //		// Check all package fragments
 //		for (int x = 0; x < packageFragments.length; x++) {
 //			IJavaElement[] javaElements = null;
