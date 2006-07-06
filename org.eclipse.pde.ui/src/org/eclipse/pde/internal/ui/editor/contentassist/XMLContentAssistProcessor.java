@@ -47,6 +47,7 @@ import org.eclipse.swt.graphics.Image;
 
 public class XMLContentAssistProcessor implements IContentAssistProcessor, ICompletionListener {
 
+	protected boolean fAssistSessionStarted;
 	// specific assist types
 	protected static final int
 		F_XX = -1, // infer by passing object
@@ -110,10 +111,15 @@ public class XMLContentAssistProcessor implements IContentAssistProcessor, IComp
 		
 		fDocLen = docLen;
 		if (model instanceof AbstractEditingModel
-				&& fSourcePage.isDirty()
-				&& ((AbstractEditingModel)model).isStale()
-				&& fRange == null)
-			((AbstractEditingModel)model).reconciled(doc);
+				&& fSourcePage.isDirty() ) {
+			if (((AbstractEditingModel)model).isStale()
+					&& fRange == null) {
+				((AbstractEditingModel)model).reconciled(doc);
+			} else if (fAssistSessionStarted) {
+				((AbstractEditingModel)model).reconciled(doc);
+				fAssistSessionStarted = false;
+			}
+		}
 
 		if (fRange == null) {
 			assignRange(offset);
@@ -547,6 +553,7 @@ public class XMLContentAssistProcessor implements IContentAssistProcessor, IComp
 	}
 
 	public void assistSessionStarted(ContentAssistEvent event) {
+		fAssistSessionStarted = true;
 	}
 
 	public void selectionChanged(ICompletionProposal proposal, boolean smartToggle) {
