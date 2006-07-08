@@ -90,6 +90,8 @@ public class TypeCompletionProposal implements ICompletionProposal {
 	 * @see org.eclipse.jface.text.contentassist.ICompletionProposal#getSelection(org.eclipse.jface.text.IDocument)
 	 */
 	public Point getSelection(IDocument document) {
+		if (fReplacementString.equals("\"\""))
+			return new Point(fBeginInsertPoint + 1, 0);
 		return new Point(fBeginInsertPoint + fReplacementString.length(), 0);
 	}
 	

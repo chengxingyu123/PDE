@@ -36,6 +36,7 @@ public class ManifestConfiguration extends ChangeAwareSourceViewerConfiguration 
 	private BasePDEScanner fPropertyValueScanner;
 	private PDEQuickAssistAssistant fQuickAssistant;
 	private ContentAssistant fContentAssistant;
+	private ManifestContentAssistProcessor fContentAssistantProcessor;
 	
 	class ManifestHeaderScanner extends BasePDEScanner {
 		
@@ -243,6 +244,8 @@ public class ManifestConfiguration extends ChangeAwareSourceViewerConfiguration 
 	public void dispose() {
 		if (fQuickAssistant != null)
 			fQuickAssistant.dispose();
+		if (fContentAssistant != null)
+			fContentAssistantProcessor.disposeImages();
 	}
 	
 	public IContentAssistant getContentAssistant(ISourceViewer sourceViewer) {
@@ -250,10 +253,10 @@ public class ManifestConfiguration extends ChangeAwareSourceViewerConfiguration 
 			if (fContentAssistant == null) {
 				fContentAssistant = new ContentAssistant();
 				fContentAssistant.setDocumentPartitioning(getConfiguredDocumentPartitioning(sourceViewer));
-				ManifestContentAssistProcessor processor = new ManifestContentAssistProcessor(fSourcePage);
-				fContentAssistant.setContentAssistProcessor(processor, IDocument.DEFAULT_CONTENT_TYPE);
-				fContentAssistant.setContentAssistProcessor(processor, ManifestPartitionScanner.MANIFEST_HEADER_VALUE);
-				fContentAssistant.addCompletionListener(processor);
+				fContentAssistantProcessor = new ManifestContentAssistProcessor(fSourcePage);
+				fContentAssistant.setContentAssistProcessor(fContentAssistantProcessor, IDocument.DEFAULT_CONTENT_TYPE);
+				fContentAssistant.setContentAssistProcessor(fContentAssistantProcessor, ManifestPartitionScanner.MANIFEST_HEADER_VALUE);
+				fContentAssistant.addCompletionListener(fContentAssistantProcessor);
 			}
 			return fContentAssistant;
 		}

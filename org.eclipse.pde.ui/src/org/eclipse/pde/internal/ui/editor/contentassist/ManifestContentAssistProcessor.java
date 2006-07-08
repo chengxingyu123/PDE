@@ -28,9 +28,11 @@ import org.eclipse.pde.core.plugin.IPluginModelBase;
 import org.eclipse.pde.internal.core.ICoreConstants;
 import org.eclipse.pde.internal.core.PDECore;
 import org.eclipse.pde.internal.core.ibundle.IBundleModel;
+import org.eclipse.pde.internal.ui.PDEPluginImages;
 import org.eclipse.pde.internal.ui.editor.PDEFormEditor;
 import org.eclipse.pde.internal.ui.editor.PDESourcePage;
 import org.eclipse.pde.internal.ui.util.PDEJavaHelper;
+import org.eclipse.swt.graphics.Image;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
 
@@ -64,6 +66,19 @@ public class ManifestContentAssistProcessor extends TypePackageCompletionProcess
 		Constants.REQUIRE_BUNDLE,
 		Constants.FRAGMENT_HOST 
 	};
+	
+	protected static final short
+	F_TYPE_HEADER = 0, // header proposal
+	F_TYPE_PKG = 1, // package proposal
+	F_TYPE_BUNDLE = 2, // bundle proposal
+	F_TYPE_CLASS = 3, // class proposal
+	F_TYPE_DIRECTIVE = 4, // directive proposal
+	F_TYPE_ATTRIBUTE = 5, // attribute proposal
+	F_TYPE_VALUE = 6, // value of attribute or directive proposal
+	
+	F_TOTAL_TYPES = 7;
+	
+	private final Image[] fImages = new Image[F_TOTAL_TYPES];
 	
 	private static final String[] fExecEnvs;
 	static {
@@ -148,7 +163,7 @@ public class ManifestContentAssistProcessor extends TypePackageCompletionProcess
 		for (--startOffset; startOffset >= 0; --startOffset) {
 			char ch = doc.getChar(startOffset);
 			if (!Character.isWhitespace(ch))
-				return ch != ',' && ch != ':';
+				return ch != ',' && ch != ':' && ch != ';';
 		}
 		return true;
 	}
@@ -161,7 +176,7 @@ public class ManifestContentAssistProcessor extends TypePackageCompletionProcess
 			--length;
 		for (int i = 0; i < fHeader.length; i++) {
 			if (fHeader[i].regionMatches(true, 0, currentValue, 0, currentValue.length()) && fHeaders.get(fHeader[i]) == null)
-				completions.add(new ManifestCompletionProposal(fHeader[i], startOffset, offset, ManifestCompletionProposal.TYPE_HEADER));
+				completions.add(new TypeCompletionProposal(fHeader[i] + ": ", getImage(F_TYPE_HEADER), fHeader[i], startOffset, currentValue.length()));
 		}
 		return (ICompletionProposal[]) completions.toArray(new ICompletionProposal[completions.size()]);
 	}
@@ -182,7 +197,7 @@ public class ManifestContentAssistProcessor extends TypePackageCompletionProcess
 		if (value.startsWith(Constants.REQUIRE_BUNDLE))
 			return handleRequireBundleCompletion(value.substring(Constants.REQUIRE_BUNDLE.length()), offset);
 		if (value.startsWith(Constants.EXPORT_PACKAGE))
-			return handleExportPackageCompletion(value.substring(Constants.EXPORT_PACKAGE.length()), offset);
+			return handleExportPackageCompletion(value.substring(Constants.EXPORT_PACKAGE.length() + 1), offset);
 		if (value.startsWith(Constants.BUNDLE_ACTIVATOR))
 			return handleBundleActivatorCompletion(removeLeadingSpaces(value.substring(Constants.BUNDLE_ACTIVATOR.length() + 1)), offset);
 		if (value.startsWith(Constants.BUNDLE_SYMBOLICNAME))
@@ -210,13 +225,14 @@ public class ManifestContentAssistProcessor extends TypePackageCompletionProcess
 			IPluginModelBase[] bases = PDECore.getDefault().getModelManager().getPlugins();
 			
 			for (int j = 0; j < bases.length; j++) {
-				if (importedBundles.contains(bases[j].getBundleDescription().getSymbolicName()))
+				BundleDescription desc = bases[j].getBundleDescription();
+				if (desc == null || importedBundles.contains(desc.getSymbolicName()))
 					continue;
-				ExportPackageDescription[] desc = bases[j].getBundleDescription().getExportPackages();
-				for (int i = 0; i < desc.length; i++) {
-					String pkgName = desc[i].getName();
+				ExportPackageDescription[] expPkgs = desc.getExportPackages();
+				for (int i = 0; i < expPkgs.length; i++) {
+					String pkgName = expPkgs[i].getName();
 					if (pkgName.regionMatches(true, 0, value, 0, length) && !set.contains(pkgName))
-						completions.add(new ManifestCompletionProposal(pkgName, offset- length, offset, ManifestCompletionProposal.TYPE_PACKAGE));
+						completions.add(new TypeCompletionProposal(pkgName, getImage(F_TYPE_PKG), pkgName, offset - length, length));
 				}
 			}
 			return (ICompletionProposal[]) completions.toArray(new ICompletionProposal[completions.size()]);
@@ -225,19 +241,17 @@ public class ManifestContentAssistProcessor extends TypePackageCompletionProcess
 		int equals = currentValue.lastIndexOf('=');
 		if (equals == -1 || semicolon > equals) {
 			String[] validAtts = new String[] {Constants.RESOLUTION_DIRECTIVE, Constants.VERSION_ATTRIBUTE};
-			Integer[] validTypes = new Integer[] {new Integer(ManifestCompletionProposal.TYPE_DIRECTIVE), 
-					new Integer(ManifestCompletionProposal.TYPE_ATTRIBUTE)};
+			Integer[] validTypes = new Integer[] {new Integer(F_TYPE_DIRECTIVE), new Integer(F_TYPE_ATTRIBUTE)};
 			return handleAttrsAndDirectives(value, intializeNewList(validAtts), intializeNewList(validTypes), offset);
 		} 
 		String attributeValue = removeLeadingSpaces(currentValue.substring(semicolon + 1));
 		if (Constants.RESOLUTION_DIRECTIVE.regionMatches(true, 0, attributeValue, 0, Constants.RESOLUTION_DIRECTIVE.length()))
 			return matchValueCompletion(currentValue.substring(equals + 1), new String[] {
-				Constants.RESOLUTION_MANDATORY, Constants.RESOLUTION_OPTIONAL} , new int[] {
-				ManifestCompletionProposal.TYPE_VALUE, ManifestCompletionProposal.TYPE_VALUE}, offset);
+				Constants.RESOLUTION_MANDATORY, Constants.RESOLUTION_OPTIONAL} , new int[] {F_TYPE_VALUE, F_TYPE_VALUE}, offset);
 		if (Constants.VERSION_ATTRIBUTE.regionMatches(true, 0, attributeValue, 0, Constants.VERSION_ATTRIBUTE.length())) {
 			value = removeLeadingSpaces(currentValue.substring(equals + 1));
 			if (value.length() == 0)
-				return new ICompletionProposal[] {new ManifestCompletionProposal("\"\"",offset, offset, -1)}; //$NON-NLS-1$
+				return new ICompletionProposal[] {new TypeCompletionProposal("\"\"", getImage(F_TYPE_VALUE), "\"\"", offset, 0)};
 		}
 		return new ICompletionProposal[0];
 	}
@@ -249,14 +263,14 @@ public class ManifestContentAssistProcessor extends TypePackageCompletionProcess
 			set.add(elems[0].getValue());
 		value = removeLeadingSpaces(value);
 		if (value.length() == 0)
-		 	return new ICompletionProposal[] {new ManifestCompletionProposal("\"\"",offset, offset, -1)}; //$NON-NLS-1$
+			return new ICompletionProposal[] {new TypeCompletionProposal("\"\"", getImage(F_TYPE_VALUE), "\"\"", offset, 0)}; //$NON-NLS-1$
 		if (value.charAt(0) == '"')
 			value = value.substring(1);
 		int index = value.lastIndexOf(',');
 		StringTokenizer tokenizer = new StringTokenizer(value, ","); //$NON-NLS-1$
 		while (tokenizer.hasMoreTokens())
 			set.add(tokenizer.nextToken());
-		return handleBundleCompletions(value.substring((index == -1) ? 0 : index + 1), set, ManifestCompletionProposal.TYPE_VALUE, offset);
+		return handleBundleCompletions(value.substring((index == -1) ? 0 : index + 1), set, F_TYPE_VALUE, offset);
 	}
 	
 	protected ICompletionProposal[] handleFragmentHostCompletion(String currentValue, int offset) {
@@ -267,10 +281,11 @@ public class ManifestContentAssistProcessor extends TypePackageCompletionProcess
 			int length = pluginStart.length();
 			IPluginModelBase [] bases = PDECore.getDefault().getModelManager().getPlugins();
 			for (int i = 0; i < bases.length; i++) {
-				if (bases[i].getBundleDescription().getHost() == null) {
+				BundleDescription desc = bases[i].getBundleDescription();
+				if (desc != null && desc.getHost() == null) {
 					String pluginID = bases[i].getBundleDescription().getSymbolicName();
 					if (pluginID.regionMatches(true, 0, pluginStart, 0, length))
-						completions.add(new ManifestCompletionProposal(pluginID, offset - length, offset, ManifestCompletionProposal.TYPE_BUNDLE));
+						completions.add(new TypeCompletionProposal(pluginID, getImage(F_TYPE_BUNDLE), pluginID, offset - length, length));
 				}
 			}
 			return (ICompletionProposal[]) completions.toArray(new ICompletionProposal[completions.size()]);
@@ -285,25 +300,25 @@ public class ManifestContentAssistProcessor extends TypePackageCompletionProcess
 		if (comma > semicolon || comma == semicolon) {
 			HashSet set = (HashSet) fHeaders.get(Constants.REQUIRE_BUNDLE);
 			if (set == null) set = new HashSet(0);
-			return handleBundleCompletions(value, set, ManifestCompletionProposal.TYPE_BUNDLE, offset);
+			return handleBundleCompletions(value, set, F_TYPE_BUNDLE, offset);
 		}
 		int equals = currentValue.lastIndexOf('=');
 		if (equals == -1 || semicolon > equals) {
 			String[] validAttrs = new String[] {Constants.BUNDLE_VERSION_ATTRIBUTE, Constants.RESOLUTION_DIRECTIVE, Constants.VISIBILITY_DIRECTIVE};
-			Integer[] validTypes = new Integer[] {new Integer(ManifestCompletionProposal.TYPE_ATTRIBUTE), new Integer(ManifestCompletionProposal.TYPE_DIRECTIVE),
-					new Integer(ManifestCompletionProposal.TYPE_DIRECTIVE)};
+			Integer[] validTypes = new Integer[] {new Integer(F_TYPE_ATTRIBUTE), new Integer(F_TYPE_DIRECTIVE), new Integer(F_TYPE_DIRECTIVE)};
 			return handleAttrsAndDirectives(value, intializeNewList(validAttrs), intializeNewList(validTypes),	offset);
 		} 
 		String attributeValue = removeLeadingSpaces(currentValue.substring(semicolon + 1));
 		if (Constants.VISIBILITY_DIRECTIVE.regionMatches(true, 0, attributeValue, 0, Constants.VISIBILITY_DIRECTIVE.length()))
 			return matchValueCompletion(currentValue.substring(equals + 1), new String[] {
-				Constants.VISIBILITY_PRIVATE, Constants.VISIBILITY_REEXPORT}, new int[] {
-				ManifestCompletionProposal.TYPE_VALUE, ManifestCompletionProposal.TYPE_VALUE}, offset);
+				Constants.VISIBILITY_PRIVATE, Constants.VISIBILITY_REEXPORT}, new int[] {F_TYPE_VALUE, F_TYPE_VALUE}, offset);
 		if (Constants.RESOLUTION_DIRECTIVE.regionMatches(true, 0, attributeValue, 0, Constants.RESOLUTION_DIRECTIVE.length()))
 			return matchValueCompletion(currentValue.substring(equals + 1), new String[] {
-				Constants.RESOLUTION_MANDATORY, Constants.RESOLUTION_OPTIONAL} , new int[] {
-				ManifestCompletionProposal.TYPE_VALUE, ManifestCompletionProposal.TYPE_VALUE}, offset);
-		
+				Constants.RESOLUTION_MANDATORY, Constants.RESOLUTION_OPTIONAL} , new int[] {F_TYPE_VALUE, F_TYPE_VALUE}, offset);
+		if (Constants.BUNDLE_VERSION_ATTRIBUTE.regionMatches(true, 0, attributeValue, 0, Constants.RESOLUTION_DIRECTIVE.length()) && 
+				removeLeadingSpaces(currentValue.substring(equals + 1)).length() == 0)
+			return new ICompletionProposal[] {new TypeCompletionProposal("\"\"", getImage(F_TYPE_VALUE), "\"\"", offset, 0)}; //$NON-NLS-1$
+			
 		return new ICompletionProposal[0];
 	}
 	
@@ -317,7 +332,7 @@ public class ManifestContentAssistProcessor extends TypePackageCompletionProcess
 			String bundleId = descs[i].getSymbolicName();
 			if (descs[i].getHost() == null && bundleId.regionMatches(true, 0, value, 0, value.length()) && 
 					!doNotInclude.contains(bundleId))
-				completions.add(new ManifestCompletionProposal(bundleId, offset - length, offset, type));
+				completions.add(new TypeCompletionProposal(bundleId, getImage(type), bundleId, offset - length, length));
 		}
 		return (ICompletionProposal[]) completions.toArray(new ICompletionProposal[completions.size()]);
 	}
@@ -326,8 +341,8 @@ public class ManifestContentAssistProcessor extends TypePackageCompletionProcess
 		int comma = currentValue.lastIndexOf(',');
 		int semicolon = currentValue.lastIndexOf(';');
 		ArrayList list = new ArrayList();
-		String value = comma != -1 ? currentValue.substring(comma + 1) : currentValue.substring(currentValue.indexOf(':') + 1);
 		if (!insideQuotes(currentValue) && comma > semicolon || comma == semicolon) {
+			String value = comma != -1 ? currentValue.substring(comma + 1) : currentValue;
 			HashSet set = (HashSet) fHeaders.get(Constants.EXPORT_PACKAGE);
 			if (set == null) set = new HashSet(0);
 			value = removeLeadingSpaces(value);
@@ -339,16 +354,26 @@ public class ManifestContentAssistProcessor extends TypePackageCompletionProcess
 				for (int i = 0; i < frags.length; i++) {
 					String name = frags[i].getElementName();
 					if (name.regionMatches(true, 0, value, 0, length))
-						list.add(new ManifestCompletionProposal(name , offset - length, offset, ManifestCompletionProposal.TYPE_PACKAGE));
+						list.add(new TypeCompletionProposal(name, getImage(F_TYPE_PKG), name, offset - length, length));
 				}
 			}
 		} else {
+			String value = currentValue;
+			if (comma > 0) {
+				do {
+					String prefix = currentValue.substring(0, comma);
+					if (!insideQuotes(prefix)) {
+						value = currentValue.substring(comma + 1);
+						break;
+					}
+					comma = currentValue.lastIndexOf(',', comma - 1);
+				} while (comma > 0);
+			}
 			int equals = currentValue.lastIndexOf('=');
 			if (equals == -1 || semicolon > equals) {
 				String[] validAttrs = new String[] {Constants.VERSION_ATTRIBUTE, ICoreConstants.INTERNAL_DIRECTIVE, 
 						ICoreConstants.FRIENDS_DIRECTIVE};
-				Integer[] validTypes = new Integer[] {new Integer(ManifestCompletionProposal.TYPE_ATTRIBUTE), 
-						new Integer(ManifestCompletionProposal.TYPE_DIRECTIVE), new Integer(ManifestCompletionProposal.TYPE_DIRECTIVE)};
+				Integer[] validTypes = new Integer[] {new Integer(F_TYPE_ATTRIBUTE), new Integer(F_TYPE_DIRECTIVE), new Integer(F_TYPE_DIRECTIVE)};
 				return handleAttrsAndDirectives(value, intializeNewList(validAttrs), intializeNewList(validTypes), offset);
 			}
 			String attributeValue = removeLeadingSpaces(currentValue.substring(semicolon + 1));
@@ -359,7 +384,7 @@ public class ManifestContentAssistProcessor extends TypePackageCompletionProcess
 			if (Constants.VERSION_ATTRIBUTE.regionMatches(true, 0, attributeValue, 0, Constants.VERSION_ATTRIBUTE.length())) {
 				value = removeLeadingSpaces(currentValue.substring(equals + 1));
 				if (value.length() == 0)
-					return new ICompletionProposal[] {new ManifestCompletionProposal("\"\"",offset, offset, -1)}; //$NON-NLS-1$
+					return new ICompletionProposal[] {new TypeCompletionProposal("\"\"", getImage(F_TYPE_VALUE), "\"\"", offset, 0)};
 			}
 		}
 		return (ICompletionProposal[]) list.toArray(new ICompletionProposal[list.size()]);
@@ -383,11 +408,12 @@ public class ManifestContentAssistProcessor extends TypePackageCompletionProcess
 				String attribute = currentValue.substring(semicolon + 1);
 				attribute = removeLeadingSpaces(attribute);
 				Object o = fHeaders.get(Constants.BUNDLE_MANIFESTVERSION);
-				int type = (o == null || o.toString().equals("1")) ? ManifestCompletionProposal.TYPE_ATTRIBUTE : //$NON-NLS-1$
-					ManifestCompletionProposal.TYPE_DIRECTIVE;
-				if (Constants.SINGLETON_DIRECTIVE.regionMatches(true, 0, attribute, 0, attribute.length()))
-					return new ICompletionProposal[] {new ManifestCompletionProposal(Constants.SINGLETON_DIRECTIVE, 
-							offset - attribute.length(), offset, type)};
+				int type = (o == null || o.toString().equals("1")) ? F_TYPE_ATTRIBUTE : F_TYPE_DIRECTIVE;//$NON-NLS-1$
+				if (Constants.SINGLETON_DIRECTIVE.regionMatches(true, 0, attribute, 0, attribute.length())) {
+					int length = attribute.length();
+					return new ICompletionProposal[] {new TypeCompletionProposal(Constants.SINGLETON_DIRECTIVE + ":=", 
+							getImage(type), Constants.SINGLETON_DIRECTIVE, offset - length, length)};
+				}
 			} else if (equals > semicolon) 
 				return handleTrueFalseValue(currentValue.substring(equals + 1), offset);
 		}
@@ -395,7 +421,7 @@ public class ManifestContentAssistProcessor extends TypePackageCompletionProcess
 	}
 	
 	protected ICompletionProposal[] handleRequiredExecEnv(String currentValue, int offset) {
-		int comma = currentValue.indexOf(',');
+		int comma = currentValue.lastIndexOf(',');
 		if (comma != -1) 
 			currentValue = currentValue.substring(comma + 1);
 		currentValue = removeLeadingSpaces(currentValue);
@@ -406,7 +432,7 @@ public class ManifestContentAssistProcessor extends TypePackageCompletionProcess
 		for (int i = 0; i < fExecEnvs.length; i++) 
 			if (fExecEnvs[i].regionMatches(true, 0, currentValue, 0, length) &&
 					!set.contains(fExecEnvs[i]))
-				completions.add( new ManifestCompletionProposal(fExecEnvs[i], offset-length, offset, ManifestCompletionProposal.TYPE_VALUE));			
+				completions.add(new TypeCompletionProposal(fExecEnvs[i], getImage(F_TYPE_VALUE), fExecEnvs[i], offset - length, length));
 		return (ICompletionProposal[]) completions.toArray(new ICompletionProposal[completions.size()]);
 	}
 	
@@ -415,20 +441,16 @@ public class ManifestContentAssistProcessor extends TypePackageCompletionProcess
 		int length = currentValue.length();
 		if (length == 0) 
 			return new ICompletionProposal[] {
-					new ManifestCompletionProposal("true", offset - length, offset, //$NON-NLS-1$
-							ManifestCompletionProposal.TYPE_VALUE),
-					new ManifestCompletionProposal("false", offset - length, offset, //$NON-NLS-1$
-							ManifestCompletionProposal.TYPE_VALUE)
+				new TypeCompletionProposal("true", getImage(F_TYPE_VALUE), "true", offset, 0),
+				new TypeCompletionProposal("false", getImage(F_TYPE_VALUE), "false", offset, 0)
 			};
 		else if (length < 5 && "true".regionMatches(true, 0, currentValue, 0, length)) //$NON-NLS-1$
 			return new ICompletionProposal[] {
-				new ManifestCompletionProposal("true", offset - length, offset, //$NON-NLS-1$
-						ManifestCompletionProposal.TYPE_VALUE)
+				new TypeCompletionProposal("true", getImage(F_TYPE_VALUE), "true", offset - length, length)
 			};
 		else if (length < 6 && "false".regionMatches(true, 0, currentValue, 0, length)) //$NON-NLS-1$
 			return new ICompletionProposal[] {
-				new ManifestCompletionProposal("false", offset - length, offset, //$NON-NLS-1$
-						ManifestCompletionProposal.TYPE_VALUE)
+				new TypeCompletionProposal("false", getImage(F_TYPE_VALUE), "false", offset - length, length)
 			};
 		return new ICompletionProposal[0];
 	}
@@ -438,7 +460,12 @@ public class ManifestContentAssistProcessor extends TypePackageCompletionProcess
 		int length = value.length();
 		for (int i = 0; i < attrs.length; i++) 
 			if (attrs[i].regionMatches(true, 0, value, 0, length))
-				list.add(new ManifestCompletionProposal(attrs[i], offset - length, offset, types[i]));
+				if (types[i] == F_TYPE_ATTRIBUTE)
+					list.add(new TypeCompletionProposal(attrs[i] + "=", getImage(F_TYPE_ATTRIBUTE), attrs[i], offset - length, length));
+				else if (types[i] == F_TYPE_DIRECTIVE)
+					list.add(new TypeCompletionProposal(attrs[i] + ":=", getImage(F_TYPE_DIRECTIVE), attrs[i], offset - length, length));
+				else
+					list.add(new TypeCompletionProposal(attrs[i], getImage(types[i]), attrs[i], offset - length, length));
 		return (ICompletionProposal[]) list.toArray(new ICompletionProposal[list.size()]);
 	}
 	
@@ -451,13 +478,13 @@ public class ManifestContentAssistProcessor extends TypePackageCompletionProcess
 		while (tokenizer.hasMoreTokens()) {
 			String tokenValue = removeLeadingSpaces(tokenizer.nextToken());
 			int index = tokenValue.indexOf('=');
-			if (index > 0) {
-				if (tokenValue.charAt(index - 1) == ':')
-					--index;
-				tokenValue = tokenValue.substring(0, index);
-			}
+			if (index == -1)
+				continue;
+			if (tokenValue.charAt(index - 1) == ':')
+				--index;
+			tokenValue = tokenValue.substring(0, index);
 			int indexOfObject = attrs.indexOf(tokenValue);
-			if (indexOfObject > 0) {
+			if (indexOfObject >= 0) {
 				attrs.remove(indexOfObject);
 				types.remove(indexOfObject);
 			}
@@ -475,13 +502,14 @@ public class ManifestContentAssistProcessor extends TypePackageCompletionProcess
 				startOfLine = doc.getLineOffset(line);
 				newValue = doc.get(offset, doc.getLineLength(line) - offset + startOfLine);
 				++line;
-			} while (newValue.indexOf(':') == -1 && newValue.indexOf(',') == -1 && !(doc.getNumberOfLines() == line));
-			int colon = newValue.indexOf(':');
-			if (colon > 0) {
+			} while ((newValue.lastIndexOf(':') == -1 || newValue.charAt(newValue.lastIndexOf(':') + 1) == '=') && 
+					newValue.indexOf(',') == -1 && !(doc.getNumberOfLines() == line));
+			int colon = newValue.lastIndexOf(':');
+			if (colon > 0 && newValue.charAt(colon +1) != '=') {
 				newValue = doc.get(offset, startOfLine - 1 - offset);
 			} else {
 				int comma = newValue.indexOf(',');
-				newValue = newValue.substring(0, comma);
+				newValue = (comma != -1) ? newValue.substring(0, comma) : newValue;
 			}
 			return value.concat(newValue);
 		} catch (BadLocationException e) {
@@ -537,4 +565,33 @@ public class ManifestContentAssistProcessor extends TypePackageCompletionProcess
 	public void selectionChanged(ICompletionProposal proposal, boolean smartToggle) {
 	}
 
+	public Image getImage(int type) {
+		if (type >= 0 && type < F_TOTAL_TYPES) 
+			if (fImages[type] == null) {
+				switch(type) {
+				case F_TYPE_HEADER:
+					return fImages[type] = PDEPluginImages.DESC_BUILD_VAR_OBJ.createImage();
+				case F_TYPE_PKG:
+					return PDEPluginImages.get(PDEPluginImages.OBJ_DESC_PACKAGE);
+				case F_TYPE_BUNDLE:
+					return fImages[type] = PDEPluginImages.DESC_PLUGIN_OBJ.createImage();
+				case F_TYPE_CLASS:
+					return PDEPluginImages.get(PDEPluginImages.OBJ_DESC_GENERATE_CLASS);
+				case F_TYPE_ATTRIBUTE:
+					return fImages[type] = PDEPluginImages.DESC_EXT_POINT_OBJ.createImage();
+				case F_TYPE_DIRECTIVE:
+					return fImages[type] = PDEPluginImages.DESC_ATT_URI_OBJ.createImage();
+				case F_TYPE_VALUE:
+					return null;
+				}
+			} else
+				return fImages[type];
+		return null;
+	}
+	
+	public void disposeImages() {
+		for (int i = 0; i < fImages.length; i++)
+			if (fImages[i] != null && !fImages[i].isDisposed())
+				fImages[i].dispose();
+	}
 }
