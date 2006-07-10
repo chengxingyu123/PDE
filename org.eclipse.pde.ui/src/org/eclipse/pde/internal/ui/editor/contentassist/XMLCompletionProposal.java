@@ -16,6 +16,7 @@ import org.eclipse.osgi.util.NLS;
 import org.eclipse.pde.core.IBaseModel;
 import org.eclipse.pde.core.IIdentifiable;
 import org.eclipse.pde.core.IModel;
+import org.eclipse.pde.core.plugin.IPluginAttribute;
 import org.eclipse.pde.core.plugin.IPluginBase;
 import org.eclipse.pde.core.plugin.IPluginElement;
 import org.eclipse.pde.core.plugin.IPluginExtension;
@@ -30,10 +31,13 @@ import org.eclipse.pde.internal.core.ischema.ISchemaElement;
 import org.eclipse.pde.internal.core.ischema.ISchemaObject;
 import org.eclipse.pde.internal.core.ischema.ISchemaRestriction;
 import org.eclipse.pde.internal.core.ischema.ISchemaSimpleType;
+import org.eclipse.pde.internal.core.ischema.ISchemaType;
+import org.eclipse.pde.internal.core.text.AbstractEditingModel;
 import org.eclipse.pde.internal.core.text.IDocumentAttribute;
 import org.eclipse.pde.internal.core.text.IDocumentNode;
 import org.eclipse.pde.internal.core.text.IDocumentRange;
 import org.eclipse.pde.internal.core.text.IReconcilingParticipant;
+import org.eclipse.pde.internal.core.text.plugin.PluginAttribute;
 import org.eclipse.pde.internal.ui.PDEPlugin;
 import org.eclipse.pde.internal.ui.PDEUIMessages;
 import org.eclipse.pde.internal.ui.editor.contentassist.XMLContentAssistProcessor.VSchemaObject;
@@ -93,7 +97,7 @@ public class XMLCompletionProposal implements ICompletionProposal {
 			sb.append(((ISchemaElement)fSchemaObject).getName());
 			sb.append('>'); //$NON-NLS-1$
 			sb.append(delim);
-			sb.append(getIndent(document));
+			sb.append(getIndent(document, fOffset));
 			sb.append('<');
 			sb.append('/');
 			sb.append(((ISchemaElement)fSchemaObject).getName());
@@ -112,7 +116,7 @@ public class XMLCompletionProposal implements ICompletionProposal {
 			case XMLContentAssistProcessor.F_EX:
 				sb.append("<extension"); //$NON-NLS-1$
 				sb.append(delim);
-				String indent = getIndent(document);
+				String indent = getIndent(document, fOffset);
 				sb.append(indent);
 				sb.append(F_DEF_ATTR_INDENT);
 				sb.append("point=\"\">"); //$NON-NLS-1$
@@ -232,17 +236,96 @@ public class XMLCompletionProposal implements ICompletionProposal {
 			if (pluginParent != null && schemaElement != null) {
 				computeInsertion(schemaElement, pluginParent);
 				fProcessor.flushDocument();
+				if (model instanceof AbstractEditingModel) {
+					((AbstractEditingModel)model).adjustOffsets(document);
+					setSelectionOffsets(document, schemaElement, pluginParent);
+				}
 			}
 		}
 	}
 	
-	private String getIndent(IDocument document) {
+	private void setSelectionOffsets(IDocument document, ISchemaElement schemaElement, IPluginParent pluginParent) {
+		if (pluginParent instanceof IPluginExtension) {
+			String point = ((IPluginExtension)pluginParent).getPoint();
+			IPluginObject[] children = ((IPluginExtension)pluginParent).getChildren();
+			if (children != null && children.length > 0 && children[0] instanceof IPluginParent) {
+				pluginParent = (IPluginParent)children[0];
+				schemaElement = XMLUtil.getSchemaElement((IDocumentNode)pluginParent, point);
+			}
+		}
+		
+		if (pluginParent instanceof IPluginElement) {
+			int offset = ((IDocumentNode)pluginParent).getOffset();
+			int len = ((IDocumentNode)pluginParent).getLength();
+			String value = null;
+			try {
+				value = document.get(offset, len);
+			} catch (BadLocationException e) {
+			}
+			if (((IPluginElement)pluginParent).getAttributeCount() > 0) {
+				// Select value of first required attribute
+				IPluginAttribute att = ((IPluginElement)pluginParent).getAttributes()[0];
+				if (att instanceof PluginAttribute) {
+					fSelOffset = ((PluginAttribute)att).getValueOffset();
+					fSelLen = ((PluginAttribute)att).getValueLength();
+				}
+			} else if (hasOptionalChildren(schemaElement, false) && value != null) {
+				// position caret for element insertion
+				int ind = value.indexOf('>');
+				if (ind > 0) {
+					fSelOffset = offset + ind + 1;
+					fSelLen = 0;
+				}
+			} else if (hasOptionalAttributes(schemaElement) && value != null) {
+				// position caret for attribute insertion
+				int ind = value.indexOf('>');
+				if (ind != -1) {
+					fSelOffset = offset + ind;
+					fSelLen = 0;
+				}
+			} else {
+				// position caret after element
+				fSelOffset = offset + len;
+				fSelLen = 0;
+			}
+		}
+	}
+	
+	private boolean hasOptionalAttributes(ISchemaElement ele) {
+		ISchemaAttribute[] attrs = ele.getAttributes();
+		for (int i = 0; i < attrs.length; i++)
+			if (attrs[i].getUse() == ISchemaAttribute.OPTIONAL || 
+					attrs[i].getUse() == ISchemaAttribute.DEFAULT)
+				return true;
+		return false;
+	}
+	
+	private boolean hasOptionalChildren(ISchemaObject obj, boolean onChild) {
+		if (obj instanceof ISchemaElement) {
+			if (onChild 
+					&& ((ISchemaElement)obj).getMinOccurs() == 0
+					&& ((ISchemaElement)obj).getMaxOccurs() > 0)
+				return true;
+			ISchemaType type = ((ISchemaElement) obj).getType();
+			if (type instanceof ISchemaComplexType)
+				return hasOptionalChildren(((ISchemaComplexType)type).getCompositor(), true);
+		} else if (obj instanceof ISchemaCompositor) {
+			ISchemaObject[] children = ((ISchemaCompositor)obj).getChildren();
+			if (children != null)
+				for (int i = 0; i < children.length; i++)
+					if (hasOptionalChildren(children[i], true))
+						return true;
+		}
+		return false;
+	}
+	
+	private String getIndent(IDocument document, int offset) {
 		StringBuffer indBuff = new StringBuffer();
 		try {
 			// add indentation
-			int line = document.getLineOfOffset(fOffset);
+			int line = document.getLineOfOffset(offset);
 			int lineOffset = document.getLineOffset(line); 
-			int indent = fOffset - lineOffset;
+			int indent = offset - lineOffset;
 			char[] indentChars = document.get(lineOffset, indent).toCharArray();
 			// for every tab append a tab, for anything else append a space
 			for (int i = 0; i < indentChars.length; i++)
