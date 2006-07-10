@@ -269,7 +269,7 @@ public class XMLCompletionProposal implements ICompletionProposal {
 					fSelOffset = ((PluginAttribute)att).getValueOffset();
 					fSelLen = ((PluginAttribute)att).getValueLength();
 				}
-			} else if (hasOptionalChildren(schemaElement, false) && value != null) {
+			} else if (hasOptionalChildren(schemaElement, false, new HashSet()) && value != null) {
 				// position caret for element insertion
 				int ind = value.indexOf('>');
 				if (ind > 0) {
@@ -300,7 +300,10 @@ public class XMLCompletionProposal implements ICompletionProposal {
 		return false;
 	}
 	
-	private boolean hasOptionalChildren(ISchemaObject obj, boolean onChild) {
+	private boolean hasOptionalChildren(ISchemaObject obj, boolean onChild, HashSet set) {
+		if (obj == null || set.contains(obj))
+			return false;
+		set.add(obj);
 		if (obj instanceof ISchemaElement) {
 			if (onChild 
 					&& ((ISchemaElement)obj).getMinOccurs() == 0
@@ -308,12 +311,12 @@ public class XMLCompletionProposal implements ICompletionProposal {
 				return true;
 			ISchemaType type = ((ISchemaElement) obj).getType();
 			if (type instanceof ISchemaComplexType)
-				return hasOptionalChildren(((ISchemaComplexType)type).getCompositor(), true);
+				return hasOptionalChildren(((ISchemaComplexType)type).getCompositor(), true, set);
 		} else if (obj instanceof ISchemaCompositor) {
 			ISchemaObject[] children = ((ISchemaCompositor)obj).getChildren();
 			if (children != null)
 				for (int i = 0; i < children.length; i++)
-					if (hasOptionalChildren(children[i], true))
+					if (hasOptionalChildren(children[i], true, set))
 						return true;
 		}
 		return false;
