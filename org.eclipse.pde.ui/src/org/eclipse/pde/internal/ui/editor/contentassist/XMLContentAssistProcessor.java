@@ -13,8 +13,6 @@ import org.eclipse.jface.text.contentassist.ContentAssistEvent;
 import org.eclipse.jface.text.contentassist.ICompletionListener;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 import org.eclipse.jface.text.contentassist.IContentAssistProcessor;
-import org.eclipse.jface.text.contentassist.IContextInformation;
-import org.eclipse.jface.text.contentassist.IContextInformationValidator;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.pde.core.IBaseModel;
 import org.eclipse.pde.core.IIdentifiable;
@@ -496,16 +494,6 @@ public class XMLContentAssistProcessor extends TypePackageCompletionProcessor im
 		return new String[] {node, attr, attVal};
 	}
 	
-	public IContextInformation[] computeContextInformation(ITextViewer viewer, int offset)
-		{ return null; }
-	public char[] getCompletionProposalAutoActivationCharacters() 
-		{ return null; }
-	public char[] getContextInformationAutoActivationCharacters()
-		{ return null; }
-	public IContextInformationValidator getContextInformationValidator()
-		{ return null; }
-	public String getErrorMessage()
-		{ return null; }
 	protected IBaseModel getModel()
 		{ return fSourcePage.getInputContext().getModel(); }
 	protected ITextSelection getCurrentSelection() {

@@ -618,7 +618,7 @@ public class XMLCompletionProposal implements ICompletionProposal {
 			((IPluginElement)parent).setAttribute(attName, attValue);
 		} else if (parent instanceof IPluginExtension) {
 			IPluginExtension pe = (IPluginExtension)parent;
-			if (attName.equals(IIdentifiable.P_ID) && pe.getId().length() > 0) {
+			if (attName.equals(IIdentifiable.P_ID)) {
 				String currValue = pe.getId();
 				if (currValue == null || currValue.length() == 0)
 					pe.setId(attValue);
