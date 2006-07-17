@@ -10,13 +10,11 @@
  *******************************************************************************/
 package org.eclipse.pde.internal.core;
 
-import java.io.StringReader;
 import java.util.Stack;
 
 import org.eclipse.pde.internal.core.util.CoreUtility;
 import org.w3c.dom.Element;
 import org.xml.sax.Attributes;
-import org.xml.sax.InputSource;
 import org.xml.sax.Locator;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
@@ -41,8 +39,11 @@ public class ExtensionsHandler extends DefaultHandler {
 	 */
 	public void processingInstruction(String target, String data)
 			throws SAXException {
+		if ("eclipse".equals(target)) { //$NON-NLS-1$
+			fParent.setAttribute("schema", "version=\"3.0\"".equals(data) ? "3.0" : "3.2"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+		}
 	}
-
+	
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -147,11 +148,4 @@ public class ExtensionsHandler extends DefaultHandler {
 		fLocator = locator;
 	}
 
-	public InputSource resolveEntity(String publicId, String systemId) throws SAXException {
-		// Prevent the resolution of external entities in order to
-		// prevent the parser from accessing the Internet
-		// This will prevent huge workbench performance degradations and hangs
-		return new InputSource(new StringReader("")); //$NON-NLS-1$
-	}
-	
 }
