@@ -35,7 +35,7 @@ import org.eclipse.pde.internal.ui.editor.PDESection;
 import org.eclipse.pde.internal.ui.editor.build.BuildInputContext;
 import org.eclipse.pde.internal.ui.editor.build.BuildPage;
 import org.eclipse.pde.internal.ui.editor.context.InputContext;
-import org.eclipse.pde.internal.ui.launcher.EquinoxLaunchShortcut;
+import org.eclipse.pde.internal.ui.launcher.OSGiLaunchShortcut;
 import org.eclipse.pde.internal.ui.launcher.RuntimeWorkbenchShortcut;
 import org.eclipse.pde.internal.ui.util.SharedLabelProvider;
 import org.eclipse.pde.internal.ui.wizards.tools.OrganizeManifestsAction;
@@ -66,7 +66,7 @@ import org.osgi.service.prefs.BackingStoreException;
 public class OverviewPage extends PDEFormPage implements IHyperlinkListener {
 	public static final String PAGE_ID = "overview"; //$NON-NLS-1$
 	private RuntimeWorkbenchShortcut fLaunchShortcut;
-	private EquinoxLaunchShortcut fEquinoxShortcut;
+	private OSGiLaunchShortcut fOSGiShortcut;
 	private PluginExportAction fExportAction;
 
 	public OverviewPage(FormEditor editor) {
@@ -303,10 +303,10 @@ public class OverviewPage extends PDEFormPage implements IHyperlinkListener {
 			handleConvert();
 		} else if (href.equals("action.runEquinox")) { //$NON-NLS-1$ {
 			getEditor().doSave(null);
-			getEquinoxShortcut().run(getPDEEditor().getCommonProject());
+			getOSGiShortcut().run(getPDEEditor().getCommonProject());
 		} else if (href.equals("action.debugEquinox")) { //$NON-NLS-1$
 			getEditor().doSave(null);
-			getEquinoxShortcut().debug(getPDEEditor().getCommonProject());
+			getOSGiShortcut().debug(getPDEEditor().getCommonProject());
 		} else if (href.equals("organize")) { //$NON-NLS-1$
 			getEditor().doSave(null);
 			OrganizeManifestsAction organizeAction = new OrganizeManifestsAction();
@@ -344,10 +344,10 @@ public class OverviewPage extends PDEFormPage implements IHyperlinkListener {
 		return fLaunchShortcut;
 	}
 	
-	private EquinoxLaunchShortcut getEquinoxShortcut() {
-		if (fEquinoxShortcut == null)
-			fEquinoxShortcut = new EquinoxLaunchShortcut();
-		return fEquinoxShortcut;
+	private OSGiLaunchShortcut getOSGiShortcut() {
+		if (fOSGiShortcut == null)
+			fOSGiShortcut = new OSGiLaunchShortcut();
+		return fOSGiShortcut;
 	}
 	
 	private PluginExportAction getExportAction() {

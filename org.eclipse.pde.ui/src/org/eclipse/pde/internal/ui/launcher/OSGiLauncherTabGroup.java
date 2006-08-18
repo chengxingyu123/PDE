@@ -11,6 +11,7 @@
 package org.eclipse.pde.internal.ui.launcher;
 
 import org.eclipse.core.runtime.Preferences;
+import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
 import org.eclipse.debug.ui.AbstractLaunchConfigurationTabGroup;
 import org.eclipse.debug.ui.CommonTab;
@@ -21,21 +22,52 @@ import org.eclipse.jdt.debug.ui.launchConfigurations.JavaArgumentsTab;
 import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants;
 import org.eclipse.pde.internal.core.ICoreConstants;
 import org.eclipse.pde.internal.core.PDECore;
-import org.eclipse.pde.ui.launcher.EquinoxPluginsTab;
-import org.eclipse.pde.ui.launcher.EquinoxSettingsTab;
+import org.eclipse.pde.ui.launcher.OSGiBundlesTab;
+import org.eclipse.pde.ui.launcher.OSGiSettingsTab;
 import org.eclipse.pde.ui.launcher.TracingTab;
 
-public class EquinoxLauncherTabGroup extends AbstractLaunchConfigurationTabGroup {
+public class OSGiLauncherTabGroup extends AbstractLaunchConfigurationTabGroup {
 
 	public void createTabs(ILaunchConfigurationDialog dialog, String mode) {
 		ILaunchConfigurationTab[] tabs = 
 			new ILaunchConfigurationTab[]{
-					new EquinoxPluginsTab(),
-					new JavaArgumentsTab(),
-					new EquinoxSettingsTab(),
-					new TracingTab(), 
-					new EnvironmentTab(),
-					new CommonTab()};
+				new OSGiBundlesTab(this),
+				new JavaArgumentsTab() {
+
+					private boolean fInitializing = false;
+
+					public void initializeFrom(ILaunchConfiguration config) {
+						fInitializing = true;
+						super.initializeFrom(config);
+						fInitializing = false;
+					}
+
+					public void updateLaunchConfigurationDialog() {
+						if (!fInitializing)
+							updateLaunchConfigurationDialog();
+					}
+
+				},
+				new OSGiSettingsTab(),
+				new TracingTab(), 
+				new EnvironmentTab(),
+				new CommonTab() {
+
+					private boolean fInitializing = false;
+
+					public void initializeFrom(ILaunchConfiguration config) {
+						fInitializing = true;
+						super.initializeFrom(config);
+						fInitializing = false;
+					}
+
+					public void updateLaunchConfigurationDialog() {
+						if (!fInitializing)
+							updateLaunchConfigurationDialog();
+					}
+				}
+
+		};
 		setTabs(tabs);
 	}
 	

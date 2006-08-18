@@ -34,17 +34,18 @@ import org.eclipse.ui.PlatformUI;
  * </p>
  * @since 3.2
  */
-public class EquinoxSettingsTab extends AbstractLauncherTab {
+public class OSGiSettingsTab extends AbstractLauncherTab {
 	
 	private JREBlock fJREBlock;
 	private ConfigurationAreaBlock fConfigurationBlock;
 	private Image fImage;
+	private boolean fInitializing = false;
 	
 	/**
 	 * Constructor
 	 *
 	 */
-	public EquinoxSettingsTab() {
+	public OSGiSettingsTab() {
 		fImage = PDEPluginImages.DESC_PLUGIN_CONFIG_OBJ.createImage();
 		fJREBlock = new JREBlock(this);
 		fConfigurationBlock = new ConfigurationAreaBlock(this);
@@ -79,8 +80,10 @@ public class EquinoxSettingsTab extends AbstractLauncherTab {
 	 */
 	public void initializeFrom(ILaunchConfiguration configuration) {
 		try {
+			fInitializing = true;
 			fJREBlock.initializeFrom(configuration);
 			fConfigurationBlock.initializeFrom(configuration);
+			fInitializing = false;
 		} catch (CoreException e) {
 		}
 	}
@@ -120,5 +123,10 @@ public class EquinoxSettingsTab extends AbstractLauncherTab {
 	 * @see org.eclipse.pde.ui.launcher.AbstractLauncherTab#validateTab()
 	 */
 	public void validateTab() {
+	}
+	
+	public void updateLaunchConfigurationDialog() {
+		if (!fInitializing)
+			super.updateLaunchConfigurationDialog();
 	}
 }

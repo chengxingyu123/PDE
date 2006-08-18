@@ -12,7 +12,10 @@ package org.eclipse.pde.ui.launcher;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.TreeMap;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
@@ -26,6 +29,10 @@ import org.eclipse.debug.core.model.LaunchConfigurationDelegate;
 import org.eclipse.jdt.launching.IVMInstall;
 import org.eclipse.jdt.launching.IVMRunner;
 import org.eclipse.jdt.launching.VMRunnerConfiguration;
+import org.eclipse.pde.core.plugin.IPluginModelBase;
+import org.eclipse.pde.internal.core.ModelEntry;
+import org.eclipse.pde.internal.core.PDECore;
+import org.eclipse.pde.internal.core.PluginModelManager;
 import org.eclipse.pde.internal.core.TargetPlatform;
 import org.eclipse.pde.internal.ui.PDEPlugin;
 import org.eclipse.pde.internal.ui.PDEUIMessages;
@@ -33,6 +40,7 @@ import org.eclipse.pde.internal.ui.launcher.LaunchArgumentsHelper;
 import org.eclipse.pde.internal.ui.launcher.LaunchConfigurationHelper;
 import org.eclipse.pde.internal.ui.launcher.LaunchPluginValidator;
 import org.eclipse.pde.internal.ui.launcher.LauncherUtils;
+import org.eclipse.pde.internal.ui.launcher.OSGiBundleBlock;
 import org.eclipse.pde.internal.ui.launcher.VMHelper;
 
 /**
@@ -306,5 +314,55 @@ public abstract class AbstractPDELaunchConfiguration extends LaunchConfiguration
 		return LaunchPluginValidator.getAffectedProjects(configuration);
 	}
 	
-
+	/**
+	 * Returns a map of workspace bundles
+	 * 
+	 * @param configuration
+	 * @return workspace bundles
+	 */
+	public Map getWorkspaceBundles(ILaunchConfiguration configuration) {
+		try {
+			return OSGiBundleBlock.retrieveWorkspaceMap(configuration);
+		} catch (CoreException e) {
+			PDECore.log(e);
+			return Collections.EMPTY_MAP;
+		}
+	}
+	
+	/**
+	 * Returns a map of target bundles
+	 * 
+	 * @param configuration
+	 * @return target bundles
+	 */
+	public Map getTargetBundles(ILaunchConfiguration configuration) {
+		return OSGiBundleBlock.retrieveTargetMap(configuration);
+	}
+	
+	public Map getBundlesToRun(Map workspace, Map target) throws CoreException {
+		Map plugins = new TreeMap();
+		Iterator iter = workspace.keySet().iterator();
+		PluginModelManager manager = PDECore.getDefault().getModelManager();
+		while (iter.hasNext()) {
+			String id = iter.next().toString();
+			IPluginModelBase model = manager.findModel(id);
+			if (model != null && model.getUnderlyingResource() != null) {
+				plugins.put(id, model);
+			}
+		}
+			
+		iter = target.keySet().iterator();
+		while (iter.hasNext()) {
+			String id = iter.next().toString();
+			if (!plugins.containsKey(id)) {
+				ModelEntry entry = manager.findEntry(id);
+				if (entry != null && entry.getExternalModel() != null) {
+					plugins.put(id, entry.getExternalModel());
+				}
+			}
+		}
+		
+		return plugins;
+	}
+	
 }

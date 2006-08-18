@@ -36,6 +36,7 @@ public class TracingTab extends AbstractLauncherTab {
 	
 	private Image fImage;
 	private TracingBlock fTracingBlock;
+	private boolean fInitializing = false;
 	
 	/**
 	 * Constructor
@@ -85,7 +86,9 @@ public class TracingTab extends AbstractLauncherTab {
 	 * @see org.eclipse.debug.ui.ILaunchConfigurationTab#initializeFrom(org.eclipse.debug.core.ILaunchConfiguration)
 	 */
 	public void initializeFrom(ILaunchConfiguration config) {
+		fInitializing = true;
 		fTracingBlock.initializeFrom(config);
+		fInitializing = false;
 	}
 	
 	/*
@@ -125,5 +128,10 @@ public class TracingTab extends AbstractLauncherTab {
 	 * @see org.eclipse.pde.ui.launcher.AbstractLauncherTab#validateTab()
 	 */
 	public void validateTab() {
+	}
+	
+	public void updateLaunchConfigurationDialog() {
+		if (!fInitializing)
+			super.updateLaunchConfigurationDialog();
 	}
 }

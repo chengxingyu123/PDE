@@ -8,6 +8,7 @@
    <extension-point id="newExtension" name="%expoint.newExtension.name" schema="schema/newExtension.exsd"/>
    <extension-point id="templates" name="%expoint.templates.name" schema="schema/templates.exsd"/>
    <extension-point id="samples" name="%expoint.samples.name" schema="schema/samples.exsd"/>
+   <extension-point id="osgiLauncher" name="%expoint.osgiLauncher.name" schema="schema/osgiLauncher.exsd"/>
 
 <!-- Extensions -->
    <extension
@@ -718,16 +719,16 @@
             id="org.eclipse.pde.ui.runtimeWorkbenchShortcut.run">
       </command>    
       <command
-            name="%EquinoxShortcut.description.debug"
-            description="%EquinoxShortcut.description.debug"
+            name="%OSGiShortcut.description.debug"
+            description="%OSGiShortcut.description.debug"
             categoryId="org.eclipse.debug.ui.category.run"
-            id="org.eclipse.pde.ui.EquinoxLaunchShortcut.debug">
+            id="org.eclipse.pde.ui.OSGiLaunchShortcut.debug">
       </command>    
       <command
-            name="%EquinoxShortcut.description.run"
-            description="%EquinoxShortcut.description.run"
+            name="%OSGiShortcut.description.run"
+            description="%OSGiShortcut.description.run"
             categoryId="org.eclipse.debug.ui.category.run"
-            id="org.eclipse.pde.ui.EquinoxLaunchShortcut.run">
+            id="org.eclipse.pde.ui.OSGiLaunchShortcut.run">
       </command>    
       <command
             name="%JUnitApplicationShortcut.description.debug"
@@ -1197,14 +1198,6 @@
             id="org.eclipse.pde.ui.RuntimeWorkbench">
       </launchConfigurationType>
       <launchConfigurationType
-            sourceLocatorId="org.eclipse.pde.ui.launcher.PDESourceLookupDirector"
-            name="%launcher.framework.name"
-            sourcePathComputerId="org.eclipse.jdt.launching.sourceLookup.javaSourcePathComputer"
-            delegate="org.eclipse.pde.ui.launcher.EquinoxLaunchConfiguration"
-            modes="run, debug"
-            id="org.eclipse.pde.ui.EquinoxLauncher">
-      </launchConfigurationType>
-      <launchConfigurationType
             sourceLocatorId="org.eclipse.jdt.launching.sourceLocator.JavaSourceLookupDirector"
             name="%launcher.swt.name"
             sourcePathComputerId="org.eclipse.pde.ui.swtSourcePathComputer"
@@ -1229,6 +1222,14 @@
                extension="class">
          </fileExtension>
       </launchConfigurationType>
+      <launchConfigurationType
+            delegate="org.eclipse.pde.ui.launcher.OSGiLaunchConfiguration"
+            id="org.eclipse.pde.ui.OSGiLauncher"
+            modes="run, debug"
+            name="%launcher.framework.name"
+            public="true"
+            sourceLocatorId="org.eclipse.pde.ui.launcher.OSGiSourceLookupDirector"
+            sourcePathComputerId="org.eclipse.pde.ui.osgiSourcePathComputer"/>
    </extension>
    <extension
          point="org.eclipse.debug.ui.launchConfigurationTypeImages">
@@ -1239,7 +1240,7 @@
       </launchConfigurationTypeImage>
       <launchConfigurationTypeImage
             icon="$nl$/icons/obj16/bundle_obj.gif"
-            configTypeID="org.eclipse.pde.ui.EquinoxLauncher"
+            configTypeID="org.eclipse.pde.ui.OSGiLauncher"
             id="org.eclipse.pde.ui.equinoxFrameworkImage">
       </launchConfigurationTypeImage>
       <launchConfigurationTypeImage
@@ -1270,16 +1271,16 @@
          </launchMode>
       </launchConfigurationTabGroup>
       <launchConfigurationTabGroup
-            type="org.eclipse.pde.ui.EquinoxLauncher"
-            class="org.eclipse.pde.internal.ui.launcher.EquinoxLauncherTabGroup"
+            type="org.eclipse.pde.ui.OSGiLauncher"
+            class="org.eclipse.pde.internal.ui.launcher.OSGiLauncherTabGroup"
             id="org.eclipse.pde.ui.launcher.EquinoxLauncherTabGroup">
          <launchMode
-               description="%equinoxLauncherTabGroup.description.debug"
+               description="%osgiLauncherTabGroup.description.debug"
                perspective="org.eclipse.debug.ui.DebugPerspective"
                mode="debug">
          </launchMode>
          <launchMode
-               description="%equinoxLauncherTabGroup.description.run"
+               description="%osgiLauncherTabGroup.description.run"
                mode="run">
          </launchMode>
       </launchConfigurationTabGroup>
@@ -1412,8 +1413,8 @@
             label="%Equinox.shortcut.label"
             icon="$nl$/icons/obj16/bundle_obj.gif"
             modes="run, debug"
-            class="org.eclipse.pde.internal.ui.launcher.EquinoxLaunchShortcut"
-            id="org.eclipse.pde.ui.EquinoxLaunchShortcut">
+            class="org.eclipse.pde.internal.ui.launcher.OSGiLaunchShortcut"
+            id="org.eclipse.pde.ui.OSGiLaunchShortcut">
          <enablement>
            <with variable="selection">
              <count value="*"/>
@@ -1674,6 +1675,9 @@
    			id="org.eclipse.pde.ui.swtSourcePathComputer"
    			class="org.eclipse.pde.internal.ui.launcher.SWTSourcePathComputer">
    		</sourcePathComputer>
+		<sourcePathComputer
+           class="org.eclipse.pde.internal.ui.launcher.OSGiSourcePathComputer"
+           id="org.eclipse.pde.ui.osgiSourcePathComputer"/>
    </extension>
    <extension
          point="org.eclipse.ui.intro.configExtension">
@@ -1761,12 +1765,12 @@
       </key>      
       <key
             sequence="M3+M2+D X"
-            commandId="org.eclipse.pde.ui.EquinoxLaunchShortcut.debug"
+            commandId="org.eclipse.pde.ui.OSGiLaunchShortcut.debug"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration">
       </key>      
       <key
             sequence="M3+M2+X X"
-            commandId="org.eclipse.pde.ui.EquinoxLaunchShortcut.run"
+            commandId="org.eclipse.pde.ui.OSGiLaunchShortcut.run"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration">
       </key>      
       <key
@@ -1956,11 +1960,23 @@
    			class="org.eclipse.pde.internal.ui.launcher.PDESourceLookupDirector"
    			name="%pde.sourcelocator">
    		</sourceLocator>
+     <sourceLocator
+           class="org.eclipse.pde.internal.ui.launcher.OSGiSourceLookupDirector"
+           id="org.eclipse.pde.ui.launcher.OSGiSourceLookupDirector"
+           name="%osgi.sourcelocator">
+     </sourceLocator>
    </extension>
    <extension
           point="org.eclipse.ui.perspectiveExtensions">
        <perspectiveExtension targetID="org.eclipse.pde.ui.PDEPerspective">
           <actionSet id="org.eclipse.debug.ui.breakpointActionSet"/>
        </perspectiveExtension>
+    </extension>
+    <extension
+         point="org.eclipse.pde.ui.osgiLauncher">
+      <launcher
+            class="org.eclipse.pde.internal.ui.launcher.EquinoxLauncher"
+            id="org.eclipse.pde.ui.EquinoxLauncher"
+            name="%Equinox.shortcut.label"/>
     </extension>
 </plugin>
