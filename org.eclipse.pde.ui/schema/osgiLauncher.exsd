@@ -67,7 +67,7 @@
                   
                </documentation>
                <appInfo>
-                  <meta.attribute kind="java" basedOn="org.eclipse.pde.ui.launcher.IOSGiLauncher"/>
+                  <meta.attribute kind="java" basedOn="org.eclipse.pde.ui.launcher.AbstractOSGiLaunchConfiguration"/>
                </appInfo>
             </annotation>
          </attribute>

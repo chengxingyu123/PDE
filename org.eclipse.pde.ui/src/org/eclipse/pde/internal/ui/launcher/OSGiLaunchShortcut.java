@@ -37,7 +37,7 @@ import org.eclipse.pde.internal.core.PluginModelManager;
 import org.eclipse.pde.internal.core.TargetPlatform;
 import org.eclipse.pde.internal.ui.PDEPlugin;
 import org.eclipse.pde.internal.ui.PDEUIMessages;
-import org.eclipse.pde.ui.launcher.IOSGiLauncher;
+import org.eclipse.pde.ui.launcher.AbstractOSGiLaunchConfiguration;
 import org.eclipse.pde.ui.launcher.IPDELauncherConstants;
 import org.eclipse.pde.ui.launcher.OSGiLaunchConfiguration;
 import org.eclipse.ui.IEditorPart;
@@ -148,10 +148,10 @@ public class OSGiLaunchShortcut implements ILaunchShortcut {
 	private void configureConfiguration(ILaunchConfigurationWorkingCopy wc) {
 		IExtensionRegistry registry = Platform.getExtensionRegistry();
 		IConfigurationElement[] elements = registry.getConfigurationElementsFor("org.eclipse.pde.ui.osgiLauncher"); //$NON-NLS-1$
-		IOSGiLauncher launcher = null;
+		AbstractOSGiLaunchConfiguration launcher = null;
 		for (int i = 0; i < elements.length && launcher == null; i++) {
 			try {
-				launcher = (IOSGiLauncher)elements[0].createExecutableExtension("class");
+				launcher = (AbstractOSGiLaunchConfiguration)elements[0].createExecutableExtension("class");
 			} catch (CoreException e) {
 				continue;
 			}

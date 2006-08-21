@@ -15,10 +15,9 @@ import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
 import org.eclipse.debug.core.sourcelookup.ISourceContainer;
 import org.eclipse.pde.internal.core.PDECore;
 import org.eclipse.pde.ui.launcher.EquinoxLaunchConfiguration;
-import org.eclipse.pde.ui.launcher.IOSGiLauncher;
 import org.eclipse.pde.ui.launcher.IPDELauncherConstants;
 
-public class EquinoxLauncher extends EquinoxLaunchConfiguration implements IOSGiLauncher {
+public class EquinoxLauncher extends EquinoxLaunchConfiguration {
 
 	public ISourceContainer[] getSourceContainers() {
 		return null;

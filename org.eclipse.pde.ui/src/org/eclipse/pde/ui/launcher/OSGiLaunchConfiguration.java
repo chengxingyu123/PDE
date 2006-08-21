@@ -17,12 +17,12 @@ public class OSGiLaunchConfiguration extends LaunchConfigurationDelegate {
 			ILaunch launch, IProgressMonitor monitor) throws CoreException {
 		String id = configuration.getAttribute(OSGI_ENV_ID, (String)null);
 		if (id != null) {
-			IOSGiLauncher launcher = findLauncher(id);
+			AbstractOSGiLaunchConfiguration launcher = findLauncher(id);
 			launcher.launch(configuration, mode, launch, monitor);
 		}
 	}
 	
-	private IOSGiLauncher findLauncher(String id ) {
+	private AbstractOSGiLaunchConfiguration findLauncher(String id ) {
 		IExtensionRegistry registry = Platform.getExtensionRegistry();
 		IConfigurationElement[] elements = registry.getConfigurationElementsFor("org.eclipse.pde.ui.osgiLauncher"); //$NON-NLS-1$
 		IConfigurationElement elem = null;
@@ -34,7 +34,7 @@ public class OSGiLaunchConfiguration extends LaunchConfigurationDelegate {
 		}
 		if (elem != null)
 			try {
-				return (IOSGiLauncher)elem.createExecutableExtension("class");
+				return (AbstractOSGiLaunchConfiguration)elem.createExecutableExtension("class");
 			} catch (CoreException e) {
 			}
 		return null;

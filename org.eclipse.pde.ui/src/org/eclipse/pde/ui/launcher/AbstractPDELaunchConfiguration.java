@@ -73,9 +73,7 @@ public abstract class AbstractPDELaunchConfiguration extends LaunchConfiguration
 				return;
 			}
 	
-			VMRunnerConfiguration runnerConfig = new VMRunnerConfiguration(
-														"org.eclipse.core.launcher.Main",  //$NON-NLS-1$
-														getClasspath(configuration)); 
+			VMRunnerConfiguration runnerConfig = createVMRunnerConfiguration(configuration);
 			runnerConfig.setVMArguments(getVMArguments(configuration));
 			runnerConfig.setProgramArguments(programArgs);
 			runnerConfig.setWorkingDirectory(getWorkingDirectory(configuration).getAbsolutePath());
@@ -85,7 +83,6 @@ public abstract class AbstractPDELaunchConfiguration extends LaunchConfiguration
 			monitor.worked(1);
 					
 			setDefaultSourceLocator(configuration);
-			LaunchConfigurationHelper.synchronizeManifests(configuration, getConfigDir(configuration));
 			PDEPlugin.getDefault().getLaunchListener().manage(launch);
 			IVMRunner runner = getVMRunner(configuration, mode);
 			if (runner != null)
@@ -365,4 +362,17 @@ public abstract class AbstractPDELaunchConfiguration extends LaunchConfiguration
 		return plugins;
 	}
 	
+	/**
+	 * Creates VMRunnerConfiguration used for launching Runtime.  OSGi Frameworks are encouraged to override this method.
+	 *  
+	 * @param configuration
+	 * @return
+	 * @throws CoreException 
+	 */
+	public VMRunnerConfiguration createVMRunnerConfiguration(ILaunchConfiguration configuration) throws CoreException {
+		return new VMRunnerConfiguration(
+				"org.eclipse.core.launcher.Main",  //$NON-NLS-1$
+				getClasspath(configuration));
+	}
+
 }

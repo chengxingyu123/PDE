@@ -228,7 +228,7 @@ public class OSGiBundlesTab extends AbstractLauncherTab {
 			String oldId = config.getAttribute(OSGiLaunchConfiguration.OSGI_ENV_ID, "");
 			String newId = fConfigElements[fLauncherCombo.getSelectionIndex()].getAttribute("id");
 			if (!newId.equals(oldId)) {
-				IOSGiLauncher launcher = (IOSGiLauncher) fConfigElements[fLauncherCombo.getSelectionIndex()].createExecutableExtension("class");
+				AbstractOSGiLaunchConfiguration launcher = (AbstractOSGiLaunchConfiguration) fConfigElements[fLauncherCombo.getSelectionIndex()].createExecutableExtension("class");
 				if (launcher != null) {
 					launcher.initialize(config);
 					config.setAttribute(OSGiLaunchConfiguration.OSGI_ENV_ID, fConfigElements[fLauncherCombo.getSelectionIndex()].getAttribute("id"));

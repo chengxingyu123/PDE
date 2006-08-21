@@ -175,6 +175,7 @@ public class EquinoxLaunchConfiguration extends AbstractPDELaunchConfiguration {
 				CoreUtility.deleteContent(getConfigDir(configuration));
 			launch.setAttribute(IPDELauncherConstants.CONFIG_LOCATION, getConfigDir(configuration).toString());
 
+			LaunchConfigurationHelper.synchronizeManifests(configuration, getConfigDir(configuration));
 			monitor.worked(1);
 		} finally {
 			monitor.done();

@@ -8,7 +8,7 @@ import org.eclipse.core.runtime.Platform;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.sourcelookup.ISourceContainer;
 import org.eclipse.jdt.launching.sourcelookup.containers.JavaSourcePathComputer;
-import org.eclipse.pde.ui.launcher.IOSGiLauncher;
+import org.eclipse.pde.ui.launcher.AbstractOSGiLaunchConfiguration;
 import org.eclipse.pde.ui.launcher.OSGiLaunchConfiguration;
 
 public class OSGiSourcePathComputer extends JavaSourcePathComputer {
@@ -16,7 +16,7 @@ public class OSGiSourcePathComputer extends JavaSourcePathComputer {
 	public ISourceContainer[] computeSourceContainers(ILaunchConfiguration configuration, IProgressMonitor monitor) throws CoreException {
 		ISourceContainer[] orgs = super.computeSourceContainers(configuration, monitor);
 		ISourceContainer[] additions = getAdditionalContainers(configuration, monitor);
-		if (additions == null)
+		if (additions == null || additions.length == 0)
 			return orgs;
 		
 		ISourceContainer[] result = new ISourceContainer[orgs.length + additions.length];
@@ -40,7 +40,7 @@ public class OSGiSourcePathComputer extends JavaSourcePathComputer {
 						}
 					}
 					if (elem != null) {
-						IOSGiLauncher launcher= (IOSGiLauncher)elem.createExecutableExtension("class");
+						AbstractOSGiLaunchConfiguration launcher= (AbstractOSGiLaunchConfiguration)elem.createExecutableExtension("class");
 						return launcher.getSourceContainers();
 					}
 				} catch (SecurityException e) {
