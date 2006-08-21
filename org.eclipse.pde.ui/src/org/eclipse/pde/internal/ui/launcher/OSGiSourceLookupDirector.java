@@ -31,11 +31,11 @@ public class OSGiSourceLookupDirector implements IPersistableSourceLocator {
 
 	public void initializeDefaults(ILaunchConfiguration configuration)
 			throws CoreException {
-		String id = configuration.getAttribute(OSGiLaunchConfiguration.OSGI_ENV_ID, "");
+		String id = configuration.getAttribute(OSGiLaunchConfiguration.OSGI_ENV_ID, ""); //$NON-NLS-1$
 		String locatorId = null;
 		locatorId = getFrameworkSourceLocator(id);
 		if (locatorId == null) 
-			locatorId = "org.eclipse.jdt.launching.sourceLocator.JavaSourceLookupDirector";
+			locatorId = "org.eclipse.jdt.launching.sourceLocator.JavaSourceLookupDirector"; //$NON-NLS-1$
 		Object obj = getClass(locatorId);
 		fLocator = (IPersistableSourceLocator)obj;
 		if (fLocator != null)
@@ -47,8 +47,8 @@ public class OSGiSourceLookupDirector implements IPersistableSourceLocator {
 			IExtensionRegistry registry = Platform.getExtensionRegistry();
 			IConfigurationElement[] elements = registry.getConfigurationElementsFor("org.eclipse.pde.ui.osgiLauncher"); //$NON-NLS-1$
 			for (int i = 0; i < elements.length; i++) {
-				if (elements[i].getAttribute("id").equals(id)) {
-					String attr = elements[i].getAttribute("sourceLocatorId");
+				if (elements[i].getAttribute("id").equals(id)) { //$NON-NLS-1$
+					String attr = elements[i].getAttribute("sourceLocatorId"); //$NON-NLS-1$
 					if (attr != null)
 						return attr;
 				}
@@ -63,13 +63,13 @@ public class OSGiSourceLookupDirector implements IPersistableSourceLocator {
 		IConfigurationElement[] elements = registry.getConfigurationElementsFor("org.eclipse.debug.core.sourceLocators"); //$NON-NLS-1$
 		for (int i = 0; i < elements.length; i++) {
 			try {
-				if (elements[i].getAttribute("id").equals(locatorId)) {
-					Object o = elements[i].createExecutableExtension("class");
+				if (elements[i].getAttribute("id").equals(locatorId)) { //$NON-NLS-1$
+					Object o = elements[i].createExecutableExtension("class"); //$NON-NLS-1$
 					if (o instanceof IPersistableSourceLocator)
 						return (IPersistableSourceLocator)o;
 				}
-				if (elements[i].getAttribute("id").equals("org.eclipse.jdt.launching.sourceLocator.JavaSourceLookupDirector"))
-					javaLocator = (IPersistableSourceLocator)elements[i].createExecutableExtension("class");
+				if (elements[i].getAttribute("id").equals("org.eclipse.jdt.launching.sourceLocator.JavaSourceLookupDirector")) //$NON-NLS-1$ //$NON-NLS-2$
+					javaLocator = (IPersistableSourceLocator)elements[i].createExecutableExtension("class"); //$NON-NLS-1$
 			} catch (CoreException e) {
 			}
 		}

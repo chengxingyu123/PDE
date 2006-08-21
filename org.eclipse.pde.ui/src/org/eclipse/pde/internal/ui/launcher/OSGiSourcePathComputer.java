@@ -34,13 +34,13 @@ public class OSGiSourcePathComputer extends JavaSourcePathComputer {
 					IConfigurationElement[] elements = registry.getConfigurationElementsFor("org.eclipse.pde.ui.osgiLauncher"); //$NON-NLS-1$
 					IConfigurationElement elem = null;
 					for (int i = 0; i < elements.length; i++) {
-						if (elements[i].getAttribute("id").equals(id)) {
+						if (elements[i].getAttribute("id").equals(id)) { //$NON-NLS-1$
 							elem = elements[i];
 							break;
 						}
 					}
 					if (elem != null) {
-						AbstractOSGiLaunchConfiguration launcher= (AbstractOSGiLaunchConfiguration)elem.createExecutableExtension("class");
+						AbstractOSGiLaunchConfiguration launcher= (AbstractOSGiLaunchConfiguration)elem.createExecutableExtension("class"); //$NON-NLS-1$
 						return launcher.getSourceContainers();
 					}
 				} catch (SecurityException e) {

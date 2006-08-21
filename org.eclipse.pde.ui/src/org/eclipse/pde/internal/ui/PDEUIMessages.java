@@ -57,6 +57,8 @@ public class PDEUIMessages extends NLS {
 
 	public static String MissingResourcePage_unableToOpenFull;
 
+	public static String OSGiBundlesTab_frameworkLabel;
+
 	public static String RemoveUnknownExecEnvironments_label;
 
 	public static String RevertUnsupportSingletonResolution_desc;

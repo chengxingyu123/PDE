@@ -21,8 +21,8 @@ import org.eclipse.pde.internal.ui.IHelpContextIds;
 import org.eclipse.pde.internal.ui.PDEPlugin;
 import org.eclipse.pde.internal.ui.PDEPluginImages;
 import org.eclipse.pde.internal.ui.PDEUIMessages;
-import org.eclipse.pde.internal.ui.launcher.OSGiLauncherTabGroup;
 import org.eclipse.pde.internal.ui.launcher.OSGiBundleBlock;
+import org.eclipse.pde.internal.ui.launcher.OSGiLauncherTabGroup;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
@@ -121,11 +121,11 @@ public class OSGiBundlesTab extends AbstractLauncherTab {
 		composite.setLayout(new GridLayout(2, false));
 
 		Label label = new Label(composite, SWT.NONE);
-		label.setText("OSGi Framework:");
+		label.setText(PDEUIMessages.OSGiBundlesTab_frameworkLabel);
 
 		fLauncherCombo = new Combo(composite, SWT.READ_ONLY);
 		for (int i = 0; i < fConfigElements.length; i++) 
-			fLauncherCombo.add(fConfigElements[i].getAttribute("name"));
+			fLauncherCombo.add(fConfigElements[i].getAttribute("name")); //$NON-NLS-1$
 		fLauncherCombo.select(0);
 		fLauncherCombo.addModifyListener(fListener);
 	}
@@ -188,7 +188,7 @@ public class OSGiBundlesTab extends AbstractLauncherTab {
 				fLauncherCombo.select(0);
 			else {
 				for (int i = 0; i < fConfigElements.length; i++) {
-					if (id.equals(fConfigElements[i].getAttribute("id"))){
+					if (id.equals(fConfigElements[i].getAttribute("id"))){ //$NON-NLS-1$
 						fLauncherCombo.select(i);
 						return;
 					}
@@ -225,13 +225,13 @@ public class OSGiBundlesTab extends AbstractLauncherTab {
 
 	private void setLauncher(ILaunchConfigurationWorkingCopy config) {
 		try {
-			String oldId = config.getAttribute(OSGiLaunchConfiguration.OSGI_ENV_ID, "");
-			String newId = fConfigElements[fLauncherCombo.getSelectionIndex()].getAttribute("id");
+			String oldId = config.getAttribute(OSGiLaunchConfiguration.OSGI_ENV_ID, ""); //$NON-NLS-1$
+			String newId = fConfigElements[fLauncherCombo.getSelectionIndex()].getAttribute("id"); //$NON-NLS-1$
 			if (!newId.equals(oldId)) {
-				AbstractOSGiLaunchConfiguration launcher = (AbstractOSGiLaunchConfiguration) fConfigElements[fLauncherCombo.getSelectionIndex()].createExecutableExtension("class");
+				AbstractOSGiLaunchConfiguration launcher = (AbstractOSGiLaunchConfiguration) fConfigElements[fLauncherCombo.getSelectionIndex()].createExecutableExtension("class"); //$NON-NLS-1$
 				if (launcher != null) {
 					launcher.initialize(config);
-					config.setAttribute(OSGiLaunchConfiguration.OSGI_ENV_ID, fConfigElements[fLauncherCombo.getSelectionIndex()].getAttribute("id"));
+					config.setAttribute(OSGiLaunchConfiguration.OSGI_ENV_ID, fConfigElements[fLauncherCombo.getSelectionIndex()].getAttribute("id")); //$NON-NLS-1$
 					if (fGroup != null) 
 						fGroup.initializeFrom(config);
 					else 

@@ -11,7 +11,7 @@ import org.eclipse.debug.core.model.LaunchConfigurationDelegate;
 
 public class OSGiLaunchConfiguration extends LaunchConfigurationDelegate {
 	
-	public final static String OSGI_ENV_ID = "osgi.env.id";
+	public final static String OSGI_ENV_ID = "osgi.env.id"; //$NON-NLS-1$
 
 	public void launch(ILaunchConfiguration configuration, String mode,
 			ILaunch launch, IProgressMonitor monitor) throws CoreException {
@@ -27,14 +27,14 @@ public class OSGiLaunchConfiguration extends LaunchConfigurationDelegate {
 		IConfigurationElement[] elements = registry.getConfigurationElementsFor("org.eclipse.pde.ui.osgiLauncher"); //$NON-NLS-1$
 		IConfigurationElement elem = null;
 		for (int i = 0; i < elements.length; i++) {
-			if (elements[i].getAttribute("id").equals(id)) {
+			if (elements[i].getAttribute("id").equals(id)) { //$NON-NLS-1$
 				elem = elements[i];
 				break;
 			}
 		}
 		if (elem != null)
 			try {
-				return (AbstractOSGiLaunchConfiguration)elem.createExecutableExtension("class");
+				return (AbstractOSGiLaunchConfiguration)elem.createExecutableExtension("class"); //$NON-NLS-1$
 			} catch (CoreException e) {
 			}
 		return null;
