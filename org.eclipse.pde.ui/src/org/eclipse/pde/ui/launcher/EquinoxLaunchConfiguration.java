@@ -24,6 +24,7 @@ import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.SubProgressMonitor;
 import org.eclipse.debug.core.ILaunch;
 import org.eclipse.debug.core.ILaunchConfiguration;
+import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.pde.core.plugin.IPluginModelBase;
@@ -44,7 +45,7 @@ import org.eclipse.swt.widgets.Display;
  * </p>
  * @since 3.2
  */
-public class EquinoxLaunchConfiguration extends AbstractPDELaunchConfiguration {
+public class EquinoxLaunchConfiguration extends AbstractOSGiLaunchConfiguration {
 	
 	/*
 	 * (non-Javadoc)
@@ -180,6 +181,10 @@ public class EquinoxLaunchConfiguration extends AbstractPDELaunchConfiguration {
 		} finally {
 			monitor.done();
 		}
+	}
+
+	public void initialize(ILaunchConfigurationWorkingCopy configuration) {
+		
 	}
 
 }
