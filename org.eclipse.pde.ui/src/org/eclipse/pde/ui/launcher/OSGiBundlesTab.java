@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2005 IBM Corporation and others.
+ * Copyright (c) 2006 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -43,7 +43,7 @@ import org.eclipse.ui.PlatformUI;
  * <p>
  * This class may be instantiated. This class is not intended to be subclassed by clients.
  * </p>
- * @since 3.2
+ * @since 3.3
  */
 public class OSGiBundlesTab extends AbstractLauncherTab {
 
@@ -54,7 +54,6 @@ public class OSGiBundlesTab extends AbstractLauncherTab {
 	private Spinner fDefaultStartLevel;
 	private Combo fLauncherCombo;
 	private IConfigurationElement[] fConfigElements;
-	private boolean fRefreshing;
 	private OSGiLauncherTabGroup fGroup;
 	private boolean fUpdateRequired;
 	private boolean fInitializing = false;
@@ -214,8 +213,6 @@ public class OSGiBundlesTab extends AbstractLauncherTab {
 	 * @see org.eclipse.debug.ui.ILaunchConfigurationTab#performApply(org.eclipse.debug.core.ILaunchConfigurationWorkingCopy)
 	 */
 	public void performApply(ILaunchConfigurationWorkingCopy config) {
-		if (fRefreshing)
-			return;
 		config.setAttribute(IPDELauncherConstants.DEFAULT_AUTO_START, 
 				Boolean.toString(true).equals(fDefaultAutoStart.getText()));
 		config.setAttribute(IPDELauncherConstants.DEFAULT_START_LEVEL, fDefaultStartLevel.getSelection());
