@@ -722,13 +722,13 @@
             name="%OSGiShortcut.description.debug"
             description="%OSGiShortcut.description.debug"
             categoryId="org.eclipse.debug.ui.category.run"
-            id="org.eclipse.pde.ui.OSGiLaunchShortcut.debug">
+            id="org.eclipse.pde.ui.EquinoxLaunchShortcut.debug">
       </command>    
       <command
             name="%OSGiShortcut.description.run"
             description="%OSGiShortcut.description.run"
             categoryId="org.eclipse.debug.ui.category.run"
-            id="org.eclipse.pde.ui.OSGiLaunchShortcut.run">
+            id="org.eclipse.pde.ui.EquinoxLaunchShortcut.run">
       </command>    
       <command
             name="%JUnitApplicationShortcut.description.debug"
@@ -1224,7 +1224,7 @@
       </launchConfigurationType>
       <launchConfigurationType
             delegate="org.eclipse.pde.ui.launcher.OSGiLaunchConfiguration"
-            id="org.eclipse.pde.ui.OSGiLauncher"
+            id="org.eclipse.pde.ui.EquinoxLauncher"
             modes="run, debug"
             name="%launcher.framework.name"
             public="true"
@@ -1240,7 +1240,7 @@
       </launchConfigurationTypeImage>
       <launchConfigurationTypeImage
             icon="$nl$/icons/obj16/bundle_obj.gif"
-            configTypeID="org.eclipse.pde.ui.OSGiLauncher"
+            configTypeID="org.eclipse.pde.ui.EquinoxLauncher"
             id="org.eclipse.pde.ui.equinoxFrameworkImage">
       </launchConfigurationTypeImage>
       <launchConfigurationTypeImage
@@ -1271,7 +1271,7 @@
          </launchMode>
       </launchConfigurationTabGroup>
       <launchConfigurationTabGroup
-            type="org.eclipse.pde.ui.OSGiLauncher"
+            type="org.eclipse.pde.ui.EquinoxLauncher"
             class="org.eclipse.pde.internal.ui.launcher.OSGiLauncherTabGroup"
             id="org.eclipse.pde.ui.launcher.EquinoxLauncherTabGroup">
          <launchMode
@@ -1414,7 +1414,7 @@
             icon="$nl$/icons/obj16/bundle_obj.gif"
             modes="run, debug"
             class="org.eclipse.pde.internal.ui.launcher.OSGiLaunchShortcut"
-            id="org.eclipse.pde.ui.OSGiLaunchShortcut">
+            id="org.eclipse.pde.ui.EquinoxLaunchShortcut">
          <enablement>
            <with variable="selection">
              <count value="*"/>
@@ -1765,12 +1765,12 @@
       </key>      
       <key
             sequence="M3+M2+D X"
-            commandId="org.eclipse.pde.ui.OSGiLaunchShortcut.debug"
+            commandId="org.eclipse.pde.ui.EquinoxLaunchShortcut.debug"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration">
       </key>      
       <key
             sequence="M3+M2+X X"
-            commandId="org.eclipse.pde.ui.OSGiLaunchShortcut.run"
+            commandId="org.eclipse.pde.ui.EquinoxLaunchShortcut.run"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration">
       </key>      
       <key

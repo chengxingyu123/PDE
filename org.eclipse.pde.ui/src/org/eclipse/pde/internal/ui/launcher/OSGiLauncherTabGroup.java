@@ -31,7 +31,7 @@ public class OSGiLauncherTabGroup extends AbstractLaunchConfigurationTabGroup {
 	public void createTabs(ILaunchConfigurationDialog dialog, String mode) {
 		ILaunchConfigurationTab[] tabs = 
 			new ILaunchConfigurationTab[]{
-				new OSGiBundlesTab(this),
+				new OSGiBundlesTab(),
 				new JavaArgumentsTab() {
 
 					private boolean fInitializing = false;

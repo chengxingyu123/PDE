@@ -13,11 +13,14 @@ package org.eclipse.pde.internal.ui.launcher;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
 import org.eclipse.debug.core.sourcelookup.ISourceContainer;
+import org.eclipse.pde.internal.core.ModelEntry;
 import org.eclipse.pde.internal.core.PDECore;
 import org.eclipse.pde.ui.launcher.EquinoxLaunchConfiguration;
 import org.eclipse.pde.ui.launcher.IPDELauncherConstants;
 
 public class EquinoxLauncher extends EquinoxLaunchConfiguration {
+	
+	public static final String ID = "org.eclipse.pde.ui.EquinoxLauncher"; //$NON-NLS-1$
 
 	public ISourceContainer[] getSourceContainers() {
 		return null;
@@ -25,9 +28,20 @@ public class EquinoxLauncher extends EquinoxLaunchConfiguration {
 
 	public void initialize(ILaunchConfigurationWorkingCopy configuration) {
 		try {
-			String value = configuration.getAttribute(IPDELauncherConstants.TARGET_BUNDLES, "");
-			value = value + ",org.apache.ant@default:default";
-			configuration.setAttribute(IPDELauncherConstants.TARGET_BUNDLES, value);
+			
+			ModelEntry base = PDECore.getDefault().getModelManager().findEntry("org.eclipse.osgi"); //$NON-NLS-1$
+			if (base == null)
+				return;
+			boolean isProject = base.getWorkspaceModel() != null;
+			String constant = isProject ? IPDELauncherConstants.WORKSPACE_BUNDLES 
+					: IPDELauncherConstants.TARGET_BUNDLES;
+			String value = configuration.getAttribute(constant, new String());
+			if (value.indexOf("org.eclipse.osgi@") == -1) {  //$NON-NLS-1$
+				if (value.length() > 0)
+					value += ","; //$NON-NLS-1$
+				value += "org.eclipse.osgi@default:default"; //$NON-NLS-1$
+				configuration.setAttribute(constant, value);
+			}
 		} catch (CoreException e) {
 			PDECore.log(e);
 		}
