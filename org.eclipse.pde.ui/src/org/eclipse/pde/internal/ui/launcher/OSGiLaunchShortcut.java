@@ -18,9 +18,7 @@ import java.util.TreeMap;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IConfigurationElement;
-import org.eclipse.core.runtime.IExtensionRegistry;
-import org.eclipse.core.runtime.Platform;
+import org.eclipse.core.runtime.Preferences;
 import org.eclipse.debug.core.DebugPlugin;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.ILaunchConfigurationType;
@@ -29,23 +27,24 @@ import org.eclipse.debug.core.ILaunchManager;
 import org.eclipse.debug.ui.DebugUITools;
 import org.eclipse.debug.ui.IDebugModelPresentation;
 import org.eclipse.debug.ui.ILaunchShortcut;
+import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.window.Window;
 import org.eclipse.pde.core.plugin.IPluginModelBase;
+import org.eclipse.pde.internal.core.ICoreConstants;
 import org.eclipse.pde.internal.core.PDECore;
 import org.eclipse.pde.internal.core.PluginModelManager;
 import org.eclipse.pde.internal.core.TargetPlatform;
 import org.eclipse.pde.internal.ui.PDEPlugin;
 import org.eclipse.pde.internal.ui.PDEUIMessages;
-import org.eclipse.pde.ui.launcher.AbstractOSGiLaunchConfiguration;
 import org.eclipse.pde.ui.launcher.IPDELauncherConstants;
-import org.eclipse.pde.ui.launcher.OSGiLaunchConfiguration;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.dialogs.ElementListSelectionDialog;
 
 public class OSGiLaunchShortcut implements ILaunchShortcut {
 	
-	private static final String CONFIGURATION_TYPE = "org.eclipse.pde.ui.OSGiLauncher"; //$NON-NLS-1$
+	private static final String CLASSPATH_PROVIDER = "org.eclipse.pde.ui.workbenchClasspathProvider"; //$NON-NLS-1$
+	private static final String CONFIGURATION_TYPE = "org.eclipse.pde.ui.EquinoxLauncher"; //$NON-NLS-1$
 
 	public void run(IProject project) {
 		launch(PDECore.getDefault().getModelManager().findModel(project), ILaunchManager.RUN_MODE);
@@ -124,20 +123,17 @@ public class OSGiLaunchShortcut implements ILaunchShortcut {
 		return null;		
 	}
 	
-	// TODO BRIAN - Make this OSGi generic
 	private ILaunchConfiguration createNewConfiguration(IPluginModelBase[] selected, String mode) {
 		ILaunchConfiguration config = null;
 		try {
 			ILaunchConfigurationType configType = getLaunchConfigurationType();
-			String computedName = getComputedName("OSGi"); //$NON-NLS-1$
+			String computedName = getComputedName("Equinox"); //$NON-NLS-1$
 			ILaunchConfigurationWorkingCopy wc = configType.newInstance(null, computedName);  
-			configureConfiguration(wc);
-//			setJavaArguments(wc);
-//			wc.setAttribute(IPDELauncherConstants.TRACING_CHECKED, IPDELauncherConstants.TRACING_NONE);
-//			wc.setAttribute(IPDELauncherConstants.AUTOMATIC_ADD, true);
-//			initializePluginState(wc, selected);
-//			wc.setAttribute(IJavaLaunchConfigurationConstants.ATTR_SOURCE_PATH_PROVIDER, CLASSPATH_PROVIDER);
-			
+			setJavaArguments(wc);
+			wc.setAttribute(IPDELauncherConstants.TRACING_CHECKED, IPDELauncherConstants.TRACING_NONE);
+			wc.setAttribute(IPDELauncherConstants.AUTOMATIC_ADD, true);
+			initializePluginState(wc, selected);
+			wc.setAttribute(IJavaLaunchConfigurationConstants.ATTR_SOURCE_PATH_PROVIDER, CLASSPATH_PROVIDER);
 			config = wc.doSave();		
 		} catch (CoreException ce) {
 			PDEPlugin.logException(ce);
@@ -145,31 +141,16 @@ public class OSGiLaunchShortcut implements ILaunchShortcut {
 		return config;
 	}
 	
-	private void configureConfiguration(ILaunchConfigurationWorkingCopy wc) {
-		IExtensionRegistry registry = Platform.getExtensionRegistry();
-		IConfigurationElement[] elements = registry.getConfigurationElementsFor("org.eclipse.pde.ui.osgiLauncher"); //$NON-NLS-1$
-		AbstractOSGiLaunchConfiguration launcher = null;
-		for (int i = 0; i < elements.length && launcher == null; i++) {
-			try {
-				launcher = (AbstractOSGiLaunchConfiguration)elements[0].createExecutableExtension("class");
-			} catch (CoreException e) {
-				continue;
-			}
-			wc.setAttribute(OSGiLaunchConfiguration.OSGI_ENV_ID, elements[0].getAttribute("id"));
-			launcher.initialize(wc);
-		}
+	private void setJavaArguments(ILaunchConfigurationWorkingCopy wc) {
+		Preferences preferences = PDECore.getDefault().getPluginPreferences();
+		String progArgs = preferences.getString(ICoreConstants.PROGRAM_ARGS);
+		if (progArgs.indexOf("-console") == -1) //$NON-NLS-1$
+			progArgs = "-console " + progArgs; //$NON-NLS-1$
+		wc.setAttribute(IJavaLaunchConfigurationConstants.ATTR_PROGRAM_ARGUMENTS, progArgs); //$NON-NLS-1$
+		String vmArgs = preferences.getString(ICoreConstants.VM_ARGS);
+		if (vmArgs.length() > 0)
+			wc.setAttribute(IJavaLaunchConfigurationConstants.ATTR_VM_ARGUMENTS, vmArgs);
 	}
-	
-//	private void setJavaArguments(ILaunchConfigurationWorkingCopy wc) {
-//		Preferences preferences = PDECore.getDefault().getPluginPreferences();
-//		String progArgs = preferences.getString(ICoreConstants.PROGRAM_ARGS);
-//		if (progArgs.indexOf("-console") == -1) //$NON-NLS-1$
-//			progArgs = "-console " + progArgs; //$NON-NLS-1$
-//		wc.setAttribute(IJavaLaunchConfigurationConstants.ATTR_PROGRAM_ARGUMENTS, progArgs); //$NON-NLS-1$
-//		String vmArgs = preferences.getString(ICoreConstants.VM_ARGS);
-//		if (vmArgs.length() > 0)
-//			wc.setAttribute(IJavaLaunchConfigurationConstants.ATTR_VM_ARGUMENTS, vmArgs);
-//	}
 	
 	public static void initializePluginState(ILaunchConfigurationWorkingCopy wc, IPluginModelBase[] selected) {
 		Map startLevelMap = getStartLevelMap();
