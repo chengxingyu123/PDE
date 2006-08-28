@@ -11,7 +11,6 @@
 package org.eclipse.pde.internal.ui.launcher;
 
 import org.eclipse.core.runtime.Preferences;
-import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
 import org.eclipse.debug.ui.AbstractLaunchConfigurationTabGroup;
 import org.eclipse.debug.ui.CommonTab;
@@ -32,42 +31,11 @@ public class OSGiLauncherTabGroup extends AbstractLaunchConfigurationTabGroup {
 		ILaunchConfigurationTab[] tabs = 
 			new ILaunchConfigurationTab[]{
 				new OSGiBundlesTab(),
-				new JavaArgumentsTab() {
-
-					private boolean fInitializing = false;
-
-					public void initializeFrom(ILaunchConfiguration config) {
-						fInitializing = true;
-						super.initializeFrom(config);
-						fInitializing = false;
-					}
-
-					public void updateLaunchConfigurationDialog() {
-						if (!fInitializing)
-							updateLaunchConfigurationDialog();
-					}
-
-				},
+				new JavaArgumentsTab(),
 				new OSGiSettingsTab(),
 				new TracingTab(), 
 				new EnvironmentTab(),
-				new CommonTab() {
-
-					private boolean fInitializing = false;
-
-					public void initializeFrom(ILaunchConfiguration config) {
-						fInitializing = true;
-						super.initializeFrom(config);
-						fInitializing = false;
-					}
-
-					public void updateLaunchConfigurationDialog() {
-						if (!fInitializing)
-							updateLaunchConfigurationDialog();
-					}
-				}
-
-		};
+				new CommonTab()};
 		setTabs(tabs);
 	}
 	
