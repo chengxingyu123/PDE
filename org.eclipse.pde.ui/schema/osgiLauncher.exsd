@@ -83,6 +83,13 @@ This extension point should be used to register new launchers for various OSGi f
                </appInfo>
             </annotation>
          </attribute>
+         <attribute name="sourceLocatorId" type="string">
+            <annotation>
+               <documentation>
+                  an id of an org.eclipse.debug.core.sourceLocator which should be used to locate source.  If one is not specified, the generic java source locator will be used.
+               </documentation>
+            </annotation>
+         </attribute>
       </complexType>
    </element>
 
