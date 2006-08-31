@@ -1977,6 +1977,7 @@
       <launcher
             class="org.eclipse.pde.internal.ui.launcher.EquinoxLauncher"
             id="org.eclipse.pde.ui.EquinoxLauncher"
-            name="%Equinox.shortcut.label"/>
+            name="%Equinox.shortcut.label"
+            sourceLocatorId="org.eclipse.pde.ui.launcher.PDESourceLookupDirector"/>
     </extension>
 </plugin>
