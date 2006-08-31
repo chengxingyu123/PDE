@@ -8,7 +8,7 @@
    <extension-point id="newExtension" name="%expoint.newExtension.name" schema="schema/newExtension.exsd"/>
    <extension-point id="templates" name="%expoint.templates.name" schema="schema/templates.exsd"/>
    <extension-point id="samples" name="%expoint.samples.name" schema="schema/samples.exsd"/>
-   <extension-point id="osgiLauncher" name="%expoint.osgiLauncher.name" schema="schema/osgiLauncher.exsd"/>
+   <extension-point id="osgiLaunchers" name="%expoint.osgiLauncher.name" schema="schema/osgiLaunchers.exsd"/>
 
 <!-- Extensions -->
    <extension
@@ -1973,7 +1973,7 @@
        </perspectiveExtension>
     </extension>
     <extension
-         point="org.eclipse.pde.ui.osgiLauncher">
+         point="org.eclipse.pde.ui.osgiLaunchers">
       <launcher
             class="org.eclipse.pde.internal.ui.launcher.EquinoxLauncher"
             id="org.eclipse.pde.ui.EquinoxLauncher"

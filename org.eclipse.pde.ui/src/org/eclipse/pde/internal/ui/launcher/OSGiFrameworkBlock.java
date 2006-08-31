@@ -10,6 +10,7 @@
  *******************************************************************************/
 package org.eclipse.pde.internal.ui.launcher;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 
@@ -19,6 +20,7 @@ import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
+import org.eclipse.pde.internal.ui.PDEPlugin;
 import org.eclipse.pde.internal.ui.PDEUIMessages;
 import org.eclipse.pde.ui.launcher.AbstractLauncherTab;
 import org.eclipse.pde.ui.launcher.AbstractOSGiLaunchConfiguration;
@@ -58,7 +60,7 @@ public class OSGiFrameworkBlock {
 	
 	public OSGiFrameworkBlock(AbstractLauncherTab tab) {
 		IExtensionRegistry registry = Platform.getExtensionRegistry();
-		fConfigElements = orderElements(registry.getConfigurationElementsFor("org.eclipse.pde.ui.osgiLauncher")); //$NON-NLS-1$
+		fConfigElements = orderElements(validateElements(registry.getConfigurationElementsFor("org.eclipse.pde.ui.osgiLaunchers"))); //$NON-NLS-1$
 		fTab = tab;
 		fListener = new Listener();
 	}
@@ -74,6 +76,17 @@ public class OSGiFrameworkBlock {
 			}
 		});
 		return elems;
+	}
+	
+	private IConfigurationElement[] validateElements(IConfigurationElement[] elems) {
+		ArrayList list = new ArrayList(elems.length);
+		for (int i = 0; i < elems.length; i++) {
+			if (elems[i].getAttribute("id") == null || elems[i].getAttribute("name") == null //$NON-NLS-1$ //$NON-NLS-2$
+					|| elems[i].getAttribute("class") == null) //$NON-NLS-1$
+				continue;
+			list.add(elems[i]);
+		}
+		return (IConfigurationElement[]) list.toArray(new IConfigurationElement[list.size()]);
 	}
 	
 	public void createControl(Composite parent) {
@@ -94,12 +107,18 @@ public class OSGiFrameworkBlock {
 		if (id == null)
 			id = EquinoxLauncher.ID;
 		
-		for (int i = 0; i < fConfigElements.length; i++) {
-			if (id.equals(fConfigElements[i].getAttribute("id"))){ //$NON-NLS-1$
-				fLauncherCombo.select(i);
-				return;
+		for ( int j = 0; j < 2; j++) {
+			for (int i = 0; i < fConfigElements.length; i++) {
+				if (id.equals(fConfigElements[i].getAttribute("id"))){ //$NON-NLS-1$
+					fLauncherCombo.select(i);
+					return;
+				}
 			}
+			id = EquinoxLauncher.ID;
 		}
+		// If we can't find equinox, set it to anything
+		if (fLauncherCombo.getSelectionIndex() == -1)
+			fLauncherCombo.select(0);
 	}
 	
 	public void performApply(ILaunchConfigurationWorkingCopy config) {
@@ -157,13 +176,21 @@ public class OSGiFrameworkBlock {
 	private void setLauncher(ILaunchConfigurationWorkingCopy config) {
 		try {
 			String oldId = config.getAttribute(OSGiLaunchConfiguration.OSGI_ENV_ID, ""); //$NON-NLS-1$
-			String newId = fConfigElements[fLauncherCombo.getSelectionIndex()].getAttribute("id"); //$NON-NLS-1$
+			int selection = fLauncherCombo.getSelectionIndex();
+			if (selection == -1)
+				return;
+			String newId = fConfigElements[selection].getAttribute("id"); //$NON-NLS-1$
 			if (!newId.equals(oldId)) {
-				AbstractOSGiLaunchConfiguration launcher = (AbstractOSGiLaunchConfiguration) fConfigElements[fLauncherCombo.getSelectionIndex()].createExecutableExtension("class"); //$NON-NLS-1$
-				if (launcher != null) {
-					launcher.initialize(config);
+				try {
 					config.setAttribute(OSGiLaunchConfiguration.OSGI_ENV_ID, fConfigElements[fLauncherCombo.getSelectionIndex()].getAttribute("id")); //$NON-NLS-1$
-					fTab.initializeFrom(config);
+					AbstractOSGiLaunchConfiguration launcher = (AbstractOSGiLaunchConfiguration) fConfigElements[fLauncherCombo.getSelectionIndex()].createExecutableExtension("class"); //$NON-NLS-1$
+					if (launcher != null) {
+						launcher.initialize(config);
+						fTab.initializeFrom(config);
+					}
+				} catch (Exception e) {
+					PDEPlugin.logException(e, PDEUIMessages.OSGiFrameworkBlock_initializingErrorTitle, 
+							PDEUIMessages.OSGiFrameworkBlock_initializingErrorMessage);
 				}
 			}
 		} catch (CoreException e) {

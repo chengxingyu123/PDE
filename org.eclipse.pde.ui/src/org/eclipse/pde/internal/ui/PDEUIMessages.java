@@ -59,6 +59,14 @@ public class PDEUIMessages extends NLS {
 
 	public static String OSGiBundlesTab_frameworkLabel;
 
+	public static String OSGiFrameworkBlock_initializingErrorMessage;
+
+	public static String OSGiFrameworkBlock_initializingErrorTitle;
+
+	public static String OSGiLaunchConfiguration_cannotFindLaunchConfiguration;
+
+	public static String OSGiLaunchConfiguration_selected;
+
 	public static String RemoveUnknownExecEnvironments_label;
 
 	public static String RevertUnsupportSingletonResolution_desc;

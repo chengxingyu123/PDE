@@ -18,6 +18,7 @@ import org.eclipse.core.runtime.Platform;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.sourcelookup.ISourceContainer;
 import org.eclipse.jdt.launching.sourcelookup.containers.JavaSourcePathComputer;
+import org.eclipse.pde.internal.ui.PDEPlugin;
 import org.eclipse.pde.ui.launcher.AbstractOSGiLaunchConfiguration;
 import org.eclipse.pde.ui.launcher.OSGiLaunchConfiguration;
 
@@ -41,17 +42,21 @@ public class OSGiSourcePathComputer extends JavaSourcePathComputer {
 			if (id != null) {
 				try {
 					IExtensionRegistry registry = Platform.getExtensionRegistry();
-					IConfigurationElement[] elements = registry.getConfigurationElementsFor("org.eclipse.pde.ui.osgiLauncher"); //$NON-NLS-1$
+					IConfigurationElement[] elements = registry.getConfigurationElementsFor("org.eclipse.pde.ui.osgiLaunchers"); //$NON-NLS-1$
 					IConfigurationElement elem = null;
 					for (int i = 0; i < elements.length; i++) {
-						if (elements[i].getAttribute("id").equals(id)) { //$NON-NLS-1$
+						if (id.equals(elements[i].getAttribute("id"))) { //$NON-NLS-1$
 							elem = elements[i];
 							break;
 						}
 					}
 					if (elem != null) {
-						AbstractOSGiLaunchConfiguration launcher= (AbstractOSGiLaunchConfiguration)elem.createExecutableExtension("class"); //$NON-NLS-1$
-						return launcher.getSourceContainers();
+						try {
+							AbstractOSGiLaunchConfiguration launcher= (AbstractOSGiLaunchConfiguration)elem.createExecutableExtension("class"); //$NON-NLS-1$
+							return launcher.getSourceContainers();
+						} catch (Exception e) {
+							PDEPlugin.log(e);
+						}
 					}
 				} catch (SecurityException e) {
 				} catch (IllegalArgumentException e) {
@@ -61,7 +66,5 @@ public class OSGiSourcePathComputer extends JavaSourcePathComputer {
 		}
 		return null;
 	}
-	
-	
 
 }

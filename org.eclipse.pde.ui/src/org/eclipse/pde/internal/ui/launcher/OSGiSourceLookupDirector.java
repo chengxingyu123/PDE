@@ -31,7 +31,9 @@ public class OSGiSourceLookupDirector implements IPersistableSourceLocator {
 
 	public void initializeDefaults(ILaunchConfiguration configuration)
 			throws CoreException {
-		String id = configuration.getAttribute(OSGiLaunchConfiguration.OSGI_ENV_ID, ""); //$NON-NLS-1$
+		String id = configuration.getAttribute(OSGiLaunchConfiguration.OSGI_ENV_ID, (String)null);
+		if (id == null)
+			id = EquinoxLauncher.ID;
 		String locatorId = null;
 		locatorId = getFrameworkSourceLocator(id);
 		if (locatorId == null) 
@@ -45,7 +47,7 @@ public class OSGiSourceLookupDirector implements IPersistableSourceLocator {
 	private String getFrameworkSourceLocator(String id) {
 		if (id != null) {
 			IExtensionRegistry registry = Platform.getExtensionRegistry();
-			IConfigurationElement[] elements = registry.getConfigurationElementsFor("org.eclipse.pde.ui.osgiLauncher"); //$NON-NLS-1$
+			IConfigurationElement[] elements = registry.getConfigurationElementsFor("org.eclipse.pde.ui.osgiLaunchers"); //$NON-NLS-1$
 			for (int i = 0; i < elements.length; i++) {
 				if (elements[i].getAttribute("id").equals(id)) { //$NON-NLS-1$
 					String attr = elements[i].getAttribute("sourceLocatorId"); //$NON-NLS-1$
