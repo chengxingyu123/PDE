@@ -45,6 +45,8 @@ public abstract class XMLEditingModel extends AbstractEditingModel {
 	}
 	
 	protected abstract DefaultHandler createDocumentHandler(IModel model, boolean reconciling);
+	protected abstract IDocumentNode getRootNode();
+	protected abstract IXMLNodeFactory getNodeFactory();
 	
 	public void adjustOffsets(IDocument document) {
 		try {

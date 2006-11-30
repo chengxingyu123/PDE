@@ -25,9 +25,10 @@ import org.eclipse.pde.core.plugin.ISharedPluginModel;
 import org.eclipse.pde.internal.core.text.IDocumentAttribute;
 import org.eclipse.pde.internal.core.text.IDocumentNode;
 import org.eclipse.pde.internal.core.text.IEditingModel;
+import org.eclipse.pde.internal.core.text.DocumentNode;
 import org.eclipse.pde.internal.core.util.CoreUtility;
 
-public class PluginObjectNode extends PluginDocumentNode
+public class PluginObjectNode extends DocumentNode
 		implements
 			IPluginObject {
 

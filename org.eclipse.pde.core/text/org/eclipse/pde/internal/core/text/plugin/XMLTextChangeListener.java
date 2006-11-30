@@ -144,8 +144,13 @@ public class XMLTextChangeListener extends AbstractTextChangeListener {
 				}
 			}
 		}
-		fOperationTable.put(node, op);
-		fOperationList.add(op);
+		TextEdit old = (TextEdit) fOperationTable.get(node);
+		if (old != null)
+			fOperationList.remove(old);
+		if (op != null) {
+			fOperationList.add(op);
+			fOperationTable.put(node, op);	
+		}
 	}
 
 	private InsertEdit insertAfterSibling(IDocumentNode node) {
@@ -188,9 +193,14 @@ public class XMLTextChangeListener extends AbstractTextChangeListener {
 			IRegion region = getMoveRegion(node1);
 			MoveSourceEdit source = new MoveSourceEdit(region.getOffset(), region.getLength());
 			region = getMoveRegion(node2);
-			source.setTargetEdit(new MoveTargetEdit(region.getOffset()));		
-			fOperationTable.put(node, source);
-			fOperationList.add(source);
+			source.setTargetEdit(new MoveTargetEdit(region.getOffset()));
+			TextEdit old = (TextEdit) fOperationTable.get(node);
+			if (old != null)
+				fOperationList.remove(old);
+			if (source != null) {
+				fOperationList.add(source);
+				fOperationTable.put(node, source);	
+			}
 		} else {
 			// one node with offset, the other without offset.  Delete/reinsert the one without offset
 			insertNode((node1.getOffset() < 0) ? node1 : node2);
@@ -239,8 +249,13 @@ public class XMLTextChangeListener extends AbstractTextChangeListener {
 				return;
 			}		
 		}
-		fOperationTable.put(changedObject, op);
-		fOperationList.add(op);
+		TextEdit old = (TextEdit) fOperationTable.get(changedObject);
+		if (old != null)
+			fOperationList.remove(old);
+		if (op != null) {
+			fOperationList.add(op);
+			fOperationTable.put(changedObject, op);	
+		}
 	}
 	
 	protected void addElementContentOperation(IDocumentTextNode textNode) {
@@ -275,8 +290,13 @@ public class XMLTextChangeListener extends AbstractTextChangeListener {
 				return;
 			}
 		}
-		fOperationTable.put(changedObject, op);
-		fOperationList.add(op);
+		TextEdit old = (TextEdit) fOperationTable.get(changedObject);
+		if (old != null)
+			fOperationList.remove(old);
+		if (op != null) {
+			fOperationList.add(op);
+			fOperationTable.put(changedObject, op);	
+		}
 	}
 
 	private boolean shouldTerminateElement(IDocument doc, int offset) {

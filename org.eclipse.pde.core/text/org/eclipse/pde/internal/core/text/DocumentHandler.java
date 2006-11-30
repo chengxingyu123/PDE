@@ -290,8 +290,8 @@ public abstract class DocumentHandler extends DefaultHandler {
 			if (buffer.toString().trim().length() > 0) {
 				textNode = new DocumentTextNode();
 				textNode.setEnclosingElement(parent);
-				parent.addTextNode(textNode);
 				textNode.setText(buffer.toString().trim());
+				parent.addTextNode(textNode);
 			}
 		} else {
 			textNode.setText(buffer.insert(0, textNode.getText()).toString());

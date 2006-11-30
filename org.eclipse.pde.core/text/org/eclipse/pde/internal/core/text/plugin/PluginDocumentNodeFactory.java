@@ -21,8 +21,9 @@ import org.eclipse.pde.core.plugin.IPluginModelFactory;
 import org.eclipse.pde.core.plugin.IPluginObject;
 import org.eclipse.pde.internal.core.text.IDocumentAttribute;
 import org.eclipse.pde.internal.core.text.IDocumentNode;
+import org.eclipse.pde.internal.core.text.IXMLNodeFactory;
 
-public class PluginDocumentNodeFactory implements IPluginModelFactory {
+public class PluginDocumentNodeFactory implements IPluginModelFactory, IXMLNodeFactory {
 	
 	private PluginModelBase fModel;
 

@@ -25,6 +25,7 @@ import org.eclipse.pde.core.plugin.IPluginModelFactory;
 import org.eclipse.pde.internal.core.NLResourceHelper;
 import org.eclipse.pde.internal.core.PDEManager;
 import org.eclipse.pde.internal.core.text.IDocumentNode;
+import org.eclipse.pde.internal.core.text.IXMLNodeFactory;
 import org.eclipse.pde.internal.core.text.XMLEditingModel;
 import org.xml.sax.helpers.DefaultHandler;
 
@@ -33,7 +34,7 @@ public abstract class PluginModelBase extends XMLEditingModel implements IPlugin
 	private PluginBaseNode fPluginBase;
 	private boolean fIsEnabled;
 	private PluginDocumentHandler fHandler;
-	private IPluginModelFactory fFactory;
+	private PluginDocumentNodeFactory fFactory;
 	
 	public PluginModelBase(IDocument document, boolean isReconciling) {
 		super(document, isReconciling);	
@@ -135,6 +136,14 @@ public abstract class PluginModelBase extends XMLEditingModel implements IPlugin
 		return fFactory;
 	}
 
+	protected IXMLNodeFactory getNodeFactory() {
+		return fFactory;
+	}
+	
+	protected IDocumentNode getRootNode() {
+		return (IDocumentNode)getPluginBase();
+	}
+	
 	/* (non-Javadoc)
 	 * @see org.eclipse.pde.internal.ui.model.AbstractEditingModel#createNLResourceHelper()
 	 */

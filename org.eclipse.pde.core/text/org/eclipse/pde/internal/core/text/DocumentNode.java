@@ -8,18 +8,14 @@
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
-package org.eclipse.pde.internal.core.text.plugin;
+package org.eclipse.pde.internal.core.text;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.TreeMap;
 
-import org.eclipse.pde.internal.core.text.IDocumentAttribute;
-import org.eclipse.pde.internal.core.text.IDocumentNode;
-import org.eclipse.pde.internal.core.text.IDocumentTextNode;
-
-public abstract class PluginDocumentNode implements IDocumentNode {
+public abstract class DocumentNode implements IDocumentNode {
 	
 	private IDocumentNode fParent;
 	private ArrayList fChildren = new ArrayList();
@@ -146,8 +142,8 @@ public abstract class PluginDocumentNode implements IDocumentNode {
 	 * @see org.eclipse.pde.internal.ui.model.IDocumentNode#getXMLAttributeValue(java.lang.String)
 	 */
 	public String getXMLAttributeValue(String name) {
-		PluginAttribute attr = (PluginAttribute)fAttributes.get(name);
-		return attr == null ? null : attr.getValue();
+		IDocumentAttribute attr = (IDocumentAttribute)fAttributes.get(name);
+		return attr == null ? null : attr.getAttributeValue();
 	}
 	
 	/* (non-Javadoc)
