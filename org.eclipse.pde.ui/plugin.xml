@@ -855,6 +855,14 @@
                id="org.eclipse.pde.ui.xhtmlconverter.convert">
          </action>
          <action
+               label="Manage Help Contexts"
+               helpContextId="org.eclipse.pde.doc.user.manageHelpContexts"
+               class="org.eclipse.pde.internal.ui.wizards.help.GetContextsAction"
+               menubarPath="org.eclipse.pde.ui.project.tools/group2"
+               enablesFor="+"
+               id="org.eclipse.pde.ui.contexthelp.manage">
+         </action>
+         <action
                label="%popupMenus.createHelpIndex.label"
                helpContextId="org.eclipse.pde.doc.user.create_help_index"
                class="org.eclipse.pde.internal.ui.wizards.tools.CreateHelpIndexAction"

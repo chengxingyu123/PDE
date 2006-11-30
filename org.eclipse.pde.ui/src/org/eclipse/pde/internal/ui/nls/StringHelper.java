@@ -12,7 +12,7 @@ package org.eclipse.pde.internal.ui.nls;
 
 public class StringHelper {
 	
-	protected static String preparePropertiesString(String s, char[] newLine) {
+	public static String preparePropertiesString(String s, char[] newLine) {
 		if (s == null)
 			return null;
 		int length = s.length();
@@ -33,7 +33,7 @@ public class StringHelper {
 		return sb.toString();
 	}
 	
-	protected static String unwindEscapeChars(String s) {
+	public static String unwindEscapeChars(String s) {
 		if (s != null) {
 			int length = s.length();
 			StringBuffer sb = new StringBuffer(length);
@@ -46,7 +46,7 @@ public class StringHelper {
 		return null;
 	}
 
-	protected static String getUnwoundString(char c) {
+	public static String getUnwoundString(char c) {
 		switch (c) {
 			case '\b' :
 				return "\\b";//$NON-NLS-1$
@@ -64,7 +64,7 @@ public class StringHelper {
 		return String.valueOf(c);
 	}
 
-	protected static String windEscapeChars(String s) {
+	public static String windEscapeChars(String s) {
 		if (s == null)
 			return null;
 
@@ -121,7 +121,7 @@ public class StringHelper {
 		return outBuffer.toString();
 	}
 	
-    protected static boolean isValidLocalization(String name) {
+    public static boolean isValidLocalization(String name) {
         if (name.length() <= 0) {
             return false;
         }

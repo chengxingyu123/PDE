@@ -51,6 +51,7 @@ Export-Package:
  org.eclipse.pde.internal.ui.wizards.exports;x-internal:=true,
  org.eclipse.pde.internal.ui.wizards.extension;x-internal:=true,
  org.eclipse.pde.internal.ui.wizards.feature;x-internal:=true,
+ org.eclipse.pde.internal.ui.wizards.help;x-internal:=true,
  org.eclipse.pde.internal.ui.wizards.imports;x-internal:=true,
  org.eclipse.pde.internal.ui.wizards.plugin;x-internal:=true,
  org.eclipse.pde.internal.ui.wizards.product;x-internal:=true,

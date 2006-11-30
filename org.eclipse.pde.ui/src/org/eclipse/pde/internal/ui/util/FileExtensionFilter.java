@@ -22,15 +22,22 @@ import org.eclipse.jface.viewers.ViewerFilter;
 
 public class FileExtensionFilter extends ViewerFilter {
 
-	private String fTargetExtension;
+	private String[] fTargetExtensions;
 
 	public FileExtensionFilter(String targetExtension) {
-		fTargetExtension = targetExtension;
+		fTargetExtensions = new String[] {targetExtension};
 	}
 
+	public FileExtensionFilter(String[] targetExtensions) {
+		fTargetExtensions = targetExtensions;
+	}
+	
 	public boolean select(Viewer viewer, Object parent, Object element) {
 		if (element instanceof IFile) {
-			return ((IFile)element).getName().toLowerCase(Locale.ENGLISH).endsWith("." + fTargetExtension); //$NON-NLS-1$
+			for (int i = 0; i < fTargetExtensions.length; i++)
+				if (((IFile)element).getName().toLowerCase(Locale.ENGLISH).endsWith("." + fTargetExtensions[i])) //$NON-NLS-1$
+					return true;
+			return false;
 		}
 
 		if (element instanceof IProject && !((IProject)element).isOpen())
