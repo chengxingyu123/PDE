@@ -22,10 +22,10 @@ public class ContextHelpLabelProvider extends SharedLabelProvider {
 		if (element instanceof ContextNode) {
 			ContextTopicNode[] topics = ((ContextNode)element).getTopics();
 			for (int i = 0; i < topics.length; i++)
-				if (!topics[i].targetExists())
+				if (!topics[i].validTarget())
 					return super.get(getBlankImage(), F_ERROR);
 		} else if (element instanceof ContextTopicNode) {
-			if (index == 1 && !((ContextTopicNode)element).targetExists())
+			if (index == 1 && !((ContextTopicNode)element).validTarget())
 				return super.get(getBlankImage(), F_ERROR);
 		}
 		return super.getColumnImage(element, index);

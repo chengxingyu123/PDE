@@ -15,7 +15,6 @@ import org.eclipse.swt.widgets.Shell;
 
 public class ChangeContextIDDialog extends InputDialog {
 
-	private String fNewID;
 	private String fJavaFile;
 	private boolean fUpdateJavaFile;
 	
@@ -27,16 +26,12 @@ public class ChangeContextIDDialog extends InputDialog {
 				new IInputValidator() {
 					public String isValid(String newText) {
 						if (newText.equals(contextNode.getId()))
-							return null;
+							return new String();
 						return contextNode.getContexts().isValidId(newText);
 					}
 		});
 	}
 
-	public String getNewID() {
-		return fNewID;
-	}
-	
 	public boolean updateJavaFile() {
 		return fUpdateJavaFile;
 	}

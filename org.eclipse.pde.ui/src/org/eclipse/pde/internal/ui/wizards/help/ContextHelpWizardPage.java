@@ -238,7 +238,7 @@ public class ContextHelpWizardPage extends WizardPage implements ISelectionChang
 			public void widgetSelected(SelectionEvent e) {
 				ChangeContextIDDialog dialog = new ChangeContextIDDialog(parent.getShell(), (ContextNode)fContextsSel);
 				if (dialog.open() == Window.OK)
-					((ContextNode)fContextsSel).setId(dialog.getNewID());
+					((ContextNode)fContextsSel).setId(dialog.getValue());
 			}
 		});
 
@@ -496,8 +496,11 @@ public class ContextHelpWizardPage extends WizardPage implements ISelectionChang
 					fContextsViewer.remove(objs[i]);
 				break;
 			case IModelChangedEvent.CHANGE:
-				if (objs[i] instanceof ContextNode)
+				if (objs[i] instanceof ContextNode) {
 					fContextsViewer.update(objs[i], null);
+					fID.setText(((ContextNode)objs[i]).getId());
+					//fDescription.setText(((ContextNode)objs[i]).getDescription());
+				}
 				if (objs[i] instanceof ContextTopicNode)
 					fContextTopicTable.update(objs[i], null);
 				break;
