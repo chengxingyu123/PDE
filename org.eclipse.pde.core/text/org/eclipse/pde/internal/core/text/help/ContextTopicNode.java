@@ -31,7 +31,7 @@ public class ContextTopicNode extends AbstractContextNode {
 		} else
 			setXMLAttribute(F_HREF, href);
 		if (getModel() != null)
-			getModel().fireStructureChanged(this, IModelChangedEvent.CHANGE, F_HREF);
+			getModel().fireAttributeChanged(this, IModelChangedEvent.CHANGE, F_HREF, null, href);
 	}
 	
 	public void setLabel(String label) {
@@ -42,7 +42,7 @@ public class ContextTopicNode extends AbstractContextNode {
 		} else
 			setXMLAttribute(F_LABEL, label);
 		if (getModel() != null)
-			getModel().fireStructureChanged(this, IModelChangedEvent.CHANGE, F_LABEL);
+			getModel().fireAttributeChanged(this, IModelChangedEvent.CHANGE, F_LABEL, null, label);
 	}
 	
 	public IFile getTarget() {
@@ -52,7 +52,7 @@ public class ContextTopicNode extends AbstractContextNode {
 		return getModel().getUnderlyingResource().getProject().getFile(href);
 	}
 	
-	public boolean targetExists() {
+	public boolean validTarget() {
 		IFile file = getTarget();
 		// if getTarget() returns null, HREF isint specified, which is valid
 		return file != null ? file.exists() : true;

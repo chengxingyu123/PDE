@@ -84,7 +84,7 @@ public class ContextsNode extends AbstractContextNode {
 		testID(newID);
 		ContextNode removed = (ContextNode)fContexts.remove(oldID);
 		fContexts.put(newID, removed);
-		getModel().fireStructureChanged(removed, IModelChangedEvent.CHANGE, ContextNode.F_ID);
+		getModel().fireAttributeChanged(removed, IModelChangedEvent.CHANGE, ContextNode.F_ID, oldID, newID);
 		return removed != null;
 	}
 	

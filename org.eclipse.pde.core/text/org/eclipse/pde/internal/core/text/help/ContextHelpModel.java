@@ -66,6 +66,9 @@ public class ContextHelpModel extends XMLEditingModel implements IContextObject 
 	public void fireStructureChanged(IContextObject changeObject, int changeType, String property) {
 		fireModelChanged(new ModelChangedEvent(this, changeType, new Object[] {changeObject}, property));
 	}
+	public void fireAttributeChanged(IContextObject changeObject, int changeType, String attrName, String oldValue, String newValue) {
+		fireModelChanged(new ModelChangedEvent(this, changeObject, attrName, oldValue, newValue));
+	}
 	public void fireTextNodeStructureChanged(IDocumentNode node, int changeType) {
 		fireModelChanged(new ModelChangedEvent(this, node, null, node.getTextNode(), null));
 	}
