@@ -11,6 +11,7 @@
 package org.eclipse.pde.internal.ui.preferences;
 
 import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -24,11 +25,15 @@ import java.util.StringTokenizer;
 import java.util.Vector;
 
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Path;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Preferences;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.SubProgressMonitor;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jface.operation.IRunnableWithProgress;
@@ -39,12 +44,15 @@ import org.eclipse.jface.viewers.ICheckStateListener;
 import org.eclipse.jface.viewers.IStructuredContentProvider;
 import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.window.Window;
+import org.eclipse.jface.wizard.WizardDialog;
+import org.eclipse.osgi.service.pluginconversion.PluginConversionException;
 import org.eclipse.osgi.service.resolver.BundleDescription;
 import org.eclipse.osgi.service.resolver.State;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.pde.core.IModel;
 import org.eclipse.pde.core.IModelProviderEvent;
 import org.eclipse.pde.core.plugin.IPluginModelBase;
+import org.eclipse.pde.internal.core.DependencyManager;
 import org.eclipse.pde.internal.core.EclipseHomeInitializer;
 import org.eclipse.pde.internal.core.ExternalFeatureModelManager;
 import org.eclipse.pde.internal.core.ExternalModelManager;
@@ -54,7 +62,6 @@ import org.eclipse.pde.internal.core.ModelProviderEvent;
 import org.eclipse.pde.internal.core.PDECore;
 import org.eclipse.pde.internal.core.PDEState;
 import org.eclipse.pde.internal.core.PluginPathFinder;
-import org.eclipse.pde.internal.core.DependencyManager;
 import org.eclipse.pde.internal.core.TargetPlatform;
 import org.eclipse.pde.internal.core.ifeature.IFeature;
 import org.eclipse.pde.internal.core.ifeature.IFeatureChild;
@@ -71,7 +78,9 @@ import org.eclipse.pde.internal.ui.editor.target.TargetErrorDialog;
 import org.eclipse.pde.internal.ui.elements.DefaultContentProvider;
 import org.eclipse.pde.internal.ui.parts.SharedPartWithButtons;
 import org.eclipse.pde.internal.ui.util.PersistablePluginObject;
+import org.eclipse.pde.internal.ui.util.SWTUtil;
 import org.eclipse.pde.internal.ui.wizards.ListUtil;
+import org.eclipse.pde.internal.ui.wizards.provisioner.AddTargetPluginsWizard;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.BusyIndicator;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -207,15 +216,15 @@ public class TargetPluginsTab extends SharedPartWithButtons{
 
 		public Object[] getElements(Object inputElement) {
 			if (fTreeViewerContents == null)
-				initializeTreeContents(getCurrentModels());
-			Object[] result = fTreeViewerContents.keySet().toArray();
-			return result;
+				return initializeTreeContents(getCurrentModels()).toArray();
+			return fTreeViewerContents.keySet().toArray();
 		}
 
 	}
 	
 	public TargetPluginsTab(TargetPlatformPreferencePage page) {
 		super(new String[]{ PDEUIMessages.ExternalPluginsBlock_reload,
+			  PDEUIMessages.TargetPluginsTab_add,
 			  null,
 			  null,
 			  PDEUIMessages.WizardCheckboxTablePart_selectAll,
@@ -620,7 +629,9 @@ public class TargetPluginsTab extends SharedPartWithButtons{
 		setCounter(elements.length);
 	}
 	
-	public void initializeTreeContents(IPluginModelBase[] allModels) {
+	// returns a Set which contains all the new File objects representing a new location
+	public Set initializeTreeContents(IPluginModelBase[] allModels) {
+		HashSet parents = new HashSet();
 		if (fTreeViewerContents == null) 
 			fTreeViewerContents = new HashMap();
 		for (int i = 0; i < allModels.length; i++) {
@@ -634,11 +645,13 @@ public class TargetPluginsTab extends SharedPartWithButtons{
 					models = new HashSet();
 					models.add(model);
 					fTreeViewerContents.put(parentFile, models);
+					parents.add(parentFile);
 				} else {
 					models.add(model);
 				}
 			}
 		}
+		return parents;
 	}
 	
 	public void performOk() {
@@ -646,6 +659,8 @@ public class TargetPluginsTab extends SharedPartWithButtons{
 			public void run() {
 				savePreferences();
 				if (fReloaded) {
+					if (fCurrentState.getState().getResolver() == null) 
+						fCurrentState.getState().setResolver(Platform.getPlatformAdmin().getResolver());
 					EclipseHomeInitializer.resetEclipseHomeVariable();
 					IPluginModelBase[] models = PDECore.getDefault().getModelManager().getWorkspaceModels();
 					for (int i = 0; i < models.length; i++) {
@@ -881,18 +896,97 @@ public class TargetPluginsTab extends SharedPartWithButtons{
 			handleReload();
 			fPage.resetTargetProfile();
 			break;
-		case 3: 
+		case 1:
+			handleAdd();
+			break;
+		case 4: 
 			handleSelectAll(true);
 			break;
-		case 4:
+		case 5:
 			handleSelectAll(false);
 			break;
-		case 5:
+		case 6:
 			handleWorkingSets();
 			break;
-		case 6:
+		case 7:
 			handleAddRequired();
 			break;
+		}
+	}
+	
+	private void handleAdd() {
+		AddTargetPluginsWizard wizard = new AddTargetPluginsWizard();
+		WizardDialog dialog = new WizardDialog(PDEPlugin.getActiveWorkbenchShell(), wizard);
+		dialog.create();
+		SWTUtil.setDialogSize(dialog, 400, 450);
+		dialog.open();
+		
+		File[] dirs = wizard.getDirectories();
+		if (dirs.length == 0) {
+			// no new URLs found/to add
+			return;
+		}
+//		File[] dirsToSearch = new File[dirs.length * 2];
+//		for (int i = 0; i < dirs.length; i++) {
+//			dirsToSearch[2 * i] = dirs[i];
+//			dirsToSearch[2 * i + 1] = new File(dirs[i], "plugins");
+//		}
+//		URL[] pluginLocs = PluginPathFinder.scanLocations(dirsToSearch);
+		for (int i = 0; i < dirs.length; i++) {
+			File temp = new File(dirs[i], "plugins");
+			if (temp.exists())
+				dirs[i] = temp;
+		}
+		URL[] pluginLocs = PluginPathFinder.scanLocations(dirs);
+		Object[] checkedPlugins = null;
+		if (fCurrentState == null) {
+			checkedPlugins = fPluginListViewer.getCheckedElements();
+			fCurrentState = new PDEState(PDECore.getDefault().getModelManager().getState());
+		}
+		ArrayList descriptions = new ArrayList(dirs.length);
+		for (int i = 0; i < pluginLocs.length; i++) {
+			File file = new File(pluginLocs[i].getFile());
+			try {
+				descriptions.add(fCurrentState.addBundle(file, -1));
+			} catch (PluginConversionException e) {
+			} catch (CoreException e) {
+			} catch (IOException e) {
+				PDECore.log(new Status(IStatus.ERROR, PDECore.PLUGIN_ID, IStatus.ERROR,
+						"Invalid manifest format at " + file.getAbsolutePath(), //$NON-NLS-1$
+						null)); 
+			}
+		}
+		if (descriptions.size() > 0) {
+			IPluginModelBase[] models = fCurrentState.createTargetModels((BundleDescription[])descriptions.toArray(new BundleDescription[descriptions.size()]));
+			// add new models to tree viewer
+			Set parents = initializeTreeContents(models);
+			
+			fPluginListViewer.setInput(PDECore.getDefault().getExternalModelManager());
+			fPluginTreeViewer.setInput(PDECore.getDefault().getExternalModelManager());
+			
+			if (checkedPlugins == null) {
+				for (int i = 0; i < models.length; i++) {
+					fPluginListViewer.setChecked(models[i], true);
+					// TODO - trying to only call setSubTreeChecked if we can find all the directories???
+					fPluginTreeViewer.setChecked(models[i], true);
+				}
+			} else {
+				Object[] newCheckedPlugins = new Object[checkedPlugins.length + models.length];
+				System.arraycopy(checkedPlugins, 0, newCheckedPlugins, 0, checkedPlugins.length);
+				System.arraycopy(models, 0, newCheckedPlugins, checkedPlugins.length, models.length);
+				fPluginListViewer.setCheckedElements(newCheckedPlugins);
+				fPluginTreeViewer.setCheckedElements(newCheckedPlugins);
+			}
+			for (int i = 0; i < models.length; i++) {
+				fChangedModels.add(models[i]);
+			}
+			Iterator it = parents.iterator();
+			while (it.hasNext())
+				fPluginTreeViewer.setChecked(it.next(), true);
+			// have to use getCheckedElements() instead of newCheckedPlugins because a new plug-in might have replaced an plug-in model in the original checked list.
+			setCounter(fPluginListViewer.getCheckedElements().length);
+			fPage.getSourceBlock().resetExtensionLocations(getCurrentModels());
+			fReloaded = true;
 		}
 	}
 

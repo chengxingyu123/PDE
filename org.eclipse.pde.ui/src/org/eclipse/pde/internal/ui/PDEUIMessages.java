@@ -17,6 +17,8 @@ public class PDEUIMessages extends NLS {
 
 	public static String AddLibraryDialog_nospaces;
 
+	public static String AddTargetPluginsWizard_windowTitle;
+
 	public static String BaseCheatSheetCreationOperation_0;
 
 	public static String CheatSheetFileWizardPage_0;
@@ -239,6 +241,14 @@ public class PDEUIMessages extends NLS {
 
 	public static String PDETextHover_0;
 
+	public static String ProvisionerListSelectionPage_description;
+
+	public static String ProvisionerListSelectionPage_pageName;
+
+	public static String ProvisionerListSelectionPage_tableLabel;
+
+	public static String ProvisionerListSelectionPage_title;
+
 	public static String RegisterCSOperation_addNewCSExtensionNewPlugin;
 
 	public static String RegisterCSOperation_errorManifestReadOnly;
@@ -410,6 +420,8 @@ public class PDEUIMessages extends NLS {
 	public static String SimpleCSSubItemDetails_3;
 
 	public static String TableSection_itemCount;
+
+	public static String TargetPluginsTab_add;
 
 	public static String UpdateClasspathResolution_label;
 
