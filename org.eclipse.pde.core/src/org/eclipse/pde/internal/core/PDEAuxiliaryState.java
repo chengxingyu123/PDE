@@ -55,6 +55,13 @@ public class PDEAuxiliaryState {
 	private static String ELEMENT_ROOT = "map"; //$NON-NLS-1$
 	
 	private Map fPluginInfos = new HashMap();
+	
+	protected PDEAuxiliaryState() {
+	}
+	
+	protected PDEAuxiliaryState(PDEAuxiliaryState state) {
+		this.fPluginInfos = new HashMap(state.fPluginInfos);
+	}
 
 	class PluginInfo {
 		String name;

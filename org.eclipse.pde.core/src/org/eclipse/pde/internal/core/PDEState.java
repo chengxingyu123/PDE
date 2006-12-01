@@ -22,6 +22,7 @@ import java.util.Map;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
@@ -58,6 +59,15 @@ public class PDEState extends MinimalState {
 	private long fTargetTimestamp;
 	private boolean fNewState;
 	
+	public PDEState(PDEState state) {
+		super(state);
+		fTargetModels = new HashMap(state.fTargetModels);
+		fCombined = false;
+		fTargetTimestamp = state.fTargetTimestamp;
+		fAuxiliaryState = new PDEAuxiliaryState(state.fAuxiliaryState);
+		fExtensionRegistry = new PDEExtensionRegistry(state.fExtensionRegistry);
+	}
+	
 	public PDEState(URL[] urls, boolean resolve, IProgressMonitor monitor) {
 		this(new URL[0], urls, resolve, monitor);
 	}
@@ -73,7 +83,7 @@ public class PDEState extends MinimalState {
 			createNewTargetState(resolve, target, monitor);	
 			fExtensionRegistry.createExtensionDocument(fState);
 		}
-		createTargetModels();
+		createTargetModels(fState.getBundles(), false);
 		
 		if (resolve && workspace.length > 0 && !fNewState && !"true".equals(System.getProperty("pde.nocache"))) //$NON-NLS-1$ //$NON-NLS-2$
 			readWorkspaceState(workspace);
@@ -128,8 +138,12 @@ public class PDEState extends MinimalState {
 		fAuxiliaryState.addAuxiliaryData(desc, manifest, hasBundleStructure);
 	}
 
-	private void createTargetModels() {
-		BundleDescription[] bundleDescriptions = fState.getBundles();
+	public IPluginModelBase[] createTargetModels(BundleDescription[] bundleDescriptions) {
+		return createTargetModels(bundleDescriptions, true);
+	}
+	
+	public IPluginModelBase[] createTargetModels(BundleDescription[] bundleDescriptions, boolean updateTimestamp) {
+		HashMap models = new HashMap((4/3) * bundleDescriptions.length + 1); 
 		for (int i = 0; i < bundleDescriptions.length; i++) {
 			boolean add = true;
 			if (!bundleDescriptions[i].isResolved()) {
@@ -143,9 +157,17 @@ public class PDEState extends MinimalState {
 			}
 			if (add) {
 				BundleDescription desc = bundleDescriptions[i];
-				fTargetModels.put(desc.getSymbolicName(), createExternalModel(desc));
+				IPluginModelBase base = createExternalModel(desc);
+				fTargetModels.put(desc.getSymbolicName(), base);
+				models.put(desc.getSymbolicName(), base);
 			}
 		}
+		if (models.isEmpty())
+			return new IPluginModelBase[0];
+		if (updateTimestamp)
+			// TODO - make sure this accurately updates the timestamp
+			fTargetTimestamp = computeTimestamp(getTargetModels());
+		return (IPluginModelBase[]) models.values().toArray(new IPluginModelBase[models.size()]);
 	}
  	
 	private void readWorkspaceState(URL[] urls) {
@@ -302,8 +324,13 @@ public class PDEState extends MinimalState {
 		URL[] urls = new URL[models.length];
 		for (int i = 0; i < models.length; i++) {
 			try {
-				IProject project = models[i].getUnderlyingResource().getProject();
-				urls[i] = new File(project.getLocation().toString()).toURL();
+				IResource res = models[i].getUnderlyingResource();
+				if (res != null) {
+					IProject project = res.getProject();
+					urls[i] = new File(project.getLocation().toString()).toURL();
+				} else {
+					urls[i] = new File(models[i].getInstallLocation()).toURL();
+				}
 			} catch (MalformedURLException e) {
 			}
 		}
