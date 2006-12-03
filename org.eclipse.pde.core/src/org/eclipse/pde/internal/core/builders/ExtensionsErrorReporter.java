@@ -30,7 +30,7 @@ import org.eclipse.osgi.util.NLS;
 import org.eclipse.pde.core.build.IBuild;
 import org.eclipse.pde.core.plugin.IPluginExtensionPoint;
 import org.eclipse.pde.core.plugin.IPluginModelBase;
-import org.eclipse.pde.internal.core.AbstractModel;
+import org.eclipse.pde.internal.core.AbstractNLModel;
 import org.eclipse.pde.internal.core.ClasspathUtilCore;
 import org.eclipse.pde.internal.core.NLResourceHelper;
 import org.eclipse.pde.internal.core.PDECore;
@@ -455,8 +455,8 @@ public class ExtensionsErrorReporter extends ManifestErrorReporter {
 					PDEMarkerFactory.P_UNTRANSLATED_NODE,
 					element, attr.getName(),
 					PDEMarkerFactory.CAT_NLS);
-		} else if (fModel instanceof AbstractModel) {
-			NLResourceHelper helper = ((AbstractModel)fModel).getNLResourceHelper();
+		} else if (fModel instanceof AbstractNLModel) {
+			NLResourceHelper helper = ((AbstractNLModel)fModel).getNLResourceHelper();
 			if (helper == null || !helper.resourceExists(value)) {
 				report(NLS.bind(PDECoreMessages.Builders_Manifest_key_not_found, value.substring(1)), getLine(element, attr.getName()), severity,
 						PDEMarkerFactory.CAT_NLS); 
@@ -477,8 +477,8 @@ public class ExtensionsErrorReporter extends ManifestErrorReporter {
 					severity,
 					PDEMarkerFactory.P_UNTRANSLATED_NODE,
 					element, null, PDEMarkerFactory.CAT_NLS); 
-		} else if (fModel instanceof AbstractModel) {
-			NLResourceHelper helper = ((AbstractModel)fModel).getNLResourceHelper();
+		} else if (fModel instanceof AbstractNLModel) {
+			NLResourceHelper helper = ((AbstractNLModel)fModel).getNLResourceHelper();
 			if (helper == null || !helper.resourceExists(value)) {
 				report(NLS.bind(PDECoreMessages.Builders_Manifest_key_not_found, value.substring(1)), getLine(element), severity, PDEMarkerFactory.CAT_NLS); 
 			}

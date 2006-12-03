@@ -46,7 +46,7 @@ public class FeatureModelManager {
 	
 	private boolean fReloadExternalNeeded = false;
 
-	private WorkspaceModelManager fWorkspaceManager;
+	private WorkspaceFeatureModelManager fWorkspaceManager;
 
 	private IModelProviderListener fProviderListener;
 
@@ -55,7 +55,7 @@ public class FeatureModelManager {
 	 */
 	private ArrayList fListeners;
 
-	public FeatureModelManager(WorkspaceModelManager wm) {
+	public FeatureModelManager(WorkspaceFeatureModelManager wm) {
 		fWorkspaceManager = wm;
 		fListeners = new ArrayList();
 	}
@@ -88,7 +88,7 @@ public class FeatureModelManager {
 		};
 		fWorkspaceManager.addModelProviderListener(fProviderListener);
 
-		IFeatureModel[] models = fWorkspaceManager.getFeatureModels();
+		IFeatureModel[] models = fWorkspaceManager.getFeatures();
 		for (int i = 0; i < models.length; i++) {
 			// add all workspace models, including invalid or duplicate (save
 			// id, ver)
@@ -118,7 +118,7 @@ public class FeatureModelManager {
 	
 	public IFeatureModel[] getWorkspaceModels() {
 		init();
-		return fWorkspaceManager.getFeatureModels();
+		return fWorkspaceManager.getFeatures();
 	}
 
 	/**

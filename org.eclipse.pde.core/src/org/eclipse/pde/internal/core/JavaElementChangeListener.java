@@ -122,8 +122,9 @@ public class JavaElementChangeListener implements IElementChangedListener {
 	
 	private boolean isInterestingProject(IJavaProject jProject) {
 		IProject project = jProject.getProject();
-		return WorkspaceModelManager.isNonBinaryPluginProject(project)
-				&& !WorkspaceModelManager.hasBundleManifest(project);
+		return WorkspaceModelManager.isPluginProject(project)
+				&& !WorkspaceModelManager.isBinaryProject(project)
+				&& !project.exists(WorkspaceModelManager.MANIFEST_PATH);
 	}
 	
 	private void updateTable(IJavaElement element) {		

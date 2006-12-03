@@ -227,7 +227,7 @@ public class PDEState extends MinimalState {
  		IProject project = PDECore.getWorkspace().getRoot().getProject(projectName);
  		if (!project.exists())
  			return null;
- 		if (WorkspaceModelManager.hasBundleManifest(project)) {
+ 		if (project.exists(WorkspaceModelManager.MANIFEST_PATH)) {
  			BundlePluginModelBase model = null;
  			if (desc.getHost() == null)
  				model = new BundlePluginModel();

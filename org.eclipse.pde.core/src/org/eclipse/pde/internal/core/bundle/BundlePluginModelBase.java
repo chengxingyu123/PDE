@@ -33,7 +33,7 @@ import org.eclipse.pde.core.plugin.IPluginLibrary;
 import org.eclipse.pde.core.plugin.IPluginModelFactory;
 import org.eclipse.pde.core.plugin.IPluginObject;
 import org.eclipse.pde.core.plugin.ISharedExtensionsModel;
-import org.eclipse.pde.internal.core.AbstractModel;
+import org.eclipse.pde.internal.core.AbstractNLModel;
 import org.eclipse.pde.internal.core.NLResourceHelper;
 import org.eclipse.pde.internal.core.PDEManager;
 import org.eclipse.pde.internal.core.ibundle.IBundle;
@@ -42,7 +42,7 @@ import org.eclipse.pde.internal.core.ibundle.IBundlePluginModelBase;
 import org.eclipse.pde.internal.core.plugin.PluginImport;
 import org.eclipse.pde.internal.core.plugin.PluginLibrary;
 
-public abstract class BundlePluginModelBase extends AbstractModel
+public abstract class BundlePluginModelBase extends AbstractNLModel
 		implements IBundlePluginModelBase, IPluginModelFactory {
 	
 	private IBundleModel fBundleModel;

@@ -17,7 +17,7 @@ import javax.xml.parsers.SAXParser;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.pde.core.IModelChangedEvent;
 import org.eclipse.pde.core.ModelChangedEvent;
-import org.eclipse.pde.internal.core.AbstractModel;
+import org.eclipse.pde.internal.core.AbstractNLModel;
 import org.eclipse.pde.internal.core.PDECore;
 import org.eclipse.pde.internal.core.XMLDefaultHandler;
 import org.eclipse.pde.internal.core.ifeature.IFeature;
@@ -28,7 +28,7 @@ import org.w3c.dom.Node;
 import org.xml.sax.SAXException;
 
 public abstract class AbstractFeatureModel
-	extends AbstractModel
+	extends AbstractNLModel
 	implements IFeatureModel {
 	protected transient Feature feature;
 	private transient IFeatureModelFactory factory;

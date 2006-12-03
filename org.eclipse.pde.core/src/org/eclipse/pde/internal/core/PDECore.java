@@ -141,7 +141,7 @@ public class PDECore extends Plugin implements IEnvironmentVariables {
 
 	private PluginModelManager fModelManager;
 	private ExternalModelManager fExternalModelManager;
-	private WorkspaceModelManager fWorkspaceModelManager;
+	private WorkspaceModelManager fWorkspacePluginModelManager;
 	private FeatureModelManager fFeatureModelManager;
 	private TargetDefinitionManager fTargetProfileManager;
 
@@ -314,7 +314,7 @@ public class PDECore extends Plugin implements IEnvironmentVariables {
 	}
 	public WorkspaceModelManager getWorkspaceModelManager() {
 		initializeModels();
-		return fWorkspaceModelManager;
+		return fWorkspacePluginModelManager;
 	}
 	
 	public boolean areModelsInitialized() {
@@ -322,12 +322,13 @@ public class PDECore extends Plugin implements IEnvironmentVariables {
 	}
 
 	private synchronized void initializeModels() {
-		if (fModelManager != null && fExternalModelManager != null && fWorkspaceModelManager != null)
+		if (fModelManager != null && fExternalModelManager != null && fWorkspacePluginModelManager != null)
 			return;
 		fExternalModelManager = new ExternalModelManager();
-		fWorkspaceModelManager = new WorkspaceModelManager();
-		fModelManager = new PluginModelManager(fWorkspaceModelManager, fExternalModelManager);
-		fFeatureModelManager = new FeatureModelManager(fWorkspaceModelManager);
+		fWorkspacePluginModelManager = new WorkspacePluginModelManager();
+		
+		fModelManager = new PluginModelManager(fWorkspacePluginModelManager, fExternalModelManager);
+		fFeatureModelManager = new FeatureModelManager(fWorkspacePluginModelManager);
 		fFeatureRebuilder = new FeatureRebuilder();
 		fFeatureRebuilder.start();
 	}
@@ -393,9 +394,9 @@ public class PDECore extends Plugin implements IEnvironmentVariables {
 			fExternalModelManager.shutdown();
 			fExternalModelManager=null;
 		}
-		if (fWorkspaceModelManager!=null) {
-			fWorkspaceModelManager.shutdown();
-			fWorkspaceModelManager = null;
+		if (fWorkspacePluginModelManager!=null) {
+			fWorkspacePluginModelManager.shutdown();
+			fWorkspacePluginModelManager = null;
 		}
 		if (fTargetProfileManager!=null) {
 			fTargetProfileManager.shutdown();
