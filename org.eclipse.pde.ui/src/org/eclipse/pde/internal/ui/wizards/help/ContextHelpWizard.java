@@ -93,6 +93,7 @@ public class ContextHelpWizard extends Wizard {
 			try {
 				manager.disconnect(fContexts[i].getFullPath(), monitor);
 				dc++;
+				fContexts[i] = null;
 			} catch (CoreException e) {
 				PDEPlugin.log(e);
 			}
@@ -131,6 +132,11 @@ public class ContextHelpWizard extends Wizard {
 	public boolean performCancel() {
 		cleanupBuffers();
 		return super.performCancel();
+	}
+	
+	public void dispose() {
+		cleanupBuffers();
+		super.dispose();
 	}
 	
 	public void addPages() {
