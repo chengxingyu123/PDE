@@ -432,8 +432,8 @@ public class PluginImportWizardDetailedPage extends BaseImportWizardSecondPage {
 			IProject project =
 				(IProject) PDEPlugin.getWorkspace().getRoot().findMember(id);
 			if (project != null
-				&& project.isOpen()
-				&& WorkspaceModelManager.isUnsharedPluginProject(project)) {
+				&& WorkspaceModelManager.isUnsharedProject(project)
+				&& WorkspaceModelManager.isPluginProject(project)) {
 				result.add(fModels[i]);
 			}
 		}

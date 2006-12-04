@@ -62,9 +62,8 @@ public class PluginImportWizardExpressPage extends BaseImportWizardSecondPage {
 			ArrayList result = new ArrayList();
 			PluginModelManager manager = PDECore.getDefault().getModelManager();
 			for (int i = 0; i < projects.length; i++) {
-				if (projects[i].isOpen()
-					&& WorkspaceModelManager.isPluginProject(projects[i])
-					&& !WorkspaceModelManager.isBinaryPluginProject(projects[i])) {
+				if (WorkspaceModelManager.isPluginProject(projects[i])
+					&& !WorkspaceModelManager.isBinaryProject(projects[i])) {
 					IPluginModelBase model = manager.findModel(projects[i]);
 					if (model != null)
 						result.add(model);
@@ -191,9 +190,8 @@ public class PluginImportWizardExpressPage extends BaseImportWizardSecondPage {
 			}
 			if (item instanceof IProject) {
 				IProject project = (IProject) item;
-				if (project.isOpen()
-					&& WorkspaceModelManager.isPluginProject(project)
-					&& !WorkspaceModelManager.isBinaryPluginProject(project)) {
+				if (WorkspaceModelManager.isPluginProject(project)
+					&& !WorkspaceModelManager.isBinaryProject(project)) {
 					IPluginModelBase model = manager.findModel(project);
 					if (model != null)
 						list.add(model);
@@ -232,7 +230,7 @@ public class PluginImportWizardExpressPage extends BaseImportWizardSecondPage {
 				IResource resource = model.getUnderlyingResource();
 				if (resource != null) {
 					IProject project = resource.getProject();
-					if (!WorkspaceModelManager.isUnsharedPluginProject(project)) {
+					if (!WorkspaceModelManager.isUnsharedProject(project)) {
 						result.remove(smodels[i]);
 					}
 				}
