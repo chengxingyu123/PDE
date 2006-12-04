@@ -66,8 +66,9 @@ public class GetNonExternalizedStringsOperation implements IRunnableWithProgress
 				if (elems[i] instanceof IFile)
 					elems[i] = ((IFile) elems[i]).getProject();
 				
-				if (elems[i] instanceof IProject &&
-						!WorkspaceModelManager.isBinaryPluginProject((IProject)elems[i]))
+				if (elems[i] instanceof IProject 
+						&& WorkspaceModelManager.isPluginProject((IProject)elems[i])
+						&& !WorkspaceModelManager.isBinaryProject((IProject)elems[i]))
 					fSelectedModels.add(elems[i]);
 			}
 		
@@ -77,7 +78,7 @@ public class GetNonExternalizedStringsOperation implements IRunnableWithProgress
 			monitor.beginTask(PDEUIMessages.GetNonExternalizedStringsOperation_taskMessage, pluginModels.length);
 			for (int i = 0; i < pluginModels.length && !fCanceled; i++) {
 				IProject project = pluginModels[i].getUnderlyingResource().getProject();
-				if (!WorkspaceModelManager.isBinaryPluginProject(project))
+				if (!WorkspaceModelManager.isBinaryProject(project))
 					getUnExternalizedStrings(project, new SubProgressMonitor(monitor, 1));
 			}
 		}

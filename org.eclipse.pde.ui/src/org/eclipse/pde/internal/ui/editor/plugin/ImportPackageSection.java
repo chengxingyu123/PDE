@@ -495,9 +495,10 @@ public class ImportPackageSection extends TableSection implements IModelChangedL
     			// add un-exported packages in workspace non-binary plug-ins
     			IResource resource = models[i].getUnderlyingResource();
     			IProject project = resource != null ? resource.getProject() : null;
-    			if (project == null || !project.hasNature(JavaCore.NATURE_ID) 
-    				|| WorkspaceModelManager.isBinaryProject(project)
-    				|| !WorkspaceModelManager.hasBundleManifest(project))
+    			if (project == null 
+    					|| !project.hasNature(JavaCore.NATURE_ID) 
+    					|| WorkspaceModelManager.isBinaryProject(project)
+    					|| !project.exists(ICoreConstants.MANIFEST_PATH))
     				continue;
 				IJavaProject jp = JavaCore.create(project);
 				IPackageFragmentRoot[] roots = jp.getPackageFragmentRoots();

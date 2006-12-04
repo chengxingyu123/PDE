@@ -63,12 +63,17 @@ public class UpdateClasspathAction implements IViewActionDelegate {
 				} else if (elem instanceof IJavaProject) {
 					project = ((IJavaProject) elem).getProject();
 				}
-				if (project != null
-						&& WorkspaceModelManager.isJavaPluginProject(project)) {
-					IPluginModelBase model = manager.findModel(project);
-					if (model != null) {
-						models.add(model);
+				try {
+					if (project != null
+							&& WorkspaceModelManager.isPluginProject(project)
+							&& project.hasNature(JavaCore.NATURE_ID)) {
+						IPluginModelBase model = manager.findModel(project);
+						if (model != null) {
+							models.add(model);
+						}
 					}
+				} catch (CoreException e) {
+					PDEPlugin.log(e);
 				}
 			}
 
