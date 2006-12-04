@@ -25,7 +25,7 @@ public class WorkspaceFeatureModelManager extends WorkspaceModelManager {
 	}
 
 	protected void createModel(IProject project, boolean notify) {
-		WorkspaceFeatureModel model = new WorkspaceFeatureModel(project.getFile(FEATURE_PATH));
+		WorkspaceFeatureModel model = new WorkspaceFeatureModel(project.getFile(ICoreConstants.FEATURE_PATH));
 		loadModel(model, false);
 		if (notify)
 			addChange(model, IModelProviderEvent.MODELS_ADDED);
@@ -33,7 +33,7 @@ public class WorkspaceFeatureModelManager extends WorkspaceModelManager {
 	
 	protected void handleFileDelta(IResourceDelta delta) {
 		IFile file = (IFile)delta.getResource();
- 		if (file.getProjectRelativePath().equals(FEATURE_PATH)) {
+ 		if (file.getProjectRelativePath().equals(ICoreConstants.FEATURE_PATH)) {
  			IProject project = file.getProject();
 			Object model = getModel(project);
 			int kind = delta.getKind();

@@ -27,8 +27,6 @@ import org.eclipse.core.resources.IResourceChangeListener;
 import org.eclipse.core.resources.IResourceDelta;
 import org.eclipse.core.resources.IResourceDeltaVisitor;
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IPath;
-import org.eclipse.core.runtime.Path;
 import org.eclipse.pde.core.IModel;
 import org.eclipse.pde.core.IModelProviderEvent;
 import org.eclipse.team.core.RepositoryProvider;
@@ -36,21 +34,16 @@ import org.eclipse.team.core.RepositoryProvider;
 public abstract class WorkspaceModelManager extends AbstractModelManager 
 		implements IResourceChangeListener, IResourceDeltaVisitor {
 	
-	public static IPath MANIFEST_PATH = new Path("META-INF/MANIFEST.MF");
-	public static IPath PLUGIN_PATH = new Path("plugin.xml");
-	public static IPath FRAGMENT_PATH = new Path("fragment.xml");
-	public static IPath FEATURE_PATH = new Path("feature.xml");
-	
 	public static boolean isPluginProject(IProject project) {
 		if (project.isOpen())
-			return project.exists(MANIFEST_PATH)
-				   || project.exists(PLUGIN_PATH)
-				   || project.exists(FRAGMENT_PATH);
+			return project.exists(ICoreConstants.MANIFEST_PATH)
+				   || project.exists(ICoreConstants.PLUGIN_PATH)
+				   || project.exists(ICoreConstants.FRAGMENT_PATH);
 		return false;
 	}
 
 	public static boolean isFeatureProject(IProject project) {
-		return project.isOpen() && project.exists(FEATURE_PATH); 
+		return project.isOpen() && project.exists(ICoreConstants.FEATURE_PATH); 
 	}
 
 	public static boolean isBinaryProject(IProject project) {

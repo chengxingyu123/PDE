@@ -50,21 +50,21 @@ public class PluginModelManager implements IAdaptable {
 	private static final String OSGI_RUNTIME ="org.eclipse.osgi"; //$NON-NLS-1$
 	private IModelProviderListener fProviderListener;
 	private ExternalModelManager fExternalManager;
-	private WorkspaceModelManager fWorkspaceManager;
+	private WorkspacePluginModelManager fWorkspaceManager;
 	private SearchablePluginsManager fSearchablePluginsManager;
 	private ArrayList fListeners;
 	private Map fEntries;
 	
 	private PDEState fState;
 
-	public PluginModelManager(WorkspaceModelManager wm, ExternalModelManager em) {
+	public PluginModelManager() {
 		fProviderListener = new IModelProviderListener() {
 			public void modelsChanged(IModelProviderEvent e) {
 				handleModelsChanged(e);
 			}
 		};
-		fWorkspaceManager = wm;
-		fExternalManager = em;
+		fWorkspaceManager = new WorkspacePluginModelManager();
+		fExternalManager = new ExternalModelManager();
 		fExternalManager.addModelProviderListener(fProviderListener);
 		fWorkspaceManager.addModelProviderListener(fProviderListener);
 		fListeners = new ArrayList();

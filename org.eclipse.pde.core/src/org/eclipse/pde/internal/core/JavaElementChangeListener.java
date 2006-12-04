@@ -124,7 +124,7 @@ public class JavaElementChangeListener implements IElementChangedListener {
 		IProject project = jProject.getProject();
 		return WorkspaceModelManager.isPluginProject(project)
 				&& !WorkspaceModelManager.isBinaryProject(project)
-				&& !project.exists(WorkspaceModelManager.MANIFEST_PATH);
+				&& !project.exists(ICoreConstants.MANIFEST_PATH);
 	}
 	
 	private void updateTable(IJavaElement element) {		

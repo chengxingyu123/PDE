@@ -24,39 +24,33 @@ import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Plugin;
 import org.eclipse.core.runtime.QualifiedName;
 import org.eclipse.core.runtime.Status;
-import org.eclipse.osgi.service.resolver.PlatformAdmin;
 import org.eclipse.pde.core.plugin.IFragmentModel;
 import org.eclipse.pde.core.plugin.IPlugin;
 import org.eclipse.pde.core.plugin.IPluginExtensionPoint;
 import org.eclipse.pde.core.plugin.IPluginModel;
 import org.eclipse.pde.core.plugin.IPluginModelBase;
 import org.eclipse.pde.internal.core.builders.CompilerFlags;
-import org.eclipse.pde.internal.core.builders.FeatureRebuilder;
 import org.eclipse.pde.internal.core.ifeature.IFeature;
 import org.eclipse.pde.internal.core.ifeature.IFeatureModel;
 import org.eclipse.pde.internal.core.schema.SchemaRegistry;
 import org.eclipse.pde.internal.core.util.VersionUtil;
 import org.eclipse.update.configurator.ConfiguratorUtils;
 import org.osgi.framework.BundleContext;
-import org.osgi.util.tracker.ServiceTracker;
 
 public class PDECore extends Plugin implements IEnvironmentVariables {
 	public static final String PLUGIN_ID = "org.eclipse.pde.core"; //$NON-NLS-1$
 	
-	public static final String BINARY_PROJECT_VALUE = "binary"; //$NON-NLS-1$
-	public static final String BINARY_REPOSITORY_PROVIDER =
-		PLUGIN_ID + "." + "BinaryRepositoryProvider"; //$NON-NLS-1$ //$NON-NLS-2$
-
-	public static final String CLASSPATH_CONTAINER_ID =PLUGIN_ID + ".requiredPlugins"; //$NON-NLS-1$
+	public static final String CLASSPATH_CONTAINER_ID = PLUGIN_ID + ".requiredPlugins"; //$NON-NLS-1$
 	public static final String JAVA_SEARCH_CONTAINER_ID = PLUGIN_ID + ".externalJavaSearch"; //$NON-NLS-1$
 
-	public static final String ECLIPSE_HOME_VARIABLE = "ECLIPSE_HOME"; //$NON-NLS-1$
-	public static final QualifiedName EXTERNAL_PROJECT_PROPERTY =
-		new QualifiedName(PLUGIN_ID, "imported"); //$NON-NLS-1$
-	public static final String EXTERNAL_PROJECT_VALUE = "external"; //$NON-NLS-1$
+	public static final String BINARY_PROJECT_VALUE = "binary"; //$NON-NLS-1$
+	public static final String BINARY_REPOSITORY_PROVIDER = PLUGIN_ID + "." + "BinaryRepositoryProvider"; //$NON-NLS-1$ //$NON-NLS-2$
+
+	public static final QualifiedName EXTERNAL_PROJECT_PROPERTY = new QualifiedName(PLUGIN_ID, "imported"); //$NON-NLS-1$
 
 	// Shared instance
 	private static PDECore inst;
+	
 	private static IPluginModelBase[] registryPlugins;
 
 	private static boolean isDevLaunchMode = false;
@@ -140,9 +134,8 @@ public class PDECore extends Plugin implements IEnvironmentVariables {
 	}
 
 	private PluginModelManager fModelManager;
-	private ExternalModelManager fExternalModelManager;
-	private WorkspaceModelManager fWorkspacePluginModelManager;
 	private FeatureModelManager fFeatureModelManager;
+	
 	private TargetDefinitionManager fTargetProfileManager;
 
 	// Schema registry
@@ -154,10 +147,7 @@ public class PDECore extends Plugin implements IEnvironmentVariables {
 	// Tracing options manager
 	private TracingOptionsManager fTracingOptionsManager;
 	private BundleContext fBundleContext;
-	private ServiceTracker fTracker;
 	private JavaElementChangeListener fJavaElementChangeListener;
-
-	private FeatureRebuilder fFeatureRebuilder;
 
 	public PDECore() {
 		inst = this;
@@ -265,12 +255,9 @@ public class PDECore extends Plugin implements IEnvironmentVariables {
 		return (model != null && model.isEnabled()) ? model.getPlugin() : null;
 	}
 
-	public ExternalModelManager getExternalModelManager() {
-		initializeModels();
-		return fExternalModelManager;
-	}
 	public PluginModelManager getModelManager() {
-		initializeModels();
+		if (fModelManager == null)
+			fModelManager = new PluginModelManager();
 		return fModelManager;
 	}
 	
@@ -281,7 +268,8 @@ public class PDECore extends Plugin implements IEnvironmentVariables {
 	}
 	
 	public FeatureModelManager getFeatureModelManager() {
-		initializeModels();
+		if (fFeatureModelManager == null)
+			fFeatureModelManager = new FeatureModelManager();
 		return fFeatureModelManager;
 	}
 	
@@ -312,50 +300,11 @@ public class PDECore extends Plugin implements IEnvironmentVariables {
 			fTracingOptionsManager = new TracingOptionsManager();
 		return fTracingOptionsManager;
 	}
-	public WorkspaceModelManager getWorkspaceModelManager() {
-		initializeModels();
-		return fWorkspacePluginModelManager;
-	}
 	
 	public boolean areModelsInitialized() {
 		return fModelManager != null;
 	}
 
-	private synchronized void initializeModels() {
-		if (fModelManager != null && fExternalModelManager != null && fWorkspacePluginModelManager != null)
-			return;
-		fExternalModelManager = new ExternalModelManager();
-		fWorkspacePluginModelManager = new WorkspacePluginModelManager();
-		
-		fModelManager = new PluginModelManager(fWorkspacePluginModelManager, fExternalModelManager);
-		fFeatureModelManager = new FeatureModelManager(fWorkspacePluginModelManager);
-		fFeatureRebuilder = new FeatureRebuilder();
-		fFeatureRebuilder.start();
-	}
-
-	public void releasePlatform() {
-		if (fTracker == null)
-			return;
-		fTracker.close();
-		fTracker = null;
-	}
-	
-	public PlatformAdmin acquirePlatform() {
-		if (fTracker==null) {
-			fTracker = new ServiceTracker(fBundleContext, PlatformAdmin.class.getName(), null);
-			fTracker.open();
-		}
-		PlatformAdmin result = (PlatformAdmin)fTracker.getService();
-		while (result == null) {
-			try {
-				fTracker.waitForService(1000);
-				result = (PlatformAdmin) fTracker.getService();
-			} catch (InterruptedException ie) {
-			}
-		}
-		return result;
-	}
-	
 	public void start(BundleContext context) throws Exception {
 		super.start(context);
 		fBundleContext = context;
@@ -365,7 +314,7 @@ public class PDECore extends Plugin implements IEnvironmentVariables {
 	}
 
 	public BundleContext getBundleContext() {
-		return this.fBundleContext;
+		return fBundleContext;
 	}
 
 	public void stop(BundleContext context) throws CoreException {
@@ -373,10 +322,6 @@ public class PDECore extends Plugin implements IEnvironmentVariables {
 		if (fJavaElementChangeListener != null) {
 			fJavaElementChangeListener.shutdown();
 			fJavaElementChangeListener = null;
-		}
-		if (fFeatureRebuilder != null) {
-			fFeatureRebuilder.stop();
-			fFeatureRebuilder = null;
 		}
 		if (fSchemaRegistry != null) {
 			fSchemaRegistry.shutdown();
@@ -389,14 +334,6 @@ public class PDECore extends Plugin implements IEnvironmentVariables {
 		if (fFeatureModelManager!=null) {
 			fFeatureModelManager.shutdown();
 			fFeatureModelManager = null;
-		}
-		if (fExternalModelManager!=null) {
-			fExternalModelManager.shutdown();
-			fExternalModelManager=null;
-		}
-		if (fWorkspacePluginModelManager!=null) {
-			fWorkspacePluginModelManager.shutdown();
-			fWorkspacePluginModelManager = null;
 		}
 		if (fTargetProfileManager!=null) {
 			fTargetProfileManager.shutdown();

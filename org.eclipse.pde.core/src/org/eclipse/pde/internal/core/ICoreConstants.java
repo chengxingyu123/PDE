@@ -10,6 +10,8 @@
  *******************************************************************************/
 package org.eclipse.pde.internal.core;
 
+import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.Path;
 import org.osgi.framework.Constants;
 
 public interface ICoreConstants {
@@ -79,4 +81,12 @@ public interface ICoreConstants {
 	public static final String[] EE_TOKENS = new String[] {
 		"wassim", "zx", "cherie", "jlb" //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 	};
+	
+	// Common paths
+	public static IPath MANIFEST_PATH = new Path("META-INF/MANIFEST.MF");
+	public static IPath PLUGIN_PATH = new Path("plugin.xml");
+	public static IPath FRAGMENT_PATH = new Path("fragment.xml");
+	public static IPath FEATURE_PATH = new Path("feature.xml");
+	
+
 }

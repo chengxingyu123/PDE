@@ -55,8 +55,8 @@ public class FeatureModelManager {
 	 */
 	private ArrayList fListeners;
 
-	public FeatureModelManager(WorkspaceFeatureModelManager wm) {
-		fWorkspaceManager = wm;
+	public FeatureModelManager() {
+		fWorkspaceManager = new WorkspaceFeatureModelManager();
 		fListeners = new ArrayList();
 	}
 

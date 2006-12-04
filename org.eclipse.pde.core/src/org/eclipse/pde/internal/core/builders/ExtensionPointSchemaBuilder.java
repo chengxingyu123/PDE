@@ -88,7 +88,7 @@ public class ExtensionPointSchemaBuilder extends IncrementalProjectBuilder {
 	}
 	
 	private boolean isInterestingProject(IProject project) {
-		return PDE.hasPluginNature(project) && !WorkspaceModelManager.isBinaryPluginProject(project);
+		return PDE.hasPluginNature(project) && !WorkspaceModelManager.isBinaryProject(project);
 	}
 
 	private void compileFile(IFile file, IProgressMonitor monitor) {

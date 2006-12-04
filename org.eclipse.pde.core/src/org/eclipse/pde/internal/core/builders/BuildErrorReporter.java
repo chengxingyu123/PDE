@@ -37,11 +37,11 @@ import org.eclipse.pde.core.plugin.IPluginLibrary;
 import org.eclipse.pde.core.plugin.IPluginModelBase;
 import org.eclipse.pde.internal.build.IBuildPropertiesConstants;
 import org.eclipse.pde.internal.core.ClasspathUtilCore;
+import org.eclipse.pde.internal.core.ICoreConstants;
 import org.eclipse.pde.internal.core.ModelEntry;
 import org.eclipse.pde.internal.core.PDECore;
 import org.eclipse.pde.internal.core.PDECoreMessages;
 import org.eclipse.pde.internal.core.PluginModelManager;
-import org.eclipse.pde.internal.core.WorkspaceModelManager;
 import org.eclipse.pde.internal.core.build.WorkspaceBuildModel;
 import org.eclipse.pde.internal.core.ibundle.IBundleFragmentModel;
 import org.eclipse.pde.internal.core.ibundle.IBundleModel;
@@ -182,19 +182,19 @@ public class BuildErrorReporter extends ErrorReporter implements IBuildPropertie
 
 	private void validateBinIncludes(IBuildEntry binIncludes) {
 		// make sure we have a manifest entry
-		if(WorkspaceModelManager.hasBundleManifest(fProject)) {
+		if(fProject.exists(ICoreConstants.MANIFEST_PATH)) {
 			String key = "META-INF/"; //$NON-NLS-1$
 			validateBinIncludes(binIncludes, key);
 		}
 
 		// make sure if we're a fragment, we have a fragment.xml entry
-		if(WorkspaceModelManager.hasFragmentManifest(fProject)) {
+		if(fProject.exists(ICoreConstants.FRAGMENT_PATH)) {
 			String key = "fragment.xml"; //$NON-NLS-1$
 			validateBinIncludes(binIncludes, key);
 		}
 
 		// make sure if we're a plugin, we have a plugin.xml entry
-		if(WorkspaceModelManager.hasPluginManifest(fProject)) {
+		if(fProject.exists(ICoreConstants.PLUGIN_PATH)) {
 			String key = "plugin.xml"; //$NON-NLS-1$
 			validateBinIncludes(binIncludes, key);
 		}

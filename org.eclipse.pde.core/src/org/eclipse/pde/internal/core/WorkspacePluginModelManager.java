@@ -37,8 +37,8 @@ public class WorkspacePluginModelManager extends WorkspaceModelManager {
 
 	protected void createModel(IProject project, boolean notify) {
 		IPluginModelBase model = null;
-		if (project.exists(MANIFEST_PATH)) {
-			WorkspaceBundleModel bmodel = new WorkspaceBundleModel(project.getFile(MANIFEST_PATH));
+		if (project.exists(ICoreConstants.MANIFEST_PATH)) {
+			WorkspaceBundleModel bmodel = new WorkspaceBundleModel(project.getFile(ICoreConstants.MANIFEST_PATH));
 			loadModel(bmodel, false);		
 			if (bmodel.isFragmentModel())
 				model = new BundleFragmentModel();
@@ -47,7 +47,8 @@ public class WorkspacePluginModelManager extends WorkspaceModelManager {
 			model.setEnabled(true);
 			((IBundlePluginModelBase)model).setBundleModel(bmodel);
 			
-			IFile efile = project.getFile(bmodel.isFragmentModel() ? FRAGMENT_PATH : PLUGIN_PATH); 
+			IFile efile = project.getFile(bmodel.isFragmentModel() 
+							? ICoreConstants.FRAGMENT_PATH : ICoreConstants.PLUGIN_PATH); 
 			if (efile.exists()) {
 				WorkspaceExtensionsModel extModel = new WorkspaceExtensionsModel(efile);
 				loadModel(extModel, false);
@@ -55,11 +56,11 @@ public class WorkspacePluginModelManager extends WorkspaceModelManager {
 				extModel.setBundleModel((IBundlePluginModelBase)model);
 			}
 			
-		} else if (project.exists(PLUGIN_PATH)) {
-			model = new WorkspacePluginModel(project.getFile(PLUGIN_PATH), true);
+		} else if (project.exists(ICoreConstants.PLUGIN_PATH)) {
+			model = new WorkspacePluginModel(project.getFile(ICoreConstants.PLUGIN_PATH), true);
 			loadModel(model, false);
-		} else if (project.exists(FRAGMENT_PATH)) {
-			model = new WorkspaceFragmentModel(project.getFile(FRAGMENT_PATH), true);
+		} else if (project.exists(ICoreConstants.FRAGMENT_PATH)) {
+			model = new WorkspaceFragmentModel(project.getFile(ICoreConstants.FRAGMENT_PATH), true);
 			loadModel(model, false);
 		}
 		
@@ -79,10 +80,10 @@ public class WorkspacePluginModelManager extends WorkspaceModelManager {
 			Object model = getModel(file.getProject());
 			if (model != null)
 				addChange(model, IModelProviderEvent.MODELS_CHANGED);
-		} else if (file.getProjectRelativePath().equals(PLUGIN_PATH)
-					|| file.getProjectRelativePath().equals(FRAGMENT_PATH)){
+		} else if (file.getProjectRelativePath().equals(ICoreConstants.PLUGIN_PATH)
+					|| file.getProjectRelativePath().equals(ICoreConstants.FRAGMENT_PATH)){
 			handleExtensionFileDelta(file, delta);
-		} else if (file.getProjectRelativePath().equals(MANIFEST_PATH)) {
+		} else if (file.getProjectRelativePath().equals(ICoreConstants.MANIFEST_PATH)) {
 			handleBundleManifestDelta(file, delta);
 		}
 	}
