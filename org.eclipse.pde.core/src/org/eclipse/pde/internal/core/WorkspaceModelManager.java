@@ -55,10 +55,12 @@ public abstract class WorkspaceModelManager extends AbstractModelManager
 
 	public static boolean isBinaryProject(IProject project) {
 		try {
-			String binary = project.getPersistentProperty(PDECore.EXTERNAL_PROJECT_PROPERTY);
-			if (binary != null) {
-				RepositoryProvider provider = RepositoryProvider.getProvider(project);
-				return provider == null || provider instanceof BinaryRepositoryProvider;
+			if (project.isOpen()) {
+				String binary = project.getPersistentProperty(PDECore.EXTERNAL_PROJECT_PROPERTY);
+				if (binary != null) {
+					RepositoryProvider provider = RepositoryProvider.getProvider(project);
+					return provider == null || provider instanceof BinaryRepositoryProvider;
+				}
 			}
 		} catch (CoreException e) {
 			PDECore.logException(e);
