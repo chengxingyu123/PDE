@@ -2,11 +2,14 @@ package org.eclipse.pde.internal.ui.wizards.provisioner;
 
 import java.io.File;
 
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtension;
 import org.eclipse.core.runtime.IExtensionPoint;
 import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.Platform;
+import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.wizard.IWizardPage;
 import org.eclipse.pde.internal.ui.PDEPlugin;
 import org.eclipse.pde.internal.ui.PDEPluginImages;
 import org.eclipse.pde.internal.ui.PDEUIMessages;
@@ -20,6 +23,7 @@ public class AddTargetPluginsWizard extends NewWizard {
 	private static final String PROVISIONER_POINT = "provisioners"; //$NON-NLS-1$
 	private ProvisionerListSelectionPage fSelectionPage = null;
 	private File[] fDirs = null;
+	private ProvisionerWizard fWizard = null;
 	
 	public AddTargetPluginsWizard() {
 		setDialogSettings(PDEPlugin.getDefault().getDialogSettings());
@@ -29,8 +33,24 @@ public class AddTargetPluginsWizard extends NewWizard {
 
 	public void addPages() {
 		setForcePreviousAndNextButtons(true);
-		fSelectionPage = new ProvisionerListSelectionPage(getAvailableProvisioners());
-		addPage(fSelectionPage);
+		ElementList list = getAvailableProvisioners();
+		if (list.size() == 1) {
+			try {
+				fWizard = (ProvisionerWizard)((WizardElement)list.getChildren()[0]).createExecutableExtension();
+			} catch (CoreException e) {
+				MessageDialog.openError(
+						getContainer().getShell(), 
+						PDEUIMessages.Errors_CreationError, 
+						PDEUIMessages.Errors_CreationError_NoWizard); 
+			}
+			fWizard.addPages();
+			IWizardPage[] pages = fWizard.getPages();
+			for (int i = 0; i < pages.length; i++)
+				addPage(pages[i]);
+		} else {
+			fSelectionPage = new ProvisionerListSelectionPage(getAvailableProvisioners());
+			addPage(fSelectionPage);
+		}
 		super.addPages();
 	}
 	
@@ -66,11 +86,12 @@ public class AddTargetPluginsWizard extends NewWizard {
 	}
 
 	public boolean canFinish() {
-		return getPageCount() > 1 && super.canFinish();
+		return ((fSelectionPage != null && getPageCount() > 1) || fSelectionPage == null) && super.canFinish();
 	}
 
 	public boolean performFinish() {
-		ProvisionerWizard wizard = (ProvisionerWizard)fSelectionPage.getSelectedWizard();
+		ProvisionerWizard wizard = (fSelectionPage != null) ? (ProvisionerWizard)fSelectionPage.getSelectedWizard() :
+			fWizard;
 		if (wizard == null)
 			return true;
 		wizard.performFinish();

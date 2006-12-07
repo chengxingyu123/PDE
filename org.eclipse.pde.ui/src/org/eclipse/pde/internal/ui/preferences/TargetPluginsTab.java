@@ -11,7 +11,6 @@
 package org.eclipse.pde.internal.ui.preferences;
 
 import java.io.File;
-import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -25,15 +24,12 @@ import java.util.StringTokenizer;
 import java.util.Vector;
 
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Preferences;
-import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.SubProgressMonitor;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jface.operation.IRunnableWithProgress;
@@ -45,7 +41,6 @@ import org.eclipse.jface.viewers.IStructuredContentProvider;
 import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.window.Window;
 import org.eclipse.jface.wizard.WizardDialog;
-import org.eclipse.osgi.service.pluginconversion.PluginConversionException;
 import org.eclipse.osgi.service.resolver.BundleDescription;
 import org.eclipse.osgi.service.resolver.State;
 import org.eclipse.osgi.util.NLS;
@@ -659,8 +654,8 @@ public class TargetPluginsTab extends SharedPartWithButtons{
 			public void run() {
 				savePreferences();
 				if (fReloaded) {
-					if (fCurrentState.getState().getResolver() == null) 
-						fCurrentState.getState().setResolver(Platform.getPlatformAdmin().getResolver());
+//					if (fCurrentState.getState().getResolver() == null) 
+//						fCurrentState.getState().setResolver(Platform.getPlatformAdmin().getResolver());
 					EclipseHomeInitializer.resetEclipseHomeVariable();
 					IPluginModelBase[] models = PDECore.getDefault().getModelManager().getWorkspaceModels();
 					for (int i = 0; i < models.length; i++) {
@@ -926,38 +921,52 @@ public class TargetPluginsTab extends SharedPartWithButtons{
 			// no new URLs found/to add
 			return;
 		}
-//		File[] dirsToSearch = new File[dirs.length * 2];
-//		for (int i = 0; i < dirs.length; i++) {
-//			dirsToSearch[2 * i] = dirs[i];
-//			dirsToSearch[2 * i + 1] = new File(dirs[i], "plugins");
-//		}
-//		URL[] pluginLocs = PluginPathFinder.scanLocations(dirsToSearch);
 		for (int i = 0; i < dirs.length; i++) {
+			fAdditionalLocations.add(dirs[i].getPath());
 			File temp = new File(dirs[i], "plugins");
 			if (temp.exists())
 				dirs[i] = temp;
-		}
+		}		
+		
 		URL[] pluginLocs = PluginPathFinder.scanLocations(dirs);
 		Object[] checkedPlugins = null;
 		if (fCurrentState == null) {
 			checkedPlugins = fPluginListViewer.getCheckedElements();
-			fCurrentState = new PDEState(PDECore.getDefault().getModelManager().getState());
+			createCopyState();
 		}
-		ArrayList descriptions = new ArrayList(dirs.length);
-		for (int i = 0; i < pluginLocs.length; i++) {
-			File file = new File(pluginLocs[i].getFile());
-			try {
-				descriptions.add(fCurrentState.addBundle(file, -1));
-			} catch (PluginConversionException e) {
-			} catch (CoreException e) {
-			} catch (IOException e) {
-				PDECore.log(new Status(IStatus.ERROR, PDECore.PLUGIN_ID, IStatus.ERROR,
-						"Invalid manifest format at " + file.getAbsolutePath(), //$NON-NLS-1$
-						null)); 
-			}
+//		ArrayList descriptions = new ArrayList(dirs.length);
+//		for (int i = 0; i < pluginLocs.length; i++) {
+//			File file = new File(pluginLocs[i].getFile());
+//			try {
+//				descriptions.add(fCurrentState.addBundle(file, -1));
+//			} catch (PluginConversionException e) {
+//			} catch (CoreException e) {
+//			} catch (IOException e) {
+//				PDECore.log(new Status(IStatus.ERROR, PDECore.PLUGIN_ID, IStatus.ERROR,
+//						"Invalid manifest format at " + file.getAbsolutePath(), //$NON-NLS-1$
+//						null)); 
+//			}
+//		}
+//		fCurrentState.sgave();
+		BundleDescription[] descriptions = fCurrentState.addAdditionalBundles(pluginLocs);
+		addNewBundles(descriptions, checkedPlugins);
+	}
+	
+	private void createCopyState() {
+		fCurrentState = new PDEState(PDECore.getDefault().getModelManager().getState());
+		fCurrentState.getState().setResolver(Platform.getPlatformAdmin().getResolver());
+		IPluginModelBase[] bases = fCurrentState.getTargetModels();
+		for (int j = 0; j < bases.length; j++) {
+			long bundleId = bases[j].getBundleDescription().getBundleId();
+			BundleDescription newDesc = fCurrentState.getState().getBundle(bundleId);
+			bases[j].setBundleDescription(newDesc);
 		}
-		if (descriptions.size() > 0) {
-			IPluginModelBase[] models = fCurrentState.createTargetModels((BundleDescription[])descriptions.toArray(new BundleDescription[descriptions.size()]));
+	}
+	
+	private void addNewBundles(BundleDescription[] descriptions, Object[] checkedPlugins) {
+		if (descriptions.length > 0) {
+			IPluginModelBase[] models = fCurrentState.createTargetModels(descriptions);
+			fCurrentState.getState().resolve(false);
 			// add new models to tree viewer
 			Set parents = initializeTreeContents(models);
 			
