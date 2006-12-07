@@ -83,7 +83,7 @@ public class PDEState extends MinimalState {
 			createNewTargetState(resolve, target, monitor);	
 			fExtensionRegistry.createExtensionDocument(fState);
 		}
-		createTargetModels(fState.getBundles(), false);
+		createTargetModels(fState.getBundles());
 		
 		if (resolve && workspace.length > 0 && !fNewState && !"true".equals(System.getProperty("pde.nocache"))) //$NON-NLS-1$ //$NON-NLS-2$
 			readWorkspaceState(workspace);
@@ -137,12 +137,8 @@ public class PDEState extends MinimalState {
 	protected void addAuxiliaryData(BundleDescription desc, Dictionary manifest, boolean hasBundleStructure) {
 		fAuxiliaryState.addAuxiliaryData(desc, manifest, hasBundleStructure);
 	}
-
-	public IPluginModelBase[] createTargetModels(BundleDescription[] bundleDescriptions) {
-		return createTargetModels(bundleDescriptions, true);
-	}
 	
-	public IPluginModelBase[] createTargetModels(BundleDescription[] bundleDescriptions, boolean updateTimestamp) {
+	public IPluginModelBase[] createTargetModels(BundleDescription[] bundleDescriptions) {
 		HashMap models = new HashMap((4/3) * bundleDescriptions.length + 1); 
 		for (int i = 0; i < bundleDescriptions.length; i++) {
 			boolean add = true;
@@ -164,9 +160,6 @@ public class PDEState extends MinimalState {
 		}
 		if (models.isEmpty())
 			return new IPluginModelBase[0];
-		if (updateTimestamp)
-			// TODO - make sure this accurately updates the timestamp
-			fTargetTimestamp = computeTimestamp(getTargetModels());
 		return (IPluginModelBase[]) models.values().toArray(new IPluginModelBase[models.size()]);
 	}
  	
@@ -221,8 +214,11 @@ public class PDEState extends MinimalState {
 	}
 	
  	private long computeTimestamp(URL[] urls) {
-		long timestamp = 0;
-		for (int i = 0; i < urls.length; i++) {
+		return computeTimestamp(urls, 0);
+	}
+ 	
+ 	private long computeTimestamp(URL[] urls, long timestamp) {
+ 		for (int i = 0; i < urls.length; i++) {
 			File file = new File(urls[i].getFile());
 			if (file.exists()) {
 				if (file.isFile()) {
@@ -321,6 +317,10 @@ public class PDEState extends MinimalState {
 	}
 	
 	private long computeTimestamp(IPluginModelBase[] models) {
+		return computeTimestamp(getModelsURLs(models));
+	}
+	
+	private URL[] getModelsURLs(IPluginModelBase[] models) {
 		URL[] urls = new URL[models.length];
 		for (int i = 0; i < models.length; i++) {
 			try {
@@ -334,7 +334,7 @@ public class PDEState extends MinimalState {
 			} catch (MalformedURLException e) {
 			}
 		}
-		return computeTimestamp(urls);
+		return urls;
 	}
 	
 	private boolean shouldSaveState(IPluginModelBase[] models) {
@@ -418,6 +418,33 @@ public class PDEState extends MinimalState {
 	
 	public String getProject(long bundleID) {
 		return fAuxiliaryState.getProject(bundleID);	
+	}
+	
+	public BundleDescription[] addAdditionalBundles(URL[] newBundleURLs) {
+		// add new Bundles to the State
+		ArrayList descriptions = new ArrayList(newBundleURLs.length);
+		for (int i = 0; i < newBundleURLs.length; i++) {
+			File file = new File(newBundleURLs[i].getFile());
+			try {
+				descriptions.add(addBundle(file, -1));
+			} catch (PluginConversionException e) {
+			} catch (CoreException e) {
+			} catch (IOException e) {
+				PDECore.log(new Status(IStatus.ERROR, PDECore.PLUGIN_ID, IStatus.ERROR,
+						"Invalid manifest format at " + file.getAbsolutePath(), //$NON-NLS-1$
+						null)); 
+			}
+		}
+		// compute Timestamp and save all new information
+		fTargetTimestamp = computeTimestamp(newBundleURLs, fTargetTimestamp);
+		File dir = new File(DIR, Long.toString(fTargetTimestamp) + ".target"); //$NON-NLS-1$
+		if (!dir.exists())
+			dir.mkdirs();
+		fAuxiliaryState.savePluginInfo(dir);
+		saveState(dir);
+		fExtensionRegistry.saveExtensions(fState, dir);
+		
+		return (BundleDescription[]) descriptions.toArray(new BundleDescription[descriptions.size()]);
 	}
 
 }
