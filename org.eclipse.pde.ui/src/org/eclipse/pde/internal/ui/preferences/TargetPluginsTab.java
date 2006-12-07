@@ -965,8 +965,8 @@ public class TargetPluginsTab extends SharedPartWithButtons{
 	
 	private void addNewBundles(BundleDescription[] descriptions, Object[] checkedPlugins) {
 		if (descriptions.length > 0) {
-			IPluginModelBase[] models = fCurrentState.createTargetModels(descriptions);
 			fCurrentState.getState().resolve(false);
+			IPluginModelBase[] models = fCurrentState.createTargetModels(descriptions);
 			// add new models to tree viewer
 			Set parents = initializeTreeContents(models);
 			
