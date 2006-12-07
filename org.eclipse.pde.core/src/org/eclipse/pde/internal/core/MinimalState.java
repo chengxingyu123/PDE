@@ -79,6 +79,7 @@ public class MinimalState {
 	
 	protected MinimalState(MinimalState state) {
 		this.fState = stateObjectFactory.createState(state.fState);
+		this.fState.setPlatformProperties(state.fState.getPlatformProperties());
 		this.fId = state.fId;
 		this.fEEListChanged = state.fEEListChanged;
 		this.fExecutionEnvironments = state.fExecutionEnvironments;
