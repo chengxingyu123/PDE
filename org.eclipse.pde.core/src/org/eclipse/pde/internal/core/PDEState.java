@@ -22,7 +22,6 @@ import java.util.Map;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
@@ -317,24 +316,15 @@ public class PDEState extends MinimalState {
 	}
 	
 	private long computeTimestamp(IPluginModelBase[] models) {
-		return computeTimestamp(getModelsURLs(models));
-	}
-	
-	private URL[] getModelsURLs(IPluginModelBase[] models) {
 		URL[] urls = new URL[models.length];
 		for (int i = 0; i < models.length; i++) {
 			try {
-				IResource res = models[i].getUnderlyingResource();
-				if (res != null) {
-					IProject project = res.getProject();
-					urls[i] = new File(project.getLocation().toString()).toURL();
-				} else {
-					urls[i] = new File(models[i].getInstallLocation()).toURL();
-				}
+				IProject project = models[i].getUnderlyingResource().getProject();
+				urls[i] = new File(project.getLocation().toString()).toURL();
 			} catch (MalformedURLException e) {
 			}
 		}
-		return urls;
+		return computeTimestamp(urls);
 	}
 	
 	private boolean shouldSaveState(IPluginModelBase[] models) {
