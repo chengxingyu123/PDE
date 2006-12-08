@@ -28,7 +28,6 @@ import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Path;
-import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Preferences;
 import org.eclipse.core.runtime.SubProgressMonitor;
 import org.eclipse.jdt.core.IJavaProject;
@@ -654,8 +653,6 @@ public class TargetPluginsTab extends SharedPartWithButtons{
 			public void run() {
 				savePreferences();
 				if (fReloaded) {
-//					if (fCurrentState.getState().getResolver() == null) 
-//						fCurrentState.getState().setResolver(Platform.getPlatformAdmin().getResolver());
 					EclipseHomeInitializer.resetEclipseHomeVariable();
 					IPluginModelBase[] models = PDECore.getDefault().getModelManager().getWorkspaceModels();
 					for (int i = 0; i < models.length; i++) {
@@ -934,27 +931,12 @@ public class TargetPluginsTab extends SharedPartWithButtons{
 			checkedPlugins = fPluginListViewer.getCheckedElements();
 			createCopyState();
 		}
-//		ArrayList descriptions = new ArrayList(dirs.length);
-//		for (int i = 0; i < pluginLocs.length; i++) {
-//			File file = new File(pluginLocs[i].getFile());
-//			try {
-//				descriptions.add(fCurrentState.addBundle(file, -1));
-//			} catch (PluginConversionException e) {
-//			} catch (CoreException e) {
-//			} catch (IOException e) {
-//				PDECore.log(new Status(IStatus.ERROR, PDECore.PLUGIN_ID, IStatus.ERROR,
-//						"Invalid manifest format at " + file.getAbsolutePath(), //$NON-NLS-1$
-//						null)); 
-//			}
-//		}
-//		fCurrentState.sgave();
 		BundleDescription[] descriptions = fCurrentState.addAdditionalBundles(pluginLocs);
 		addNewBundles(descriptions, checkedPlugins);
 	}
 	
 	private void createCopyState() {
 		fCurrentState = new PDEState(PDECore.getDefault().getModelManager().getState());
-		fCurrentState.getState().setResolver(Platform.getPlatformAdmin().getResolver());
 		IPluginModelBase[] bases = fCurrentState.getTargetModels();
 		for (int j = 0; j < bases.length; j++) {
 			long bundleId = bases[j].getBundleDescription().getBundleId();
@@ -965,7 +947,6 @@ public class TargetPluginsTab extends SharedPartWithButtons{
 	
 	private void addNewBundles(BundleDescription[] descriptions, Object[] checkedPlugins) {
 		if (descriptions.length > 0) {
-			fCurrentState.getState().resolve(false);
 			IPluginModelBase[] models = fCurrentState.createTargetModels(descriptions);
 			// add new models to tree viewer
 			Set parents = initializeTreeContents(models);
@@ -976,7 +957,6 @@ public class TargetPluginsTab extends SharedPartWithButtons{
 			if (checkedPlugins == null) {
 				for (int i = 0; i < models.length; i++) {
 					fPluginListViewer.setChecked(models[i], true);
-					// TODO - trying to only call setSubTreeChecked if we can find all the directories???
 					fPluginTreeViewer.setChecked(models[i], true);
 				}
 			} else {
