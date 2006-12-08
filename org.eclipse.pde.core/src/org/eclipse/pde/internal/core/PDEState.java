@@ -136,7 +136,7 @@ public class PDEState extends MinimalState {
 	protected void addAuxiliaryData(BundleDescription desc, Dictionary manifest, boolean hasBundleStructure) {
 		fAuxiliaryState.addAuxiliaryData(desc, manifest, hasBundleStructure);
 	}
-	
+
 	public IPluginModelBase[] createTargetModels(BundleDescription[] bundleDescriptions) {
 		HashMap models = new HashMap((4/3) * bundleDescriptions.length + 1); 
 		for (int i = 0; i < bundleDescriptions.length; i++) {
@@ -433,6 +433,9 @@ public class PDEState extends MinimalState {
 		fAuxiliaryState.savePluginInfo(dir);
 		saveState(dir);
 		fExtensionRegistry.saveExtensions(fState, dir);
+		
+		// resolve state - same steps as when populating a new State
+		resolveState(false);
 		
 		return (BundleDescription[]) descriptions.toArray(new BundleDescription[descriptions.size()]);
 	}
