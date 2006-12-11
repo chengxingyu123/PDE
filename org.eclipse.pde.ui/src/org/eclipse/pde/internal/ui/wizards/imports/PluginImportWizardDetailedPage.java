@@ -144,7 +144,7 @@ public class PluginImportWizardDetailedPage extends BaseImportWizardSecondPage {
 		fAvailableListViewer = new TableViewer(table);
 		fAvailableListViewer.setLabelProvider(PDEPlugin.getDefault().getLabelProvider());
 		fAvailableListViewer.setContentProvider(new ContentProvider());
-		fAvailableListViewer.setInput(PDECore.getDefault().getExternalModelManager());
+		fAvailableListViewer.setInput(PDECore.getDefault().getModelManager());
 		fAvailableListViewer.setComparator(ListUtil.PLUGIN_COMPARATOR);
 
 		return container;

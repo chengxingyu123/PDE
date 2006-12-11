@@ -39,12 +39,16 @@ public class PluginExportWizardPage extends BaseExportWizardPage {
 			PDEUIMessages.ExportWizard_Plugin_pageBlock); 
 		setTitle(PDEUIMessages.ExportWizard_Plugin_pageTitle); 
 	}
+	
+	protected Object getInput() {
+		return PDECore.getDefault().getModelManager();
+	}
 
 	public Object[] getListElements() {
 		IProject[] projects = ResourcesPlugin.getWorkspace().getRoot().getProjects();
 		ArrayList result = new ArrayList();
 		for (int i = 0; i < projects.length; i++) {
-			if (!WorkspaceModelManager.isBinaryPluginProject(projects[i])
+			if (!WorkspaceModelManager.isBinaryProject(projects[i])
 				&& WorkspaceModelManager.isPluginProject(projects[i])) {
 				IModel model = PDECore.getDefault().getModelManager().findModel(projects[i]);
 				if (model != null && isValidModel(model) && hasBuildProperties((IPluginModelBase)model)) {

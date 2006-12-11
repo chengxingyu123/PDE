@@ -250,7 +250,7 @@ public class TargetPluginsTab extends SharedPartWithButtons{
 		fChangedModels.clear();
 		if (type != 0) {
 			ExternalModelManager registry =
-				PDECore.getDefault().getExternalModelManager();
+				PDECore.getDefault().getModelManager().getExternalModelManager();
 			ModelProviderEvent event =
 				new ModelProviderEvent(
 					registry,
@@ -561,8 +561,8 @@ public class TargetPluginsTab extends SharedPartWithButtons{
 			} catch (InvocationTargetException e) {
 			} catch (InterruptedException e) {
 			}
-			fPluginListViewer.setInput(PDECore.getDefault().getExternalModelManager());
-			fPluginTreeViewer.setInput(PDECore.getDefault().getExternalModelManager());
+			fPluginListViewer.setInput(PDECore.getDefault().getModelManager().getExternalModelManager());
+			fPluginTreeViewer.setInput(PDECore.getDefault().getModelManager().getExternalModelManager());
 			fChangedModels.clear();
 			handleSelectAll(true);
 			if (fTreeViewerContents.size() > 1)
@@ -584,7 +584,7 @@ public class TargetPluginsTab extends SharedPartWithButtons{
 			return;
 		
 		fPluginTreeViewer.setUseHashlookup(true);
-		ExternalModelManager manager = PDECore.getDefault().getExternalModelManager();
+		ExternalModelManager manager = PDECore.getDefault().getModelManager().getExternalModelManager();
 		fPluginListViewer.setInput(manager);
 		fPluginTreeViewer.setInput(manager);
 		IPluginModelBase[] allModels = getCurrentModels();
@@ -661,7 +661,7 @@ public class TargetPluginsTab extends SharedPartWithButtons{
 						fCurrentState.resolveState(true);
 					updateModels();
 					computeDelta();
-					PDECore.getDefault().getExternalModelManager().setModels(fCurrentState.getTargetModels());
+					PDECore.getDefault().getModelManager().getExternalModelManager().setModels(fCurrentState.getTargetModels());
 					PDECore.getDefault().getModelManager().setState(fCurrentState);
 					PDECore.getDefault().getFeatureModelManager().targetReloaded();				
 				} else {
