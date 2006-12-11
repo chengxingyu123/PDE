@@ -46,9 +46,8 @@ import org.eclipse.pde.core.plugin.IPluginModelBase;
 import org.eclipse.pde.internal.core.util.VersionUtil;
 import org.osgi.framework.Version;
 
-public class PluginModelManager implements IAdaptable {
+public class PluginModelManager implements IAdaptable, IModelProviderListener {
 	private static final String OSGI_RUNTIME ="org.eclipse.osgi"; //$NON-NLS-1$
-	private IModelProviderListener fProviderListener;
 	private ExternalModelManager fExternalManager;
 	private WorkspacePluginModelManager fWorkspaceManager;
 	private SearchablePluginsManager fSearchablePluginsManager;
@@ -58,15 +57,10 @@ public class PluginModelManager implements IAdaptable {
 	private PDEState fState;
 
 	public PluginModelManager() {
-		fProviderListener = new IModelProviderListener() {
-			public void modelsChanged(IModelProviderEvent e) {
-				handleModelsChanged(e);
-			}
-		};
 		fWorkspaceManager = new WorkspacePluginModelManager();
 		fExternalManager = new ExternalModelManager();
-		fExternalManager.addModelProviderListener(fProviderListener);
-		fWorkspaceManager.addModelProviderListener(fProviderListener);
+		fExternalManager.addModelProviderListener(this);
+		fWorkspaceManager.addModelProviderListener(this);
 		fListeners = new ArrayList();
 		fSearchablePluginsManager = new SearchablePluginsManager(this);
 	}
@@ -168,13 +162,13 @@ public class PluginModelManager implements IAdaptable {
 	
 	public ModelEntry findEntry(IProject project) {
 		initializeTable();
-		IPluginModelBase model = fWorkspaceManager.getModel(project);
+		IPluginModelBase model = fWorkspaceManager.getPluginModel(project);
 		return model == null ? null : findEntry(model.getPluginBase().getId());
 	}
 	
 	public IPluginModelBase findModel(IProject project) {
-		ModelEntry entry = findEntry(project);
-		return (entry != null) ? entry.getActiveModel() : null;
+		initializeTable();
+		return fWorkspaceManager.getPluginModel(project);
 	}
 	
 	public IPluginModelBase findModel(BundleDescription desc) {
@@ -208,7 +202,8 @@ public class PluginModelManager implements IAdaptable {
 		return (model != null && model instanceof IFragmentModel) ? (IFragmentModel)model : null;
 	}
 	
-	private void handleModelsChanged(IModelProviderEvent e) {
+	
+	public void modelsChanged(IModelProviderEvent e) {
 		PluginModelDelta delta = new PluginModelDelta();
 		boolean javaSearchAffected = false;
 		if ((e.getEventTypes() & IModelProviderEvent.MODELS_REMOVED) != 0) {
@@ -442,7 +437,7 @@ public class PluginModelManager implements IAdaptable {
 			fWorkspaceManager.initializeModels(models);
 			addToTable(models, true);
 		} else {
-			addToTable(fWorkspaceManager.getAllModels(), true);			
+			addToTable(fWorkspaceManager.getPluginModels(), true);			
 			addWorkspaceBundlesToNewState();
 		}
 		fSearchablePluginsManager.initialize();
@@ -476,7 +471,7 @@ public class PluginModelManager implements IAdaptable {
 	}
 		
 	private void addWorkspaceBundlesToNewState() {
-		IPluginModelBase[] models = fWorkspaceManager.getAllModels();
+		IPluginModelBase[] models = fWorkspaceManager.getPluginModels();
 		for (int i = 0; i < models.length; i++) {
 			addWorkspaceBundleToState(models[i]);
 		}
@@ -529,10 +524,8 @@ public class PluginModelManager implements IAdaptable {
 	}
 
 	public void shutdown() {
-		if (fWorkspaceManager != null)	
-			fWorkspaceManager.removeModelProviderListener(fProviderListener);
-		if (fExternalManager != null)
-			fExternalManager.removeModelProviderListener(fProviderListener);
+		fWorkspaceManager.shutdown();
+		fExternalManager.shutdown();
 		if (fState != null)
 			fState.shutdown();
 		fSearchablePluginsManager.shutdown();
@@ -586,6 +579,10 @@ public class PluginModelManager implements IAdaptable {
 	
 	public IPluginModelBase[] getWorkspaceModels() {
 		initializeTable();
-		return fWorkspaceManager.getAllModels();
+		return fWorkspaceManager.getPluginModels();
+	}
+	
+	public ExternalModelManager getExternalModelManager() {
+		return fExternalManager;
 	}
 }

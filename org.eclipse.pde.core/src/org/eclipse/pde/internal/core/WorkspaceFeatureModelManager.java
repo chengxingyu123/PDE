@@ -59,9 +59,13 @@ public class WorkspaceFeatureModelManager extends WorkspaceModelManager {
 		super.removeListeners();
 	}
 	
-	public IFeatureModel[] getFeatures() {
+	public IFeatureModel[] getFeatureModels() {
 		initialize();
 		return (IFeatureModel[])fModels.values().toArray(new IFeatureModel[fModels.size()]);
+	}
+	
+	public IFeatureModel getFeatureModel(IProject project) {
+		return (IFeatureModel)getModel(project);
 	}
 
 }

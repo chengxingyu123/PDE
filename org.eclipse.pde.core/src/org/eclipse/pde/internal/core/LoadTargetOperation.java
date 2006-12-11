@@ -214,7 +214,7 @@ public class LoadTargetOperation implements IWorkspaceRunnable {
 			IPluginModelBase[] changed = handlePluginSelection(core.getModelManager().getState(), core.getFeatureModelManager(),
 					pref, new SubProgressMonitor(monitor,85));
 			if (changed.length > 0) {
-				ExternalModelManager pluginManager = core.getExternalModelManager();
+				ExternalModelManager pluginManager = core.getModelManager().getExternalModelManager();
 				pluginManager.fireModelProviderEvent(
 						new ModelProviderEvent(
 							pluginManager,
@@ -281,7 +281,7 @@ public class LoadTargetOperation implements IWorkspaceRunnable {
 		handlePluginSelection(state, features, pref, new SubProgressMonitor(monitor,25));
 		
 		IPluginModelBase[] targetModels = state.getTargetModels();
-		ExternalModelManager pluginManager = PDECore.getDefault().getExternalModelManager();
+		ExternalModelManager pluginManager = PDECore.getDefault().getModelManager().getExternalModelManager();
 		pluginManager.fireModelProviderEvent(
 				new ModelProviderEvent(
 					pluginManager,

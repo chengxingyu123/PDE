@@ -10,6 +10,9 @@
  *******************************************************************************/
 package org.eclipse.pde.internal.core;
 
+import java.util.Collections;
+import java.util.HashMap;
+
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
@@ -150,6 +153,15 @@ public class WorkspacePluginModelManager extends WorkspaceModelManager {
 		return model;
 	}
 	
+	public IPluginModelBase getPluginModel(IProject project) {
+		return (IPluginModelBase)getModel(project);
+	}
+	
+	public IPluginModelBase[] getPluginModels() {
+		initialize();
+		return (IPluginModelBase[])fModels.values().toArray(new IPluginModelBase[fModels.size()]);
+	}
+	
 	protected void addListeners() {
 		IWorkspace workspace = PDECore.getWorkspace();
 		workspace.addResourceChangeListener(this, IResourceChangeEvent.PRE_CLOSE);
@@ -164,6 +176,15 @@ public class WorkspacePluginModelManager extends WorkspaceModelManager {
 	
 	protected boolean isInterestingFolder(IFolder folder) {
 		return folder.getName().equals("META-INF") && folder.getParent() instanceof IProject; //$NON-NLS-1$;
+	}
+	
+	protected void initializeModels(IPluginModelBase[] models) {
+		fModels = Collections.synchronizedMap(new HashMap());		
+		for (int i = 0; i < models.length; i++) {
+			IProject project = models[i].getUnderlyingResource().getProject();
+			fModels.put(project, models[i]);
+		}
+		addListeners();
 	}
 	
 }

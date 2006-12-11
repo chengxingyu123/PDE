@@ -183,6 +183,7 @@ public class ExternalModelManager {
 		}
 		
 		PDECore.getDefault().savePluginPreferences();
+		fListeners.clear();
 	}
 	
 }

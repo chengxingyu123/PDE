@@ -13,6 +13,8 @@ package org.eclipse.pde.internal.core;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -27,6 +29,7 @@ import org.eclipse.core.resources.IResourceChangeListener;
 import org.eclipse.core.resources.IResourceDelta;
 import org.eclipse.core.resources.IResourceDeltaVisitor;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.pde.core.IModel;
 import org.eclipse.pde.core.IModelProviderEvent;
 import org.eclipse.team.core.RepositoryProvider;
@@ -63,6 +66,23 @@ public abstract class WorkspaceModelManager extends AbstractModelManager
 	
 	public static boolean isUnsharedProject(IProject project) {
 		return RepositoryProvider.getProvider(project) == null || isBinaryProject(project);
+	}
+
+	public static URL[] getPluginPaths() {
+		ArrayList list = new ArrayList();
+		IProject[] projects = PDECore.getWorkspace().getRoot().getProjects();
+		for (int i = 0; i < projects.length; i++) {
+			if (isPluginProject(projects[i])) {			
+				try {
+					IPath path = projects[i].getLocation();
+					if (path != null) {
+						list.add(path.toFile().toURL());
+					}
+				} catch (MalformedURLException e) {
+				}
+			}
+		}
+		return (URL[])list.toArray(new URL[list.size()]);
 	}
 
 	class ModelChange {

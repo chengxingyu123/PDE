@@ -15,6 +15,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
+import org.eclipse.core.resources.IProject;
 import org.eclipse.pde.core.IModel;
 import org.eclipse.pde.core.IModelProviderEvent;
 import org.eclipse.pde.core.IModelProviderListener;
@@ -88,7 +89,7 @@ public class FeatureModelManager {
 		};
 		fWorkspaceManager.addModelProviderListener(fProviderListener);
 
-		IFeatureModel[] models = fWorkspaceManager.getFeatures();
+		IFeatureModel[] models = fWorkspaceManager.getFeatureModels();
 		for (int i = 0; i < models.length; i++) {
 			// add all workspace models, including invalid or duplicate (save
 			// id, ver)
@@ -118,7 +119,12 @@ public class FeatureModelManager {
 	
 	public IFeatureModel[] getWorkspaceModels() {
 		init();
-		return fWorkspaceManager.getFeatures();
+		return fWorkspaceManager.getFeatureModels();
+	}
+	
+	public IFeatureModel getFeatureModel(IProject project) {
+		init();
+		return fWorkspaceManager.getFeatureModel(project);
 	}
 
 	/**

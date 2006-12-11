@@ -18,6 +18,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.SubProgressMonitor;
 import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.pde.internal.core.FeatureModelManager;
 import org.eclipse.pde.internal.core.IFeatureModelDelta;
 import org.eclipse.pde.internal.core.IFeatureModelListener;
 import org.eclipse.pde.internal.core.IPluginModelListener;
@@ -75,7 +76,8 @@ public class FeatureRebuilder implements IFeatureModelListener, IPluginModelList
 	}
 	
 	private void touchFeatures() {
-		IFeatureModel[] workspaceFeatures = PDECore.getDefault().getWorkspaceModelManager().getFeatureModels();
+		FeatureModelManager manager = PDECore.getDefault().getFeatureModelManager();
+		IFeatureModel[] workspaceFeatures = manager.getWorkspaceModels();
 		if (workspaceFeatures.length > 0) {
 			IProgressMonitor monitor = new NullProgressMonitor();
 			monitor.beginTask("", workspaceFeatures.length); //$NON-NLS-1$
