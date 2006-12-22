@@ -19,8 +19,8 @@ import org.eclipse.osgi.util.NLS;
 import org.eclipse.pde.core.plugin.IPluginModel;
 import org.eclipse.pde.core.plugin.IPluginModelBase;
 import org.eclipse.pde.internal.core.PDECore;
-import org.eclipse.pde.internal.core.ifeature.IFeature;
 import org.eclipse.pde.internal.core.PDECoreMessages;
+import org.eclipse.pde.internal.core.ifeature.IFeatureModel;
 import org.eclipse.pde.internal.core.util.CoreUtility;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
@@ -403,8 +403,8 @@ public class FeatureErrorReporter extends ManifestErrorReporter {
 	private void validateFeatureID(Element element, Attr attr) {
 		int severity = CompilerFlags.getFlag(fProject, CompilerFlags.F_UNRESOLVED_FEATURES);
 		if (severity != CompilerFlags.IGNORE) {
-			IFeature feature = PDECore.getDefault().findFeature(attr.getValue());	
-			if (feature == null) {
+			IFeatureModel[] models = PDECore.getDefault().getFeatureModelManager().findFeatureModels(attr.getValue());
+			if (models.length == 0) {
 				report(NLS.bind(PDECoreMessages.Builders_Feature_freference, attr.getValue()),  
 						getLine(element, attr.getName()),
 						severity,

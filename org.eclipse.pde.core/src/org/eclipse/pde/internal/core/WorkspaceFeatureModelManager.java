@@ -10,6 +10,8 @@
  *******************************************************************************/
 package org.eclipse.pde.internal.core;
 
+import java.util.HashMap;
+
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResourceChangeEvent;
@@ -25,10 +27,15 @@ public class WorkspaceFeatureModelManager extends WorkspaceModelManager {
 	}
 
 	protected void createModel(IProject project, boolean notify) {
-		WorkspaceFeatureModel model = new WorkspaceFeatureModel(project.getFile(ICoreConstants.FEATURE_PATH));
-		loadModel(model, false);
-		if (notify)
-			addChange(model, IModelProviderEvent.MODELS_ADDED);
+		if (project.exists(ICoreConstants.FEATURE_PATH)) {
+			WorkspaceFeatureModel model = new WorkspaceFeatureModel(project.getFile(ICoreConstants.FEATURE_PATH));
+			loadModel(model, false);
+			if (fModels == null)
+				fModels = new HashMap();
+			fModels.put(project, model);
+			if (notify)
+				addChange(model, IModelProviderEvent.MODELS_ADDED);
+		}
 	}
 	
 	protected void handleFileDelta(IResourceDelta delta) {

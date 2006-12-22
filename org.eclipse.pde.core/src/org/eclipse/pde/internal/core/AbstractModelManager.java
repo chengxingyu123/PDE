@@ -13,17 +13,12 @@ package org.eclipse.pde.internal.core;
 import java.util.ArrayList;
 import java.util.Iterator;
 
-import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.pde.core.IModelProviderListener;
 
-public abstract class AbstractModelManager implements IAdaptable {
+public abstract class AbstractModelManager {
 	
 	private ArrayList fListeners = new ArrayList();
 
-	public Object getAdapter(Class adapter) {
-		return null;
-	}
-	
 	protected abstract void initialize();
 	
 	/* (non-Javadoc)

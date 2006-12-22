@@ -70,8 +70,13 @@ public class WorkspacePluginModelManager extends WorkspaceModelManager {
 		if (project.getFile(".options").exists()) //$NON-NLS-1$
 			PDECore.getDefault().getTracingOptionsManager().reset();
 
-		if (model != null && notify)
-			addChange(model, IModelProviderEvent.MODELS_ADDED);
+		if (model != null) {
+			if (fModels == null) 
+				fModels = new HashMap();
+			fModels.put(project, model);
+			if (notify)
+				addChange(model, IModelProviderEvent.MODELS_ADDED);
+		}
 	}
 	
 	protected void handleFileDelta(IResourceDelta delta) {

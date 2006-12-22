@@ -38,7 +38,7 @@ public abstract class AbstractNLModel extends AbstractModel {
 		if (fNLHelper == null)
 			fNLHelper = createNLResourceHelper();
 		
-		return fNLHelper != null ? fNLHelper.getResourceString(key) : null;
+		return fNLHelper != null ? fNLHelper.getResourceString(key) : key;
 	}
 	
 	protected abstract NLResourceHelper createNLResourceHelper();

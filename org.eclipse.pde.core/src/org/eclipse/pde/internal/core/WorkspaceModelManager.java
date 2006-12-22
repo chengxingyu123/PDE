@@ -169,8 +169,8 @@ public abstract class WorkspaceModelManager extends AbstractModelManager
 			IResource resource = delta.getResource();
 			if (resource instanceof IProject) {
 				IProject project = (IProject) resource;
-				if (delta.getKind() == IResourceDelta.ADDED 
-						|| (project.isOpen() && (delta.getFlags()&IResourceDelta.OPEN) != 0)) {
+				if (isInterestingProject(project) 
+						&& (delta.getKind() == IResourceDelta.ADDED || (delta.getFlags() & IResourceDelta.OPEN) != 0)) {
 					createModel(project, true);
 					return false;
 				} else if (delta.getKind() == IResourceDelta.REMOVED) {

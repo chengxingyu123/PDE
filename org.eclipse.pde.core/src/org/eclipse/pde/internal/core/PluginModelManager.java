@@ -209,7 +209,6 @@ public class PluginModelManager implements IAdaptable, IModelProviderListener {
 		if ((e.getEventTypes() & IModelProviderEvent.MODELS_REMOVED) != 0) {
 			IModel[] removed = e.getRemovedModels();
 			for (int i = 0; i < removed.length; i++) {
-				if (!(removed[i] instanceof IPluginModelBase)) continue;
 				IPluginModelBase model = (IPluginModelBase) removed[i];
 				IPluginBase plugin = model.getPluginBase();
 				ModelEntry entry = updateTable(plugin.getId(), model, false, delta);
@@ -220,7 +219,6 @@ public class PluginModelManager implements IAdaptable, IModelProviderListener {
 		if ((e.getEventTypes() & IModelProviderEvent.MODELS_ADDED) != 0) {
 			IModel[] added = e.getAddedModels();
 			for (int i = 0; i < added.length; i++) {
-				if (!(added[i] instanceof IPluginModelBase)) continue;
 				IPluginModelBase model = (IPluginModelBase) added[i];
 				IPluginBase plugin = model.getPluginBase();
 				ModelEntry entry = updateTable(plugin.getId(), model, true, delta);
@@ -231,7 +229,6 @@ public class PluginModelManager implements IAdaptable, IModelProviderListener {
 		if ((e.getEventTypes() & IModelProviderEvent.MODELS_CHANGED) != 0) {
 			IModel[] changed = e.getChangedModels();
 			for (int i = 0; i < changed.length; i++) {
-				if (!(changed[i] instanceof IPluginModelBase)) continue;
 				IPluginModelBase model = (IPluginModelBase) changed[i];
 				BundleDescription desc = model.getBundleDescription();
 				String oldID = desc == null ? null : desc.getSymbolicName();

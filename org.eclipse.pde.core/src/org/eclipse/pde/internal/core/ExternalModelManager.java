@@ -32,35 +32,13 @@ public class ExternalModelManager {
 	public static String computeDefaultPlatformPath() {
 		URL installURL = Platform.getInstallLocation().getURL();
 		IPath ppath = new Path(installURL.getFile()).removeTrailingSeparator();
-		return getCorrectPath(ppath.toOSString());
+		return ppath.toOSString();
 	}
 	
 	public static boolean isTargetEqualToHost(String platformPath) {
 		return arePathsEqual(new Path(platformPath), new Path(computeDefaultPlatformPath()));
 	}
 	
-	private static String getCorrectPath(String path) {
-		StringBuffer buf = new StringBuffer();
-		for (int i = 0; i < path.length(); i++) {
-			char c = path.charAt(i);
-			if (Platform.getOS().equals("win32")) { //$NON-NLS-1$
-				if (i == 0 && c == '/')
-					continue;
-			}
-			// Some VMs may return %20 instead of a space
-			if (c == '%' && i + 2 < path.length()) {
-				char c1 = path.charAt(i + 1);
-				char c2 = path.charAt(i + 2);
-				if (c1 == '2' && c2 == '0') {
-					i += 2;
-					buf.append(" "); //$NON-NLS-1$
-					continue;
-				}
-			}
-			buf.append(c);
-		}
-		return buf.toString();
-	}	
 	public static IPath getEclipseHome() {
 		Preferences preferences = PDECore.getDefault().getPluginPreferences();
 		return new Path(preferences.getString(ICoreConstants.PLATFORM_PATH));

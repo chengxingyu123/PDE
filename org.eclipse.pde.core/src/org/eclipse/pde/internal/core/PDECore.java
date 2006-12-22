@@ -30,6 +30,7 @@ import org.eclipse.pde.core.plugin.IPluginExtensionPoint;
 import org.eclipse.pde.core.plugin.IPluginModel;
 import org.eclipse.pde.core.plugin.IPluginModelBase;
 import org.eclipse.pde.internal.core.builders.CompilerFlags;
+import org.eclipse.pde.internal.core.builders.FeatureRebuilder;
 import org.eclipse.pde.internal.core.ifeature.IFeature;
 import org.eclipse.pde.internal.core.ifeature.IFeatureModel;
 import org.eclipse.pde.internal.core.schema.SchemaRegistry;
@@ -149,6 +150,8 @@ public class PDECore extends Plugin implements IEnvironmentVariables {
 	private BundleContext fBundleContext;
 	private JavaElementChangeListener fJavaElementChangeListener;
 
+	private FeatureRebuilder fFeatureRebuilder;
+
 	public PDECore() {
 		inst = this;
 	}
@@ -204,18 +207,6 @@ public class PDECore extends Plugin implements IEnvironmentVariables {
 			if (VersionUtil.compare(id, version, pid, pversion, match))
 				return feature;
 		}
-		return null;
-	}
-
-	/**
-	 * Finds a feature with the given ID, any version
-	 * @param id
-	 * @return IFeature or null
-	 */
-	public IFeature findFeature(String id) {
-		IFeatureModel[] models = getFeatureModelManager().findFeatureModels(id);
-		if (models.length > 0)
-			return models[0].getFeature();
 		return null;
 	}
 
@@ -311,6 +302,8 @@ public class PDECore extends Plugin implements IEnvironmentVariables {
 		CompilerFlags.initializeDefaults();
 		fJavaElementChangeListener = new JavaElementChangeListener();
 		fJavaElementChangeListener.start();
+		fFeatureRebuilder = new FeatureRebuilder();
+		fFeatureRebuilder.start();
 	}
 
 	public BundleContext getBundleContext() {
@@ -319,10 +312,10 @@ public class PDECore extends Plugin implements IEnvironmentVariables {
 
 	public void stop(BundleContext context) throws CoreException {
 		PDECore.getDefault().savePluginPreferences();
-		if (fJavaElementChangeListener != null) {
-			fJavaElementChangeListener.shutdown();
-			fJavaElementChangeListener = null;
-		}
+		
+		fJavaElementChangeListener.shutdown();
+		fFeatureRebuilder.stop();
+		
 		if (fSchemaRegistry != null) {
 			fSchemaRegistry.shutdown();
 			fSchemaRegistry = null;

@@ -10,7 +10,7 @@
  *******************************************************************************/
 package org.eclipse.pde.internal.core;
 
-public class NewTargetModelManager extends AbstractModelManager {
+public class TargetModelManager extends AbstractModelManager {
 
 	protected void initialize() {
 	}
