@@ -191,11 +191,11 @@ public class PDEPlugin extends AbstractUIPlugin implements IPDEUIConstants {
 	 * @see org.eclipse.ui.plugin.AbstractUIPlugin#stop(org.osgi.framework.BundleContext)
 	 */
 	public void stop(BundleContext context) throws Exception {
-		if (fLaunchListener!=null)
+		if (fLaunchListener != null)
 			fLaunchListener.shutdown();
-		if (fFormColors!=null) {
+		if (fFormColors != null) {
 			fFormColors.dispose();
-			fFormColors=null;
+			fFormColors = null;
 		}
 		if (fLabelProvider != null) {
 			fLabelProvider.dispose();
@@ -210,7 +210,7 @@ public class PDEPlugin extends AbstractUIPlugin implements IPDEUIConstants {
 	}
 
 	public PDELabelProvider getLabelProvider() {
-		if (fLabelProvider==null)
+		if (fLabelProvider == null)
 			fLabelProvider = new PDELabelProvider();
 		return fLabelProvider;
 	}
