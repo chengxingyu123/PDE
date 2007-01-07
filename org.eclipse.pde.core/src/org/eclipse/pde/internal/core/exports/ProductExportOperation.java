@@ -42,13 +42,14 @@ import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.SubProgressMonitor;
 import org.eclipse.osgi.service.resolver.BundleDescription;
 import org.eclipse.osgi.service.resolver.State;
+import org.eclipse.pde.core.TargetPlatform;
 import org.eclipse.pde.core.plugin.IPluginModelBase;
 import org.eclipse.pde.internal.build.BuildScriptGenerator;
 import org.eclipse.pde.internal.build.IBuildPropertiesConstants;
 import org.eclipse.pde.internal.build.IXMLConstants;
 import org.eclipse.pde.internal.core.ExternalModelManager;
 import org.eclipse.pde.internal.core.PDECore;
-import org.eclipse.pde.internal.core.TargetPlatform;
+import org.eclipse.pde.internal.core.InternalTargetPlatform;
 import org.eclipse.pde.internal.core.XMLPrintHandler;
 import org.eclipse.pde.internal.core.iproduct.IArgumentsInfo;
 import org.eclipse.pde.internal.core.iproduct.IConfigurationFileInfo;
@@ -300,7 +301,7 @@ public class ProductExportOperation extends FeatureExportOperation {
             if (location != null)
             	writer.println("osgi.splashPath=" + location); //$NON-NLS-1$
             writer.println("eclipse.product=" + fProduct.getId()); //$NON-NLS-1$
-            writer.println("osgi.bundles=" + getPluginList(config, TargetPlatform.getBundleList()));  //$NON-NLS-1$
+            writer.println("osgi.bundles=" + getPluginList(config, InternalTargetPlatform.getBundleList()));  //$NON-NLS-1$
             writer.println("osgi.bundles.defaultStartLevel=4"); //$NON-NLS-1$ 		
         } catch (IOException e) {
         } finally {

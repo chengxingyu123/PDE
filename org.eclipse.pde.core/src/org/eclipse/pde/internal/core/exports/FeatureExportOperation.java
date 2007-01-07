@@ -52,6 +52,7 @@ import org.eclipse.jdt.launching.environments.IExecutionEnvironmentsManager;
 import org.eclipse.osgi.service.resolver.BundleDescription;
 import org.eclipse.osgi.service.resolver.State;
 import org.eclipse.pde.core.IModel;
+import org.eclipse.pde.core.TargetPlatform;
 import org.eclipse.pde.core.build.IBuild;
 import org.eclipse.pde.core.build.IBuildEntry;
 import org.eclipse.pde.core.build.IBuildModel;
@@ -65,7 +66,7 @@ import org.eclipse.pde.internal.core.ModelEntry;
 import org.eclipse.pde.internal.core.PDECore;
 import org.eclipse.pde.internal.core.PDECoreMessages;
 import org.eclipse.pde.internal.core.PluginModelManager;
-import org.eclipse.pde.internal.core.TargetPlatform;
+import org.eclipse.pde.internal.core.InternalTargetPlatform;
 import org.eclipse.pde.internal.core.XMLPrintHandler;
 import org.eclipse.pde.internal.core.build.WorkspaceBuildModel;
 import org.eclipse.pde.internal.core.feature.FeatureChild;
@@ -156,7 +157,7 @@ public class FeatureExportOperation implements IWorkspaceRunnable {
 		if (message != null && message.length() > 0) {	
 			throw new CoreException(new Status(
 					IStatus.ERROR,
-					PDECore.getPluginId(),
+					PDECore.PLUGIN_ID,
 					IStatus.ERROR,
 					message,
 					null));
@@ -467,14 +468,14 @@ public class FeatureExportOperation implements IWorkspaceRunnable {
 			format = config + '-' + IXMLConstants.FORMAT_ANTZIP;
 		generator.setArchivesFormat(format);
 		generator.setPDEState(getState(os, ws, arch));
-		generator.setNextId(TargetPlatform.getPDEState().getNextId());
-		generator.setStateExtraData(TargetPlatform.getBundleClasspaths(TargetPlatform.getPDEState()), TargetPlatform.getPatchMap(TargetPlatform.getPDEState()));
+		generator.setNextId(InternalTargetPlatform.getPDEState().getNextId());
+		generator.setStateExtraData(InternalTargetPlatform.getBundleClasspaths(InternalTargetPlatform.getPDEState()), InternalTargetPlatform.getPatchMap(InternalTargetPlatform.getPDEState()));
 		AbstractScriptGenerator.setForceUpdateJar(false);
 		AbstractScriptGenerator.setEmbeddedSource(fInfo.exportSource);		
 	}
 	
 	protected State getState(String os, String ws, String arch) {
-		State main = TargetPlatform.getState();
+		State main = InternalTargetPlatform.getState();
 		if (os.equals(TargetPlatform.getOS()) 
 				&& ws.equals(TargetPlatform.getWS())
 				&& arch.equals(TargetPlatform.getOSArch())) {
@@ -529,7 +530,7 @@ public class FeatureExportOperation implements IWorkspaceRunnable {
 	}
 
 	protected String[] getPaths() {
-		return TargetPlatform.getFeaturePaths();
+		return InternalTargetPlatform.getFeaturePaths();
 	}
 	
 	protected void cleanup(String[] config, IProgressMonitor monitor) {

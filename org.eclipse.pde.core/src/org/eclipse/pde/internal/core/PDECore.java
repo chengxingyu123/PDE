@@ -38,7 +38,7 @@ import org.eclipse.pde.internal.core.util.VersionUtil;
 import org.eclipse.update.configurator.ConfiguratorUtils;
 import org.osgi.framework.BundleContext;
 
-public class PDECore extends Plugin implements IEnvironmentVariables {
+public class PDECore extends Plugin {
 	public static final String PLUGIN_ID = "org.eclipse.pde.core"; //$NON-NLS-1$
 	
 	public static final String CLASSPATH_CONTAINER_ID = PLUGIN_ID + ".requiredPlugins"; //$NON-NLS-1$
@@ -59,9 +59,6 @@ public class PDECore extends Plugin implements IEnvironmentVariables {
 	public static PDECore getDefault() {
 		return inst;
 	}
-	public static String getPluginId() {
-		return getDefault().getBundle().getSymbolicName();
-	}
 	
 	public static IWorkspace getWorkspace() {
 		return ResourcesPlugin.getWorkspace();
@@ -81,7 +78,7 @@ public class PDECore extends Plugin implements IEnvironmentVariables {
 			status =
 				new Status(
 					IStatus.ERROR,
-					getPluginId(),
+					PLUGIN_ID,
 					IStatus.OK,
 					e.getMessage(),
 					e);
@@ -92,7 +89,7 @@ public class PDECore extends Plugin implements IEnvironmentVariables {
 		log(
 			new Status(
 				IStatus.ERROR,
-				getPluginId(),
+				PLUGIN_ID,
 				IStatus.ERROR,
 				message,
 				null));
@@ -117,7 +114,7 @@ public class PDECore extends Plugin implements IEnvironmentVariables {
 			status =
 				new Status(
 					IStatus.ERROR,
-					getPluginId(),
+					PLUGIN_ID,
 					IStatus.OK,
 					message,
 					e);

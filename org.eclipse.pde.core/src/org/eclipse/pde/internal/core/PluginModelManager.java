@@ -10,6 +10,8 @@
  *******************************************************************************/
 package org.eclipse.pde.internal.core;
 
+import java.io.File;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -18,6 +20,7 @@ import java.util.Iterator;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.Stack;
+import java.util.StringTokenizer;
 import java.util.TreeMap;
 
 import org.eclipse.core.resources.IProject;
@@ -28,6 +31,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Path;
+import org.eclipse.core.runtime.Preferences;
 import org.eclipse.jdt.core.IClasspathContainer;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
@@ -423,7 +427,7 @@ public class PluginModelManager implements IAdaptable, IModelProviderListener {
 		fEntries = Collections.synchronizedMap(new TreeMap());
 		fState = new PDEState(
 						WorkspaceModelManager.getPluginPaths(),
-						ExternalModelManager.getPluginPaths(),
+						getPluginPaths(),
 						true,
 						new NullProgressMonitor());
 		
@@ -439,6 +443,37 @@ public class PluginModelManager implements IAdaptable, IModelProviderListener {
 		}
 		fSearchablePluginsManager.initialize();
 	}
+	
+	private URL[] getPluginPaths() {
+		Preferences pref = PDECore.getDefault().getPluginPreferences();
+		URL[] base = PluginPathFinder.getPluginPaths(pref.getString(ICoreConstants.PLATFORM_PATH));
+
+		String value = pref.getString(ICoreConstants.ADDITIONAL_LOCATIONS);
+		StringTokenizer tokenizer = new StringTokenizer(value, ","); //$NON-NLS-1$
+		
+		if (tokenizer.countTokens() == 0)
+			return base;
+				
+		File[] extraLocations = new File[tokenizer.countTokens()];
+		for (int i = 0; i < extraLocations.length; i++) {
+			String location = tokenizer.nextToken();
+			File dir = new File(location, "plugins"); //$NON-NLS-1$
+			if (!dir.exists() || !dir.isDirectory())
+				dir = new File(location);
+			extraLocations[i] = dir;
+		}
+		URL[] additional = PluginPathFinder.scanLocations(extraLocations);
+		
+		if (additional.length == 0)
+			return base;
+		
+		URL[] result = new URL[base.length + additional.length];
+		System.arraycopy(base, 0, result, 0, base.length);
+		System.arraycopy(additional, 0, result, base.length, additional.length);
+		
+		return result;
+	}
+
 	
 	public PDEState getState() {
 		initializeTable();

@@ -57,7 +57,7 @@ import org.eclipse.pde.internal.core.NLResourceHelper;
 import org.eclipse.pde.internal.core.PDECore;
 import org.eclipse.pde.internal.core.PDECoreMessages;
 import org.eclipse.pde.internal.core.PluginModelManager;
-import org.eclipse.pde.internal.core.TargetPlatform;
+import org.eclipse.pde.internal.core.InternalTargetPlatform;
 import org.eclipse.pde.internal.core.search.PluginJavaSearchUtil;
 import org.eclipse.pde.internal.core.util.IdUtil;
 import org.eclipse.pde.internal.core.util.VersionUtil;
@@ -155,7 +155,7 @@ public class BundleErrorReporter extends JarManifestErrorReporter {
 				|| base.getExtensions().length > 0);
 
 		if (hasExtensions) {
-			if (TargetPlatform.getTargetVersion() >= 3.1) {
+			if (InternalTargetPlatform.getTargetVersion() >= 3.1) {
 				if (!"true".equals(singletonDir)) { //$NON-NLS-1$
 					if ("true".equals(singletonAttr)) { //$NON-NLS-1$
 						if (isCheckDeprecated()) {
@@ -178,7 +178,7 @@ public class BundleErrorReporter extends JarManifestErrorReporter {
 			}
 		}
 
-		if (TargetPlatform.getTargetVersion() >= 3.1) {
+		if (InternalTargetPlatform.getTargetVersion() >= 3.1) {
 			if (singletonAttr != null) {
 				if (isCheckDeprecated()) {
 					String message = PDECoreMessages.BundleErrorReporter_deprecated_attribute_singleton;
@@ -901,7 +901,7 @@ public class BundleErrorReporter extends JarManifestErrorReporter {
 		if (!validateStartHeader(header))
 			return; // valid start header problems already reported
 		int severity = CompilerFlags.getFlag(fProject, CompilerFlags.P_DEPRECATED);
-		if (severity != CompilerFlags.IGNORE && TargetPlatform.getTargetVersion() >= 3.2) {
+		if (severity != CompilerFlags.IGNORE && InternalTargetPlatform.getTargetVersion() >= 3.2) {
 			int line = header.getLineNumber();
 			report(PDECoreMessages.BundleErrorReporter_startHeader_autoStartDeprecated, line + 1, severity, 
 					PDEMarkerFactory.M_DEPRECATED_AUTOSTART,
@@ -912,7 +912,7 @@ public class BundleErrorReporter extends JarManifestErrorReporter {
 	private void validateLazyStart() {
 		IHeader header = (IHeader) fHeaders.get(ICoreConstants.ECLIPSE_LAZYSTART);
 		int severity = CompilerFlags.getFlag(fProject, CompilerFlags.P_DEPRECATED);
-		if (header != null && TargetPlatform.getTargetVersion() < 3.2 && severity != CompilerFlags.IGNORE) {
+		if (header != null && InternalTargetPlatform.getTargetVersion() < 3.2 && severity != CompilerFlags.IGNORE) {
 			report(PDECoreMessages.BundleErrorReporter_lazyStart_unsupported,
 					header.getLineNumber() + 1, severity,
 					PDEMarkerFactory.NO_RESOLUTION,

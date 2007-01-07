@@ -31,11 +31,11 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Path;
-import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.osgi.service.resolver.BundleDescription;
 import org.eclipse.osgi.service.resolver.State;
 import org.eclipse.osgi.util.ManifestElement;
+import org.eclipse.pde.core.TargetPlatform;
 import org.eclipse.pde.core.plugin.IPluginExtension;
 import org.eclipse.pde.core.plugin.IPluginLibrary;
 import org.eclipse.pde.core.plugin.IPluginModelBase;
@@ -50,7 +50,7 @@ import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
 
-public class TargetPlatform implements IEnvironmentVariables {
+public class InternalTargetPlatform {
 	
 	private static String REFERENCE_PREFIX = "reference:"; //$NON-NLS-1$
 	private static String FILE_URL_PREFIX = "file:"; //$NON-NLS-1$
@@ -204,7 +204,7 @@ public class TargetPlatform implements IEnvironmentVariables {
 			throw new CoreException(
 				new Status(
 					IStatus.ERROR,
-					PDECore.getPluginId(),
+					PDECore.PLUGIN_ID,
 					IStatus.ERROR,
 					message,
 					e));
@@ -336,30 +336,6 @@ public class TargetPlatform implements IEnvironmentVariables {
 				null,
 				root);
 		config.configureFeatureEntry(featureEntry);
-	}
-
-	public static String getOS() {
-		String value = getProperty(OS);
-		return value.equals("") ? Platform.getOS() : value; //$NON-NLS-1$
-	}
-
-	public static String getWS() {
-		String value = getProperty(WS);
-		return value.equals("") ? Platform.getWS() : value; //$NON-NLS-1$
-	}
-
-	public static String getNL() {
-		String value = getProperty(NL);
-		return value.equals("") ? Platform.getNL() : value; //$NON-NLS-1$
-	}
-
-	public static String getOSArch() {
-		String value = getProperty(ARCH);
-		return value.equals("") ? Platform.getOSArch() : value; //$NON-NLS-1$
-	}
-
-	private static String getProperty(String key) {
-		return PDECore.getDefault().getPluginPreferences().getString(key);
 	}
 	
 	public static String[] getApplicationNames() {

@@ -10,6 +10,6 @@
  *******************************************************************************/
 package org.eclipse.pde.core;
 
-public class BundleRegistry {
+public class PluginRegistry {
 
 }

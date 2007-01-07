@@ -267,7 +267,7 @@ public class RequiredPluginsClasspathContainer extends PDEClasspathContainer imp
 		if (desc == null
 				|| "false".equals(System.getProperty("pde.restriction")) //$NON-NLS-1$ //$NON-NLS-2$
 				|| !(fModel instanceof IBundlePluginModelBase)
-				|| TargetPlatform.getTargetVersion() < 3.1)
+				|| InternalTargetPlatform.getTargetVersion() < 3.1)
 			return null;
 		
 		Rule[] rules;

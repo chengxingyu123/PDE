@@ -16,8 +16,7 @@ import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Preferences;
 import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer;
 
-public class PreferenceInitializer extends AbstractPreferenceInitializer
-		implements IEnvironmentVariables {
+public class PreferenceInitializer extends AbstractPreferenceInitializer  {
 
 	/*
 	 * (non-Javadoc)
@@ -42,10 +41,10 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer
 					ExternalModelManager.computeDefaultPlatformPath());
 
 		// set defaults for the target environment variables.
-		preferences.setDefault(OS, Platform.getOS());
-		preferences.setDefault(WS, Platform.getWS());
-		preferences.setDefault(NL, Locale.getDefault().toString());
-		preferences.setDefault(ARCH, Platform.getOSArch());
+		preferences.setDefault(ICoreConstants.OS, Platform.getOS());
+		preferences.setDefault(ICoreConstants.WS, Platform.getWS());
+		preferences.setDefault(ICoreConstants.NL, Locale.getDefault().toString());
+		preferences.setDefault(ICoreConstants.ARCH, Platform.getOSArch());
 	}
 
 }

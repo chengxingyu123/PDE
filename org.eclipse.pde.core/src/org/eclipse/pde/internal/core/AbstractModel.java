@@ -135,7 +135,7 @@ public abstract class AbstractModel extends PlatformObject implements IModel,
 	}
 
 	public void throwParseErrorsException(Throwable e) throws CoreException {
-		Status status = new Status(IStatus.ERROR, PDECore.getPluginId(), IStatus.OK,
+		Status status = new Status(IStatus.ERROR, PDECore.PLUGIN_ID, IStatus.OK,
 				"Error in the manifest file", //$NON-NLS-1$
 				e);
 		throw new CoreException(status);

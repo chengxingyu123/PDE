@@ -180,7 +180,7 @@ public abstract class PluginObject
 		Status status =
 			new Status(
 				IStatus.ERROR,
-				PDECore.getPluginId(),
+				PDECore.PLUGIN_ID,
 				IStatus.OK,
 				message,
 				null);

@@ -154,7 +154,7 @@ public class SourceLocationManager implements ICoreConstants {
 		IPluginExtension[] extensions = model.getPluginBase().getExtensions();
 		for (int j = 0; j < extensions.length; j++) {
 			IPluginExtension extension = extensions[j];
-			if ((PDECore.getPluginId() + ".source").equals(extension.getPoint())) { //$NON-NLS-1$
+			if ((PDECore.PLUGIN_ID + ".source").equals(extension.getPoint())) { //$NON-NLS-1$
 				processExtension(extension, result);
 			}
 		}				

@@ -40,7 +40,6 @@ import org.eclipse.pde.internal.core.ExternalFeatureModelManager;
 import org.eclipse.pde.internal.core.ExternalModelManager;
 import org.eclipse.pde.internal.core.FeatureModelManager;
 import org.eclipse.pde.internal.core.ICoreConstants;
-import org.eclipse.pde.internal.core.IEnvironmentVariables;
 import org.eclipse.pde.internal.core.ModelProviderEvent;
 import org.eclipse.pde.internal.core.PDECore;
 import org.eclipse.pde.internal.core.PDEState;
@@ -105,15 +104,15 @@ public class LoadTargetOperation implements IWorkspaceRunnable {
 		IEnvironmentInfo env = fTarget.getEnvironment();
 		monitor.beginTask(PDECoreMessages.LoadTargetOperation_envTaskName, 1);
 		if (env == null) {
-			pref.setToDefault(IEnvironmentVariables.ARCH);
-			pref.setToDefault(IEnvironmentVariables.NL);
-			pref.setToDefault(IEnvironmentVariables.OS);
-			pref.setToDefault(IEnvironmentVariables.WS);
+			pref.setToDefault(ICoreConstants.ARCH);
+			pref.setToDefault(ICoreConstants.NL);
+			pref.setToDefault(ICoreConstants.OS);
+			pref.setToDefault(ICoreConstants.WS);
 		} else {
-			pref.setValue(IEnvironmentVariables.ARCH, env.getDisplayArch());
-			pref.setValue(IEnvironmentVariables.NL, env.getDisplayNL());
-			pref.setValue(IEnvironmentVariables.OS, env.getDisplayOS());
-			pref.setValue(IEnvironmentVariables.WS, env.getDisplayWS());
+			pref.setValue(ICoreConstants.ARCH, env.getDisplayArch());
+			pref.setValue(ICoreConstants.NL, env.getDisplayNL());
+			pref.setValue(ICoreConstants.OS, env.getDisplayOS());
+			pref.setValue(ICoreConstants.WS, env.getDisplayWS());
 		}
 		monitor.done();
 	}

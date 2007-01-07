@@ -235,14 +235,14 @@ public class MinimalState {
 
 	private Dictionary[] getProfilePlatformProperties() {
 		if (fExecutionEnvironments == null || fExecutionEnvironments.length == 0)
-			return new Dictionary[] {TargetPlatform.getTargetEnvironment()};
+			return new Dictionary[] {InternalTargetPlatform.getTargetEnvironment()};
 		
 		// add java profiles for those EE's that have a .profile file in the current system bundle
 		ArrayList result = new ArrayList(fExecutionEnvironments.length);
 		for (int i = 0; i < fExecutionEnvironments.length; i++) {
 			Properties profileProps = getJavaProfileProperties(fExecutionEnvironments[i]);
 			if (profileProps != null) {
-				Dictionary props = TargetPlatform.getTargetEnvironment();
+				Dictionary props = InternalTargetPlatform.getTargetEnvironment();
 				String systemPackages = profileProps.getProperty(Constants.FRAMEWORK_SYSTEMPACKAGES);
 				if (systemPackages != null)
 					props.put(Constants.FRAMEWORK_SYSTEMPACKAGES, systemPackages);
@@ -254,7 +254,7 @@ public class MinimalState {
 		}
 		if (result.size() > 0)
 			return (Dictionary[])result.toArray(new Dictionary[result.size()]);
-		return new Dictionary[] {TargetPlatform.getTargetEnvironment()};
+		return new Dictionary[] {InternalTargetPlatform.getTargetEnvironment()};
 	}
 
 	private Properties getJavaProfileProperties(String ee) {
@@ -359,7 +359,7 @@ public class MinimalState {
 	}
 
 	protected void logResolutionErrors() {
-		MultiStatus errors = new MultiStatus(PDECore.getPluginId(), 1,
+		MultiStatus errors = new MultiStatus(PDECore.PLUGIN_ID, 1,
 				"Problems occurred during the resolution of the target platform",  //$NON-NLS-1$
 				null);
 
