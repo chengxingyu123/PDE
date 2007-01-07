@@ -47,7 +47,7 @@ import org.eclipse.pde.internal.core.ICoreConstants;
 import org.eclipse.pde.internal.core.PDECore;
 import org.eclipse.pde.internal.core.PDEManager;
 import org.eclipse.pde.internal.core.PluginModelManager;
-import org.eclipse.pde.internal.core.TargetPlatform;
+import org.eclipse.pde.internal.core.InternalTargetPlatform;
 import org.eclipse.pde.internal.core.ibundle.IBundle;
 import org.eclipse.pde.internal.core.ibundle.IBundleModel;
 import org.eclipse.pde.internal.core.ibundle.IManifestHeader;
@@ -206,7 +206,7 @@ public class OrganizeManifest implements IOrganizeManifestsSettings {
 	}
 	
 	private static final Set getAvailableExportedPackages() {
-		State state = TargetPlatform.getState();
+		State state = InternalTargetPlatform.getState();
 		ExportPackageDescription[] packages = state.getExportedPackages();
 		Set set = new HashSet();
 		for (int i = 0; i < packages.length; i++) {

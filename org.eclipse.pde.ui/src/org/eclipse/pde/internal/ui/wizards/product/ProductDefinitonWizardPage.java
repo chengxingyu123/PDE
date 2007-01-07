@@ -20,7 +20,7 @@ import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.pde.core.plugin.IPluginExtensionPoint;
 import org.eclipse.pde.core.plugin.IPluginModelBase;
 import org.eclipse.pde.internal.core.PDECore;
-import org.eclipse.pde.internal.core.TargetPlatform;
+import org.eclipse.pde.internal.core.InternalTargetPlatform;
 import org.eclipse.pde.internal.core.iproduct.IProduct;
 import org.eclipse.pde.internal.ui.IHelpContextIds;
 import org.eclipse.pde.internal.ui.PDEUIMessages;
@@ -169,7 +169,7 @@ public class ProductDefinitonWizardPage extends WizardPage implements IHyperlink
 		
 		fApplicationCombo = new Combo(group, SWT.SINGLE|SWT.READ_ONLY);
 		fApplicationCombo.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-		fApplicationCombo.setItems(TargetPlatform.getApplicationNames());
+		fApplicationCombo.setItems(InternalTargetPlatform.getApplicationNames());
 		if (fApplicationCombo.getItemCount() > 0)
 			fApplicationCombo.setText(fApplicationCombo.getItem(0));	
 	}
@@ -249,7 +249,7 @@ public class ProductDefinitonWizardPage extends WizardPage implements IHyperlink
 	
 	private Set getProductNameSet() {
 		if (fProductSet == null)
-			fProductSet = TargetPlatform.getProductNameSet();
+			fProductSet = InternalTargetPlatform.getProductNameSet();
 		return fProductSet;
 	}
 	

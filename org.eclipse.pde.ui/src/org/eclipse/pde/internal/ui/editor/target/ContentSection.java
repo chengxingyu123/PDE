@@ -36,7 +36,7 @@ import org.eclipse.osgi.service.resolver.ExportPackageDescription;
 import org.eclipse.pde.core.IModelChangedEvent;
 import org.eclipse.pde.core.plugin.IPluginModelBase;
 import org.eclipse.pde.internal.core.PDECore;
-import org.eclipse.pde.internal.core.TargetPlatform;
+import org.eclipse.pde.internal.core.InternalTargetPlatform;
 import org.eclipse.pde.internal.core.ifeature.IFeature;
 import org.eclipse.pde.internal.core.ifeature.IFeatureModel;
 import org.eclipse.pde.internal.core.itarget.ITarget;
@@ -463,7 +463,7 @@ public class ContentSection extends TableSection {
 		
 		HashSet set = new HashSet();
 		for (int i = 0; i < plugins.length; i++) {
-			addDependencies(TargetPlatform.getState().getBundle(plugins[i].getId(), null), set);
+			addDependencies(InternalTargetPlatform.getState().getBundle(plugins[i].getId(), null), set);
 		}
 		
 		ITarget target = plugins[0].getTarget();
@@ -523,7 +523,7 @@ public class ContentSection extends TableSection {
 	
 	private static BundleDescription[] getAllFragments() {
 		ArrayList list = new ArrayList();
-		BundleDescription[] bundles = TargetPlatform.getState().getBundles();
+		BundleDescription[] bundles = InternalTargetPlatform.getState().getBundles();
 		for (int i = 0; i < bundles.length; i++) {
 			if (bundles[i].getHost() != null)
 				list.add(bundles[i]);

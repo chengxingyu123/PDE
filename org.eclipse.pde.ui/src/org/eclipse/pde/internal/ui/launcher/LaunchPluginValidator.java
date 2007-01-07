@@ -31,7 +31,7 @@ import org.eclipse.pde.core.plugin.IPluginModelBase;
 import org.eclipse.pde.internal.core.PDECore;
 import org.eclipse.pde.internal.core.PluginModelManager;
 import org.eclipse.pde.internal.core.SearchablePluginsManager;
-import org.eclipse.pde.internal.core.TargetPlatform;
+import org.eclipse.pde.internal.core.InternalTargetPlatform;
 import org.eclipse.pde.ui.launcher.IPDELauncherConstants;
 import org.eclipse.swt.widgets.Display;
 
@@ -76,9 +76,12 @@ public class LaunchPluginValidator {
 		}
 		
 		String version = configuration.getAttribute("pde.version", (String) null); //$NON-NLS-1$
-		boolean upgrade = TargetPlatform.getTargetVersion() >= 3.2 && !"3.2a".equals(version); //$NON-NLS-1$
+		boolean newApp = InternalTargetPlatform.usesNewApplicationModel();
+		boolean upgrade = !"3.3".equals(version) && newApp; //$NON-NLS-1$
+		if (!upgrade)
+			upgrade = InternalTargetPlatform.getTargetVersion() >= 3.2 && version == null; //$NON-NLS-1$
 		if (upgrade) {
-			wc.setAttribute("pde.version", "3.2a"); //$NON-NLS-1$ //$NON-NLS-2$
+			wc.setAttribute("pde.version", newApp ? "3.3" : "3.2a"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 			boolean usedefault = configuration.getAttribute(IPDELauncherConstants.USE_DEFAULT, true);
 			boolean useFeatures = configuration.getAttribute(IPDELauncherConstants.USEFEATURES, false);
 			boolean automaticAdd = configuration.getAttribute(IPDELauncherConstants.AUTOMATIC_ADD, true);
@@ -90,9 +93,10 @@ public class LaunchPluginValidator {
 					list.add("org.eclipse.equinox.common"); //$NON-NLS-1$
 					list.add("org.eclipse.equinox.preferences"); //$NON-NLS-1$
 					list.add("org.eclipse.equinox.registry"); //$NON-NLS-1$
+					list.add("org.eclipse.core.runtime.compatibility.registry"); //$NON-NLS-1$
 				}
-				list.add("org.eclipse.core.runtime.compatibility.registry"); //$NON-NLS-1$
-													
+				if (!"3.3".equals(version) && newApp) //$NON-NLS-1$
+					list.add("org.eclipse.equinox.app"); //$NON-NLS-1$
 				StringBuffer extensions = new StringBuffer(configuration.getAttribute(IPDELauncherConstants.SELECTED_WORKSPACE_PLUGINS, "")); //$NON-NLS-1$
 				StringBuffer target = new StringBuffer(configuration.getAttribute(IPDELauncherConstants.SELECTED_TARGET_PLUGINS, "")); //$NON-NLS-1$
 				PluginModelManager manager = PDECore.getDefault().getModelManager();

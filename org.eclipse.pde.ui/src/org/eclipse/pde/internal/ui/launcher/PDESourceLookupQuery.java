@@ -45,7 +45,7 @@ import org.eclipse.pde.internal.core.ExternalModelManager;
 import org.eclipse.pde.internal.core.ModelEntry;
 import org.eclipse.pde.internal.core.PDEClasspathContainer;
 import org.eclipse.pde.internal.core.PDECore;
-import org.eclipse.pde.internal.core.TargetPlatform;
+import org.eclipse.pde.internal.core.InternalTargetPlatform;
 import org.eclipse.pde.internal.ui.PDEPlugin;
 
 public class PDESourceLookupQuery implements ISafeRunnable {
@@ -135,7 +135,7 @@ public class PDESourceLookupQuery implements ISafeRunnable {
 				return result;
 			
 			// don't give up yet, search fragments attached to this host
-			State state = TargetPlatform.getState();
+			State state = InternalTargetPlatform.getState();
 			BundleDescription desc = state.getBundle(id, null);
 			if (desc != null) {
 				BundleDescription[] fragments = desc.getFragments();

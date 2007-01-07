@@ -39,12 +39,13 @@ import org.eclipse.jdt.launching.IVMRunner;
 import org.eclipse.jdt.launching.SocketUtil;
 import org.eclipse.jdt.launching.VMRunnerConfiguration;
 import org.eclipse.osgi.util.NLS;
+import org.eclipse.pde.core.TargetPlatform;
 import org.eclipse.pde.core.plugin.IFragmentModel;
 import org.eclipse.pde.core.plugin.IPluginModelBase;
 import org.eclipse.pde.internal.core.ClasspathHelper;
+import org.eclipse.pde.internal.core.InternalTargetPlatform;
 import org.eclipse.pde.internal.core.PDECore;
 import org.eclipse.pde.internal.core.PluginModelManager;
-import org.eclipse.pde.internal.core.TargetPlatform;
 import org.eclipse.pde.internal.core.util.CoreUtility;
 import org.eclipse.pde.internal.ui.IPDEUIConstants;
 import org.eclipse.pde.internal.ui.PDEPlugin;
@@ -242,7 +243,7 @@ public class JUnitLaunchConfigurationDelegate extends JUnitBaseLaunchConfigurati
 		String productID = LaunchConfigurationHelper.getProductID(configuration);
 		LaunchConfigurationHelper.createConfigIniFile(configuration,
 				productID, fPluginMap, getConfigurationDirectory(configuration));
-		TargetPlatform.createPlatformConfigurationArea(
+		InternalTargetPlatform.createPlatformConfigurationArea(
 				fPluginMap,
 				getConfigurationDirectory(configuration),
 				LaunchConfigurationHelper.getContributingPlugin(productID));
@@ -256,7 +257,7 @@ public class JUnitLaunchConfigurationDelegate extends JUnitBaseLaunchConfigurati
 		
 		// necessary for PDE to know how to load plugins when target platform = host platform
 		// see PluginPathFinder.getPluginPaths()
-		if (fPluginMap.containsKey(PDECore.getPluginId()))
+		if (fPluginMap.containsKey(PDECore.PLUGIN_ID))
 			programArgs.add("-pdelaunch"); //$NON-NLS-1$	
 
 		// Create the .options file if tracing is turned on

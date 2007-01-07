@@ -18,7 +18,7 @@ import org.eclipse.jdt.junit.launcher.JUnitLaunchShortcut;
 import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants;
 import org.eclipse.pde.internal.core.ICoreConstants;
 import org.eclipse.pde.internal.core.PDECore;
-import org.eclipse.pde.internal.core.TargetPlatform;
+import org.eclipse.pde.internal.core.InternalTargetPlatform;
 import org.eclipse.pde.internal.ui.launcher.LaunchArgumentsHelper;
 import org.eclipse.pde.internal.ui.launcher.LauncherUtils;
 
@@ -43,7 +43,9 @@ public class JUnitWorkbenchLaunchShortcut extends JUnitLaunchShortcut {
 	 */
 	protected ILaunchConfigurationWorkingCopy createLaunchConfiguration(IJavaElement element) throws CoreException {
 		ILaunchConfigurationWorkingCopy configuration = super.createLaunchConfiguration(element);
-		if (TargetPlatform.getTargetVersion() >= 3.2)
+		if (InternalTargetPlatform.usesNewApplicationModel())
+			configuration.setAttribute("pde.version", "3.3"); //$NON-NLS-1$ //$NON-NLS-2$
+		else if (InternalTargetPlatform.getTargetVersion() >= 3.2)
 			configuration.setAttribute("pde.version", "3.2a"); //$NON-NLS-1$ //$NON-NLS-2$
 		configuration.setAttribute(IPDELauncherConstants.LOCATION, LaunchArgumentsHelper.getDefaultJUnitWorkspaceLocation());
 		configuration.setAttribute(IPDELauncherConstants.DOCLEAR, true);
@@ -51,7 +53,7 @@ public class JUnitWorkbenchLaunchShortcut extends JUnitLaunchShortcut {
 
 		// Program to launch
 		if (LauncherUtils.requiresUI(configuration)) {
-			String product = TargetPlatform.getDefaultProduct();
+			String product = InternalTargetPlatform.getDefaultProduct();
 			if (product != null) {
 				configuration.setAttribute(IPDELauncherConstants.USE_PRODUCT, true);
 				configuration.setAttribute(IPDELauncherConstants.PRODUCT, product);

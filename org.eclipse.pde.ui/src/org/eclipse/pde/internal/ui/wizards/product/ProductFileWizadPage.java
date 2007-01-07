@@ -28,7 +28,7 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.pde.core.plugin.IPluginExtension;
 import org.eclipse.pde.core.plugin.IPluginModelBase;
 import org.eclipse.pde.internal.core.PDECore;
-import org.eclipse.pde.internal.core.TargetPlatform;
+import org.eclipse.pde.internal.core.InternalTargetPlatform;
 import org.eclipse.pde.internal.ui.IHelpContextIds;
 import org.eclipse.pde.internal.ui.PDEPlugin;
 import org.eclipse.pde.internal.ui.PDEUIMessages;
@@ -102,7 +102,7 @@ public class ProductFileWizadPage extends WizardNewFileCreationPage {
 		
 		fProductCombo = new Combo(fGroup, SWT.SINGLE|SWT.READ_ONLY);
 		fProductCombo.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-		fProductCombo.setItems(TargetPlatform.getProductNames());
+		fProductCombo.setItems(InternalTargetPlatform.getProductNames());
 		
 		fLaunchConfigButton = new Button(fGroup, SWT.RADIO);
 		fLaunchConfigButton.setText(PDEUIMessages.ProductFileWizadPage_existingLaunchConfig); 

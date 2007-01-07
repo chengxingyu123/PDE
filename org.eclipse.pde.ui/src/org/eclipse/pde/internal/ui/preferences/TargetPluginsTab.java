@@ -55,7 +55,7 @@ import org.eclipse.pde.internal.core.PDECore;
 import org.eclipse.pde.internal.core.PDEState;
 import org.eclipse.pde.internal.core.PluginPathFinder;
 import org.eclipse.pde.internal.core.DependencyManager;
-import org.eclipse.pde.internal.core.TargetPlatform;
+import org.eclipse.pde.internal.core.InternalTargetPlatform;
 import org.eclipse.pde.internal.core.ifeature.IFeature;
 import org.eclipse.pde.internal.core.ifeature.IFeatureChild;
 import org.eclipse.pde.internal.core.ifeature.IFeatureModel;
@@ -856,7 +856,7 @@ public class TargetPluginsTab extends SharedPartWithButtons{
 	}
 	
 	protected PDEState getCurrentState() {
-		return (fCurrentState != null) ? fCurrentState : TargetPlatform.getPDEState();
+		return (fCurrentState != null) ? fCurrentState : InternalTargetPlatform.getPDEState();
 	}
 	
 	protected void handleSwitchView() {

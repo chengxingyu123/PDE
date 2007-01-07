@@ -39,7 +39,7 @@ import org.eclipse.pde.core.plugin.IPluginModelBase;
 import org.eclipse.pde.internal.core.IPluginModelListener;
 import org.eclipse.pde.internal.core.PDECore;
 import org.eclipse.pde.internal.core.PluginModelDelta;
-import org.eclipse.pde.internal.core.TargetPlatform;
+import org.eclipse.pde.internal.core.InternalTargetPlatform;
 import org.eclipse.pde.internal.core.iproduct.IProduct;
 import org.eclipse.pde.internal.core.iproduct.IProductModel;
 import org.eclipse.pde.internal.core.iproduct.IProductModelFactory;
@@ -285,7 +285,7 @@ public class PluginSection extends TableSection implements IPluginModelListener{
 		
 		HashSet set = new HashSet();
 		for (int i = 0; i < plugins.length; i++) {
-			addDependencies(TargetPlatform.getState().getBundle(plugins[i].getId(), null), set);
+			addDependencies(InternalTargetPlatform.getState().getBundle(plugins[i].getId(), null), set);
 		}
 		
 		IProduct product = plugins[0].getProduct();
@@ -345,7 +345,7 @@ public class PluginSection extends TableSection implements IPluginModelListener{
 	
 	private static BundleDescription[] getAllFragments() {
 		ArrayList list = new ArrayList();
-		BundleDescription[] bundles = TargetPlatform.getState().getBundles();
+		BundleDescription[] bundles = InternalTargetPlatform.getState().getBundles();
 		for (int i = 0; i < bundles.length; i++) {
 			if (bundles[i].getHost() != null)
 				list.add(bundles[i]);
@@ -411,7 +411,7 @@ public class PluginSection extends TableSection implements IPluginModelListener{
 	private BundleDescription[] getBundles() {
 		TreeMap map = new TreeMap();
 		IProduct product = getProduct();
-		BundleDescription[] bundles = TargetPlatform.getState().getBundles();
+		BundleDescription[] bundles = InternalTargetPlatform.getState().getBundles();
 		for (int i = 0; i < bundles.length; i++) {
 			String id = bundles[i].getSymbolicName();
 			if (!product.containsPlugin(id)) {

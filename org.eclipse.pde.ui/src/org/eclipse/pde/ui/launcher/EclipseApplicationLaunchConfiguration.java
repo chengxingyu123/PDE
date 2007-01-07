@@ -21,10 +21,11 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.debug.core.ILaunchConfiguration;
+import org.eclipse.pde.core.TargetPlatform;
 import org.eclipse.pde.internal.core.ClasspathHelper;
 import org.eclipse.pde.internal.core.ExternalModelManager;
+import org.eclipse.pde.internal.core.InternalTargetPlatform;
 import org.eclipse.pde.internal.core.PDECore;
-import org.eclipse.pde.internal.core.TargetPlatform;
 import org.eclipse.pde.internal.core.util.CoreUtility;
 import org.eclipse.pde.internal.ui.PDEPlugin;
 import org.eclipse.pde.internal.ui.PDEUIMessages;
@@ -92,7 +93,7 @@ public class EclipseApplicationLaunchConfiguration extends AbstractPDELaunchConf
 			Properties prop = LaunchConfigurationHelper.createConfigIniFile(configuration,
 					productID, pluginMap, getConfigDir(configuration));
 			showSplash = prop.containsKey("osgi.splashPath") || prop.containsKey("splashLocation"); //$NON-NLS-1$ //$NON-NLS-2$
-			TargetPlatform.createPlatformConfigurationArea(
+			InternalTargetPlatform.createPlatformConfigurationArea(
 					pluginMap,
 					getConfigDir(configuration),
 					LaunchConfigurationHelper.getContributingPlugin(productID));
@@ -106,7 +107,7 @@ public class EclipseApplicationLaunchConfiguration extends AbstractPDELaunchConf
  
     		// necessary for PDE to know how to load plugins when target platform = host platform
     		// see PluginPathFinder.getPluginPaths()
-    		if (pluginMap.containsKey(PDECore.getPluginId()))
+    		if (pluginMap.containsKey(PDECore.PLUGIN_ID))
     			programArgs.add("-pdelaunch"); //$NON-NLS-1$	
 		}
 		
@@ -116,7 +117,7 @@ public class EclipseApplicationLaunchConfiguration extends AbstractPDELaunchConf
 		}
 		
 		if (!programArgs.contains("-nosplash") && showSplash) { //$NON-NLS-1$
-			if (TargetPlatform.getTargetVersion() >= 3.1) {
+			if (InternalTargetPlatform.getTargetVersion() >= 3.1) {
 				programArgs.add(0, "-launcher");  //$NON-NLS-1$
 				
 				IPath path = null;

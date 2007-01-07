@@ -54,7 +54,7 @@ import org.eclipse.pde.core.plugin.IPluginImport;
 import org.eclipse.pde.core.plugin.IPluginModelBase;
 import org.eclipse.pde.internal.core.ICoreConstants;
 import org.eclipse.pde.internal.core.PDECore;
-import org.eclipse.pde.internal.core.TargetPlatform;
+import org.eclipse.pde.internal.core.InternalTargetPlatform;
 import org.eclipse.pde.internal.core.WorkspaceModelManager;
 import org.eclipse.pde.internal.core.bundle.BundlePluginBase;
 import org.eclipse.pde.internal.core.ibundle.IBundle;
@@ -688,7 +688,7 @@ public class ImportPackageSection extends TableSection implements IModelChangedL
         if (id != null)
             set.add(id);
         IPluginImport[] imports = model.getPluginBase().getImports();
-        State state = TargetPlatform.getState();
+        State state = InternalTargetPlatform.getState();
         for (int i = 0; i < imports.length; i++) {
             addDependency(state, imports[i].getId(), set);
         }

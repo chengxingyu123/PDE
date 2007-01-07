@@ -29,7 +29,7 @@ import org.eclipse.pde.core.plugin.IPluginLibrary;
 import org.eclipse.pde.core.plugin.IPluginModel;
 import org.eclipse.pde.core.plugin.IPluginModelBase;
 import org.eclipse.pde.internal.core.PDECore;
-import org.eclipse.pde.internal.core.TargetPlatform;
+import org.eclipse.pde.internal.core.InternalTargetPlatform;
 import org.eclipse.pde.internal.core.WorkspaceModelManager;
 import org.eclipse.pde.internal.core.builders.CompilerFlags;
 import org.eclipse.pde.internal.core.feature.FeatureChild;
@@ -638,7 +638,7 @@ public class PDELabelProvider extends SharedLabelProvider {
 	}
 	
 	private Image getObjectImage(IProductPlugin obj) {
-		BundleDescription desc = TargetPlatform.getState().getBundle(obj.getId(), null);
+		BundleDescription desc = InternalTargetPlatform.getState().getBundle(obj.getId(), null);
 		if (desc != null) {
 			return desc.getHost() == null 
 				? get(PDEPluginImages.DESC_PLUGIN_OBJ)
@@ -829,7 +829,7 @@ public class PDELabelProvider extends SharedLabelProvider {
 	}
 	
 	public Image getObjectImage(ITargetPlugin obj) {
-		BundleDescription desc = TargetPlatform.getState().getBundle(obj.getId(), null);
+		BundleDescription desc = InternalTargetPlatform.getState().getBundle(obj.getId(), null);
 		if (desc != null) {
 			return desc.getHost() == null 
 				? get(PDEPluginImages.DESC_PLUGIN_OBJ)

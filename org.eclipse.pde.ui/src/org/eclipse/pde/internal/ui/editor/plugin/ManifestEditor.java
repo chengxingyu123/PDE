@@ -39,7 +39,7 @@ import org.eclipse.pde.core.plugin.IPluginObject;
 import org.eclipse.pde.core.plugin.ISharedPluginModel;
 import org.eclipse.pde.internal.core.ICoreConstants;
 import org.eclipse.pde.internal.core.PDECore;
-import org.eclipse.pde.internal.core.TargetPlatform;
+import org.eclipse.pde.internal.core.InternalTargetPlatform;
 import org.eclipse.pde.internal.core.build.IBuildObject;
 import org.eclipse.pde.internal.core.ibundle.IBundlePluginModelProvider;
 import org.eclipse.pde.internal.core.plugin.WorkspaceFragmentModel;
@@ -254,7 +254,7 @@ public class ManifestEditor extends MultiSourceEditor implements IShowEditorInpu
 		
 		IPluginBase pluginBase = model.getPluginBase(true);
 		try {
-			pluginBase.setSchemaVersion(TargetPlatform.getTargetVersion() < 3.2 ? "3.0" : "3.2"); //$NON-NLS-1$ //$NON-NLS-2$
+			pluginBase.setSchemaVersion(InternalTargetPlatform.getTargetVersion() < 3.2 ? "3.0" : "3.2"); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		catch (CoreException e) {
 		}

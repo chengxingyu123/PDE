@@ -37,7 +37,7 @@ import org.eclipse.pde.core.plugin.IPluginModelBase;
 import org.eclipse.pde.core.plugin.IPluginObject;
 import org.eclipse.pde.internal.core.ExternalModelManager;
 import org.eclipse.pde.internal.core.PDECore;
-import org.eclipse.pde.internal.core.TargetPlatform;
+import org.eclipse.pde.internal.core.InternalTargetPlatform;
 import org.eclipse.pde.internal.ui.PDEPlugin;
 import org.eclipse.pde.ui.launcher.IPDELauncherConstants;
 
@@ -96,7 +96,7 @@ public class LaunchConfigurationHelper {
 				properties = loadFromTemplate(getSubstitutedString(templateLoc));
 				String osgiBundles = properties.getProperty("osgi.bundles"); //$NON-NLS-1$
 				if (osgiBundles != null) {
-					properties.put("osgi.bundles", TargetPlatform.stripPathInformation(osgiBundles)); //$NON-NLS-1$
+					properties.put("osgi.bundles", InternalTargetPlatform.stripPathInformation(osgiBundles)); //$NON-NLS-1$
 				}
 			}
 		}
@@ -117,7 +117,7 @@ public class LaunchConfigurationHelper {
 		if (productID != null)
 			addSplashLocation(properties, productID, map);
 		
-		String bundleList = TargetPlatform.getBundleList();
+		String bundleList = InternalTargetPlatform.getBundleList();
 		StringBuffer buffer = new StringBuffer();
 		
 		// include only bundles that are actually in the list of plug-ins to launch
@@ -184,7 +184,7 @@ public class LaunchConfigurationHelper {
 	}
 
 	private static void addSplashLocation(Properties properties, String productID, Map map)  {
-		Properties targetConfig = TargetPlatform.getConfigIniProperties(); 
+		Properties targetConfig = InternalTargetPlatform.getConfigIniProperties(); 
 		String targetProduct = targetConfig == null ? null : targetConfig.getProperty("eclipse.product"); //$NON-NLS-1$
 		String targetSplash = targetConfig == null ? null : targetConfig.getProperty("osgi.splashPath"); //$NON-NLS-1$
 		ArrayList locations = new ArrayList();
@@ -322,12 +322,12 @@ public class LaunchConfigurationHelper {
 		if (result != null)
 			return result;
 		
-		Properties properties = TargetPlatform.getConfigIniProperties();
+		Properties properties = InternalTargetPlatform.getConfigIniProperties();
 		return properties == null ? null : properties.getProperty("eclipse.product"); //$NON-NLS-1$
 	}
 
 	public static String getDefaultApplicationName() {
-		Properties properties = TargetPlatform.getConfigIniProperties(); 
+		Properties properties = InternalTargetPlatform.getConfigIniProperties(); 
 		String appName = (properties != null) ? properties.getProperty("eclipse.application") : null; //$NON-NLS-1$
 		return (appName != null) ? appName : "org.eclipse.ui.ide.workbench"; //$NON-NLS-1$
 	}
