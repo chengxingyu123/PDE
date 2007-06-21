@@ -19,6 +19,7 @@ public class PDEExtensionRegistry {
 	private Object fUserKey = new Object();
 	
 	private IExtensionRegistry fRegistry = null;
+	private PDERegistryStrategy fStrategy = null;
 	
 	public void stop() {
 		if (fRegistry != null)
@@ -29,14 +30,15 @@ public class PDEExtensionRegistry {
 		if (fRegistry == null) {
 			long start = System.currentTimeMillis();
 			File targetDirectory = PDECore.getDefault().getModelManager().getState().getTargetDirectory();
-			PDERegistryStrategy strategy = new PDERegistryStrategy(new File[] {targetDirectory}, new boolean[] {false}, fMasterKey);
-			fRegistry  = RegistryFactory.createRegistry(strategy, fMasterKey, fUserKey);
+			fStrategy = new PDERegistryStrategy(new File[] {targetDirectory}, new boolean[] {false}, fMasterKey);
+			fRegistry  = RegistryFactory.createRegistry(fStrategy, fMasterKey, fUserKey);
 			System.out.println("Time to create registry: " + (System.currentTimeMillis() - start));
 		}
 		return fRegistry;
 	}
 	
 	public void targetReloaded() {
+		fStrategy.dispose();
 		fRegistry = null;
 	}
 	

@@ -18,8 +18,10 @@ import java.io.PrintWriter;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.ListIterator;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
@@ -48,6 +50,9 @@ import org.eclipse.pde.internal.core.plugin.WorkspacePluginModel;
 import org.eclipse.pde.internal.core.schema.SchemaDescriptor;
 
 public class WorkspacePluginModelManager extends WorkspaceModelManager {
+	
+	private ArrayList fExtensionListeners = new ArrayList();
+	private ArrayList fChangedExtensions = null;
 
 	/**
 	 * The workspace plug-in model manager is only interested
@@ -246,6 +251,7 @@ public class WorkspacePluginModelManager extends WorkspaceModelManager {
 		if (kind == IResourceDelta.REMOVED) {
 			if (model instanceof IBundlePluginModelBase) {
 				((IBundlePluginModelBase)model).setExtensionsModel(null);
+				addExtensionChange(model, IModelProviderEvent.MODELS_REMOVED);
 			} else {
 				removeModel(file.getProject());
 			}
@@ -255,6 +261,7 @@ public class WorkspacePluginModelManager extends WorkspaceModelManager {
 				((IBundlePluginModelBase)model).setExtensionsModel(extensions);
 				extensions.setBundleModel((IBundlePluginModelBase)model);
 				loadModel(extensions, false);				
+				addExtensionChange(model, IModelProviderEvent.MODELS_REMOVED);
 			} else {
 				createModel(file.getProject(), true);
 			}
@@ -273,6 +280,7 @@ public class WorkspacePluginModelManager extends WorkspaceModelManager {
 				loadModel(model, true);
 				addChange(model, IModelProviderEvent.MODELS_CHANGED);
 			}
+			addExtensionChange(model, IModelProviderEvent.MODELS_CHANGED);
 		}
 	}
 	
@@ -331,6 +339,14 @@ public class WorkspacePluginModelManager extends WorkspaceModelManager {
 		Object model = super.removeModel(project);
 		if (model != null && project.exists(new Path(".options"))) //$NON-NLS-1$
 			PDECore.getDefault().getTracingOptionsManager().reset();
+		if (model instanceof IPluginModelBase) {
+			// PluginModelManager will remove IPluginModelBase form ModelEntry before triggering IModelChangedEvent
+			// Therefore, if we want to track a removed model we need to create an entry for it in the ExtensionDeltaEvent
+//			String id = ((IPluginModelBase)model).getPluginBase().getId();
+//			ModelEntry entry = PluginRegistry.findEntry(id);
+//			if (entry.getWorkspaceModels().length + entry.getExternalModels().length < 2)
+				addExtensionChange((IPluginModelBase)model, IModelProviderEvent.MODELS_REMOVED);
+		}
 		return model;
 	}
 	
@@ -377,6 +393,8 @@ public class WorkspacePluginModelManager extends WorkspaceModelManager {
 	protected void removeListeners() {
 		PDECore.getWorkspace().removeResourceChangeListener(this);
 		JavaCore.removePreProcessingResourceChangedListener(this);
+		if (fExtensionListeners.size() > 0)
+			fExtensionListeners.clear();
 		super.removeListeners();
 	}
 	
@@ -439,4 +457,43 @@ public class WorkspacePluginModelManager extends WorkspaceModelManager {
 		return (URL[])list.toArray(new URL[list.size()]);
 	}
 	
+	void addExtensionDeltaListener(IExtensionDeltaListener listener) {
+		if (!fExtensionListeners.contains(listener))
+			fExtensionListeners.add(listener);
+	}
+	
+	void removeExtensionDeltaListener(IExtensionDeltaListener listener) {
+		fExtensionListeners.remove(listener);
+	}
+	
+	public void fireExtensionDeltaEvent(IExtensionDeltaEvent event) {
+		for (ListIterator li = fExtensionListeners.listIterator(); li.hasNext();) {
+			((IExtensionDeltaListener)li.next()).extensionsChanged(event);
+		}
+	}
+	
+	protected void processModelChanges() {
+		processModelChanges("org.eclipse.pde.internal.core.IExtensionDeltaEvent", fChangedExtensions);
+		fChangedExtensions = null;
+		super.processModelChanges();
+	}
+	
+	protected void createAndFireEvent(String eventId, int type, Collection added,
+			Collection removed, Collection changed) {
+		if (eventId.equals("org.eclipse.pde.internal.core.IExtensionDeltaEvent")) {
+			IExtensionDeltaEvent event = new ExtensionDeltaEvent(type,
+					(IPluginModelBase[])added.toArray(new IPluginModelBase[added.size()]),
+					(IPluginModelBase[])removed.toArray(new IPluginModelBase[removed.size()]),
+					(IPluginModelBase[])changed.toArray(new IPluginModelBase[changed.size()]));
+			fireExtensionDeltaEvent(event);
+		} else 
+			super.createAndFireEvent(eventId, type, added, removed, changed);
+	}
+
+	protected void addExtensionChange(IPluginModelBase plugin, int type) {
+		if (fChangedExtensions == null) 
+			fChangedExtensions = new ArrayList();
+		ModelChange change = new ModelChange(plugin, type);
+		fChangedExtensions.add(change);
+	}
 }

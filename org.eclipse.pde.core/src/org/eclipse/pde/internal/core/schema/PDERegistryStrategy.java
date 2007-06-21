@@ -6,7 +6,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashSet;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -20,8 +19,14 @@ import org.eclipse.core.runtime.spi.RegistryStrategy;
 import org.eclipse.osgi.service.resolver.BundleDescription;
 import org.eclipse.osgi.service.resolver.HostSpecification;
 import org.eclipse.pde.core.plugin.IPluginModelBase;
+import org.eclipse.pde.core.plugin.ModelEntry;
 import org.eclipse.pde.core.plugin.PluginRegistry;
+import org.eclipse.pde.internal.core.IExtensionDeltaEvent;
+import org.eclipse.pde.internal.core.IExtensionDeltaListener;
+import org.eclipse.pde.internal.core.IPluginModelListener;
 import org.eclipse.pde.internal.core.PDECore;
+import org.eclipse.pde.internal.core.PluginModelDelta;
+import org.eclipse.pde.internal.core.PluginModelManager;
 import org.osgi.util.tracker.ServiceTracker;
 
 public class PDERegistryStrategy extends RegistryStrategy{
@@ -31,9 +36,63 @@ public class PDERegistryStrategy extends RegistryStrategy{
 	 */
 	private ServiceTracker xmlTracker = null;
 	
-	private HashSet contributedIds = new HashSet(); 
-	
 	private Object fKey = null;
+	
+	ModelListener fModelListener = null;
+	ExtensionListener fExtensionListener = null;
+	
+	class RegistryListener {
+		IExtensionRegistry fRegistry;
+		
+		public RegistryListener(IExtensionRegistry registry) {
+			fRegistry = registry;
+		}
+		
+		protected final void removeModels(IPluginModelBase[] bases, boolean onlyInactive) {
+			for (int i = 0; i < bases.length; i++) {
+				if (onlyInactive && bases[i].isEnabled())
+					continue;
+				removeBundle(fRegistry, bases[i]);
+			}
+		}
+	}
+	
+	class ModelListener extends RegistryListener implements IPluginModelListener{
+		
+		public ModelListener(IExtensionRegistry registry) {
+			super(registry);
+		}
+
+		public void modelsChanged(PluginModelDelta delta) {
+			// can ignore removed models since the ModelEntries is empty
+			ModelEntry[] entries = delta.getChangedEntries();
+			for (int i = 0; i < entries.length; i++) {
+				// remove all external models if there are any workspace models since they are considered 'activeModels'.  See ModelEntry.getActiveModels().
+				removeModels(entries[i].getExternalModels(), !entries[i].hasWorkspaceModels());
+				removeModels(entries[i].getWorkspaceModels(), true);
+				addBundles(fRegistry, entries[i].getActiveModels());
+			}
+			entries = delta.getAddedEntries();
+			for (int i = 0; i < entries.length; i++) 
+				addBundles(fRegistry, entries[i].getActiveModels());
+		}
+		
+	}
+	
+	class ExtensionListener extends RegistryListener implements IExtensionDeltaListener {
+		
+		public ExtensionListener(IExtensionRegistry registry) {
+			super(registry);
+		}
+
+		public void extensionsChanged(IExtensionDeltaEvent event) {
+			removeModels(event.getRemovedModels(), false);
+			removeModels(event.getChangedModels(), false);
+			addBundles(fRegistry, event.getChangedModels());
+			addBundles(fRegistry, event.getAddedModels());
+		}
+		
+	}
 		
 	public PDERegistryStrategy(File[] storageDirs, boolean[] cacheReadOnly, Object key) {
 		super(storageDirs, cacheReadOnly);
@@ -44,10 +103,21 @@ public class PDERegistryStrategy extends RegistryStrategy{
 		super.onStart(registry);
 		if (!(registry instanceof ExtensionRegistry))
 			return;
-		// Possibly add a listener to listen for models being added/removed
+		
+		// Listen for model changes to register new bundles and unregister removed bundles
+		PluginModelManager manager = PDECore.getDefault().getModelManager();
+		manager.addPluginModelListener(fModelListener = new ModelListener(registry));
+		manager.addExtensionDeltaListener(fExtensionListener = new ExtensionListener(registry));
+		
+		
 		if (!((ExtensionRegistry) registry).filledFromCache()) {
 			processBundles(registry);
 		}
+	}
+	
+	public void onStop(IExtensionRegistry registry) {
+		super.onStop(registry);
+		dispose();
 	}
 
 	/* (non-Javadoc)
@@ -62,10 +132,13 @@ public class PDERegistryStrategy extends RegistryStrategy{
 	}
 	
 	private void processBundles(IExtensionRegistry registry) {
-		IPluginModelBase[] models = PluginRegistry.getAllModels();
-		for (int i = 0; i < models.length; i++) {
-			addBundle(registry, models[i]);
-		}
+		addBundles(registry, PluginRegistry.getActiveModels());
+		// TODO: think about saving information of external plug-ins.  Then add workspace plug-ins
+	}
+	
+	private void addBundles(IExtensionRegistry registry, IPluginModelBase[] bases) {
+		for (int i = 0; i < bases.length; i++)
+			addBundle(registry, bases[i]);
 	}
 	
 	private void addBundle(IExtensionRegistry registry, IPluginModelBase base) {
@@ -81,7 +154,7 @@ public class PDERegistryStrategy extends RegistryStrategy{
 			return;
 		
 		String id = Long.toString(desc.getBundleId());
-		if (contributedIds.contains(id)) 
+		if (((ExtensionRegistry)registry).hasContribution(id)) 
 			return;
 		
 		File input = getFile(base);
@@ -97,11 +170,17 @@ public class PDERegistryStrategy extends RegistryStrategy{
 				createContributor(base), 
 				true, 
 				input.getPath(), 
-//				findResourceBundle(IPluginModelBase base),
 				null,
 				fKey);
-		
-		contributedIds.add(id);
+	}
+	
+	private void removeBundle(IExtensionRegistry registry, IPluginModelBase base) {
+		BundleDescription desc =  base.getBundleDescription();
+		if (desc == null)
+			return;
+		String id = Long.toString(desc.getBundleId());
+		if (((ExtensionRegistry)registry).hasContribution(id))
+			((ExtensionRegistry)registry).remove(id);
 	}
 	
 	private File getFile(IPluginModelBase base) {
@@ -151,40 +230,10 @@ public class PDERegistryStrategy extends RegistryStrategy{
 		return new RegistryContributor(id, name, hostId, hostName);
 	}
 	
-//	WORK DONE TO TRY TO SUPPORT NL TRANSLATION STRINGS IN EXTENSIONS
-//	private ResourceBundle findResourceBundle(IPluginModelBase base) {
-//		String localization = null;
-//		if (base instanceof IBundlePluginModelBase) {
-//			IBundlePluginModelBase bbase = (IBundlePluginModelBase)base;
-//			String localization = bbase.getBundleModel().getBundle().getHeader(Constants.BUNDLE_LOCALIZATION);
-//			if (localization == null)
-//				localization = Constants.BUNDLE_LOCALIZATION_DEFAULT_BASENAME;
-//		} else 
-//			localization = "plugin";
-//
-//		String loc = base.getInstallLocation();
-//		File file = new File(loc);
-//		if (file.isFile())
-//		
-//		
-//		String[] varients = buildNLVariants(TargetPlatform.getNL());
-//		for (int i = 0; i < varients.length; i++) {
-//			
-//		}
-//	}
-	
-//	private String[] buildNLVariants(String nl) {
-//		ArrayList result = new ArrayList();
-//		int lastSeparator;
-//		while ((lastSeparator = nl.lastIndexOf('_')) != -1) {
-//			result.add(nl);
-//			if (lastSeparator != -1) {
-//				nl = nl.substring(0, lastSeparator);
-//			}
-//		}
-//		result.add(nl);
-//		// always add the default locale string
-//		result.add(""); //$NON-NLS-1$
-//		return (String[]) result.toArray(new String[result.size()]);
-//	}
+	public void dispose() {
+		PluginModelManager manager = PDECore.getDefault().getModelManager();
+		manager.removePluginModelListener(fModelListener);
+		manager.removeExtensionDeltaListener(fExtensionListener);
+	}
+
 }
