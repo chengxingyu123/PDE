@@ -18,6 +18,8 @@ import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Preferences;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.DialogPage;
+import org.eclipse.jface.dialogs.IDialogPage;
+import org.eclipse.jface.preference.IPreferencePage;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -30,7 +32,6 @@ import org.eclipse.pde.core.plugin.IPluginExtensionPoint;
 import org.eclipse.pde.core.plugin.IPluginModelBase;
 import org.eclipse.pde.internal.core.ICoreConstants;
 import org.eclipse.pde.internal.core.PDECore;
-import org.eclipse.pde.internal.core.PDEStateHelper;
 import org.eclipse.pde.internal.core.SourceLocation;
 import org.eclipse.pde.internal.core.SourceLocationManager;
 import org.eclipse.pde.internal.core.itarget.ITarget;
@@ -240,7 +241,7 @@ public class TargetSourceTab {
 		text.setLayoutData(gd);
 		text.addSelectionListener(new SelectionAdapter() {
 			public void widgetSelected(SelectionEvent e) {
-			IPluginExtensionPoint point = PDEStateHelper.findExtensionPoint("org.eclipse.pde.core.source"); //$NON-NLS-1$
+			IPluginExtensionPoint point = PDECore.getDefault().getExtensionsRegistry().findExtensionPoint("org.eclipse.pde.core.source"); //$NON-NLS-1$
 			if (point != null)
 				new ShowDescriptionAction(point, true).run();	
 			}

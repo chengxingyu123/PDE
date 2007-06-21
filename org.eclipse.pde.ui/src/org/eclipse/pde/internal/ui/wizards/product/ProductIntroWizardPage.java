@@ -22,7 +22,7 @@ import org.eclipse.pde.core.plugin.IPluginExtensionPoint;
 import org.eclipse.pde.core.plugin.IPluginModelBase;
 import org.eclipse.pde.core.plugin.IPluginObject;
 import org.eclipse.pde.core.plugin.PluginRegistry;
-import org.eclipse.pde.internal.core.PDEStateHelper;
+import org.eclipse.pde.internal.core.PDECore;
 import org.eclipse.pde.internal.core.iproduct.IProduct;
 import org.eclipse.pde.internal.ui.IHelpContextIds;
 import org.eclipse.pde.internal.ui.PDEUIMessages;
@@ -241,7 +241,7 @@ public class ProductIntroWizardPage extends WizardPage implements IHyperlinkList
 
 	public void linkActivated(HyperlinkEvent e) {
 		String extPoint = "org.eclipse.ui." + e.getHref().toString(); //$NON-NLS-1$
-		IPluginExtensionPoint point = PDEStateHelper.findExtensionPoint(extPoint);
+		IPluginExtensionPoint point = PDECore.getDefault().getExtensionsRegistry().findExtensionPoint(extPoint);
 		if (point != null)
 			new ShowDescriptionAction(point, true).run();
 		
