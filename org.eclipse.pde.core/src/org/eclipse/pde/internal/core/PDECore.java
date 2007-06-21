@@ -29,6 +29,7 @@ import org.eclipse.pde.core.plugin.IPluginModelBase;
 import org.eclipse.pde.internal.core.builders.CompilerFlags;
 import org.eclipse.pde.internal.core.builders.FeatureRebuilder;
 import org.eclipse.pde.internal.core.builders.PluginRebuilder;
+import org.eclipse.pde.internal.core.schema.PDEExtensionRegistry;
 import org.eclipse.pde.internal.core.schema.SchemaRegistry;
 import org.eclipse.update.configurator.ConfiguratorUtils;
 import org.osgi.framework.BundleContext;
@@ -52,6 +53,7 @@ public class PDECore extends Plugin {
 	private static PDECore inst;
 	
 	private static IPluginModelBase[] registryPlugins;
+	private static PDEExtensionRegistry fExtensionRegistry = null;
 
 	public static PDECore getDefault() {
 		return inst;
@@ -193,6 +195,13 @@ public class PDECore extends Plugin {
 			fSchemaRegistry = new SchemaRegistry();
 		return fSchemaRegistry;
 	}
+	
+	public PDEExtensionRegistry getExtensionsRegistry() {
+		if (fExtensionRegistry == null) {
+			fExtensionRegistry = new PDEExtensionRegistry();
+		}
+		return fExtensionRegistry;
+	}
 
 	public SourceLocationManager getSourceLocationManager() {
 		if (fSourceLocationManager == null)
@@ -271,6 +280,10 @@ public class PDECore extends Plugin {
 		if (fModelManager != null) {
 			fModelManager.shutdown();
 			fModelManager = null;
+		}
+		if (fExtensionRegistry != null) {
+			fExtensionRegistry.stop();
+			fExtensionRegistry = null;
 		}
 	}
 }

@@ -35,6 +35,7 @@ public class TargetPlatformResetJob extends Job {
 		manager.getExternalModelManager().setModels(models);
 		manager.resetState(fState);
 		PDECore.getDefault().getFeatureModelManager().targetReloaded();
+		PDECore.getDefault().getExtensionsRegistry().targetReloaded();
 		monitor.done();
 		return Status.OK_STATUS;
 	}

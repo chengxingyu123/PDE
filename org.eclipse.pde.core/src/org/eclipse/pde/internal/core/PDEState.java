@@ -443,5 +443,9 @@ public class PDEState extends MinimalState {
 		
 		return (BundleDescription[]) descriptions.toArray(new BundleDescription[descriptions.size()]);
 	}
+	
+	public File getTargetDirectory() {
+		return new File(DIR, Long.toString(fTargetTimestamp) + ".target"); //$NON-NLS-1$
+	}
 
 }
