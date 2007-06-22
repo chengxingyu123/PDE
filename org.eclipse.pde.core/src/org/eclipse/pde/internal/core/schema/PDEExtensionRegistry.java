@@ -70,8 +70,8 @@ public class PDEExtensionRegistry {
 		if (point == null) {
 			return null;
 		}
-		IContributor contibutor = point.getContributor();
-		return PluginRegistry.findModel(contibutor.getName());
+		IContributor contributor = point.getContributor();
+		return PluginRegistry.findModel(contributor.getName());
 	}
 	
 	private IExtensionPoint getExtensionPoint(String pointId) {
