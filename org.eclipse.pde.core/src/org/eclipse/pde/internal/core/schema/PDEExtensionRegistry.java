@@ -21,19 +21,23 @@ public class PDEExtensionRegistry {
 	private IExtensionRegistry fRegistry = null;
 	private PDERegistryStrategy fStrategy = null;
 	
+	public PDEExtensionRegistry() {
+		if (fStrategy == null) {
+			File targetDirectory = PDECore.getDefault().getModelManager().getState().getTargetDirectory();
+			// create the strategy without creating registry.  That way we create the registry at the last possible moment.
+			// This way we can listen to events in PDE without creating the registry until we need it.
+			fStrategy = new PDERegistryStrategy(new File[] {targetDirectory}, new boolean[] {false}, fMasterKey, this);
+		}
+	}
+	
 	public void stop() {
 		if (fRegistry != null)
 			fRegistry.stop(fMasterKey);
 	}
 	
 	private IExtensionRegistry getRegistry() {
-		if (fRegistry == null) {
-			long start = System.currentTimeMillis();
-			File targetDirectory = PDECore.getDefault().getModelManager().getState().getTargetDirectory();
-			fStrategy = new PDERegistryStrategy(new File[] {targetDirectory}, new boolean[] {false}, fMasterKey);
-			fRegistry  = RegistryFactory.createRegistry(fStrategy, fMasterKey, fUserKey);
-			System.out.println("Time to create registry: " + (System.currentTimeMillis() - start));
-		}
+		if (fRegistry == null)
+			createRegistry();
 		return fRegistry;
 	}
 	
@@ -89,6 +93,12 @@ public class PDEExtensionRegistry {
 			}
 		}
 		return null;
+	}
+	
+	void createRegistry() {
+		long start = System.currentTimeMillis();
+		fRegistry  = RegistryFactory.createRegistry(fStrategy, fMasterKey, fUserKey);
+		System.out.println("Time to create registry: " + (System.currentTimeMillis() - start));
 	}
 
 }

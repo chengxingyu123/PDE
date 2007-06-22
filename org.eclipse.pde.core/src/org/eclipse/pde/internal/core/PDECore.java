@@ -169,8 +169,12 @@ public class PDECore extends Plugin {
 	}
 
 	public PluginModelManager getModelManager() {
-		if (fModelManager == null)
+		if (fModelManager == null) {
 			fModelManager = new PluginModelManager();
+			// when initializing plug-in models, create the extension registry so it can track relevant (ModelChange) events.
+			if (fExtensionRegistry == null)
+				getExtensionsRegistry();
+		}
 		return fModelManager;
 	}
 	

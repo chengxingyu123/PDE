@@ -38,15 +38,13 @@ public class PDERegistryStrategy extends RegistryStrategy{
 	
 	private Object fKey = null;
 	
-	ModelListener fModelListener = null;
-	ExtensionListener fExtensionListener = null;
+	private ModelListener fModelListener = null;
+	private ExtensionListener fExtensionListener = null;
+	private PDEExtensionRegistry fPDERegistry = null;
+	
 	
 	class RegistryListener {
 		IExtensionRegistry fRegistry;
-		
-		public RegistryListener(IExtensionRegistry registry) {
-			fRegistry = registry;
-		}
 		
 		protected final void removeModels(IPluginModelBase[] bases, boolean onlyInactive) {
 			for (int i = 0; i < bases.length; i++) {
@@ -55,15 +53,17 @@ public class PDERegistryStrategy extends RegistryStrategy{
 				removeBundle(fRegistry, bases[i]);
 			}
 		}
+		
+		public void setRegistry(IExtensionRegistry registry) {
+			fRegistry = registry;
+		}
 	}
 	
 	class ModelListener extends RegistryListener implements IPluginModelListener{
 		
-		public ModelListener(IExtensionRegistry registry) {
-			super(registry);
-		}
-
 		public void modelsChanged(PluginModelDelta delta) {
+			if (fRegistry == null)
+				createRegistry();
 			// can ignore removed models since the ModelEntries is empty
 			ModelEntry[] entries = delta.getChangedEntries();
 			for (int i = 0; i < entries.length; i++) {
@@ -81,11 +81,9 @@ public class PDERegistryStrategy extends RegistryStrategy{
 	
 	class ExtensionListener extends RegistryListener implements IExtensionDeltaListener {
 		
-		public ExtensionListener(IExtensionRegistry registry) {
-			super(registry);
-		}
-
 		public void extensionsChanged(IExtensionDeltaEvent event) {
+			if (fRegistry == null)
+				createRegistry();
 			removeModels(event.getRemovedModels(), false);
 			removeModels(event.getChangedModels(), false);
 			addBundles(fRegistry, event.getChangedModels());
@@ -94,9 +92,16 @@ public class PDERegistryStrategy extends RegistryStrategy{
 		
 	}
 		
-	public PDERegistryStrategy(File[] storageDirs, boolean[] cacheReadOnly, Object key) {
+	public PDERegistryStrategy(File[] storageDirs, boolean[] cacheReadOnly, Object key, PDEExtensionRegistry registry) {
 		super(storageDirs, cacheReadOnly);
 		fKey = key;
+		
+		// Listen for model changes to register new bundles and unregister removed bundles
+		PluginModelManager manager = PDECore.getDefault().getModelManager();
+		manager.addPluginModelListener(fModelListener = new ModelListener());
+		manager.addExtensionDeltaListener(fExtensionListener = new ExtensionListener());
+		
+		fPDERegistry = registry;
 	}
 	
 	public void onStart(IExtensionRegistry registry) {
@@ -104,11 +109,8 @@ public class PDERegistryStrategy extends RegistryStrategy{
 		if (!(registry instanceof ExtensionRegistry))
 			return;
 		
-		// Listen for model changes to register new bundles and unregister removed bundles
-		PluginModelManager manager = PDECore.getDefault().getModelManager();
-		manager.addPluginModelListener(fModelListener = new ModelListener(registry));
-		manager.addExtensionDeltaListener(fExtensionListener = new ExtensionListener(registry));
-		
+		fModelListener.setRegistry(registry);
+		fExtensionListener.setRegistry(registry);
 		
 		if (!((ExtensionRegistry) registry).filledFromCache()) {
 			processBundles(registry);
@@ -234,6 +236,10 @@ public class PDERegistryStrategy extends RegistryStrategy{
 		PluginModelManager manager = PDECore.getDefault().getModelManager();
 		manager.removePluginModelListener(fModelListener);
 		manager.removeExtensionDeltaListener(fExtensionListener);
+	}
+	
+	private void createRegistry() {
+		fPDERegistry.createRegistry();
 	}
 
 }
