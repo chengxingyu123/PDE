@@ -43,7 +43,6 @@ import org.eclipse.pde.internal.core.plugin.WorkspaceFragmentModel;
 import org.eclipse.pde.internal.core.plugin.WorkspacePluginModel;
 import org.eclipse.pde.internal.core.plugin.WorkspacePluginModelBase;
 import org.eclipse.pde.internal.core.util.CoreUtility;
-import org.w3c.dom.Node;
 
 
 public class PDEState extends MinimalState {
@@ -262,8 +261,8 @@ public class PDEState extends MinimalState {
  			IFile file = project.getFile(filename);
  			if (file.exists()) {
  				WorkspaceExtensionsModel extensions = new WorkspaceExtensionsModel(file);
- 				extensions.load(desc, this);
  				extensions.setBundleModel(model);
+ 				extensions.load(desc, this);
  				model.setExtensionsModel(extensions);
  			}
  			return model;
@@ -358,18 +357,6 @@ public class PDEState extends MinimalState {
 				}
 			}
 		}
-	}	
-	
-	public Node[] getExtensions(long bundleID) {
-		return fExtensionRegistry.getExtensions(bundleID);
-	}
-	
-	public Node[] getExtensionPoints(long bundleID) {
-		return fExtensionRegistry.getExtensionPoints(bundleID);
-	}
-
-	public Node[] getAllExtensions(long bundleID) {
-		return fExtensionRegistry.getAllExtensions(bundleID);
 	}
 	
 	public String getClassName(long bundleID) {

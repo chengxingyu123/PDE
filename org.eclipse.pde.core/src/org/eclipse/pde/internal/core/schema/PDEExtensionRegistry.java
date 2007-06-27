@@ -1,17 +1,23 @@
 package org.eclipse.pde.internal.core.schema;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.HashMap;
 
+import org.eclipse.core.internal.registry.ExtensionRegistry;
 import org.eclipse.core.runtime.IContributor;
 import org.eclipse.core.runtime.IExtension;
 import org.eclipse.core.runtime.IExtensionPoint;
 import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.RegistryFactory;
+import org.eclipse.osgi.service.resolver.BundleDescription;
+import org.eclipse.pde.core.plugin.IPluginExtension;
 import org.eclipse.pde.core.plugin.IPluginExtensionPoint;
 import org.eclipse.pde.core.plugin.IPluginModelBase;
 import org.eclipse.pde.core.plugin.PluginRegistry;
 import org.eclipse.pde.internal.core.PDECore;
+import org.eclipse.pde.internal.core.plugin.ConfigurationExtension;
+import org.eclipse.pde.internal.core.plugin.ConfigurationExtensionPoint;
 
 public class PDEExtensionRegistry {
 	
@@ -96,9 +102,33 @@ public class PDEExtensionRegistry {
 	}
 	
 	void createRegistry() {
-		long start = System.currentTimeMillis();
 		fRegistry  = RegistryFactory.createRegistry(fStrategy, fMasterKey, fUserKey);
-		System.out.println("Time to create registry: " + (System.currentTimeMillis() - start));
+	}
+	
+	public IPluginExtension[] findExtensionsForPlugin(String pluginId) {
+		IPluginModelBase base = PluginRegistry.findModel(pluginId);
+		BundleDescription desc = (base != null) ? base.getBundleDescription() : null;
+		if (desc == null)
+			return new IPluginExtension[0];
+		IExtension[] extensions = ((ExtensionRegistry)getRegistry()).getExtensionsFrom(Long.toString(desc.getBundleId()));
+		ArrayList list = new ArrayList();
+		for (int i = 0; i < extensions.length; i++) { 
+			list.add(new ConfigurationExtension(extensions[i]));
+		}
+		return (IPluginExtension[]) list.toArray(new IPluginExtension[list.size()]);
+	}
+	
+	public IPluginExtensionPoint[] findExtensionPointsForPlugin(String pluginId) {
+		IPluginModelBase base = PluginRegistry.findModel(pluginId);
+		BundleDescription desc = (base != null) ? base.getBundleDescription() : null;
+		if (desc == null)
+			return new IPluginExtensionPoint[0];
+		IExtensionPoint[] extensions = ((ExtensionRegistry)getRegistry()).getExtensionPointsFrom(Long.toString(desc.getBundleId()));
+		ArrayList list = new ArrayList();
+		for (int i = 0; i < extensions.length; i++) { 
+			list.add(new ConfigurationExtensionPoint(extensions[i]));
+		}
+		return (IPluginExtensionPoint[]) list.toArray(new IPluginExtensionPoint[list.size()]);
 	}
 
 }

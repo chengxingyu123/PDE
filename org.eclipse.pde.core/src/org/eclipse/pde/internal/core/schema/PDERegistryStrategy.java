@@ -18,6 +18,8 @@ import org.eclipse.core.runtime.spi.RegistryContributor;
 import org.eclipse.core.runtime.spi.RegistryStrategy;
 import org.eclipse.osgi.service.resolver.BundleDescription;
 import org.eclipse.osgi.service.resolver.HostSpecification;
+import org.eclipse.pde.core.plugin.IExtensions;
+import org.eclipse.pde.core.plugin.IPluginBase;
 import org.eclipse.pde.core.plugin.IPluginModelBase;
 import org.eclipse.pde.core.plugin.ModelEntry;
 import org.eclipse.pde.core.plugin.PluginRegistry;
@@ -27,6 +29,8 @@ import org.eclipse.pde.internal.core.IPluginModelListener;
 import org.eclipse.pde.internal.core.PDECore;
 import org.eclipse.pde.internal.core.PluginModelDelta;
 import org.eclipse.pde.internal.core.PluginModelManager;
+import org.eclipse.pde.internal.core.bundle.BundlePluginBase;
+import org.eclipse.pde.internal.core.plugin.AbstractExtensions;
 import org.osgi.util.tracker.ServiceTracker;
 
 public class PDERegistryStrategy extends RegistryStrategy{
@@ -48,6 +52,7 @@ public class PDERegistryStrategy extends RegistryStrategy{
 		
 		protected final void removeModels(IPluginModelBase[] bases, boolean onlyInactive) {
 			for (int i = 0; i < bases.length; i++) {
+				resetModel(bases[i]);
 				if (onlyInactive && bases[i].isEnabled())
 					continue;
 				removeBundle(fRegistry, bases[i]);
@@ -56,6 +61,18 @@ public class PDERegistryStrategy extends RegistryStrategy{
 		
 		public void setRegistry(IExtensionRegistry registry) {
 			fRegistry = registry;
+		}
+		
+		private void resetModel(IPluginModelBase model) {
+			IPluginBase base = model.getPluginBase();
+			if (base instanceof BundlePluginBase) {
+				IExtensions ext = ((BundlePluginBase)base).getExtensionsRoot();
+				if (ext != null && ext instanceof AbstractExtensions) {
+					((AbstractExtensions)ext).reset();
+				}
+			} else if (base instanceof AbstractExtensions){
+				((AbstractExtensions)base).resetExtensions();
+			}
 		}
 	}
 	

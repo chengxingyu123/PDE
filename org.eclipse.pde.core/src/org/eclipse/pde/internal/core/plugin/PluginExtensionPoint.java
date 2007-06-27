@@ -17,7 +17,6 @@ import org.eclipse.pde.core.plugin.IFragment;
 import org.eclipse.pde.core.plugin.IPluginBase;
 import org.eclipse.pde.core.plugin.IPluginExtensionPoint;
 import org.eclipse.pde.core.plugin.IPluginModelBase;
-import org.w3c.dom.Node;
 
 public class PluginExtensionPoint extends IdentifiablePluginObject
 	implements IPluginExtensionPoint {
@@ -27,7 +26,7 @@ public class PluginExtensionPoint extends IdentifiablePluginObject
 	protected String fSchema;
 	
 	public boolean isValid() {
-		return fID != null && fName != null;
+		return getId() != null && getName() != null;
 	}
 
 	public String getFullId() {
@@ -46,13 +45,6 @@ public class PluginExtensionPoint extends IdentifiablePluginObject
 	
 	public String getSchema() {
 		return fSchema;
-	}
-	
-	void load(Node node) {
-		this.fID = getNodeAttribute(node, "id"); //$NON-NLS-1$
-		fName = getNodeAttribute(node, "name"); //$NON-NLS-1$
-		fSchema = getNodeAttribute(node, "schema"); //$NON-NLS-1$
-		fStartLine = Integer.parseInt(getNodeAttribute(node, "line")); //$NON-NLS-1$
 	}
 	
 	public boolean equals(Object obj) {

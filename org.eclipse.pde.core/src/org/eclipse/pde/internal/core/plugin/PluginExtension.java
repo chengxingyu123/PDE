@@ -19,8 +19,6 @@ import org.eclipse.pde.core.plugin.IPluginObject;
 import org.eclipse.pde.internal.core.PDECore;
 import org.eclipse.pde.internal.core.ischema.ISchema;
 import org.eclipse.pde.internal.core.schema.SchemaRegistry;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 
 public class PluginExtension extends PluginParent implements IPluginExtension {
 
@@ -35,7 +33,7 @@ public class PluginExtension extends PluginParent implements IPluginExtension {
 	}
 	
 	public boolean isValid() {
-		return fPoint != null;
+		return getPoint() != null;
 	}
 		
 	public Object getSchema() {
@@ -46,25 +44,6 @@ public class PluginExtension extends PluginParent implements IPluginExtension {
 			schema = null;
 		}
 		return schema;
-	}
-	
-	void load(Node node) {
-		this.fID = getNodeAttribute(node, "id"); //$NON-NLS-1$
-		fName = getNodeAttribute(node, "name"); //$NON-NLS-1$
-		fPoint = getNodeAttribute(node, "point"); //$NON-NLS-1$
-		NodeList children = node.getChildNodes();
-		for (int i = 0; i < children.getLength(); i++) {
-			Node child = children.item(i);
-			if (child.getNodeType() == Node.ELEMENT_NODE) {
-				PluginElement childElement = new PluginElement();
-				childElement.setModel(getModel());
-				childElement.setInTheModel(true);
-				childElement.setParent(this);
-				this.fChildren.add(childElement);
-				childElement.load(child);
-			}
-		}
-		fStartLine = Integer.parseInt(getNodeAttribute(node, "line")); //$NON-NLS-1$
 	}
 
 	public boolean equals(Object obj) {

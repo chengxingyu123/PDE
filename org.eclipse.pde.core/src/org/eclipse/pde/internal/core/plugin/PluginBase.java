@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2007 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -96,32 +96,6 @@ public abstract class PluginBase extends AbstractExtensions implements IPluginBa
 		fHasBundleStructure = state.hasBundleStructure(bundleDesc.getBundleId());
 		loadRuntime(bundleDesc, state);
 		loadImports(bundleDesc);		
-		loadExtensionPoints(state.getExtensionPoints(bundleDesc.getBundleId()));
-		loadExtensions(state.getExtensions(bundleDesc.getBundleId()));
-	}
-	
-	void loadExtensions(Node[] list) {
-		fExtensions = new ArrayList();
-		for (int i = 0; i < list.length; i++) {
-			PluginExtension extension = new PluginExtension();
-			extension.setInTheModel(true);
-			extension.setModel(getModel());
-			extension.setParent(this);
-			extension.load(list[i]);
-			fExtensions.add(extension);
-		}
-	}
-	
-	void loadExtensionPoints(Node[] list) {
-		fExtensionPoints = new ArrayList(list.length);
-		for (int i = 0; i < list.length; i++) {
-			PluginExtensionPoint extPoint = new PluginExtensionPoint();
-			extPoint.setInTheModel(true);
-			extPoint.setModel(getModel());
-			extPoint.setParent(this);
-			extPoint.load(list[i]);
-			fExtensionPoints.add(extPoint);
-		}
 	}
 	
 	public void restoreProperty(String name, Object oldValue, Object newValue)
@@ -233,8 +207,6 @@ public abstract class PluginBase extends AbstractExtensions implements IPluginBa
 			loadRuntime(child);
 		} else if (name.equals("requires")) { //$NON-NLS-1$
 			loadImports(child);
-		} else  {
-			super.processChild(child);
 		}
 	}
 
