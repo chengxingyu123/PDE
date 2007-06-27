@@ -47,7 +47,6 @@ import org.eclipse.pde.internal.core.util.CoreUtility;
 
 public class PDEState extends MinimalState {
 	
-	private PDEExtensionRegistry fExtensionRegistry;
 	private PDEAuxiliaryState fAuxiliaryState;
 	
 	private ArrayList fTargetModels = new ArrayList();
@@ -64,7 +63,6 @@ public class PDEState extends MinimalState {
 		fAuxiliaryState = new PDEAuxiliaryState(state.fAuxiliaryState);
 		if (fAuxiliaryState.fPluginInfos.isEmpty()) 
 			fAuxiliaryState.readPluginInfoCache(new File(DIR, Long.toString(fTargetTimestamp) + ".target")); //$NON-NLS-1$
-		fExtensionRegistry = new PDEExtensionRegistry(state.fExtensionRegistry);
 	}
 	
 	public PDEState(URL[] urls, boolean resolve, IProgressMonitor monitor) {
@@ -73,21 +71,18 @@ public class PDEState extends MinimalState {
 	
 	public PDEState(URL[] workspace, URL[] target, boolean resolve, IProgressMonitor monitor) {
 		long start = System.currentTimeMillis();	
-		fExtensionRegistry = new PDEExtensionRegistry();
 		fAuxiliaryState = new PDEAuxiliaryState();
 		
 		if (resolve) {
 			readTargetState(target, monitor);
 		} else {
 			createNewTargetState(resolve, target, monitor);	
-			fExtensionRegistry.createExtensionDocument(fState);
 		}
 		createTargetModels(fState.getBundles());
 		
 		if (resolve && workspace.length > 0 && !fNewState && !"true".equals(System.getProperty("pde.nocache"))) //$NON-NLS-1$ //$NON-NLS-2$
 			readWorkspaceState(workspace);
 		
-		fExtensionRegistry.clear();
 		fAuxiliaryState.clear();
 		
 		if (DEBUG)
@@ -111,8 +106,6 @@ public class PDEState extends MinimalState {
 				fState.resolve(false);
 			fId = fState.getBundles().length;
 		}
-		if (!fExtensionRegistry.readExtensionsCache(dir))
-			fExtensionRegistry.saveExtensions(fState, dir);
 	}
 	
 	private void createNewTargetState(boolean resolve, URL[] urls, IProgressMonitor monitor) {
@@ -161,8 +154,7 @@ public class PDEState extends MinimalState {
 		File dir = new File(DIR, Long.toString(workspace) + ".workspace"); //$NON-NLS-1$
 		State localState = readStateCache(dir);
 		fCombined = localState != null 
-						&& fAuxiliaryState.readPluginInfoCache(dir) 
-						&& fExtensionRegistry.readExtensionsCache(dir);
+						&& fAuxiliaryState.readPluginInfoCache(dir);
 		if (fCombined) {
 			long targetCount = fId;
 			BundleDescription[] bundles = localState.getBundles();
@@ -309,7 +301,6 @@ public class PDEState extends MinimalState {
 			}
 			saveState(state, dir);
 			PDEAuxiliaryState.writePluginInfo(models, dir);
-			PDEExtensionRegistry.writeExtensions(models, dir);
 		}
 		clearStaleStates(".target", fTargetTimestamp); //$NON-NLS-1$
 		clearStaleStates(".workspace", timestamp); //$NON-NLS-1$
@@ -374,10 +365,6 @@ public class PDEState extends MinimalState {
 	public boolean hasBundleStructure(long bundleID) {
 		return fAuxiliaryState.hasBundleStructure(bundleID);
 	}
-	
-	public String getSchemaVersion(long bundleID) {
-		return fExtensionRegistry.getSchemaVersion(bundleID);	
-	}
 
 	public String getPluginName(long bundleID) {
 		return fAuxiliaryState.getPluginName(bundleID);
@@ -423,7 +410,6 @@ public class PDEState extends MinimalState {
 			dir.mkdirs();
 		fAuxiliaryState.savePluginInfo(dir);
 		saveState(dir);
-		fExtensionRegistry.saveExtensions(fState, dir);
 		
 		// resolve state - same steps as when populating a new State
 		resolveState(false);

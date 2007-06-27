@@ -10,9 +10,16 @@
  *******************************************************************************/
 package org.eclipse.pde.internal.core.plugin;
 
+import java.io.BufferedInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.SAXParserFactory;
+
+import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.pde.core.IModelChangedEvent;
 import org.eclipse.pde.core.plugin.IExtensions;
@@ -20,8 +27,10 @@ import org.eclipse.pde.core.plugin.IPluginBase;
 import org.eclipse.pde.core.plugin.IPluginExtension;
 import org.eclipse.pde.core.plugin.IPluginExtensionPoint;
 import org.eclipse.pde.core.plugin.IPluginObject;
+import org.eclipse.pde.core.plugin.ISharedPluginModel;
 import org.eclipse.pde.internal.core.PDECore;
 import org.eclipse.pde.internal.core.PDECoreMessages;
+import org.xml.sax.SAXException;
 
 public abstract class AbstractExtensions extends PluginObject implements IExtensions {
 	
@@ -152,6 +161,25 @@ public abstract class AbstractExtensions extends PluginObject implements IExtens
 	}
 	
 	public String getSchemaVersion() {
+		if (fSchemaVersion == null) {
+			// since schema version is only needed on workspace models in very few situtations, reading information from the file should suffice
+			ISharedPluginModel model = getModel();
+			if (model != null) {
+				org.eclipse.core.resources.IResource res = model.getUnderlyingResource();
+				if (res != null && res instanceof IFile) {
+					try {
+						InputStream stream = new BufferedInputStream(((IFile)res).getContents(true));
+						PluginHandler handler = new PluginHandler(true);
+						SAXParserFactory.newInstance().newSAXParser().parse(stream, handler);
+						return handler.getSchemaVersion();
+					} catch (CoreException e) {
+					} catch (SAXException e) {
+					} catch (IOException e) {
+					} catch (ParserConfigurationException e) {
+					}
+				}
+			}
+		}
 		return fSchemaVersion;
 	}
 	

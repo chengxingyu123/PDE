@@ -92,7 +92,6 @@ public abstract class PluginBase extends AbstractExtensions implements IPluginBa
 		fVersion = bundleDesc.getVersion().toString();
 		fName = state.getPluginName(bundleDesc.getBundleId());
 		fProviderName = state.getProviderName(bundleDesc.getBundleId());
-		fSchemaVersion = state.getSchemaVersion(bundleDesc.getBundleId());
 		fHasBundleStructure = state.hasBundleStructure(bundleDesc.getBundleId());
 		loadRuntime(bundleDesc, state);
 		loadImports(bundleDesc);		

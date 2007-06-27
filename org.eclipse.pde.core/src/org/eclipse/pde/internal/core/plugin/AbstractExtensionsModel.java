@@ -98,7 +98,6 @@ public abstract class AbstractExtensionsModel
 	public void load(BundleDescription desc, PDEState state) {
 		fExtensions = createExtensions();
 		fExtensions.setModel(this);
-		fExtensions.load(state.getSchemaVersion(desc.getBundleId()));
 		updateTimeStamp();
 		setLoaded(true);
 	}
