@@ -56,18 +56,6 @@ public class PDERegistryStrategy extends RegistryStrategy{
 		public void setRegistry(IExtensionRegistry registry) {
 			fRegistry = registry;
 		}
-		
-		private void resetModel(IPluginModelBase model) {
-			IPluginBase base = model.getPluginBase();
-			if (base instanceof BundlePluginBase) {
-				IExtensions ext = ((BundlePluginBase)base).getExtensionsRoot();
-				if (ext != null && ext instanceof AbstractExtensions) {
-					((AbstractExtensions)ext).reset();
-				}
-			} else if (base instanceof AbstractExtensions){
-				((AbstractExtensions)base).resetExtensions();
-			}
-		}
 	}
 	
 	class ModelListener extends RegistryListener implements IPluginModelListener{
@@ -146,7 +134,6 @@ public class PDERegistryStrategy extends RegistryStrategy{
 	
 	private void processBundles(IExtensionRegistry registry) {
 		addBundles(registry, PluginRegistry.getActiveModels());
-		// TODO: think about saving information of external plug-ins.  Then add workspace plug-ins
 	}
 	
 	private void addBundles(IExtensionRegistry registry, IPluginModelBase[] bases) {
@@ -194,6 +181,18 @@ public class PDERegistryStrategy extends RegistryStrategy{
 		String id = Long.toString(desc.getBundleId());
 		if (((ExtensionRegistry)registry).hasContribution(id))
 			((ExtensionRegistry)registry).remove(id);
+	}
+	
+	private void resetModel(IPluginModelBase model) {
+		IPluginBase base = model.getPluginBase();
+		if (base instanceof BundlePluginBase) {
+			IExtensions ext = ((BundlePluginBase)base).getExtensionsRoot();
+			if (ext != null && ext instanceof AbstractExtensions) {
+				((AbstractExtensions)ext).reset();
+			}
+		} else if (base instanceof AbstractExtensions){
+			((AbstractExtensions)base).resetExtensions();
+		}
 	}
 	
 	private File getFile(IPluginModelBase base) {
@@ -251,6 +250,20 @@ public class PDERegistryStrategy extends RegistryStrategy{
 	
 	private void createRegistry() {
 		fPDERegistry.createRegistry();
+	}
+
+	public long getContributionsTimestamp() {
+		// TODO: don't need complicated timestamp algorithm.  Just need to figure out if there was a workspace crash after the last time we loaded.
+		// Can probably do something with a flag set to true upon shutdown and it set to false after the first query.  
+		// That way if a crash happened the flag would be set to false.
+		IPluginModelBase[] bases = PluginRegistry.getActiveModels();
+		long timeStamp = 0;
+		for (int i = 0; i < bases.length; i++) {
+			File location = getFile(bases[i]);
+			if (location != null)
+			timeStamp ^= location.lastModified();
+		}
+		return timeStamp;
 	}
 
 }

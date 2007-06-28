@@ -19,6 +19,7 @@ import org.eclipse.pde.core.plugin.PluginRegistry;
 import org.eclipse.pde.internal.core.ibundle.IBundlePluginModelBase;
 import org.eclipse.pde.internal.core.plugin.PluginExtension;
 import org.eclipse.pde.internal.core.plugin.PluginExtensionPoint;
+import org.eclipse.pde.internal.core.util.CoreUtility;
 
 public class PDEExtensionRegistry {
 	
@@ -28,12 +29,14 @@ public class PDEExtensionRegistry {
 	private IExtensionRegistry fRegistry = null;
 	private PDERegistryStrategy fStrategy = null;
 	
+	private static final String EXTENSION_DIR = ".extensions";
+	
 	public PDEExtensionRegistry() {
 		if (fStrategy == null) {
-			File targetDirectory = PDECore.getDefault().getModelManager().getState().getTargetDirectory();
+			File extensionsDir = new File(PDECore.getDefault().getStateLocation().toFile(), EXTENSION_DIR);
 			// create the strategy without creating registry.  That way we create the registry at the last possible moment.
 			// This way we can listen to events in PDE without creating the registry until we need it.
-			fStrategy = new PDERegistryStrategy(new File[] {targetDirectory}, new boolean[] {false}, fMasterKey, this);
+			fStrategy = new PDERegistryStrategy(new File[] {extensionsDir}, new boolean[] {false}, fMasterKey, this);
 		}
 	}
 	
@@ -42,21 +45,27 @@ public class PDEExtensionRegistry {
 			fRegistry.stop(fMasterKey);
 	}
 	
-	private IExtensionRegistry getRegistry() {
+	private synchronized IExtensionRegistry getRegistry() {
 		if (fRegistry == null)
 			createRegistry();
 		return fRegistry;
 	}
 	
 	public void targetReloaded() {
+		// disconnect listeners
 		fStrategy.dispose();
+		// stop old registry (which will write contents to FS) and delete the cache it creates
+		// might see if we can dispose of a registry without writing to file system
+		stop();
+		CoreUtility.deleteContent(new File(PDECore.getDefault().getStateLocation().toFile(), EXTENSION_DIR));
 		fRegistry = null;
 	}
 	
 	public IPluginModelBase[] findExtensionPlugins(String pointId) {
 		IExtensionPoint point = getExtensionPoint(pointId);
 		if (point == null) {
-			return new IPluginModelBase[0];
+			// if extension point for extension does not exist, search all plug-ins manually
+			return PluginRegistry.getAllModels();
 		}
 		IExtension[] exts = point.getExtensions();
 		HashMap plugins = new HashMap();
