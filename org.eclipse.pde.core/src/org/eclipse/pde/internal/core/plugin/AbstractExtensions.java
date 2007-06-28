@@ -162,7 +162,7 @@ public abstract class AbstractExtensions extends PluginObject implements IExtens
 	
 	public String getSchemaVersion() {
 		if (fSchemaVersion == null) {
-			// since schema version is only needed on workspace models in very few situtations, reading information from the file should suffice
+			// since schema version is only needed on workspace models in very few situations, reading information from the file should suffice
 			ISharedPluginModel model = getModel();
 			if (model != null) {
 				org.eclipse.core.resources.IResource res = model.getUnderlyingResource();
