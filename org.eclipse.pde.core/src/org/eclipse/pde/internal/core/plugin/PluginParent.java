@@ -24,11 +24,6 @@ public abstract class PluginParent extends IdentifiablePluginObject implements
 	protected ArrayList fChildren = null;
 
 	public PluginParent() {
-		initialize();
-	}
-	
-	protected void initialize() {
-		fChildren = new ArrayList(1);
 	}
 
 	public void add(int index, IPluginObject child) throws CoreException {
@@ -105,6 +100,8 @@ public abstract class PluginParent extends IdentifiablePluginObject implements
 	}
 	
 	protected ArrayList getChildrenList() {
+		if (fChildren == null)
+			fChildren = new ArrayList(1);
 		return fChildren;
 	}
 

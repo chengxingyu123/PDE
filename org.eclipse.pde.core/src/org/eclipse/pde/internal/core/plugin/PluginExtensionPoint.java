@@ -13,6 +13,7 @@ package org.eclipse.pde.internal.core.plugin;
 import java.io.PrintWriter;
 
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IExtensionPoint;
 import org.eclipse.pde.core.plugin.IFragment;
 import org.eclipse.pde.core.plugin.IPluginBase;
 import org.eclipse.pde.core.plugin.IPluginExtensionPoint;
@@ -23,13 +24,24 @@ public class PluginExtensionPoint extends IdentifiablePluginObject
 
 	private static final long serialVersionUID = 1L;
 	
+	private IExtensionPoint fPoint = null;
+	
 	protected String fSchema;
+	
+	public PluginExtensionPoint() {
+	}
+	
+	public PluginExtensionPoint(IExtensionPoint point) {
+		fPoint = point;
+	}
 	
 	public boolean isValid() {
 		return getId() != null && getName() != null;
 	}
 
 	public String getFullId() {
+		if (fPoint != null)
+			return fPoint.getUniqueIdentifier();
 		String pointId = getId();
 		IPluginModelBase modelBase = getPluginModel();
 		IPluginBase pluginBase = modelBase.getPluginBase();
@@ -44,6 +56,8 @@ public class PluginExtensionPoint extends IdentifiablePluginObject
 	}
 	
 	public String getSchema() {
+		if (fSchema == null && fPoint != null)
+			fSchema = fPoint.getSchemaReference();
 		return fSchema;
 	}
 	
@@ -90,5 +104,26 @@ public class PluginExtensionPoint extends IdentifiablePluginObject
 		if (getSchema() != null)
 			writer.print(" schema=\"" + getSchema() + "\""); //$NON-NLS-1$ //$NON-NLS-2$
 		writer.println("/>"); //$NON-NLS-1$
+	}
+	
+	public String getName() {
+		if (fName == null) 
+			fName = fPoint.getLabel();
+		return fName;
+	}
+	
+	public String getId() {
+		if (fID == null) {
+			fID = fPoint.getUniqueIdentifier();
+			if (fID != null) {
+				String pluginId = getPluginBase().getId();
+				if (fID.startsWith(pluginId)) {
+					String sub = fID.substring(pluginId.length());
+					if (sub.lastIndexOf('.') == 0)
+						fID = sub.substring(1);
+				}
+			}
+		}
+		return fID;
 	}
 }

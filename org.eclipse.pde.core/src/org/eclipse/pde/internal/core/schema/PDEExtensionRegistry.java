@@ -14,10 +14,12 @@ import org.eclipse.osgi.service.resolver.BundleDescription;
 import org.eclipse.pde.core.plugin.IPluginExtension;
 import org.eclipse.pde.core.plugin.IPluginExtensionPoint;
 import org.eclipse.pde.core.plugin.IPluginModelBase;
+import org.eclipse.pde.core.plugin.ISharedPluginModel;
 import org.eclipse.pde.core.plugin.PluginRegistry;
 import org.eclipse.pde.internal.core.PDECore;
-import org.eclipse.pde.internal.core.plugin.ConfigurationExtension;
-import org.eclipse.pde.internal.core.plugin.ConfigurationExtensionPoint;
+import org.eclipse.pde.internal.core.ibundle.IBundlePluginModelBase;
+import org.eclipse.pde.internal.core.plugin.PluginExtension;
+import org.eclipse.pde.internal.core.plugin.PluginExtensionPoint;
 
 public class PDEExtensionRegistry {
 	
@@ -112,8 +114,11 @@ public class PDEExtensionRegistry {
 			return new IPluginExtension[0];
 		IExtension[] extensions = ((ExtensionRegistry)getRegistry()).getExtensionsFrom(Long.toString(desc.getBundleId()));
 		ArrayList list = new ArrayList();
-		for (int i = 0; i < extensions.length; i++) { 
-			list.add(new ConfigurationExtension(extensions[i]));
+		for (int i = 0; i < extensions.length; i++) {
+			PluginExtension extension = new PluginExtension(extensions[i]);
+			extension.setModel(getExtensionsModel(base));
+			extension.setParent(base.getExtensions());
+			list.add(extension);
 		}
 		return (IPluginExtension[]) list.toArray(new IPluginExtension[list.size()]);
 	}
@@ -125,10 +130,19 @@ public class PDEExtensionRegistry {
 			return new IPluginExtensionPoint[0];
 		IExtensionPoint[] extensions = ((ExtensionRegistry)getRegistry()).getExtensionPointsFrom(Long.toString(desc.getBundleId()));
 		ArrayList list = new ArrayList();
-		for (int i = 0; i < extensions.length; i++) { 
-			list.add(new ConfigurationExtensionPoint(extensions[i]));
+		for (int i = 0; i < extensions.length; i++) {
+			PluginExtensionPoint point = new PluginExtensionPoint(extensions[i]);
+			point.setModel(getExtensionsModel(base));
+			point.setParent(base.getExtensions());
+			list.add(point);
 		}
 		return (IPluginExtensionPoint[]) list.toArray(new IPluginExtensionPoint[list.size()]);
+	}
+	
+	private ISharedPluginModel getExtensionsModel(IPluginModelBase base) {
+		if (base instanceof IBundlePluginModelBase) 
+			return ((IBundlePluginModelBase)base).getExtensionsModel();
+		return base;
 	}
 
 }

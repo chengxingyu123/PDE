@@ -11,12 +11,14 @@
 package org.eclipse.pde.internal.core.plugin;
 
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Iterator;
 
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.pde.core.plugin.IPluginAttribute;
 import org.eclipse.pde.core.plugin.IPluginElement;
 import org.eclipse.pde.core.plugin.IPluginExtension;
@@ -37,7 +39,13 @@ public class PluginElement extends PluginParent implements IPluginElement {
 
 	protected Hashtable fAttributes;
 	
+	private IConfigurationElement fElement = null;
+	
 	public PluginElement() {
+	}
+	
+	public PluginElement(IConfigurationElement element) {
+		fElement = element;
 	}
 	
 	PluginElement(PluginElement element) {
@@ -51,11 +59,7 @@ public class PluginElement extends PluginParent implements IPluginElement {
 		}
 		fText = element.getText();
 		fElementInfo = (ISchemaElement) element.getElementInfo();
-	}
-	
-	protected void initialize() {
-		super.initialize();
-		fAttributes = new Hashtable();
+		fElement = element.fElement;
 	}
 
 	public boolean equals(Object obj) {
@@ -95,6 +99,9 @@ public class PluginElement extends PluginParent implements IPluginElement {
 	}
 
 	public int getAttributeCount() {
+		// if attributes are initialized, don't load the entire map to find the # of elements
+		if (fAttributes == null && fElement != null) 
+			return fElement.getAttributeNames().length;
 		return getAttributeMap().size();
 	}
 
@@ -122,6 +129,8 @@ public class PluginElement extends PluginParent implements IPluginElement {
 	}
 
 	public String getText() {
+		if (fText == null && fElement != null)
+			fText = fElement.getValue();
 		return fText;
 	}
 
@@ -198,6 +207,57 @@ public class PluginElement extends PluginParent implements IPluginElement {
 	}
 	
 	protected Hashtable getAttributeMap() {
+		if (fAttributes == null) {
+			fAttributes = new Hashtable();
+			if (fElement != null) {
+				String[] names = fElement.getAttributeNames();
+				for (int i = 0; i < names.length; i++) {
+					IPluginAttribute attr = createAttribute(names[i], fElement.getAttribute(names[i]));
+					if (attr != null)
+						fAttributes.put(names[i], attr);
+				}
+			}
+		}
 		return fAttributes;
+	}
+	
+	private IPluginAttribute createAttribute(String name, String value) {
+		if (name == null || value == null)
+			return null;
+		try {
+			IPluginAttribute attr = getPluginModel().getFactory().createAttribute(this);
+			if (attr instanceof PluginAttribute)
+				((PluginAttribute)attr).load(name, value);
+			else {
+				attr.setName(name);
+				attr.setValue(value);
+			}
+			return attr;
+		} catch (CoreException e) {
+		}
+		return null;
+	}
+	
+	protected ArrayList getChildrenList() {
+		if (fChildren == null) {
+			fChildren = new ArrayList();
+			if (fElement != null) {
+				IConfigurationElement[] elements = fElement.getChildren();
+				for (int i = 0; i < elements.length; i++) {
+					PluginElement element = new PluginElement(elements[i]);
+					element.setModel(getModel());
+					element.setParent(this);
+					fChildren.add(element);
+				}
+			}
+		}
+		return fChildren;
+	}
+	
+	public String getName() {
+		if (fName == null && fElement != null) {
+			fName = fElement.getName();
+		}
+		return fName;
 	}
 }

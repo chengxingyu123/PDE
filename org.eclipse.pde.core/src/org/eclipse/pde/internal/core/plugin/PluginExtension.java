@@ -11,8 +11,11 @@
 package org.eclipse.pde.internal.core.plugin;
 
 import java.io.PrintWriter;
+import java.util.ArrayList;
 
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IConfigurationElement;
+import org.eclipse.core.runtime.IExtension;
 import org.eclipse.pde.core.plugin.IPluginElement;
 import org.eclipse.pde.core.plugin.IPluginExtension;
 import org.eclipse.pde.core.plugin.IPluginObject;
@@ -25,10 +28,18 @@ public class PluginExtension extends PluginParent implements IPluginExtension {
 	private static final long serialVersionUID = 1L;
 	protected String fPoint;
 	private transient ISchema schema;
+	private IExtension fExtension = null;
 
 	public PluginExtension() {
 	}
+	
+	public PluginExtension(IExtension extension) {
+		fExtension = extension;
+	}
+	
 	public String getPoint() {
+		if (fPoint == null && fExtension != null)
+			fPoint = fExtension.getExtensionPointUniqueIdentifier(); 
 		return fPoint;
 	}
 	
@@ -114,5 +125,45 @@ public class PluginExtension extends PluginParent implements IPluginExtension {
 			child.write(indent + PluginElement.ELEMENT_SHIFT, writer);
 		}
 		writer.println(indent + "</extension>"); //$NON-NLS-1$
+	}
+	
+	public String getName() {
+		if (fName == null && fExtension != null) {
+			fName = fExtension.getLabel();
+		}
+		return fName;
+	}
+	
+	public String getId() {
+		if (fID == null && fExtension != null) {
+			fID = fExtension.getUniqueIdentifier();
+			if (fID != null) {
+				String pluginId = getPluginBase().getId();
+				if (fID.startsWith(pluginId)) {
+					String sub = fID.substring(pluginId.length());
+					if (sub.lastIndexOf('.') == 0)
+						fID = sub.substring(1);
+				}
+			}
+		}
+		return fID;
+	}
+	
+	protected ArrayList getChildrenList() {
+		if (fChildren == null) {
+			fChildren = new ArrayList();
+			if (fExtension != null) {
+				if (fExtension != null) {
+					IConfigurationElement[] elements = fExtension.getConfigurationElements();
+					for (int i = 0; i < elements.length;i++) {
+						PluginElement element = new PluginElement(elements[i]);
+						element.setModel(getModel());
+						element.setParent(this);
+						fChildren.add(element);
+					}
+				}
+			}
+		}
+		return fChildren;
 	}
 }
