@@ -4,7 +4,7 @@ import java.util.HashSet;
 
 import org.eclipse.pde.core.plugin.IPluginModelBase;
 import org.eclipse.pde.internal.core.PDECore;
-import org.eclipse.pde.internal.core.schema.PDEExtensionRegistry;
+import org.eclipse.pde.internal.core.PDEExtensionRegistry;
 
 public class ExtensionPluginSearchScope extends PluginSearchScope {
 	

@@ -1,4 +1,4 @@
-package org.eclipse.pde.internal.core.schema;
+package org.eclipse.pde.internal.core;
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -23,12 +23,6 @@ import org.eclipse.pde.core.plugin.IPluginBase;
 import org.eclipse.pde.core.plugin.IPluginModelBase;
 import org.eclipse.pde.core.plugin.ModelEntry;
 import org.eclipse.pde.core.plugin.PluginRegistry;
-import org.eclipse.pde.internal.core.IExtensionDeltaEvent;
-import org.eclipse.pde.internal.core.IExtensionDeltaListener;
-import org.eclipse.pde.internal.core.IPluginModelListener;
-import org.eclipse.pde.internal.core.PDECore;
-import org.eclipse.pde.internal.core.PluginModelDelta;
-import org.eclipse.pde.internal.core.PluginModelManager;
 import org.eclipse.pde.internal.core.bundle.BundlePluginBase;
 import org.eclipse.pde.internal.core.plugin.AbstractExtensions;
 import org.osgi.util.tracker.ServiceTracker;

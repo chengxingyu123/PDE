@@ -1,4 +1,4 @@
-package org.eclipse.pde.internal.core.schema;
+package org.eclipse.pde.internal.core;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -16,7 +16,6 @@ import org.eclipse.pde.core.plugin.IPluginExtensionPoint;
 import org.eclipse.pde.core.plugin.IPluginModelBase;
 import org.eclipse.pde.core.plugin.ISharedPluginModel;
 import org.eclipse.pde.core.plugin.PluginRegistry;
-import org.eclipse.pde.internal.core.PDECore;
 import org.eclipse.pde.internal.core.ibundle.IBundlePluginModelBase;
 import org.eclipse.pde.internal.core.plugin.PluginExtension;
 import org.eclipse.pde.internal.core.plugin.PluginExtensionPoint;
