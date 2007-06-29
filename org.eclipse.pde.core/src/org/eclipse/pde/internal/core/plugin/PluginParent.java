@@ -64,7 +64,8 @@ public abstract class PluginParent extends IdentifiablePluginObject implements
 			IPluginObject[] tchildren = target.getChildren();
 			for (int i = 0; i < tchildren.length; i++) {
 				IPluginObject tchild = tchildren[i];
-				if (tchild.equals(getChildrenList().get(i)) == false)
+				IPluginObject child = (IPluginObject)getChildrenList().get(i);
+				if (child == null || child.equals(tchild) == false)
 					return false;
 			}
 			return true;

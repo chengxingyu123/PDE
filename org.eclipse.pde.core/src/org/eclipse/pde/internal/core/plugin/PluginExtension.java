@@ -70,14 +70,22 @@ public class PluginExtension extends PluginParent implements IPluginExtension {
 				return false;
 			if (!stringEqualWithNull(target.getId(), getId()))
 				return false;
-			if (!stringEqualWithNull(target.getName(), getName()))
-				return false;
 			if (!stringEqualWithNull(target.getPoint(), getPoint()))
+				return false;
+			if (!nameEqual(target.getName()))
 				return false;
 			// Children
 			return super.equals(obj);
 		}
 		return false;
+	}
+	
+	private boolean nameEqual(String targetName) {
+		// Since extension registry returns "" when an extension's name == null, we have to do the same when comparing the name of the target.
+		// Note, we only do this if the PluginExtension has an fExtension element which means it's name comes from the extension registry.
+		if (fExtension != null && targetName == null)
+			targetName = ""; //$NON-NLS-1$
+		return stringEqualWithNull(targetName, getName());
 	}
 
 	public void setPoint(String point) throws CoreException {

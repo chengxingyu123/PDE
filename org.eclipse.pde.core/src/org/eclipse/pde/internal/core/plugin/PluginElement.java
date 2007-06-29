@@ -76,7 +76,8 @@ public class PluginElement extends PluginParent implements IPluginElement {
 			IPluginAttribute tatts[] = target.getAttributes();
 			for (int i = 0; i < tatts.length; i++) {
 				IPluginAttribute tatt = tatts[i];
-				if (tatt.equals(getAttributeMap().get(tatt.getName())) == false)
+				IPluginAttribute att = (IPluginAttribute) getAttributeMap().get(tatt.getName());
+				if (att == null || att.equals(tatt) == false)
 					return false;
 			}
 			return super.equals(obj);
