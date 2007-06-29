@@ -35,7 +35,6 @@ import org.eclipse.pde.core.plugin.IPluginElement;
 import org.eclipse.pde.core.plugin.IPluginExtension;
 import org.eclipse.pde.core.plugin.IPluginModelBase;
 import org.eclipse.pde.core.plugin.IPluginObject;
-import org.eclipse.pde.core.plugin.PluginRegistry;
 import org.eclipse.pde.core.plugin.TargetPlatform;
 import org.eclipse.pde.internal.core.PDECore;
 import org.eclipse.pde.internal.core.TargetPlatformHelper;
@@ -335,14 +334,15 @@ public class LaunchConfigurationHelper {
 		// contributing plug-in
 		String appID = configuration.getAttribute(IPDELauncherConstants.APPLICATION,
 				TargetPlatform.getDefaultApplication());
-		IPluginModelBase[] plugins = PluginRegistry.getActiveModels();
+		String extensionPoint = "org.eclipse.core.runtime.products"; //$NON-NLS-1$
+		IPluginModelBase[] plugins = PDECore.getDefault().getExtensionsRegistry().findExtensionPlugins(extensionPoint);
 		for (int i = 0; i < plugins.length; i++) {
 			String id = plugins[i].getPluginBase().getId();
 			IPluginExtension[] extensions = plugins[i].getPluginBase().getExtensions();
 			for (int j = 0; j < extensions.length; j++) {
 				String point = extensions[j].getPoint();
 				String extId = extensions[j].getId();
-				if ("org.eclipse.core.runtime.products".equals(point) && extId != null) {//$NON-NLS-1$
+				if (extensionPoint.equals(point) && extId != null) {//$NON-NLS-1$
 					IPluginObject[] children = extensions[j].getChildren();
 					if (children.length != 1)
 						continue;
