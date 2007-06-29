@@ -25,7 +25,7 @@ import org.eclipse.pde.core.plugin.IPluginElement;
 import org.eclipse.pde.core.plugin.IPluginExtension;
 import org.eclipse.pde.core.plugin.IPluginModelBase;
 import org.eclipse.pde.core.plugin.IPluginObject;
-import org.eclipse.pde.core.plugin.PluginRegistry;
+import org.eclipse.pde.internal.core.PDECore;
 import org.eclipse.pde.internal.core.TargetPlatformHelper;
 import org.eclipse.pde.internal.core.ibundle.IBundle;
 import org.eclipse.pde.internal.core.ibundle.IBundlePluginModelBase;
@@ -140,12 +140,13 @@ public class IntroSection extends PDESection {
 	private void loadManifestAndIntroIds(boolean onlyLoadManifest) {
 		TreeSet result = new TreeSet();
 		String introId;
-		IPluginModelBase[] plugins = PluginRegistry.getActiveModels();
+		String extensionPoint = "org.eclipse.ui.intro"; //$NON-NLS-1$
+		IPluginModelBase[] plugins = PDECore.getDefault().getExtensionsRegistry().findExtensionPlugins(extensionPoint);
 		for (int i = 0; i < plugins.length; i++) {
 			IPluginExtension[] extensions = plugins[i].getPluginBase().getExtensions();
 			for (int j = 0; j < extensions.length; j++) {
 				String point = extensions[j].getPoint();
-				if (point != null && point.equals("org.eclipse.ui.intro")) {//$NON-NLS-1$
+				if (point != null && point.equals(extensionPoint)) {
 					IPluginObject[] children = extensions[j].getChildren();
 					for (int k = 0; k < children.length; k++) {
 						IPluginElement element = (IPluginElement)children[k];
