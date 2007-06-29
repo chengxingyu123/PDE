@@ -197,12 +197,13 @@ public class ProductIntroWizardPage extends WizardPage implements IHyperlinkList
 	private TreeSet getCurrentIntroIds() {
 		String introId;
 		TreeSet result = new TreeSet();
-		IPluginModelBase[] plugins = PluginRegistry.getActiveModels();
+		String extensionPoint = "org.eclipse.ui.intro"; //$NON-NLS-1$
+		IPluginModelBase[] plugins = PDECore.getDefault().getExtensionsRegistry().findExtensionPlugins(extensionPoint);
 		for (int i = 0; i < plugins.length; i++) {
 			IPluginExtension[] extensions = plugins[i].getPluginBase().getExtensions();
 			for (int j = 0; j < extensions.length; j++) {
 				String point = extensions[j].getPoint();
-				if (point != null && point.equals("org.eclipse.ui.intro")) {//$NON-NLS-1$
+				if (point != null && point.equals(extensionPoint)) {
 					IPluginObject[] children = extensions[j].getChildren();
 					for (int k = 0; k < children.length; k++) {
 						IPluginElement element = (IPluginElement)children[k];
