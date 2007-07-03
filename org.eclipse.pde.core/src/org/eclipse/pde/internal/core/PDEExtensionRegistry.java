@@ -29,7 +29,7 @@ public class PDEExtensionRegistry {
 	private IExtensionRegistry fRegistry = null;
 	private PDERegistryStrategy fStrategy = null;
 	
-	private static final String EXTENSION_DIR = ".extensions";
+	private static final String EXTENSION_DIR = ".extensions"; //$NON-NLS-1$
 	
 	public PDEExtensionRegistry() {
 		if (fStrategy == null) {
@@ -151,6 +151,13 @@ public class PDEExtensionRegistry {
 		if (base instanceof IBundlePluginModelBase) 
 			return ((IBundlePluginModelBase)base).getExtensionsModel();
 		return base;
+	}
+	
+	public IExtension[] findExtensions(String extensionPointId) {
+		IExtensionPoint point = getExtensionPoint(extensionPointId);
+		if (point != null) 
+			return point.getExtensions();
+		return new IExtension[0];
 	}
 
 }
