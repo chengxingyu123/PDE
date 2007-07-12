@@ -226,7 +226,7 @@ public class PDERegistryStrategy extends RegistryStrategy{
 		return null;
 	}
 	
-	private IContributor createContributor(IPluginModelBase base) {
+	public IContributor createContributor(IPluginModelBase base) {
 		BundleDescription desc = base.getBundleDescription();
 		String name = desc.getSymbolicName();
 		String id = Long.toString(desc.getBundleId());

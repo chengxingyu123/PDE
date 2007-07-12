@@ -4,7 +4,6 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import org.eclipse.core.internal.registry.ExtensionRegistry;
 import org.eclipse.core.runtime.IContributor;
 import org.eclipse.core.runtime.IExtension;
 import org.eclipse.core.runtime.IExtensionPoint;
@@ -120,7 +119,7 @@ public class PDEExtensionRegistry {
 		BundleDescription desc = (base != null) ? base.getBundleDescription() : null;
 		if (desc == null)
 			return new IPluginExtension[0];
-		IExtension[] extensions = ((ExtensionRegistry)getRegistry()).getExtensionsFrom(Long.toString(desc.getBundleId()));
+		IExtension[] extensions = getRegistry().getExtensions(fStrategy.createContributor(base));
 		ArrayList list = new ArrayList();
 		for (int i = 0; i < extensions.length; i++) {
 			PluginExtension extension = new PluginExtension(extensions[i]);
@@ -136,7 +135,7 @@ public class PDEExtensionRegistry {
 		BundleDescription desc = (base != null) ? base.getBundleDescription() : null;
 		if (desc == null)
 			return new IPluginExtensionPoint[0];
-		IExtensionPoint[] extensions = ((ExtensionRegistry)getRegistry()).getExtensionPointsFrom(Long.toString(desc.getBundleId()));
+		IExtensionPoint[] extensions = getRegistry().getExtensionPoints(fStrategy.createContributor(base));
 		ArrayList list = new ArrayList();
 		for (int i = 0; i < extensions.length; i++) {
 			PluginExtensionPoint point = new PluginExtensionPoint(extensions[i]);
