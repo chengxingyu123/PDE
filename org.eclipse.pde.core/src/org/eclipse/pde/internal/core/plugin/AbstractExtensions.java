@@ -15,6 +15,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParserFactory;
@@ -78,7 +80,7 @@ public abstract class AbstractExtensions extends PluginObject implements IExtens
 		addArrayToVector(getExtensionPointsList(), srcExtensions.getExtensionPoints());
 	}
 
-	protected void addArrayToVector(ArrayList vector, Object[] array) {
+	protected void addArrayToVector(List vector, Object[] array) {
 		for (int i = 0; i < array.length; i++) {
 			Object obj= array[i];
 			if (obj instanceof PluginObject)
@@ -190,39 +192,25 @@ public abstract class AbstractExtensions extends PluginObject implements IExtens
 		firePropertyChanged(IPluginBase.P_SCHEMA_VERSION, oldValue, schemaVersion);
 	}
 	
-	protected ArrayList getExtensionsList() {
+	protected List getExtensionsList() {
 		if (fExtensions == null) {
-			createExtensions();
+			IPluginBase base = getPluginBase();
+			if (base != null) {
+				return Arrays.asList(PDECore.getDefault().getExtensionsRegistry().findExtensionsForPlugin(base.getId()));
+			}
+			fExtensions = new ArrayList();
 		}
 		return fExtensions;
 	}
 	
-	protected ArrayList getExtensionPointsList() {
+	protected List getExtensionPointsList() {
 		if (fExtensionPoints == null) {
-			createExtensionPoints();
+			IPluginBase base = getPluginBase();
+			if (base != null) {
+				return Arrays.asList(PDECore.getDefault().getExtensionsRegistry().findExtensionPointsForPlugin(base.getId()));
+			}
+			fExtensionPoints = new ArrayList();
 		}
 		return fExtensionPoints;
-	}
-	
-	protected void createExtensions() {
-		fExtensions = new ArrayList();
-		IPluginBase base = getPluginBase();
-		if (base == null)
-			return;
-		IPluginExtension[] extensions = PDECore.getDefault().getExtensionsRegistry().findExtensionsForPlugin(base.getId());
-		for (int i = 0; i < extensions.length; i++) {
-			fExtensions.add(extensions[i]);
-		}
-	}
-	
-	protected void createExtensionPoints() {
-		fExtensionPoints = new ArrayList();
-		IPluginBase base = getPluginBase();
-		if (base == null)
-			return;
-		IPluginExtensionPoint[] extensionPoints = PDECore.getDefault().getExtensionsRegistry().findExtensionPointsForPlugin(base.getId());
-		for (int i = 0; i < extensionPoints.length; i++) {
-			fExtensionPoints.add(extensionPoints[i]);
-		}
 	}
 }
