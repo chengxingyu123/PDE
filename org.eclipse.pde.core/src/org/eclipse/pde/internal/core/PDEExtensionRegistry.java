@@ -93,6 +93,10 @@ public class PDEExtensionRegistry {
 		return getRegistry().getExtensionPoint(pointId);
 	}
 	
+	public boolean hasExtensionPoint(String pointId) {
+		return getExtensionPoint(pointId) != null;
+	}
+	
 	public IPluginExtensionPoint findExtensionPoint(String pointId) {
 		IExtensionPoint extPoint = getExtensionPoint(pointId);
 		if (extPoint != null) {

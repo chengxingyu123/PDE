@@ -126,8 +126,7 @@ public class ExtensionsErrorReporter extends ManifestErrorReporter {
 		if (!assertAttributeDefined(element, "point", CompilerFlags.ERROR)) //$NON-NLS-1$
 			return;
 		String pointID = element.getAttribute("point"); //$NON-NLS-1$
-		IPluginExtensionPoint point = PDECore.getDefault().getExtensionsRegistry().findExtensionPoint(pointID);
-		if (point == null) {
+		if (!PDECore.getDefault().getExtensionsRegistry().hasExtensionPoint(pointID)) {
 			int severity = CompilerFlags.getFlag(fProject, CompilerFlags.P_UNRESOLVED_EX_POINTS);
 			if (severity != CompilerFlags.IGNORE) {
 				report(NLS.bind(PDECoreMessages.Builders_Manifest_ex_point, pointID), 

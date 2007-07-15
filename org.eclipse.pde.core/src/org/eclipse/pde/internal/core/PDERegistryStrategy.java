@@ -103,17 +103,12 @@ public class PDERegistryStrategy extends RegistryStrategy{
 		fPDERegistry = registry;
 	}
 	
-	public void onStart(IExtensionRegistry registry) {
-		super.onStart(registry);
-		if (!(registry instanceof ExtensionRegistry))
-			return;
-		
+	public void onStart(IExtensionRegistry registry, boolean loadedFromCache) {
+		super.onStart(registry, loadedFromCache);
 		fModelListener.setRegistry(registry);
 		fExtensionListener.setRegistry(registry);
-		
-		if (!((ExtensionRegistry) registry).filledFromCache()) {
+		if (!loadedFromCache)
 			processBundles(registry);
-		}
 	}
 	
 	public void onStop(IExtensionRegistry registry) {
