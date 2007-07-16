@@ -12,7 +12,6 @@
 package org.eclipse.pde.internal.ui.editor.toc.actions;
 
 import org.eclipse.jface.action.Action;
-import org.eclipse.pde.internal.core.itoc.ITocConstants;
 import org.eclipse.pde.internal.core.toc.TocObject;
 import org.eclipse.pde.internal.core.toc.TocTopic;
 import org.eclipse.pde.internal.ui.PDEUIMessages;
@@ -55,9 +54,7 @@ public class TocRemoveObjectAction extends Action {
 		for(int i = 0; i < fTocObjects.length; ++i)
 		{	if (fTocObjects[i] != null && fTocObjects[i].canBeRemoved()) {
 				TocObject parent = fTocObjects[i].getParent();
-				if (parent != null && 
-						(parent.getType() == ITocConstants.TYPE_TOPIC ||
-						parent.getType() == ITocConstants.TYPE_TOC)) {
+				if (parent != null && parent.canBeParent()) {
 					// Determine the object to select after the deletion 
 					// takes place 
 					determineNextSelection(parent, i);

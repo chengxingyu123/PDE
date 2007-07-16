@@ -35,7 +35,7 @@ public class TocAddTopicAction extends TocAddObjectAction {
 			topic.setFieldLabel(name);
 
 			//Add the new topic to the parent TOC object
-			((TocTopic)fParentObject).addChild(topic); 
+			addChild(topic);
 		}
 	}
 }

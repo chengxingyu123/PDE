@@ -13,6 +13,7 @@ package org.eclipse.pde.internal.ui.editor.toc.actions;
 
 import org.eclipse.jface.action.Action;
 import org.eclipse.pde.internal.core.toc.TocObject;
+import org.eclipse.pde.internal.core.toc.TocTopic;
 
 /**
  * TocAddObjectAction - the abstract implementation for
@@ -23,6 +24,9 @@ public abstract class TocAddObjectAction extends Action {
 	//a child of.
 	TocObject fParentObject;
 
+	//The target object to insert after
+	TocObject fTargetObject;
+
 	/**
 	 * Set the parent object that this action will add
 	 * objects to.
@@ -32,13 +36,22 @@ public abstract class TocAddObjectAction extends Action {
 	public void setParentObject(TocObject parent)
 	{	fParentObject = parent;
 	}
-	
+
+	/**
+	 * Set the target object that this action will add
+	 * objects after.
+	 * 
+	 * @param target The new target object for this action
+	 */
+	public void setTargetObject(TocObject target) {
+		fTargetObject = target;
+	}
+
 	/**
 	 * @return The names of the children of this TOC object
 	 */
 	public String[] getChildNames()
-	{	
-		int numChildren = fParentObject.getChildren().size();
+	{	int numChildren = fParentObject.getChildren().size();
 		TocObject[] tocObjects = 
 			(TocObject[])fParentObject.getChildren().toArray(new TocObject[numChildren]);
 		
@@ -49,5 +62,21 @@ public abstract class TocAddObjectAction extends Action {
 		}
 		
 		return tocObjectNames;
+	}
+
+	/**
+	 * Add the child to the parent object. If a target object is specified,
+	 * add the child as a direct sibling after that object.
+	 * 
+	 * @param child The object to add to the parent
+	 */
+	protected void addChild(TocObject child)
+	{	if(fTargetObject == null)
+		{	((TocTopic)fParentObject).addChild(child);
+		}
+		else
+		{	((TocTopic)fParentObject).addChild(child, fTargetObject, false);
+			fTargetObject = null;
+		}
 	}
 }

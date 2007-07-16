@@ -12,11 +12,7 @@
 package org.eclipse.pde.internal.ui.editor.toc.details;
 
 import org.eclipse.core.resources.IFile;
-import org.eclipse.core.resources.IResource;
-import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.runtime.IPath;
-import org.eclipse.core.runtime.Path;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.window.Window;
 import org.eclipse.pde.internal.core.toc.Toc;
@@ -29,11 +25,9 @@ import org.eclipse.pde.internal.ui.parts.FormEntry;
 import org.eclipse.pde.internal.ui.util.FileValidator;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.dialogs.ElementTreeSelectionDialog;
 import org.eclipse.ui.forms.IFormPart;
 import org.eclipse.ui.forms.events.HyperlinkEvent;
-import org.eclipse.ui.ide.IDE;
 import org.eclipse.ui.model.WorkbenchContentProvider;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 
@@ -203,26 +197,7 @@ public class TocDetails extends TocAbstractDetails {
 	}
 	
 	private void handleOpen()
-	{	IWorkspaceRoot root = PDEPlugin.getWorkspace().getRoot();
-		Path resourcePath = new Path(fPageEntry.getValue());
-		if(!resourcePath.isEmpty())
-		{	IPath pluginPath = fDataTOC.getModel().getUnderlyingResource().getProject().getFullPath();
-			IResource resource = root.findMember(pluginPath.append(resourcePath));
-			try
-			{	if (resource != null && resource instanceof IFile)
-				{	IDE.openEditor(PDEPlugin.getActivePage(), (IFile)resource, true);
-				}
-				else
-				{	MessageDialog.openWarning(PDEPlugin.getActiveWorkbenchShell(), PDEUIMessages.WindowImagesSection_open, PDEUIMessages.WindowImagesSection_warning);
-				}
-			}
-			catch (PartInitException e)
-			{	//suppress exception
-			}
-		}
-		else
-		{	MessageDialog.openWarning(PDEPlugin.getActiveWorkbenchShell(), PDEUIMessages.WindowImagesSection_open, PDEUIMessages.WindowImagesSection_emptyPath);
-		}
+	{	getMasterSection().openDocument(fPageEntry.getValue());
 	}
 
 	/* (non-Javadoc)

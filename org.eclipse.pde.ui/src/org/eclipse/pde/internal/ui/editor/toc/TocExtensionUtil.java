@@ -32,6 +32,6 @@ public class TocExtensionUtil {
 
 	public static boolean hasValidTocExtension(IPath path)
 	{	String fileExtension = path.getFileExtension();
-		return (fileExtension != null && fileExtension.equals(tocExtension)); 
+		return fileExtension != null && fileExtension.equals(tocExtension); 
 	}
 }

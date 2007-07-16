@@ -12,9 +12,20 @@
 package org.eclipse.pde.internal.ui.editor.toc;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Iterator;
 
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IResource;
+import org.eclipse.core.resources.IWorkspaceRoot;
+import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.Path;
+import org.eclipse.jdt.ui.JavaUI;
 import org.eclipse.jface.viewers.ISelection;
+import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.StructuredSelection;
+import org.eclipse.pde.internal.core.toc.TocModel;
+import org.eclipse.pde.internal.core.toc.TocObject;
 import org.eclipse.pde.internal.ui.IPDEUIConstants;
 import org.eclipse.pde.internal.ui.PDEPlugin;
 import org.eclipse.pde.internal.ui.editor.ISortableContentOutlinePage;
@@ -24,8 +35,13 @@ import org.eclipse.pde.internal.ui.editor.context.InputContext;
 import org.eclipse.pde.internal.ui.editor.context.InputContextManager;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IFileEditorInput;
+import org.eclipse.ui.IPageLayout;
 import org.eclipse.ui.IStorageEditorInput;
 import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.forms.editor.IFormPage;
+import org.eclipse.ui.part.IShowInSource;
+import org.eclipse.ui.part.IShowInTargetList;
+import org.eclipse.ui.part.ShowInContext;
 
 /**
  * TocEditor
@@ -46,7 +62,92 @@ public class TocEditor extends PDEFormEditor {
 	protected String getEditorID() {
 		return IPDEUIConstants.TABLE_OF_CONTENTS_EDITOR_ID;
 	}
+
+	public Object getAdapter(Class adapter) {
+		if(isShowInApplicable())
+		{	if(adapter == IShowInSource.class && isShowInApplicable())
+			{	return getShowInSource();
+			}
+			else if(adapter == IShowInTargetList.class)
+			{	return getShowInTargetList();
+			}
+		}
+
+		return super.getAdapter(adapter);
+	}
+
+
+	private boolean isShowInApplicable() {
+		IStructuredSelection selection = (IStructuredSelection)getSelection();
+		if (selection.isEmpty())
+		{	return false;
+		}
+		for (Iterator iter = selection.iterator(); iter.hasNext();)
+		{	Object obj = iter.next();
+			if (!(obj instanceof TocObject))
+				return false;
+			if (((TocObject)obj).getPath() == null)
+				return false;
+		}
+
+		return true;
+	}
+
+	/**
+	 * Returns the <code>IShowInSource</code> for this section.
+	 * @return the <code>IShowInSource</code> 
+	 */
+	private IShowInSource getShowInSource() {
+		return new IShowInSource() {
+			public ShowInContext getShowInContext() {
+				ArrayList resourceList = new ArrayList();
+				IStructuredSelection selection = (IStructuredSelection)getSelection();
+				IStructuredSelection resources;
+				if (selection.isEmpty())
+				{	resources = null;
+				}
+				else
+				{	IWorkspaceRoot root = PDEPlugin.getWorkspace().getRoot();
+
+					for (Iterator iter = selection.iterator(); iter.hasNext();)
+					{	Object obj = iter.next();
+						if (obj instanceof TocObject)
+						{	Path resourcePath = new Path(((TocObject)obj).getPath());
+
+							if(!resourcePath.isEmpty())
+							{	TocModel model = (TocModel)getAggregateModel();
 	
+								IPath pluginPath = model.getUnderlyingResource().getProject().getFullPath();
+								IResource resource = root.findMember(pluginPath.append(resourcePath));
+
+								if(resource != null)
+								{	resourceList.add(resource);
+								}
+							}
+						}
+					}
+
+					resources = new StructuredSelection(resourceList); 
+				}
+				
+				return new ShowInContext(null, resources);
+			}
+		};
+	}
+
+	/**
+	 * Returns the <code>IShowInTargetList</code> for this section.
+	 * @return the <code>IShowInTargetList</code> 
+	 */
+	private IShowInTargetList getShowInTargetList() {
+		return new IShowInTargetList() {
+			public String[] getShowInTargetIds() {
+				return new String[] 
+				       {JavaUI.ID_PACKAGES, IPageLayout.ID_RES_NAV};
+			}
+		};
+	}
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.pde.internal.ui.editor.PDEFormEditor#isSaveAsAllowed()
 	 */
@@ -154,6 +255,15 @@ public class TocEditor extends PDEFormEditor {
 	 * @see org.eclipse.pde.internal.ui.editor.PDEFormEditor#getSelection()
 	 */
 	public ISelection getSelection() {
+		IFormPage formPage = getActivePageInstance();	
+		if ((formPage != null) && 
+				(formPage instanceof TocPage)) {
+			// Synchronizes the selection made in the master tree view with the
+			// selection in the outline view when the link with editor button
+			// is toggled on
+			return ((TocPage)formPage).getSelection();
+		}
+
 		return super.getSelection();
 	}
 	
