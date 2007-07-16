@@ -43,6 +43,13 @@ public abstract class TocLeafObject extends TocObject {
 	public List getChildren() {
 		return new ArrayList();
 	}
+	
+	/* (non-Javadoc)
+	 * @see org.eclipse.pde.internal.core.toc.TocObject#canBeParent()
+	 */
+	public boolean canBeParent() {
+		return false;
+	}
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.pde.internal.core.toc.TocObject#parseElement(org.w3c.dom.Element)

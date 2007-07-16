@@ -11,6 +11,8 @@
 
 package org.eclipse.pde.internal.core.toc;
 
+import org.eclipse.core.resources.IFile;
+
 /**
  * The TocModelFactory is a data factory used by a TOC model
  * and by TOC objects to create new TocObjects.
@@ -47,6 +49,15 @@ public class TocModelFactory {
 	}
 	
 	/**
+	 * @return a new TOC topic.
+	 * 
+	 * @see org.eclipse.pde.internal.core.toc.TocTopic
+	 */
+	public TocTopic createTocTopic(TocObject parent, IFile file) {
+		return new TocTopic(fModel, parent, file);
+	}
+	
+	/**
 	 * @return a new TOC link.
 	 * 
 	 * @see org.eclipse.pde.internal.core.toc.TocLink
@@ -55,6 +66,15 @@ public class TocModelFactory {
 		return new TocLink(fModel, parent);
 	}
 	
+	/**
+	 * @return a new TOC link pointing to the specified TOC file.
+	 * 
+	 * @see org.eclipse.pde.internal.core.toc.TocLink
+	 */
+	public TocLink createTocLink(TocObject parent, IFile file) {
+		return new TocLink(fModel, parent, file);
+	}
+
 	/**
 	 * @return a new TOC anchor.
 	 * 

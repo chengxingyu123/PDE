@@ -16,6 +16,7 @@ import java.io.PrintWriter;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 
 import org.eclipse.core.runtime.PlatformObject;
@@ -83,12 +84,28 @@ public abstract class TocObject extends PlatformObject implements ITocConstants,
 		hasEnablement = false;
 		reset();
 	}
-	
+
+	public void reconnect(TocModel model, TocObject parent) {
+		fModel = model;
+		fParent = parent;
+		List children = getChildren();
+		
+		for(Iterator iter = children.iterator(); iter.hasNext();)
+		{	TocObject child = (TocObject)iter.next();
+			child.reconnect(model, this);
+		}
+	}
+
 	/**
 	 * @return the children of the object or an empty List if none exist.
 	 */
 	public abstract List getChildren();
 
+	/**
+	 * @return true iff this TOC object is capable of containing children.
+	 */
+	public abstract boolean canBeParent();
+	
 	/**
 	 * @return the root TOC element that is an ancestor to this TocObject.
 	 */
@@ -109,6 +126,12 @@ public abstract class TocObject extends PlatformObject implements ITocConstants,
 	public abstract String getName();
 
 	/**
+	 * @return the path to the resource associated with this TOC object
+	 * or <code>null</code> if one does not exist.
+	 */
+	public abstract String getPath();
+
+	/**
 	 * @return the parent of this TocObject, or <br />
 	 * <code>null</code> if the TocObject has no parent.
 	 */
@@ -116,6 +139,41 @@ public abstract class TocObject extends PlatformObject implements ITocConstants,
 		return fParent;
 	}
 
+	/**
+	 * Change the parent of this TocObject. Usually
+	 * used when the object is being moved from one
+	 * part of the TOC to another
+	 * 
+	 * @param newParent the new parent of this TocObject
+	 */
+	void setParent(TocObject newParent) {
+		fParent = newParent;
+	}
+
+	/**
+	 * Check if the object is a direct or indirect descendant
+	 * of the object parameter.
+	 * 
+	 * @param obj The TOC object to find in this object's ancestry
+	 * @return true iff obj is an ancestor of this TOC object
+	 */
+	public boolean descendsFrom(TocObject obj)
+	{	if(this.equals(obj))
+		{	return true;
+		}
+
+		if(fParent != null && obj.canBeParent())
+		{	return fParent.descendsFrom(obj);	
+		}
+
+		return false;
+	}
+
+	/* (non-Javadoc)
+	 * Force subclasses to implement equals
+	 */
+	//public abstract boolean equals(Object obj);
+	
 	/**
 	 * Get the concrete type of this TocObject.
 	 */
@@ -227,13 +285,6 @@ public abstract class TocObject extends PlatformObject implements ITocConstants,
 	public abstract void reset();
 
 	/**
-	 * Set a model for this TocObject.
-	 */
-	public void setModel(TocModel model) {
-		fModel = model;
-	}
-
-	/**
 	 * Writes out the XML representation of this TocObject, and proceeds
 	 * to write the elements of its children.
 	 * 
@@ -319,7 +370,7 @@ public abstract class TocObject extends PlatformObject implements ITocConstants,
 	 * @return true iff the model is not read-only.
 	 */
 	protected boolean isEditable() {
-		return getModel().isEditable();
+		return fModel.isEditable();
 	}	
 	
 	/**

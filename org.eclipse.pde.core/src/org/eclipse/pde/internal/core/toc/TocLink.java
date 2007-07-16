@@ -11,6 +11,8 @@
 
 package org.eclipse.pde.internal.core.toc;
 
+import org.eclipse.core.resources.IFile;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.pde.internal.core.XMLPrintHandler;
 import org.w3c.dom.Element;
 
@@ -38,6 +40,48 @@ public class TocLink extends TocLeafObject {
 	 */
 	public TocLink(TocModel model, TocObject parent) {
 		super(model, parent);
+	}
+
+	/**
+	 * Constructs a link with the given model, parent and file.
+	 * 
+	 * @param model The model associated with the new link.
+	 * @param parent The parent TocObject of the new link.
+	 * @param file The TOC file to link to.
+	 */
+	public TocLink(TocModel model, TocObject parent, IFile file) {
+		super(model, parent);
+
+		IPath path = file.getFullPath();
+		if(file.getProject().equals(getModel().getUnderlyingResource().getProject()))
+		{	//If the file is from the same project,
+			//remove the project name segment
+			fFieldTocPath = path.removeFirstSegments(1).toString(); //$NON-NLS-1$
+		}
+		else
+		{	//If the file is from another project, add ".."
+			//to traverse outside this model's project
+			fFieldTocPath = ".." + path.toString(); //$NON-NLS-1$
+		}
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.pde.internal.core.toc.TocObject#equals(java.lang.Object)
+	 */
+	public boolean equals(Object object)
+	{	if(!(object instanceof TocLink))
+		{	return false;
+		}
+	
+		TocLink link = (TocLink)object;
+		
+		//Compare TOC path
+		if(fFieldTocPath!= null)
+		{	return fFieldTocPath.equals(link.getFieldTocPath());
+		}
+		
+		//if the both objects have null TOC paths, return true
+		return link.getFieldTocPath() == null;
 	}
 
 	/* (non-Javadoc)
@@ -96,6 +140,10 @@ public class TocLink extends TocLeafObject {
 	 * @see org.eclipse.pde.internal.core.toc.TocObject#getName()
 	 */
 	public String getName() {
+		return fFieldTocPath;
+	}
+
+	public String getPath() {
 		return fFieldTocPath;
 	}
 

@@ -16,6 +16,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.eclipse.core.resources.IFile;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.pde.core.IModelChangedEvent;
 import org.eclipse.pde.internal.core.XMLPrintHandler;
 import org.eclipse.pde.internal.core.util.PDETextHelper;
@@ -63,6 +65,69 @@ public class TocTopic extends TocObject {
 	public TocTopic(TocModel model, TocObject parent) {
 		super(model, parent);
 	}
+	
+	/**
+	 * Constructs a topic with the given model, parent and file.
+	 * 
+	 * @param model The model associated with the new link.
+	 * @param parent The parent TocObject of the new link.
+	 * @param file The page to link to.
+	 */
+	public TocTopic(TocModel model, TocObject parent, IFile file) {
+		super(model, parent);
+
+		IPath path = file.getFullPath();
+		if(file.getProject().equals(getModel().getUnderlyingResource().getProject()))
+		{	//If the file is from the same project,
+			//remove the project name segment
+			fFieldRef = path.removeFirstSegments(1).toString(); //$NON-NLS-1$
+		}
+		else
+		{	//If the file is from another project, add ".."
+			//to traverse outside this model's project
+			fFieldRef = ".." + path.toString(); //$NON-NLS-1$
+		}
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.pde.internal.core.toc.TocObject#equals(java.lang.Object)
+	 *
+	public boolean equals(Object object)
+	{	if(this == object)
+		{	return true;
+		}
+
+		if(!(object instanceof TocTopic))
+		{	return false;
+		}
+
+		TocTopic topic = (TocTopic)object;
+
+		//Compare labels, return false if at least one is non-null
+		//and they are non-equal
+		if(fFieldLabel != null)
+		{	if(!fFieldLabel.equals(topic.getFieldLabel()))
+			{	return false;
+			}
+		}
+		else if(topic.getFieldLabel() != null)
+		{	return false;
+		}
+
+		//Compare reference, return false if at least one is non-null
+		//and they are non-equal
+		if(fFieldRef != null)
+		{	if(!fFieldRef.equals(topic.getFieldRef()))
+			{	return false;
+			}
+		}
+		else if(topic.getFieldRef() != null)
+		{	return false;
+		}
+
+		//Compare children
+		return getChildren().equals(topic.getChildren());
+	}
 
 	/**
 	 * @return a copy of the current list of children for this topic.
@@ -82,6 +147,13 @@ public class TocTopic extends TocObject {
 	}
 	
 	/* (non-Javadoc)
+	 * @see org.eclipse.pde.internal.core.toc.TocObject#canBeParent()
+	 */
+	public boolean canBeParent() {
+		return true;
+	}
+	
+	/* (non-Javadoc)
 	 * @see org.eclipse.pde.internal.core.toc.TocObject#getElement()
 	 */
 	public String getElement() {
@@ -93,6 +165,10 @@ public class TocTopic extends TocObject {
 	 */
 	public String getName() {
 		return fFieldLabel;
+	}
+
+	public String getPath() {
+		return fFieldRef;
 	}
 
 	/* (non-Javadoc)
@@ -191,11 +267,34 @@ public class TocTopic extends TocObject {
 	 */
 	public void addChild(TocObject child) {
 		fFieldElements.add(child);
+		child.setParent(this);
 		if (isEditable()) {
 			fireStructureChanged(child, IModelChangedEvent.INSERT);
 		}
 	}
-	
+
+	/**
+	 * Add a TocObject child to this topic
+	 * beside a specified sibling
+	 * and signal the model if necessary.
+	 * 
+	 * @param child The child to add to the TocObject
+	 * @param sibling The object that will become the child's direct sibling
+	 * @param insertBefore If the object should be inserted before the sibling
+	 */
+	public void addChild(TocObject child, TocObject sibling, boolean insertBefore) {
+		int currentIndex = fFieldElements.indexOf(sibling);
+		if(!insertBefore)
+		{	currentIndex++;
+		}
+
+		fFieldElements.add(currentIndex, child);
+		child.setParent(this);
+		if (isEditable()) {
+			fireStructureChanged(child, IModelChangedEvent.INSERT);
+		}
+	}
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.pde.internal.core.toc.TocObject#moveChild(org.eclipse.pde.internal.core.toc.TocObject, int)
 	 */
@@ -231,7 +330,6 @@ public class TocTopic extends TocObject {
 	 */
 	public void removeChild(TocObject tocObject) {
 		fFieldElements.remove(tocObject);
-		tocObject.reset();
 		if (isEditable()) {
 			fireStructureChanged(tocObject, IModelChangedEvent.REMOVE);
 		}	
