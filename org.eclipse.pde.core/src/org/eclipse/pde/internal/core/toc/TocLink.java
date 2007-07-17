@@ -66,25 +66,6 @@ public class TocLink extends TocLeafObject {
 	}
 
 	/* (non-Javadoc)
-	 * @see org.eclipse.pde.internal.core.toc.TocObject#equals(java.lang.Object)
-	 */
-	public boolean equals(Object object)
-	{	if(!(object instanceof TocLink))
-		{	return false;
-		}
-	
-		TocLink link = (TocLink)object;
-		
-		//Compare TOC path
-		if(fFieldTocPath!= null)
-		{	return fFieldTocPath.equals(link.getFieldTocPath());
-		}
-		
-		//if the both objects have null TOC paths, return true
-		return link.getFieldTocPath() == null;
-	}
-
-	/* (non-Javadoc)
 	 * @see org.eclipse.pde.internal.core.toc.TocObject#getElement()
 	 */
 	public String getElement() {

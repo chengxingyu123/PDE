@@ -169,11 +169,6 @@ public abstract class TocObject extends PlatformObject implements ITocConstants,
 		return false;
 	}
 
-	/* (non-Javadoc)
-	 * Force subclasses to implement equals
-	 */
-	//public abstract boolean equals(Object obj);
-	
 	/**
 	 * Get the concrete type of this TocObject.
 	 */

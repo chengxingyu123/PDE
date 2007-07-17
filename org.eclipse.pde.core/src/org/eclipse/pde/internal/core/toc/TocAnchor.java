@@ -43,25 +43,6 @@ public class TocAnchor extends TocLeafObject {
 	}
 
 	/* (non-Javadoc)
-	 * @see org.eclipse.pde.internal.core.toc.TocObject#equals(java.lang.Object)
-	 */
-	public boolean equals(Object object)
-	{	if(!(object instanceof TocAnchor))
-		{	return false;
-		}
-
-		TocAnchor anchor = (TocAnchor)object;
-
-		//Compare anchor ID
-		if(fFieldAnchorId!= null)
-		{	return fFieldAnchorId.equals(anchor.getFieldAnchorId());
-		}
-
-		//if the both objects have null anchor IDs, return true
-		return anchor.getFieldAnchorId() == null;
-	}
-
-	/* (non-Javadoc)
 	 * @see org.eclipse.pde.internal.core.toc.TocObject#getElement()
 	 */
 	public String getElement() {

@@ -118,11 +118,6 @@ public class TocEnablement extends TocLeafObject {
 		}
 	}
 
-	public boolean equals(Object obj) {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
 	public String getPath() {
 		// TODO Auto-generated method stub
 		return null;

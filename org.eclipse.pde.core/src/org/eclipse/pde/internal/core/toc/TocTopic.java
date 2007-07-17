@@ -45,8 +45,7 @@ public class TocTopic extends TocObject {
 	//These three lists hold the different child elements
 	//that a topic can currently have. Currently only used
 	//for debugging purposes.
-	//TODO: Remove these lists when the TOC editor is stable,
-	//or find a reason to leave them in.
+	//TODO: Remove these lists when the TOC editor is stable
 	private ArrayList fFieldLinks;
 	private ArrayList fFieldAnchors;
 	private ArrayList fFieldTopics;
@@ -87,46 +86,6 @@ public class TocTopic extends TocObject {
 			//to traverse outside this model's project
 			fFieldRef = ".." + path.toString(); //$NON-NLS-1$
 		}
-	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.pde.internal.core.toc.TocObject#equals(java.lang.Object)
-	 *
-	public boolean equals(Object object)
-	{	if(this == object)
-		{	return true;
-		}
-
-		if(!(object instanceof TocTopic))
-		{	return false;
-		}
-
-		TocTopic topic = (TocTopic)object;
-
-		//Compare labels, return false if at least one is non-null
-		//and they are non-equal
-		if(fFieldLabel != null)
-		{	if(!fFieldLabel.equals(topic.getFieldLabel()))
-			{	return false;
-			}
-		}
-		else if(topic.getFieldLabel() != null)
-		{	return false;
-		}
-
-		//Compare reference, return false if at least one is non-null
-		//and they are non-equal
-		if(fFieldRef != null)
-		{	if(!fFieldRef.equals(topic.getFieldRef()))
-			{	return false;
-			}
-		}
-		else if(topic.getFieldRef() != null)
-		{	return false;
-		}
-
-		//Compare children
-		return getChildren().equals(topic.getChildren());
 	}
 
 	/**
