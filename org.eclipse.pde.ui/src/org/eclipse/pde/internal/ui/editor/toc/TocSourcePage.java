@@ -9,33 +9,28 @@
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
 
-package org.eclipse.pde.internal.ui.editor.cheatsheet.simple;
+package org.eclipse.pde.internal.ui.editor.toc;
 
-import org.eclipse.jface.action.IMenuManager;
-import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.viewers.ILabelProvider;
 import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.ViewerComparator;
-import org.eclipse.pde.internal.core.icheatsheet.simple.ISimpleCSModel;
 import org.eclipse.pde.internal.ui.PDEUIMessages;
 import org.eclipse.pde.internal.ui.editor.ISortableContentOutlinePage;
 import org.eclipse.pde.internal.ui.editor.PDEFormEditor;
 import org.eclipse.pde.internal.ui.editor.XMLSourcePage;
-import org.eclipse.pde.internal.ui.editor.cheatsheet.simple.actions.SimpleCSPreviewAction;
 
 /**
- * SimpleCSSourcePage
- *
+ * TocSourcePage
  */
-public class SimpleCSSourcePage extends XMLSourcePage {
+public class TocSourcePage extends XMLSourcePage {
 
 	/**
 	 * @param editor
 	 * @param id
 	 * @param title
 	 */
-	public SimpleCSSourcePage(PDEFormEditor editor, String id, String title) {
+	public TocSourcePage(PDEFormEditor editor, String id, String title) {
 		super(editor, id, title);
 	}
 
@@ -82,36 +77,11 @@ public class SimpleCSSourcePage extends XMLSourcePage {
 	}
 	
 	/* (non-Javadoc)
-	 * @see org.eclipse.pde.internal.ui.editor.PDEProjectionSourcePage#editorContextMenuAboutToShow(org.eclipse.jface.action.IMenuManager)
-	 */
-	protected void editorContextMenuAboutToShow(IMenuManager menu) {
-		// Get the editor
-		PDEFormEditor editor = (PDEFormEditor)getEditor();
-		// Get the form editor contributor
-		SimpleCSEditorContributor contributor = 
-			(SimpleCSEditorContributor)editor.getContributor();
-		// Get the model
-		// TODO: MP: SimpleCS:  Preview does not show unsaved changes made to source page, 
-		// check if fixed after implementing text edit operations
-		ISimpleCSModel model = (ISimpleCSModel)editor.getAggregateModel();
-		// Get the preview action
-		SimpleCSPreviewAction previewAction = contributor.getPreviewAction();
-		// Set the cheat sheet object
-		previewAction.setDataModelObject(model.getSimpleCS());
-		// Set the editor input
-		previewAction.setEditorInput(editor.getEditorInput());
-		// Add the preview action to the context menu
-		menu.add(previewAction);
-		menu.add(new Separator());
-		super.editorContextMenuAboutToShow(menu);
-	}
-	
-	/* (non-Javadoc)
 	 * @see org.eclipse.pde.internal.ui.editor.PDESourcePage#createOutlinePage()
 	 */
 	protected ISortableContentOutlinePage createOutlinePage() {
-		// TODO: MP: SimpleCS:  Use until source page defined for source page
-		return new SimpleCSFormOutlinePage((PDEFormEditor)getEditor());
+		//TODO: Create a TOC source page outline
+		return new TocFormOutlinePage((PDEFormEditor)getEditor());
 	}	
 	
 	/* (non-Javadoc)

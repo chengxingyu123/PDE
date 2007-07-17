@@ -29,7 +29,9 @@ import org.eclipse.pde.internal.core.toc.TocObject;
 import org.eclipse.pde.internal.ui.IPDEUIConstants;
 import org.eclipse.pde.internal.ui.PDEPlugin;
 import org.eclipse.pde.internal.ui.editor.ISortableContentOutlinePage;
+import org.eclipse.pde.internal.ui.editor.MultiSourceEditor;
 import org.eclipse.pde.internal.ui.editor.PDEFormEditor;
+import org.eclipse.pde.internal.ui.editor.PDESourcePage;
 import org.eclipse.pde.internal.ui.editor.SystemFileEditorInput;
 import org.eclipse.pde.internal.ui.editor.context.InputContext;
 import org.eclipse.pde.internal.ui.editor.context.InputContextManager;
@@ -47,7 +49,7 @@ import org.eclipse.ui.part.ShowInContext;
  * TocEditor
  *
  */
-public class TocEditor extends PDEFormEditor {
+public class TocEditor extends MultiSourceEditor {
 
 	/**
 	 * 
@@ -78,19 +80,24 @@ public class TocEditor extends PDEFormEditor {
 
 
 	private boolean isShowInApplicable() {
-		IStructuredSelection selection = (IStructuredSelection)getSelection();
-		if (selection.isEmpty())
+		if (getSelection().isEmpty())
 		{	return false;
 		}
-		for (Iterator iter = selection.iterator(); iter.hasNext();)
-		{	Object obj = iter.next();
-			if (!(obj instanceof TocObject))
-				return false;
-			if (((TocObject)obj).getPath() == null)
-				return false;
+
+		if(getSelection() instanceof IStructuredSelection)
+		{	IStructuredSelection selection = (IStructuredSelection)getSelection();
+			for (Iterator iter = selection.iterator(); iter.hasNext();)
+			{	Object obj = iter.next();
+				if (!(obj instanceof TocObject))
+					return false;
+				if (((TocObject)obj).getPath() == null)
+					return false;
+			}
+
+			return true;
 		}
 
-		return true;
+		return false;
 	}
 
 	/**
@@ -129,7 +136,7 @@ public class TocEditor extends PDEFormEditor {
 
 					resources = new StructuredSelection(resourceList); 
 				}
-				
+
 				return new ShowInContext(null, resources);
 			}
 		};
@@ -171,13 +178,15 @@ public class TocEditor extends PDEFormEditor {
 		} catch (PartInitException e) {
 			PDEPlugin.logException(e);
 		}
+		// Add source page
+		addSourcePage(TocInputContext.CONTEXT_ID);
 	}
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.pde.internal.ui.editor.PDEFormEditor#createContentOutline()
 	 */
 	protected ISortableContentOutlinePage createContentOutline() {
-		return null;
+		return new TocFormOutlinePage(this);
 	}
 
 	/* (non-Javadoc)
@@ -220,7 +229,8 @@ public class TocEditor extends PDEFormEditor {
 	 * @see org.eclipse.pde.internal.ui.editor.PDEFormEditor#editorContextAdded(org.eclipse.pde.internal.ui.editor.context.InputContext)
 	 */
 	public void editorContextAdded(InputContext context) {
-		// NO-OP
+		// Add the source page
+		addSourcePage(context.getId());
 	}
 
 	/* (non-Javadoc)
@@ -267,4 +277,11 @@ public class TocEditor extends PDEFormEditor {
 		return super.getSelection();
 	}
 	
+	
+	/* (non-Javadoc)
+	 * @see org.eclipse.pde.internal.ui.editor.MultiSourceEditor#createSourcePage(org.eclipse.pde.internal.ui.editor.PDEFormEditor, java.lang.String, java.lang.String, java.lang.String)
+	 */
+	protected PDESourcePage createSourcePage(PDEFormEditor editor, String title, String name, String contextId) {
+		return new TocSourcePage(editor, title, name);
+	}
 }

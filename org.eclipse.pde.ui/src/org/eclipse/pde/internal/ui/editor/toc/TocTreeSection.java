@@ -97,6 +97,9 @@ public class TocTreeSection extends TreeSection {
 	private TocAddAnchorAction fAddAnchorAction;
 	private TocRemoveObjectAction fRemoveObjectAction;
 	
+	private TocDragAdapter fDragAdapter;
+	private boolean fPreserveSelection;
+	
 	public TocTreeSection(PDEFormPage formPage, Composite parent) {
 		super(formPage, parent, Section.DESCRIPTION, 
 			new String[] { PDEUIMessages.TocPage_addTopic,
@@ -187,7 +190,8 @@ public class TocTreeSection extends TreeSection {
 		//Content dragged from the tree viewer can be treated as model objects (TocObjects)
 		//or as text (XML represenation of the TocObjects)
 		Transfer[] dragTransfers = new Transfer[] { ModelDataTransfer.getInstance(), TextTransfer.getInstance() };
-		fTocTree.addDragSupport(ops, dragTransfers, new TocDragAdapter(this));
+		fDragAdapter = new TocDragAdapter(this);
+		fTocTree.addDragSupport(ops, dragTransfers, fDragAdapter);
 
 		//Model objects and files can be dropped onto the viewer
 		//TODO: Consider allowing dropping of XML text
@@ -437,10 +441,18 @@ public class TocTreeSection extends TreeSection {
 	{	if(dropped instanceof Object[])
 		{	TocObject tocTarget = (TocObject)currentTarget;
 			TocTopic targetParent = determineParent(tocTarget, location);
-			
+
+			if(targetParent == tocTarget
+					&& location == TocDropAdapter.LOCATION_JUST_AFTER
+					&& !tocTarget.getChildren().isEmpty()
+					&& fTocTree.getExpandedState(tocTarget))
+			{	location = ViewerDropAdapter.LOCATION_BEFORE;
+				tocTarget = (TocObject)tocTarget.getChildren().get(0);
+			}
+
 			if(targetParent != null)
 			{	ArrayList objectsToAdd = getObjectsToAdd((Object[])dropped, targetParent);
-				if(!objectsToAdd.isEmpty())
+				if(objectsToAdd != null && !objectsToAdd.isEmpty())
 				{	boolean insertBefore = (location == ViewerDropAdapter.LOCATION_BEFORE);
 					handleMultiAddAction(objectsToAdd, tocTarget, insertBefore, targetParent);
 					return true;
@@ -470,7 +482,17 @@ public class TocTreeSection extends TreeSection {
 		{	//In all other cases, it depends on the location of the drop
 			//relative to the drop target
 			switch(dropLocation)
-			{	case ViewerDropAdapter.LOCATION_ON:
+			{	case TocDropAdapter.LOCATION_JUST_AFTER:
+				{	//if the drop occured after an expanded node
+					//and all of its children,
+					//make the drop target's parent the target parent object
+					if(!fTocTree.getExpandedState(dropTarget))
+					{	return (TocTopic)dropTarget.getParent();
+					}
+					//otherwise, the target parent is the drop target,
+					//since the drop occured between it and its first child
+				}
+				case ViewerDropAdapter.LOCATION_ON:
 				{	//the drop location is directly on the drop target
 					//set the parent object to be the drop target
 					return (TocTopic)dropTarget;
@@ -499,10 +521,16 @@ public class TocTreeSection extends TreeSection {
 				}
 			}
 			else if(droppings[i] instanceof TocObject)
-			{	if(targetParent.descendsFrom((TocObject)droppings[i]))
-				{	//Nesting a parent inside itself or its children
-					//is stupid and ridiculous so this add is NOT going through
-					return new ArrayList();
+			{	ArrayList dragged = fDragAdapter.getDraggedElements();
+				if(dragged != null && dragged.size() == droppings.length)
+				{	TocObject draggedObj = (TocObject)dragged.get(i);
+
+					if(targetParent.descendsFrom(draggedObj))
+					{	//Nesting an object inside itself or its children
+						//is so stupid and ridiculous that I get a headache
+						//just thinking about it. Thus, this drag is not going to complete.
+						return null;
+					}
 				}
 				//Reconnect this TocObject, since it was deserialized
 				((TocObject)droppings[i]).reconnect(fModel, targetParent);
@@ -595,8 +623,7 @@ public class TocTreeSection extends TreeSection {
 	 * @param object
 	 */
 	private void handleDeleteAction()
-	{	List objects = ((IStructuredSelection)fTocTree.getSelection()).toList();
-	
+	{	ArrayList objects = new ArrayList(((IStructuredSelection)fTocTree.getSelection()).toList());
 		boolean beep = false;
 		
 		for(Iterator i = objects.iterator(); i.hasNext();)
@@ -622,6 +649,15 @@ public class TocTreeSection extends TreeSection {
 	{	if(!itemsToRemove.isEmpty())
 		{	fRemoveObjectAction.setToRemove((TocObject[])itemsToRemove.toArray(new TocObject[itemsToRemove.size()]));
 			fRemoveObjectAction.run();
+		}
+	}
+
+	public void handleDrag(List itemsToRemove)
+	{	if(!itemsToRemove.isEmpty())
+		{	fPreserveSelection = true;
+			fRemoveObjectAction.setToRemove((TocObject[])itemsToRemove.toArray(new TocObject[itemsToRemove.size()]));
+			fRemoveObjectAction.run();
+			fPreserveSelection = false;
 		}
 	}
 
@@ -752,8 +788,10 @@ public class TocTreeSection extends TreeSection {
 		if(tocObject.equals(object.getParent()))
 		{	fTocTree.refresh(object.getParent());
 		}
-		
-		fTocTree.setSelection(new StructuredSelection(tocObject), true);
+
+		if(!fPreserveSelection)
+		{	fTocTree.setSelection(new StructuredSelection(tocObject), true);
+		}
 	}	
 
 	/**

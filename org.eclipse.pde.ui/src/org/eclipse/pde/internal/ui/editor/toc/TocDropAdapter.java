@@ -20,6 +20,9 @@ import org.eclipse.swt.dnd.DND;
 import org.eclipse.swt.dnd.DropTargetEvent;
 import org.eclipse.swt.dnd.FileTransfer;
 import org.eclipse.swt.dnd.TransferData;
+import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.Rectangle;
+import org.eclipse.swt.widgets.Item;
 
 /**
  * TocDropAdapter - implements drop behaviour for the TOC Tree Section.
@@ -29,10 +32,52 @@ import org.eclipse.swt.dnd.TransferData;
 public class TocDropAdapter extends ViewerDropAdapter {
 	private TocTreeSection fSection;
 	
+    /**
+     * Constant describing the position of the cursor relative 
+     * to the target object.  This means the mouse is positioned
+     * slightly after the target, but not after its children if it is
+     * expanded.
+     * @see #getCurrentLocation()
+     */
+    public static final int LOCATION_JUST_AFTER = 5;
+	
 	public TocDropAdapter(TreeViewer tocTree, TocTreeSection section)
 	{	super(tocTree);
 		fSection = section;
 	}
+
+    /**
+     * Returns the position of the given event's coordinates relative to its target.
+     * The position is determined to be before, after, or on the item, based on
+     * some threshold value.
+     *
+     * @param event the event
+     * @return one of the <code>LOCATION_* </code>constants defined in this class
+     */
+    protected int determineLocation(DropTargetEvent event) {
+        if (!(event.item instanceof Item)) {
+            return LOCATION_NONE;
+        }
+        Item item = (Item) event.item;
+        Point coordinates = new Point(event.x, event.y);
+        coordinates = getViewer().getControl().toControl(coordinates);
+        if (item != null) {
+            Rectangle bounds = getBounds(item);
+            if (bounds == null) {
+                return LOCATION_NONE;
+            }
+            if ((coordinates.y - bounds.y) < 5) {
+                return LOCATION_BEFORE;
+            }
+            if ((bounds.y + bounds.height - coordinates.y) < 5) {
+                if ((bounds.y - coordinates.y) < 5) {
+                	return LOCATION_JUST_AFTER;
+                }
+            	return LOCATION_AFTER;
+            }
+        }
+        return LOCATION_ON;
+    }
 
 	/* (non-Javadoc)
 	 * A new drag has entered the widget. Do file validation if necessary,
@@ -54,6 +99,7 @@ public class TocDropAdapter extends ViewerDropAdapter {
             event.feedback = DND.FEEDBACK_INSERT_BEFORE;
             break;
         case LOCATION_AFTER:
+        case LOCATION_JUST_AFTER:
             event.feedback = DND.FEEDBACK_INSERT_AFTER;
             break;
         case LOCATION_ON:

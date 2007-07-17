@@ -126,7 +126,13 @@ public class TocDragAdapter implements DragSourceListener {
 	 */
 	public void dragFinished(DragSourceEvent event)
 	{	if(event.detail == DND.DROP_MOVE && fDraggedItems != null)
-		{	fSection.handleRemove(fDraggedItems);
+		{	fSection.handleDrag(fDraggedItems);
 		}
+
+		fDraggedItems = null;
+	}
+
+	public ArrayList getDraggedElements() {
+		return fDraggedItems;
 	}
 }
