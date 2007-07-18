@@ -53,6 +53,7 @@ import org.eclipse.pde.internal.ui.editor.toc.actions.TocRemoveObjectAction;
 import org.eclipse.pde.internal.ui.editor.toc.details.TocAbstractDetails;
 import org.eclipse.pde.internal.ui.editor.toc.details.TocDetails;
 import org.eclipse.pde.internal.ui.parts.TreePart;
+import org.eclipse.pde.internal.ui.util.PDELabelUtility;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.dnd.Clipboard;
 import org.eclipse.swt.dnd.DND;
@@ -517,7 +518,23 @@ public class TocTreeSection extends TreeSection {
 				{	tocObjects.add(makeNewTocLink(targetParent, path));
 				}
 				else if(TocExtensionUtil.hasValidPageExtension(path))
-				{	tocObjects.add(makeNewTocTopic(targetParent, path));
+				{	TocTopic topic = makeNewTocTopic(targetParent, path); 
+					String title = TOCHTMLTitleUtil.findTitle(path.toFile());	
+					if(title == null)
+					{	topic.setFieldLabel(title);
+						int numChildren = targetParent.getChildren().size();
+						TocObject[] children = 
+							(TocObject[])targetParent.getChildren().toArray(new TocObject[numChildren]);
+						
+						String[] tocObjectNames = new String[children.length];
+						
+						for(int j = 0; j < numChildren; ++j)
+						{	tocObjectNames[j] = children[j].getName();
+						}
+						
+						title = PDELabelUtility.generateName(tocObjectNames, PDEUIMessages.TocPage_TocTopic);
+					}
+					tocObjects.add(topic);
 				}
 			}
 			else if(droppings[i] instanceof TocObject)
