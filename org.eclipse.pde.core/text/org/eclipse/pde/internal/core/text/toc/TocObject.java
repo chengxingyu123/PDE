@@ -9,70 +9,37 @@
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
 
-package org.eclipse.pde.internal.core.toc;
+package org.eclipse.pde.internal.core.text.toc;
 
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Serializable;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import org.eclipse.core.runtime.PlatformObject;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.pde.core.IModelChangeProvider;
-import org.eclipse.pde.core.IWritable;
 import org.eclipse.pde.core.ModelChangedEvent;
 import org.eclipse.pde.internal.core.XMLPrintHandler;
 import org.eclipse.pde.internal.core.itoc.ITocConstants;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.w3c.dom.Text;
+import org.eclipse.pde.internal.core.text.IDocumentNode;
+import org.eclipse.pde.internal.core.text.plugin.PluginAttribute;
+import org.eclipse.pde.internal.core.text.plugin.PluginDocumentNode;
 
 /**
  * TocObject - All objects modeled in a Table of Contents subclass TocObject
  * This class contains functionality common to all TOC elements.
  */
-public abstract class TocObject extends PlatformObject implements ITocConstants, Serializable, IWritable {
+public abstract class TocObject extends PluginDocumentNode implements ITocConstants, Serializable {
 
 	//The model associated with this TocObject
 	private transient TocModel fModel;
-	
+	private transient boolean fInTheModel;
+
 	//The TocObject's parent TocObject (can be null for root objects)
 	private transient TocObject fParent;	
 
-	private boolean hasEnablement;
-	
-	private TocEnablement fFieldEnablement;
-	
-	//Default XHTML elements that may be found in XML Text elements
-	protected static final HashSet DEFAULT_TAG_EXCEPTIONS = new HashSet(12);
-	
-	//Characters that need to be substituted with escapes
-	protected static final HashMap DEFAULT_SUBSTITUTE_CHARS = new HashMap(5);
-	
-	static {
-		DEFAULT_TAG_EXCEPTIONS.add("b"); //$NON-NLS-1$
-		DEFAULT_TAG_EXCEPTIONS.add("/b"); //$NON-NLS-1$
-		DEFAULT_TAG_EXCEPTIONS.add("br/"); //$NON-NLS-1$
-		DEFAULT_TAG_EXCEPTIONS.add("p"); //$NON-NLS-1$
-		DEFAULT_TAG_EXCEPTIONS.add("/p"); //$NON-NLS-1$
-		DEFAULT_TAG_EXCEPTIONS.add("li"); //$NON-NLS-1$
-		DEFAULT_TAG_EXCEPTIONS.add("/li"); //$NON-NLS-1$		
-		DEFAULT_TAG_EXCEPTIONS.add("a"); //$NON-NLS-1$
-		DEFAULT_TAG_EXCEPTIONS.add("/a"); //$NON-NLS-1$	
-		DEFAULT_TAG_EXCEPTIONS.add("span"); //$NON-NLS-1$
-		DEFAULT_TAG_EXCEPTIONS.add("/span"); //$NON-NLS-1$			
-		DEFAULT_TAG_EXCEPTIONS.add("img"); //$NON-NLS-1$	
-		
-		DEFAULT_SUBSTITUTE_CHARS.put(new Character('&'), "&amp;"); //$NON-NLS-1$
-		DEFAULT_SUBSTITUTE_CHARS.put(new Character('<'), "&lt;"); //$NON-NLS-1$
-		DEFAULT_SUBSTITUTE_CHARS.put(new Character('>'), "&gt;"); //$NON-NLS-1$
-		DEFAULT_SUBSTITUTE_CHARS.put(new Character('\''), "&apos;"); //$NON-NLS-1$
-		DEFAULT_SUBSTITUTE_CHARS.put(new Character('\"'), "&quot;"); //$NON-NLS-1$
-	}	
-	
 	/**
 	 * Constructs the TocObject and initializes its attributes.
 	 * 
@@ -82,8 +49,6 @@ public abstract class TocObject extends PlatformObject implements ITocConstants,
 	public TocObject(TocModel model, TocObject parent) {
 		fModel = model;
 		fParent = parent;
-		hasEnablement = false;
-		reset();
 	}
 
 	public void reconnect(TocModel model, TocObject parent) {
@@ -100,13 +65,25 @@ public abstract class TocObject extends PlatformObject implements ITocConstants,
 	/**
 	 * @return the children of the object or an empty List if none exist.
 	 */
-	public abstract List getChildren();
+	public List getChildren()
+	{	//Create a copy of the child list instead of 
+		//returning the list itself. That way, our list
+		//of children cannot be altered from outside
+		ArrayList list = new ArrayList();
+
+		// Add children of this topic
+		if (getChildNodesList().size() > 0) {
+			list.addAll(getChildNodesList());
+		}
+
+		return list;
+	}
 
 	/**
 	 * @return true iff this TOC object is capable of containing children.
 	 */
 	public abstract boolean canBeParent();
-	
+
 	/**
 	 * @return the root TOC element that is an ancestor to this TocObject.
 	 */
@@ -119,6 +96,13 @@ public abstract class TocObject extends PlatformObject implements ITocConstants,
 	 */
 	public TocModel getModel() {
 		return fModel;
+	}
+
+	/**
+	 * @param model the model to associate with this TocObject
+	 */
+	public void setModel(TocModel model) {
+		fModel = model;
 	}
 
 	/**
@@ -174,7 +158,7 @@ public abstract class TocObject extends PlatformObject implements ITocConstants,
 	 * Get the concrete type of this TocObject.
 	 */
 	public abstract int getType();
-	
+
 	/**
 	 * @return <code>true</code> iff the child parameter is the first
 	 * of the TocObject's children.
@@ -194,7 +178,7 @@ public abstract class TocObject extends PlatformObject implements ITocConstants,
 		//are expected to override this function
 		return false;
 	}
-	
+
 	/**
 	 * @param tocObject the child used to locate a sibling
 	 * @return the TocObject preceding the specified one
@@ -216,7 +200,7 @@ public abstract class TocObject extends PlatformObject implements ITocConstants,
 		
 		return (TocObject)children.get(position - 1);
 	}
-	
+
 	/**
 	 * @param tocObject the child used to locate a sibling
 	 * @return the TocObject proceeding the specified one
@@ -240,7 +224,6 @@ public abstract class TocObject extends PlatformObject implements ITocConstants,
 		return (TocObject)children.get(position + 1);
 	}
 
-
 	/**
 	 * @return true iff a child object can be removed
 	 */
@@ -262,23 +245,6 @@ public abstract class TocObject extends PlatformObject implements ITocConstants,
 	
 		return false;
 	}
-	
-	/**
-	 * Parses the given element's attributes and children.
-	 * 
-	 * @param element The XML element to parse.
-	 */
-	public void parse(Element element) {
-		if (element.getNodeName().equals(getElement())) {
-			parseAttributes(element);
-			parseContent(element);
-		}
-	}
-
-	/**
-	 * Re-initializes the entire TocObject.
-	 */
-	public abstract void reset();
 
 	/**
 	 * Writes out the XML representation of this TocObject, and proceeds
@@ -287,9 +253,8 @@ public abstract class TocObject extends PlatformObject implements ITocConstants,
 	 * @param indent The indentation that will precede this element's data.
 	 * @param writer The output stream to write the XML to.
 	 */
-	public void write(String indent, PrintWriter writer) {
-
-		StringBuffer buffer = new StringBuffer();
+	public void write(String indent, PrintWriter writer)
+	{	StringBuffer buffer = new StringBuffer();
 		try {
 			// Assemble start element
 			buffer.append(getElement());
@@ -319,7 +284,7 @@ public abstract class TocObject extends PlatformObject implements ITocConstants,
 			Object newValue) {
 		firePropertyChanged(this, property, oldValue, newValue);
 	}
-		
+
 	/**
 	 * Signal to the model that the object has changed.
 	 * 
@@ -328,14 +293,14 @@ public abstract class TocObject extends PlatformObject implements ITocConstants,
 	 * @param oldValue The old value of the property.
 	 * @param newValue The current value of the property.
 	 */
-	private void firePropertyChanged(TocObject object, String property,
+	private void firePropertyChanged(IDocumentNode object, String property,
 		Object oldValue, Object newValue) {
 		if (fModel.isEditable()) {
 			IModelChangeProvider provider = fModel;
 			provider.fireModelObjectChanged(object, property, oldValue, newValue);
 		}
 	}
-		
+
 	/**
 	 * Signals a change in the structure of the element, such as
 	 * child addition or removal.
@@ -346,7 +311,7 @@ public abstract class TocObject extends PlatformObject implements ITocConstants,
 	protected void fireStructureChanged(TocObject child, int changeType) {
 		fireStructureChanged(new TocObject[] { child }, changeType);
 	}
-	
+
 	/**
 	 * Signal to the model that the TOC structure has changed.
 	 * 
@@ -361,72 +326,14 @@ public abstract class TocObject extends PlatformObject implements ITocConstants,
 					changeType, children, null));
 		}
 	}
-		
+
 	/**
 	 * @return true iff the model is not read-only.
 	 */
 	protected boolean isEditable() {
 		return fModel.isEditable();
 	}	
-	
-	/**
-	 * Parse the attributes of this XML element.
-	 * 
-	 * @param element The element to parse.
-	 */
-	protected abstract void parseAttributes(Element element);
-	
-	/**
-	 * Parse the contents of this XML element.
-	 * 
-	 * @param element the element to parse.
-	 */
-	protected void parseContent(Element element) {
-		// Process children
-		NodeList children = element.getChildNodes();
-		for (int i = 0; i < children.getLength(); i++) {
-			Node child = children.item(i);
-			if (child.getNodeType() == Node.ELEMENT_NODE) {
-				if(child.getNodeName().equals(ELEMENT_ENABLEMENT))
-				{	parseEnablement((Element)child);
-				}
-				else
-				{	parseElement((Element)child);
-				}
-			} else if (child.getNodeType() == Node.TEXT_NODE) {
-				parseText((Text)child);
-			}
-		}		
-	}
-	
-	/**
-	 * Parse the XML enablement of this element.
-	 * 
-	 * @param element the enablement to parse.
-	 */
-	private void parseEnablement(Element element)
-	{	hasEnablement = true;
-	
-		fFieldEnablement = getModel().getFactory().createTocEnablement(this);
-		fFieldEnablement.parse(element);
-	}
-	
-	/**
-	 * Parse an XML element child node of this element.
-	 * 
-	 * @param element the element to parse.
-	 */
-	protected abstract void parseElement(Element element);
 
-	/**
-	 * Parse the text contents of this element node.
-	 * Currently, the TOC model contains no Text elements,
-	 * and thus this is usually implemented as a no-op
-	 * 
-	 * @param text the element to parse.
-	 */
-	protected abstract void parseText(Text text);
-	
 	/**
 	 * Write out the XML representations of the attributes
 	 * associated with this TocObject.
@@ -434,7 +341,7 @@ public abstract class TocObject extends PlatformObject implements ITocConstants,
 	 * @param buffer the buffer to which the attributes are written.
 	 */
 	protected abstract void writeAttributes(StringBuffer buffer);
-	
+
 	/**
 	 * Writes child elements or child content.
 	 * 
@@ -442,17 +349,51 @@ public abstract class TocObject extends PlatformObject implements ITocConstants,
 	 * @param writer The output stream to write the XML to.
 	 */
 	protected abstract void writeElements(String indent, PrintWriter writer);
-	
+
 	/**
 	 * @return the name of the XML element associated with this TocObject
 	 */
 	public abstract String getElement();
 
-	public boolean isHasEnablement() {
-		return hasEnablement;
+	/**
+	 * @return the inTheModel
+	 */
+	public boolean isInTheModel() {
+		return fInTheModel;
 	}
 
-	public void setHasEnablement(boolean hasEnablement) {
-		this.hasEnablement = hasEnablement;
+	/**
+	 * @param inTheModel the inTheModel to set
+	 */
+	public void setInTheModel(boolean inTheModel) {
+		this.fInTheModel = inTheModel;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.eclipse.pde.internal.ui.model.IDocumentNode#setXMLAttribute(java.lang.String,
+	 *      java.lang.String)
+	 */
+	public void setXMLAttribute(String name, String value) {
+		String oldValue = getXMLAttributeValue(name);
+		if (oldValue != null && oldValue.equals(value))
+			return;
+		PluginAttribute attr = (PluginAttribute) getDocumentAttribute(name);
+		try {
+			if (value == null)
+				value = ""; //$NON-NLS-1$
+				if (attr == null) {
+					attr = new PluginAttribute();
+					attr.setName(name);
+					attr.setEnclosingElement(this);
+					setXMLAttribute(attr);
+				}
+				attr.setValue(value == null ? "" : value); //$NON-NLS-1$
+		} catch (CoreException e) {
+		}
+		if (fInTheModel)
+			firePropertyChanged(attr.getEnclosingElement(), attr
+					.getAttributeName(), oldValue, value);
 	}
 }
