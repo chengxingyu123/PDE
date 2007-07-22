@@ -21,6 +21,10 @@ import org.eclipse.ui.forms.IDetailsPage;
 import org.eclipse.ui.forms.IDetailsPageProvider;
 import org.eclipse.ui.forms.IManagedForm;
 
+/**
+ * TODO: Comment
+ *
+ */
 public class TocBlock extends PDEMasterDetailsBlock implements
 	IModelChangedListener, IDetailsPageProvider {
 
@@ -34,19 +38,25 @@ public class TocBlock extends PDEMasterDetailsBlock implements
 	
 	private TocLinkDetails fLinkDetails;
 
-	/**
+	/**TODO: Comment
 	 * @param page
 	 */
 	public TocBlock(PDEFormPage page) {
 		super(page);
 	}
 	
+	/* (non-Javadoc)
+	 * @see org.eclipse.pde.internal.ui.editor.PDEMasterDetailsBlock#createMasterSection(org.eclipse.ui.forms.IManagedForm, org.eclipse.swt.widgets.Composite)
+	 */
 	protected PDESection createMasterSection(IManagedForm managedForm,
 			Composite parent) {
 		fMasterSection = new TocTreeSection(getPage(), parent);
 		return fMasterSection;
 	}
 
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.forms.MasterDetailsBlock#registerPages(org.eclipse.ui.forms.DetailsPart)
+	 */
 	protected void registerPages(DetailsPart detailsPart) {
 		// Only static pages to be defined.  Do not cache pages
 		detailsPart.setPageLimit(0); 
@@ -66,6 +76,9 @@ public class TocBlock extends PDEMasterDetailsBlock implements
 		detailsPart.setPageProvider(this);
 	}
 
+	/* (non-Javadoc)
+	 * @see org.eclipse.pde.core.IModelChangedListener#modelChanged(org.eclipse.pde.core.IModelChangedEvent)
+	 */
 	public void modelChanged(IModelChangedEvent event) {
 		// Inform the master section
 		if (fMasterSection != null) {
@@ -73,11 +86,17 @@ public class TocBlock extends PDEMasterDetailsBlock implements
 		}
 	}
 
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.forms.IDetailsPageProvider#getPage(java.lang.Object)
+	 */
 	public IDetailsPage getPage(Object key) {
 		// No dynamic pages.  Static pages already registered
 		return null;
 	}
 
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.forms.IDetailsPageProvider#getPageKey(java.lang.Object)
+	 */
 	public Object getPageKey(Object object) {
 		// Get static page key
 		if (object instanceof Toc) {
@@ -98,7 +117,7 @@ public class TocBlock extends PDEMasterDetailsBlock implements
 		return object.getClass();
 	}
 
-	/**
+	/**TODO: Comment
 	 * @return
 	 */
 	public ISelection getSelection() {
@@ -108,6 +127,9 @@ public class TocBlock extends PDEMasterDetailsBlock implements
 		return null;
 	}
 
+	/**TODO: Comment
+	 * @return
+	 */
 	public TocTreeSection getMasterSection() {
 		return fMasterSection;
 	}

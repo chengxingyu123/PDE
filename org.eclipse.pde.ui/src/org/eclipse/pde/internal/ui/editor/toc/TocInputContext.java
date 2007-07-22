@@ -63,6 +63,33 @@ public class TocInputContext extends UTF8InputContext {
 	 * @see org.eclipse.pde.internal.ui.editor.context.InputContext#createModel(org.eclipse.ui.IEditorInput)
 	 */
 	protected IBaseModel createModel(IEditorInput input) throws CoreException {
+		/*if (input instanceof IStorageEditorInput)
+		{	boolean isReconciling = input instanceof IFileEditorInput;
+			IDocument document = getDocumentProvider().getDocument(input);
+			
+			TocModel model = new TocModel(document, isReconciling);
+			
+			if (input instanceof IFileEditorInput) {
+				IFile file = ((IFileEditorInput)input).getFile();
+				model.setUnderlyingResource(file);
+				model.setCharset(file.getCharset());
+			} else if (input instanceof SystemFileEditorInput){
+				File file = (File)((SystemFileEditorInput)input).getAdapter(File.class);
+				model.setInstallLocation(file.getParent());
+				model.setCharset(getDefaultCharset());
+			} else if (input instanceof JarEntryEditorInput){
+				File file = (File)((JarEntryEditorInput)input).getAdapter(File.class);
+				model.setInstallLocation(file.toString());
+				model.setCharset(getDefaultCharset());
+			} else {
+				model.setCharset(getDefaultCharset());				
+			}
+			model.load();
+			
+			return model;
+		}
+
+		return null;*/
 		TocModel model = null;
 		if (input instanceof IStorageEditorInput) {
 			try {
