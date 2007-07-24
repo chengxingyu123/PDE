@@ -59,11 +59,13 @@ public abstract class AbstractExtensions extends PluginObject implements IExtens
 	}
 
 	public IPluginExtensionPoint[] getExtensionPoints() {
-		return (IPluginExtensionPoint[])getExtensionPointsList().toArray(new IPluginExtensionPoint[getExtensionPointsList().size()]);
+		List extPoints = getExtensionPointsList();
+		return (IPluginExtensionPoint[])extPoints.toArray(new IPluginExtensionPoint[extPoints.size()]);
 	}
 	
 	public IPluginExtension[] getExtensions() {
-		return (IPluginExtension[])getExtensionsList().toArray(new IPluginExtension[getExtensionsList().size()]);
+		List extensions = getExtensionsList();
+		return (IPluginExtension[])extensions.toArray(new IPluginExtension[extensions.size()]);
 	}
 
 	public void restoreProperty(String name, Object oldValue, Object newValue)
@@ -124,12 +126,13 @@ public abstract class AbstractExtensions extends PluginObject implements IExtens
 	public void swap(IPluginExtension e1, IPluginExtension e2)
 		throws CoreException {
 		ensureModelEditable();
-		int index1 = getExtensionsList().indexOf(e1);
-		int index2 = getExtensionsList().indexOf(e2);
+		List extensions = getExtensionsList();
+		int index1 = extensions.indexOf(e1);
+		int index2 = extensions.indexOf(e2);
 		if (index1 == -1 || index2 == -1)
 			throwCoreException(PDECoreMessages.AbstractExtensions_extensionsNotFoundException); 
-		getExtensionsList().set(index2, e1);
-		getExtensionsList().set(index2, e2);
+		extensions.set(index2, e1);
+		extensions.set(index2, e2);
 		firePropertyChanged(this, P_EXTENSION_ORDER, e1, e2);
 	}
 	
@@ -148,15 +151,17 @@ public abstract class AbstractExtensions extends PluginObject implements IExtens
 
 	protected boolean hasRequiredAttributes(){
 		// validate extensions
-		int size = getExtensionCount();
+		List extensions = getExtensionsList();
+		int size = extensions.size();
 		for (int i = 0; i < size; i++) {
-			IPluginExtension extension = (IPluginExtension)getExtensionsList().get(i);
+			IPluginExtension extension = (IPluginExtension)extensions.get(i);
 			if (!extension.isValid()) return false;
 		}
 		// validate extension points
-		size = getExtensionPointsList().size();
+		List extPoints = getExtensionPointsList();
+		size = extPoints.size();
 		for (int i = 0; i < size; i++) {
-			IPluginExtensionPoint expoint = (IPluginExtensionPoint)getExtensionPointsList().get(i);
+			IPluginExtensionPoint expoint = (IPluginExtensionPoint)extPoints.get(i);
 			if (!expoint.isValid()) return false;
 		}
 		return true;
