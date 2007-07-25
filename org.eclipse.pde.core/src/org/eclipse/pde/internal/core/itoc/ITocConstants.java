@@ -17,10 +17,6 @@ package org.eclipse.pde.internal.core.itoc;
  */
 public interface ITocConstants {
 
-	// Attribute Values
-	
-	public static final String ATTRIBUTE_VALUE_ENCODING = "UTF-8"; //$NON-NLS-1$
-
 	// Elements
 
 	public static final String ELEMENT_TOC = "toc"; //$NON-NLS-1$

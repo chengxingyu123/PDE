@@ -16,6 +16,7 @@ import java.io.PrintWriter;
 //import java.util.ArrayList;
 
 import org.eclipse.pde.internal.core.XMLPrintHandler;
+import org.eclipse.pde.internal.core.text.plugin.PluginDocumentNode;
 import org.eclipse.pde.internal.core.util.PDETextHelper;
 import org.w3c.dom.Element;
 
@@ -134,7 +135,7 @@ public class Toc extends TocTopic {
 		//this element is the root
 		try {
 			// Print XML declaration
-			XMLPrintHandler.printHead(writer, ATTRIBUTE_VALUE_ENCODING);
+			XMLPrintHandler.printHead(writer, PluginDocumentNode.ATTRIBUTE_VALUE_ENCODING);
 			super.write(indent, writer);
 		} catch (IOException e) {
 			// Suppress
