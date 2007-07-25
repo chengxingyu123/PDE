@@ -8,6 +8,7 @@ import org.eclipse.core.runtime.IContributor;
 import org.eclipse.core.runtime.IExtension;
 import org.eclipse.core.runtime.IExtensionPoint;
 import org.eclipse.core.runtime.IExtensionRegistry;
+import org.eclipse.core.runtime.IRegistryChangeListener;
 import org.eclipse.core.runtime.RegistryFactory;
 import org.eclipse.osgi.service.resolver.BundleDescription;
 import org.eclipse.pde.core.plugin.IPluginExtension;
@@ -161,6 +162,14 @@ public class PDEExtensionRegistry {
 		if (point != null) 
 			return point.getExtensions();
 		return new IExtension[0];
+	}
+	
+	public void addListener(IRegistryChangeListener listener) {
+		fRegistry.addRegistryChangeListener(listener);
+	}
+	
+	public void removeListener(IRegistryChangeListener listener) {
+		fRegistry.removeRegistryChangeListener(listener);
 	}
 
 }
