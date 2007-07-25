@@ -18,13 +18,11 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import org.eclipse.core.runtime.CoreException;
 import org.eclipse.pde.core.IModelChangeProvider;
 import org.eclipse.pde.core.ModelChangedEvent;
 import org.eclipse.pde.internal.core.XMLPrintHandler;
 import org.eclipse.pde.internal.core.itoc.ITocConstants;
 import org.eclipse.pde.internal.core.text.IDocumentNode;
-import org.eclipse.pde.internal.core.text.plugin.PluginAttribute;
 import org.eclipse.pde.internal.core.text.plugin.PluginDocumentNode;
 
 /**
@@ -369,31 +367,4 @@ public abstract class TocObject extends PluginDocumentNode implements ITocConsta
 		this.fInTheModel = inTheModel;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.eclipse.pde.internal.ui.model.IDocumentNode#setXMLAttribute(java.lang.String,
-	 *      java.lang.String)
-	 */
-	public void setXMLAttribute(String name, String value) {
-		String oldValue = getXMLAttributeValue(name);
-		if (oldValue != null && oldValue.equals(value))
-			return;
-		PluginAttribute attr = (PluginAttribute) getDocumentAttribute(name);
-		try {
-			if (value == null)
-				value = ""; //$NON-NLS-1$
-				if (attr == null) {
-					attr = new PluginAttribute();
-					attr.setName(name);
-					attr.setEnclosingElement(this);
-					setXMLAttribute(attr);
-				}
-				attr.setValue(value == null ? "" : value); //$NON-NLS-1$
-		} catch (CoreException e) {
-		}
-		if (fInTheModel)
-			firePropertyChanged(attr.getEnclosingElement(), attr
-					.getAttributeName(), oldValue, value);
-	}
 }
