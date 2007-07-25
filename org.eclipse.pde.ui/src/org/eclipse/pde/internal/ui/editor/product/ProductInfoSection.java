@@ -10,11 +10,16 @@
  *******************************************************************************/
 package org.eclipse.pde.internal.ui.editor.product;
 
+import org.eclipse.core.runtime.IExtension;
+import org.eclipse.core.runtime.IExtensionDelta;
+import org.eclipse.core.runtime.IRegistryChangeEvent;
+import org.eclipse.core.runtime.IRegistryChangeListener;
 import org.eclipse.jface.action.IStatusLineManager;
 import org.eclipse.jface.window.Window;
 import org.eclipse.jface.wizard.WizardDialog;
 import org.eclipse.pde.core.IModelChangedEvent;
 import org.eclipse.pde.core.plugin.TargetPlatform;
+import org.eclipse.pde.internal.core.PDECore;
 import org.eclipse.pde.internal.core.iproduct.IProduct;
 import org.eclipse.pde.internal.core.iproduct.IProductModel;
 import org.eclipse.pde.internal.ui.PDEPlugin;
@@ -50,7 +55,7 @@ import org.eclipse.ui.forms.widgets.Section;
 import org.eclipse.ui.forms.widgets.TableWrapData;
 
 
-public class ProductInfoSection extends PDESection {
+public class ProductInfoSection extends PDESection implements IRegistryChangeListener {
 
 	private FormEntry fNameEntry;
 	private ComboPart fAppCombo;
@@ -90,12 +95,14 @@ public class ProductInfoSection extends PDESection {
 		section.setClient(client);	
 		
 		getModel().addModelChangedListener(this);
+		PDECore.getDefault().getExtensionsRegistry().addListener(this);
 	}
 	
 	public void dispose() {
 		IProductModel model = getModel();
 		if (model != null)
 			model.removeModelChangedListener(this);
+		PDECore.getDefault().getExtensionsRegistry().removeListener(this);
 		super.dispose();
 	}
 	
@@ -351,5 +358,54 @@ public class ProductInfoSection extends PDESection {
 		if (c instanceof Text)
 			return true;
 		return false;
+	}
+	
+	public void registryChanged(IRegistryChangeEvent event) {
+		final IExtensionDelta[] applicationDeltas = event.getExtensionDeltas("org.eclipse.core.runtime","applications"); //$NON-NLS-1$ //$NON-NLS-2$
+		final IExtensionDelta[] productDeltas = event.getExtensionDeltas("org.eclipse.core.runtime","products"); //$NON-NLS-1$ //$NON-NLS-2$
+		if (applicationDeltas.length + productDeltas.length == 0)
+			return;
+		
+		Display.getDefault().syncExec(new Runnable() {
+			public void run() {
+				handleExtensionDelta(applicationDeltas, fAppCombo, true);
+				handleExtensionDelta(productDeltas, fProductCombo, false);
+			}
+		});
+	}
+	
+	private void handleExtensionDelta(IExtensionDelta[] deltas, ComboPart combo, boolean applicationDelta) {
+		for (int i = 0; i < deltas.length; i++) {
+			IExtension extension = deltas[i].getExtension();
+			if (extension == null)
+				return;
+			String id = extension.getUniqueIdentifier();
+			if (id == null || (applicationDelta && id.startsWith("org.eclipse.pde.junit.runtime"))) //$NON-NLS-1$
+				continue;
+			if (deltas[i].getKind() == IExtensionDelta.ADDED) {
+				int index = computeIndex(combo.getItems(), id);
+				// index of -1 means id is already in combo
+				if (index >= 0)
+					combo.add(id, index);
+			} else {
+				int index = combo.indexOf(id);
+				if (index >= 0)
+					combo.remove(index);
+			}
+		}
+	}
+	
+	private int computeIndex(String[] entries, String newId) {
+		// Easy linear search to compute the index to insert.  If this take too much time (ie. long list) suggest binary search
+		int i = 0;
+		// go to entries.length -1 because last entry in both ComboParts is a ""
+		for (; i < entries.length - 1; i++) {
+			int compareValue = entries[i].compareTo(newId);
+			if (compareValue == 0)
+				return -1;
+			else if (compareValue > 0)
+				break;
+		}
+		return i;
 	}
 }
