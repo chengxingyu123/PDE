@@ -335,49 +335,78 @@ public class TocTreeSection extends TreeSection {
 	/**
 	 * Update the buttons in the section based on the current selection
 	 */
-	public void updateButtons() {
-		if (!fModel.isEditable()) {
-			return;
+	public void updateButtons()
+	{	if (!fModel.isEditable())
+		{	return;
 		}
 
-		Object object = ((IStructuredSelection) fTocTree.getSelection()).getFirstElement();
-		TocObject tocObject = (TocObject)object;
+		// 'Add' actions are enabled if any object in the selection can
+		// be added to
 		boolean canAddObject = false;
+		// 'Remove' is enabled if any object in the selection is removable
 		boolean canRemove = false;
-		boolean canMoveUp = false;
-		boolean canMoveDown = false;
 
-		if (tocObject != null) {
-			canRemove = tocObject.canBeRemoved();
-			
-			TocObject parent = tocObject.getParent();
-			if (tocObject.getType() == ITocConstants.TYPE_TOC ||
-					parent.getType() == ITocConstants.TYPE_TOPIC ||
-					parent.getType() == ITocConstants.TYPE_TOC) {
-				/* Semantic rule: 
-				 * As long as the selection is a child of a 
-				 * TOC root or a topic, or the selection itself
-				 * is a TOC root, then a new object can be added
-				 * either to the selection or to the parent
-				 */
-				canAddObject = true;
-			}
-			
-			//Semantic rule:
-			//You cannot rearrange the TOC root itself
-			if(tocObject.getType() != ITocConstants.TYPE_TOC)
-			{	if(parent != null)
-				{	TocTopic topic = (TocTopic)parent;
-					canMoveUp = !topic.isFirstChildObject(tocObject);
-					canMoveDown = !topic.isLastChildObject(tocObject);
+		IStructuredSelection sel = (IStructuredSelection)fTocTree.getSelection();
+		//TODO: Implement multi-select move actions from the root TOC element
+
+		// 'Up' is disabled if any object in the selection can't be moved up.
+		boolean canMoveUp = sel.size() == 1;
+
+		// 'Down' is disabled if any object in the selection can't be moved down.
+		boolean canMoveDown = sel.size() == 1;
+
+		for(Iterator iter = sel.iterator(); iter.hasNext();)
+		{	TocObject tocObject = (TocObject)iter.next();
+
+			if (tocObject != null)
+			{	if(tocObject.canBeRemoved())
+				{	canRemove = true;
+				}
+
+				TocObject parent = tocObject.getParent();
+				if (sel.size() == 1 &&
+						(tocObject.getType() == ITocConstants.TYPE_TOC ||
+						 parent.getType() == ITocConstants.TYPE_TOPIC ||
+						 parent.getType() == ITocConstants.TYPE_TOC))
+				{	/* Semantic rule: 
+					 * As long as the selection is a child of a 
+					 * TOC root or a topic, or the selection itself
+					 * is a TOC root, then a new object can be added
+					 * either to the selection or to the parent
+					 */
+					canAddObject = true;
+				}
+				
+				//Semantic rule:
+				//You cannot rearrange the TOC root itself
+				if(tocObject.getType() == ITocConstants.TYPE_TOC)
+				{	canMoveUp = false;
+					canMoveDown = false;
+				}
+				else
+				{	if(parent != null)
+					{	TocTopic topic = (TocTopic)parent;
+						if(topic.isFirstChildObject(tocObject))
+						{	canMoveUp = false;
+						}
+
+						if(topic.isLastChildObject(tocObject))
+						{	canMoveDown = false;
+						}
+					}
 				}
 			}
-		}
+			else
+			{	// How anyone can select a null object, I don't know.
+				// However, if it happens, disable all buttons.
+				canAddObject = false;
+				canRemove = false;
+				canMoveUp = false;
+				canMoveDown = false;
 
-		canAddObject = canAddObject && isEditable();
-		canRemove = canRemove && isEditable();
-		canMoveUp = canMoveUp && isEditable();
-		canMoveDown = canMoveDown && isEditable();
+				break;
+			}
+		}
 
 		getTreePart().setButtonEnabled(F_BUTTON_ADD_TOPIC, canAddObject);
 		getTreePart().setButtonEnabled(F_BUTTON_ADD_LINK, canAddObject);
@@ -397,43 +426,54 @@ public class TocTreeSection extends TreeSection {
 		// Has to be null or a TOC object
 		TocObject tocObject = (TocObject)object;
 
-		// Create the "New" sub-menu
-		MenuManager submenu = new MenuManager(PDEUIMessages.Menus_new_label);
-		// Populate the "New" sub-menu
-		fillContextMenuAddActions(submenu, tocObject);
-		// Add the "New" sub-menu to the main context menu
-		manager.add(submenu);
+		if(tocObject.canBeParent())
+		{	// Create the "New" sub-menu
+			MenuManager submenu = new MenuManager(PDEUIMessages.Menus_new_label);
+			// Populate the "New" sub-menu
+			fillContextMenuAddActions(submenu, tocObject);
+			// Add the "New" sub-menu to the main context menu
+			manager.add(submenu);
 
-		// Add a separator to the main context menu
-		manager.add(new Separator());
+			// Add a separator to the main context menu
+			manager.add(new Separator());
+		}
 
 		// Add the Show In action and Remove action if an object is selected
 		if (tocObject != null)
-		{	String showInLabel = PDEUIMessages.PluginsView_showIn;
-			
-			// Add a label for the keybinding for Show In action, if one exists
-			IBindingService bindingService = (IBindingService) PlatformUI
-				.getWorkbench().getAdapter(IBindingService.class);
-			if (bindingService != null)
-			{	String keyBinding = bindingService
-					.getBestActiveBindingFormattedFor(
-						"org.eclipse.ui.navigate.showInQuickMenu"); //$NON-NLS-1$
-				if (keyBinding != null)
-				{	showInLabel += '\t' + keyBinding;
-				}
-			}
-
-			// Add the "Show In" action and its contributions
-			IMenuManager showInMenu = new MenuManager(showInLabel);
-			showInMenu.add(ContributionItemFactory.VIEWS_SHOW_IN
-				.create(getPage().getSite().getWorkbenchWindow()));
-
-			manager.add(showInMenu);
+		{	// Add clipboard actions
+			getPage().getPDEEditor().getContributor().contextMenuAboutToShow(manager);
 			manager.add(new Separator());
-			
+
 			// Add the TOC object removal action
 			fillContextMenuRemoveAction(manager, tocObject);
+			manager.add(new Separator());
+
+			fillContextMenuShowInAction(manager);
+			manager.add(new Separator());
 		}
+	}
+
+	private void fillContextMenuShowInAction(IMenuManager manager) {
+		String showInLabel = PDEUIMessages.PluginsView_showIn;
+
+		// Add a label for the keybinding for Show In action, if one exists
+		IBindingService bindingService = (IBindingService) PlatformUI
+			.getWorkbench().getAdapter(IBindingService.class);
+		if (bindingService != null)
+		{	String keyBinding = bindingService
+				.getBestActiveBindingFormattedFor(
+					"org.eclipse.ui.navigate.showInQuickMenu"); //$NON-NLS-1$
+			if (keyBinding != null)
+			{	showInLabel += '\t' + keyBinding;
+			}
+		}
+
+		// Add the "Show In" action and its contributions
+		IMenuManager showInMenu = new MenuManager(showInLabel);
+		showInMenu.add(ContributionItemFactory.VIEWS_SHOW_IN
+			.create(getPage().getSite().getWorkbenchWindow()));
+
+		manager.add(showInMenu);
 	}
 
 	/**
@@ -444,38 +484,23 @@ public class TocTreeSection extends TreeSection {
 	 */
 	private void fillContextMenuAddActions(MenuManager submenu, 
 			TocObject tocObject) {
-		
-		// find the parent object that the addition will occur inside
-		TocObject parentObject;
-		if(tocObject == null)
-		{	// if no object is selected, default to the TOC root
-			parentObject = fModel.getToc();
-		}
-		else if (tocObject.canBeParent())
-		{	// if the object itself can be a parent, then the addition
-			// will create an item inside the parent itself
-			parentObject = tocObject;
-		}
-		else
-		{	// if the object cannot be a parent, then use its parent
-			// (the action will create a sibling for the selected object)
-			parentObject = tocObject.getParent();
-		}
 
-		// Add the 'Add Topic' action to the sub-menu
-		fAddTopicAction.setParentObject(parentObject);
-		fAddTopicAction.setEnabled(fModel.isEditable());
-		submenu.add(fAddTopicAction);
-
-		// Add the 'Add Link' action to the sub-menu
-		fAddLinkAction.setParentObject(parentObject);
-		fAddLinkAction.setEnabled(fModel.isEditable());
-		submenu.add(fAddLinkAction);
-
-		// Add the 'Add Anchor' action to the sub-menu
-		fAddAnchorAction.setParentObject(parentObject);
-		fAddAnchorAction.setEnabled(fModel.isEditable());
-		submenu.add(fAddAnchorAction);
+		if(tocObject != null && tocObject.canBeParent())
+		{	// Add the 'Add Topic' action to the sub-menu
+			fAddTopicAction.setParentObject(tocObject);
+			fAddTopicAction.setEnabled(fModel.isEditable());
+			submenu.add(fAddTopicAction);
+	
+			// Add the 'Add Link' action to the sub-menu
+			fAddLinkAction.setParentObject(tocObject);
+			fAddLinkAction.setEnabled(fModel.isEditable());
+			submenu.add(fAddLinkAction);
+	
+			// Add the 'Add Anchor' action to the sub-menu
+			fAddAnchorAction.setParentObject(tocObject);
+			fAddAnchorAction.setEnabled(fModel.isEditable());
+			submenu.add(fAddAnchorAction);
+		}
 	}
 
 	/**
@@ -747,7 +772,7 @@ public class TocTreeSection extends TreeSection {
 	 * @return The generated name of the Topic.
 	 */
 	private String generateTitle(TocTopic targetParent, Path path) {
-		String title = TOCHTMLTitleUtil.findTitle(path.toFile());	
+		String title = TocHTMLTitleUtil.findTitle(path.toFile());	
 		if(title == null)
 		{	int numChildren = targetParent.getChildren().size();
 			TocObject[] children = 
@@ -940,20 +965,22 @@ public class TocTreeSection extends TreeSection {
 	 * @param positionFlag The direction that the object will move
 	 */
 	private void handleMoveAction(int positionFlag) {
-		ISelection sel = fTocTree.getSelection();
-		Object object = ((IStructuredSelection) sel).getFirstElement();
-		
-		if (object == null) {
-			return;
-		}
-		else if (object instanceof TocObject) {
-			TocObject tocObject = (TocObject)object;
-			TocTopic parent = (TocTopic)tocObject.getParent();
+		IStructuredSelection sel = (IStructuredSelection)fTocTree.getSelection();
 
-			// Determine the parent type
-			if (parent != null)
-			{	// Move the object up or down one position
-				parent.moveChild(tocObject, positionFlag);
+		for(Iterator iter = sel.iterator(); iter.hasNext();)
+		{	Object object = iter.next();
+			if (object == null) {
+				return;
+			}
+			else if (object instanceof TocObject) {
+				TocObject tocObject = (TocObject)object;
+				TocTopic parent = (TocTopic)tocObject.getParent();
+	
+				// Determine the parent type
+				if (parent != null)
+				{	// Move the object up or down one position
+					parent.moveChild(tocObject, positionFlag);
+				}
 			}
 		}
 	}

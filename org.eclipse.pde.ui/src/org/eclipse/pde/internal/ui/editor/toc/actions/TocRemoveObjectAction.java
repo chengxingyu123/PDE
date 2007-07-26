@@ -26,6 +26,10 @@ public class TocRemoveObjectAction extends Action {
 	private TocObject fObjectToSelect;	
 
 	public TocRemoveObjectAction() {
+		// Adds the 'Delete' keybinding to the action when displayed
+		// in a context menu
+		setActionDefinitionId("org.eclipse.ui.edit.delete"); //$NON-NLS-1$
+
 		setText(PDEUIMessages.TocPage_remove);
 		fTocObjects = null;
 		fObjectToSelect = null;		

@@ -67,7 +67,7 @@ public class TocEditor extends MultiSourceEditor {
 
 	public Object getAdapter(Class adapter) {
 		if(isShowInApplicable())
-		{	if(adapter == IShowInSource.class && isShowInApplicable())
+		{	if(adapter == IShowInSource.class)
 			{	return getShowInSource();
 			}
 			else if(adapter == IShowInTargetList.class)
@@ -118,7 +118,7 @@ public class TocEditor extends MultiSourceEditor {
 
 					for (Iterator iter = selection.iterator(); iter.hasNext();)
 					{	Object obj = iter.next();
-						if (obj instanceof TocObject)
+						if (obj instanceof TocObject && ((TocObject)obj).getPath() != null)
 						{	Path resourcePath = new Path(((TocObject)obj).getPath());
 
 							if(!resourcePath.isEmpty())
@@ -276,8 +276,22 @@ public class TocEditor extends MultiSourceEditor {
 
 		return super.getSelection();
 	}
-	
-	
+
+	public boolean canCut(ISelection selection) {
+		if(selection instanceof IStructuredSelection)
+		{	IStructuredSelection sel = (IStructuredSelection)selection;
+			for(Iterator iter = sel.iterator(); iter.hasNext();)
+			{	Object obj = iter.next();
+				if(obj instanceof TocObject
+						&& ((TocObject)obj).canBeRemoved())
+				{	return canCopy(selection);
+				}
+			}
+		}
+
+		return false;
+	}
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.pde.internal.ui.editor.MultiSourceEditor#createSourcePage(org.eclipse.pde.internal.ui.editor.PDEFormEditor, java.lang.String, java.lang.String, java.lang.String)
 	 */

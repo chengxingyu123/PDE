@@ -10,7 +10,7 @@ import java.nio.charset.Charset;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class TOCHTMLTitleUtil {
+public class TocHTMLTitleUtil {
 
 	private static final String whitespace = "[ \\t\\n\\r\\f\\v]*"; //$NON-NLS-1$
 	private static final String titleTag = "[Tt][Ii][Tt][Ll][Ee]"; //$NON-NLS-1$

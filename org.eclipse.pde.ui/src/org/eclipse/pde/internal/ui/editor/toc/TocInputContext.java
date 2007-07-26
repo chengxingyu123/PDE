@@ -28,16 +28,17 @@ import org.eclipse.pde.internal.core.toc.TocModel;
 import org.eclipse.pde.internal.core.toc.TocWorkspaceModel;
 import org.eclipse.pde.internal.ui.PDEPlugin;
 import org.eclipse.pde.internal.ui.editor.PDEFormEditor;
-import org.eclipse.pde.internal.ui.editor.context.UTF8InputContext;
+import org.eclipse.pde.internal.ui.editor.context.XMLInputContext;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IFileEditorInput;
 import org.eclipse.ui.IStorageEditorInput;
+import org.eclipse.ui.texteditor.IDocumentProvider;
 
 /**
  * CompCSInputContext
  *
  */
-public class TocInputContext extends UTF8InputContext {
+public class TocInputContext extends XMLInputContext {
 
 	public static final String CONTEXT_ID = "toc-context"; //$NON-NLS-1$	
 	
@@ -130,7 +131,7 @@ public class TocInputContext extends UTF8InputContext {
 	 * @see org.eclipse.pde.internal.ui.editor.context.InputContext#flushModel(org.eclipse.jface.text.IDocument)
 	 */
 	protected void flushModel(IDocument doc) {
-		if ((getModel() instanceof IEditable) == false) {
+		if (!(getModel() instanceof IEditable)) {
 			return;
 		}
 		IEditable editableModel = (IEditable)getModel();
@@ -150,4 +151,47 @@ public class TocInputContext extends UTF8InputContext {
 		}
 	}		
 	
+	/* (non-Javadoc)
+	 * @see org.eclipse.pde.internal.ui.editor.context.XMLInputContext#reorderInsertEdits(java.util.ArrayList)
+	 */
+	protected void reorderInsertEdits(ArrayList ops) {
+		// NO-OP
+	}
+	
+	/* (non-Javadoc)
+	 * @see org.eclipse.pde.internal.ui.editor.context.InputContext#flushEditorInput()
+	 */
+	public void flushEditorInput() {
+		// Override parent, since this editor does not utilize edit operations
+		// Relevant during revert operations
+		IDocumentProvider provider = getDocumentProvider();
+		IEditorInput input = getInput();
+		IDocument doc = provider.getDocument(input);
+		provider.aboutToChange(input);
+		flushModel(doc);
+		provider.changed(input);
+		setValidated(false);
+	}	
+	
+	/* (non-Javadoc)
+	 * @see org.eclipse.pde.internal.ui.editor.context.InputContext#synchronizeModel(org.eclipse.jface.text.IDocument)
+	 */
+	protected boolean synchronizeModel(IDocument document) {
+		// Method used to synchronize the source page changes with the form
+		// page
+		// Not needed if using text edit operations
+		// Get the model
+		IBaseModel baseModel = getModel();
+		// Ensure the model is a workspace model
+		if (baseModel  == null) {
+			return false;
+		} else if (!(baseModel instanceof TocWorkspaceModel)) {
+			return false;
+		}
+		TocWorkspaceModel model = (TocWorkspaceModel)baseModel;
+		// Reload the model using the unsaved contents of the source page
+		model.reload(document);
+		
+		return true;
+	}	
 }

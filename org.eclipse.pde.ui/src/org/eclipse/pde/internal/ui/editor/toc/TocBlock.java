@@ -1,6 +1,7 @@
 package org.eclipse.pde.internal.ui.editor.toc;
 
 import org.eclipse.jface.viewers.ISelection;
+import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.pde.core.IModelChangedEvent;
 import org.eclipse.pde.core.IModelChangedListener;
 import org.eclipse.pde.internal.core.toc.Toc;
@@ -98,6 +99,12 @@ public class TocBlock extends PDEMasterDetailsBlock implements
 	 * @see org.eclipse.ui.forms.IDetailsPageProvider#getPageKey(java.lang.Object)
 	 */
 	public Object getPageKey(Object object) {
+		ISelection selection = getSelection();
+		if(!(selection instanceof IStructuredSelection)
+				|| ((IStructuredSelection)selection).size() > 1)
+		{	return object.getClass();
+		}
+
 		// Get static page key
 		if (object instanceof Toc) {
 			// Static page:  toc
