@@ -629,7 +629,7 @@ public class TocTreeSection extends TreeSection {
 				if(objectsToAdd != null && !objectsToAdd.isEmpty())
 				{	if(fDragAdapter.getDraggedElements() != null
 						&& fDragAdapter.getDraggedElements().size() == 1
-						&& currentTarget == fDragAdapter.getDraggedElements().get(1))
+						&& currentTarget == fDragAdapter.getDraggedElements().get(0))
 					{	// Last-minute check: ignore drops of an object onto/near itself
 						// to avoid unnecessarily dirtying the page
 						return false;
