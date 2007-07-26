@@ -13,7 +13,6 @@ package org.eclipse.pde.internal.core.text.toc;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.IPath;
-import org.eclipse.pde.internal.core.XMLPrintHandler;
 
 /**
  * The TocLink object represents a link to another TOC.
@@ -23,7 +22,7 @@ import org.eclipse.pde.internal.core.XMLPrintHandler;
  *
  * TOC links cannot have any content within them, so they are leaf objects.
  */
-public class TocLink extends TocLeafObject {
+public class TocLink extends TocObject {
 
 	private static final long serialVersionUID = 1L;
 
@@ -33,8 +32,8 @@ public class TocLink extends TocLeafObject {
 	 * @param model The model associated with the new link.
 	 * @param parent The parent TocObject of the new link.
 	 */
-	public TocLink(TocModel model, TocObject parent) {
-		super(model, parent);
+	public TocLink(TocModel model) {
+		super(model, ELEMENT_LINK);
 	}
 
 	/**
@@ -44,11 +43,11 @@ public class TocLink extends TocLeafObject {
 	 * @param parent The parent TocObject of the new link.
 	 * @param file The TOC file to link to.
 	 */
-	public TocLink(TocModel model, TocObject parent, IFile file) {
-		super(model, parent);
+	public TocLink(TocModel model, IFile file) {
+		super(model, ELEMENT_LINK);
 
 		IPath path = file.getFullPath();
-		if(file.getProject().equals(getModel().getUnderlyingResource().getProject()))
+		if(file.getProject().equals(getSharedModel().getUnderlyingResource().getProject()))
 		{	//If the file is from the same project,
 			//remove the project name segment
 			setFieldTocPath(path.removeFirstSegments(1).toString()); //$NON-NLS-1$
@@ -61,10 +60,10 @@ public class TocLink extends TocLeafObject {
 	}
 
 	/* (non-Javadoc)
-	 * @see org.eclipse.pde.internal.core.toc.TocObject#getElement()
+	 * @see org.eclipse.pde.internal.core.text.toc.TocObject#canBeParent()
 	 */
-	public String getElement() {
-		return ELEMENT_LINK;
+	public boolean canBeParent() {
+		return false;
 	}
 
 	/* (non-Javadoc)
@@ -72,19 +71,6 @@ public class TocLink extends TocLeafObject {
 	 */
 	public int getType() {
 		return TYPE_LINK;
-	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.pde.internal.core.toc.TocObject#writeAttributes(java.lang.StringBuffer)
-	 */
-	protected void writeAttributes(StringBuffer buffer) {
-		if ((getFieldTocPath() != null) && 
-				(getFieldTocPath().length() > 0)) {
-			// No trim required
-			// No encode required
-			buffer.append(XMLPrintHandler.wrapAttribute(
-					ATTRIBUTE_TOC, getFieldTocPath().trim()));
-		}
 	}
 
 	/* (non-Javadoc)

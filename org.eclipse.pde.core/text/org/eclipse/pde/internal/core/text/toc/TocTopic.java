@@ -11,13 +11,8 @@
 
 package org.eclipse.pde.internal.core.text.toc;
 
-import java.io.PrintWriter;
-import java.util.Iterator;
-
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.IPath;
-import org.eclipse.pde.core.IModelChangedEvent;
-import org.eclipse.pde.internal.core.XMLPrintHandler;
 
 /**
  * The TocTopic class represents a topic element in a TOC.
@@ -36,8 +31,18 @@ public class TocTopic extends TocObject
 	 * @param model The model associated with the new topic.
 	 * @param parent The parent TocObject of the new topic.
 	 */
-	public TocTopic(TocModel model, TocObject parent) {
-		super(model, parent);
+	public TocTopic(TocModel model) {
+		super(model, ELEMENT_TOPIC);
+	}
+
+	/**
+	 * Constructs a subclass of a topic with the given model and parent.
+	 * 
+	 * @param model The model associated with the new topic.
+	 * @param parent The parent TocObject of the new topic.
+	 */
+	public TocTopic(TocModel model, String tagName) {
+		super(model, tagName);
 	}
 	
 	/**
@@ -47,11 +52,11 @@ public class TocTopic extends TocObject
 	 * @param parent The parent TocObject of the new link.
 	 * @param file The page to link to.
 	 */
-	public TocTopic(TocModel model, TocObject parent, IFile file) {
-		super(model, parent);
+	public TocTopic(TocModel model, IFile file) {
+		super(model, ELEMENT_TOPIC);
 
 		IPath path = file.getFullPath();
-		if(file.getProject().equals(getModel().getUnderlyingResource().getProject()))
+		if(file.getProject().equals(getSharedModel().getUnderlyingResource().getProject()))
 		{	//If the file is from the same project,
 			//remove the project name segment
 			setFieldRef(path.removeFirstSegments(1).toString()); //$NON-NLS-1$
@@ -69,13 +74,6 @@ public class TocTopic extends TocObject
 	public boolean canBeParent() {
 		return true;
 	}
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.pde.internal.core.toc.TocObject#getElement()
-	 */
-	public String getElement() {
-		return ELEMENT_TOPIC;
-	}
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.pde.internal.core.toc.TocObject#getName()
@@ -84,6 +82,9 @@ public class TocTopic extends TocObject
 		return getFieldLabel();
 	}
 
+	/* (non-Javadoc)
+	 * @see org.eclipse.pde.internal.core.text.toc.TocObject#getPath()
+	 */
 	public String getPath() {
 		return getFieldRef();
 	}
@@ -99,16 +100,14 @@ public class TocTopic extends TocObject
 	 * @see org.eclipse.pde.internal.core.toc.TocObject#isFirstChildObject(org.eclipse.pde.internal.core.toc.TocObject)
 	 */
 	public boolean isFirstChildObject(TocObject tocObject) {
-		return getChildNodes().length > 0 
-			&& getChildNodes()[0] == tocObject;
+		return super.isFirstChildNode(tocObject, TocObject.class);
 	}
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.pde.internal.core.toc.TocObject#isLastChildObject(org.eclipse.pde.internal.core.toc.TocObject)
 	 */
 	public boolean isLastChildObject(TocObject tocObject) {
-		return getChildNodes().length > 0 
-			&& getChildNodes()[getChildNodes().length - 1] == tocObject;
+		return super.isLastChildNode(tocObject, TocObject.class);
 	}
 
 	/**
@@ -118,11 +117,8 @@ public class TocTopic extends TocObject
 	 * @param child The child to add to the TocObject
 	 */
 	public void addChild(TocObject child) {
+		child.setInTheModel(true);
 		addChildNode(child);
-		child.setParent(this);
-		if (isEditable()) {
-			fireStructureChanged(child, IModelChangedEvent.INSERT);
-		}
 	}
 
 	/**
@@ -139,38 +135,15 @@ public class TocTopic extends TocObject
 		if(!insertBefore)
 		{	currentIndex++;
 		}
-
+		child.setInTheModel(true);
 		addChildNode(child, currentIndex);
-		child.setParent(this);
-		if (isEditable()) {
-			fireStructureChanged(child, IModelChangedEvent.INSERT);
-		}
 	}
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.pde.internal.core.toc.TocObject#moveChild(org.eclipse.pde.internal.core.toc.TocObject, int)
 	 */
 	public void moveChild(TocObject tocObject, int newRelativeIndex) {
-		// Get the current index of the child
-		int currentIndex = indexOf(tocObject);
-		// Ensure the object is found
-		if (currentIndex == -1) {
-			return;
-		}
-		// Calculate the new location of the child
-		int newIndex = newRelativeIndex + currentIndex;
-		// Validate the new location
-		if ((newIndex < 0) ||
-				(newIndex >= getChildNodesList().size())) {
-			return;
-		}
-		// Remove the child and add it back at the new location
-		removeChildNode(tocObject);
-		addChildNode(tocObject, newIndex);
-		// Send an insert event
-		if (isEditable()) {
-			fireStructureChanged(tocObject, IModelChangedEvent.INSERT);
-		}	
+		moveChildNode(tocObject, newRelativeIndex);
 	}
 	
 	/**
@@ -181,63 +154,7 @@ public class TocTopic extends TocObject
 	 */
 	public void removeChild(TocObject tocObject) {
 		removeChildNode(tocObject);
-		if (isEditable()) {
-			fireStructureChanged(tocObject, IModelChangedEvent.REMOVE);
-		}	
-	}
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.pde.internal.core.toc.TocObject#writeAttributes(java.lang.StringBuffer)
-	 */
-	protected void writeAttributes(StringBuffer buffer) {
-		printLabelAttribute(buffer);		
-		printLinkAttribute(buffer);
-	}
-
-	/**
-	 * Print out the label attribute of the topic.
-	 *  
-	 * @param buffer the buffer to which the attribute is written.
-	 */
-	private void printLabelAttribute(StringBuffer buffer) {
-		// Print label attribute
-		if ((getFieldLabel() != null) && 
-				(getFieldLabel().length() > 0)) {
-			// No trim required
-			// No encode required
-			buffer.append(XMLPrintHandler.wrapAttribute(
-					ATTRIBUTE_LABEL, getFieldLabel().trim()));
-		}
-	}
-
-	/**
-	 * Print out the link attribute of the topic, if it exists.
-	 *  
-	 * @param buffer the buffer to which the attribute is written.
-	 */
-	protected void printLinkAttribute(StringBuffer buffer) {
-		// Print link attribute
-		if ((getFieldRef() != null) && 
-				(getFieldRef().length() > 0)) {
-			// Trim leading and trailing whitespace
-			// Encode characters
-			buffer.append(XMLPrintHandler.wrapAttribute(
-					ATTRIBUTE_HREF, getFieldRef().trim()));
-		}
-	}
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.pde.internal.core.toc.TocObject#writeElements(java.lang.String, java.io.PrintWriter)
-	 */
-	protected void writeElements(String indent, PrintWriter writer) {
-		String newIndent = indent + XMLPrintHandler.XML_INDENT;
-		
-		// Print elements
-		Iterator iterator = getChildNodesList().iterator();
-		while (iterator.hasNext()) {
-			TocObject object = (TocObject)iterator.next();
-			object.write(newIndent, writer);
-		}
+		tocObject.setInTheModel(false);
 	}
 
 	/**

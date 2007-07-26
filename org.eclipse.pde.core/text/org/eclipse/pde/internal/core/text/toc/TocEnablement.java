@@ -21,7 +21,7 @@ import org.w3c.dom.Element;
  * Enablement is a condition that the environment must fulfill in order
  * for the element in question to appear.
  */
-public class TocEnablement extends TocLeafObject {
+public class TocEnablement extends TocObject {
 
 	protected String fEnablementSource;
 	
@@ -35,8 +35,8 @@ public class TocEnablement extends TocLeafObject {
 	 * 
 	 * @param parent The parent TocObject of the new topic.
 	 */
-	public TocEnablement(TocModel model, TocObject parent) {
-		super(model, parent);
+	public TocEnablement(TocModel model) {
+		super(model, ELEMENT_ENABLEMENT);
 	}
 
 	/**
@@ -55,13 +55,6 @@ public class TocEnablement extends TocLeafObject {
 		return ELEMENT_ENABLEMENT;
 	}
 	
-	/**
-	 * @see org.eclipse.pde.internal.core.toc.TocObject#getElement()
-	 */
-	public String getElement() {
-		return ELEMENT_ENABLEMENT;
-	}
-
 	/**
 	 * @see org.eclipse.pde.internal.core.toc.TocObject#getType()
 	 */
@@ -102,7 +95,7 @@ public class TocEnablement extends TocLeafObject {
 	 * or <code>null</code> if none exists.
 	 */
 	public String getEnablementSource() {
-		return fEnablementSource;
+		return getXMLAttributeValue(ELEMENT_ENABLEMENT);
 	}
 
 	/**
@@ -110,15 +103,17 @@ public class TocEnablement extends TocLeafObject {
 	 * signal a model change if needed.
 	 */
 	public void setFieldRef(String value) {
-		String old = fEnablementSource;
-		fEnablementSource = value;
-		if (isEditable()) {
-			firePropertyChanged(ELEMENT_ENABLEMENT, old, fEnablementSource);
-		}
+		setXMLAttribute(ELEMENT_ENABLEMENT, value);
 	}
 
 	public String getPath() {
-		// TODO Auto-generated method stub
 		return null;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.pde.internal.core.text.toc.TocObject#canBeParent()
+	 */
+	public boolean canBeParent() {
+		return false;
 	}
 }

@@ -73,22 +73,22 @@ public class TocDocumentFactory implements IDocumentNodeFactory
 
 		if (isTopic(name))
 		{	// Topic
-			return (IDocumentNode)createTocTopic((TocObject)parent);
+			return (IDocumentNode)createTocTopic();
 		}
 
 		if (isLink(name))
 		{	// Link
-			return (IDocumentNode)createTocLink((TocObject)parent);
+			return (IDocumentNode)createTocLink();
 		}			
 
 		if (isAnchor(name))
 		{	// Anchor
-			return (IDocumentNode)createTocAnchor((TocObject)parent);
+			return (IDocumentNode)createTocAnchor();
 		}
 
 		if(isEnablement(name))
 		{	// Enablement
-			return (IDocumentNode)createTocEnablement((TocObject)parent);
+			return (IDocumentNode)createTocEnablement();
 		}
 
 		return null;
@@ -157,31 +157,29 @@ public class TocDocumentFactory implements IDocumentNodeFactory
 	 * @param parent
 	 * @return
 	 */
-	public TocTopic createTocTopic(TocObject parent) {
-		return new TocTopic(fModel, parent);
+	public TocTopic createTocTopic() {
+		return new TocTopic(fModel);
 	}
 
 	/**
 	 * @param parent
 	 * @return
 	 */
-	public TocLink createTocLink(TocObject parent) {
-		return new TocLink(fModel, parent);
+	public TocLink createTocLink() {
+		return new TocLink(fModel);
 	}
 
 	/**
-	 * @param parent
 	 * @return
 	 */
-	public TocAnchor createTocAnchor(TocObject parent) {
-		return new TocAnchor(fModel, parent);
+	public TocAnchor createTocAnchor() {
+		return new TocAnchor(fModel);
 	}
 
 	/**
-	 * @param parent
 	 * @return
 	 */
-	public TocEnablement createTocEnablement(TocObject parent) {
-		return new TocEnablement(fModel, parent);
+	public TocEnablement createTocEnablement() {
+		return new TocEnablement(fModel);
 	}
 }

@@ -11,7 +11,6 @@
 
 package org.eclipse.pde.internal.core.text.toc;
 
-import org.eclipse.pde.internal.core.XMLPrintHandler;
 
 /**
  * The TocAnchor class represents an anchor, which is used as a point
@@ -23,7 +22,7 @@ import org.eclipse.pde.internal.core.XMLPrintHandler;
  * 
  * TOC anchors cannot have any content within them, so they are leaf objects.
  */
-public class TocAnchor extends TocLeafObject {
+public class TocAnchor extends TocObject {
 
 	private static final long serialVersionUID = 1L;
 	
@@ -32,15 +31,15 @@ public class TocAnchor extends TocLeafObject {
 	 * 
 	 * @param parent The parent TocObject of the new anchor.
 	 */
-	public TocAnchor(TocModel model, TocObject parent) {
-		super(model, parent);
+	public TocAnchor(TocModel model) {
+		super(model, ELEMENT_ANCHOR);
 	}
 
 	/* (non-Javadoc)
-	 * @see org.eclipse.pde.internal.core.toc.TocObject#getElement()
+	 * @see org.eclipse.pde.internal.core.text.toc.TocObject#canBeParent()
 	 */
-	public String getElement() {
-		return ELEMENT_ANCHOR;
+	public boolean canBeParent() {
+		return false;
 	}
 
 	/* (non-Javadoc)
@@ -48,19 +47,6 @@ public class TocAnchor extends TocLeafObject {
 	 */
 	public int getType() {
 		return TYPE_ANCHOR;
-	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.pde.internal.core.toc.TocObject#writeAttributes(java.lang.StringBuffer)
-	 */
-	protected void writeAttributes(StringBuffer buffer) {
-		if ((getFieldAnchorId() != null) && 
-				(getFieldAnchorId().length() > 0)) {
-			// No trim required
-			// No encode required
-			buffer.append(XMLPrintHandler.wrapAttribute(
-					ATTRIBUTE_ID, getFieldAnchorId().trim()));
-		}
 	}
 
 	/* (non-Javadoc)
