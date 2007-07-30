@@ -12,7 +12,7 @@
 package org.eclipse.pde.internal.ui.editor.toc.details;
 
 import org.eclipse.jface.viewers.ISelection;
-import org.eclipse.pde.internal.core.toc.TocAnchor;
+import org.eclipse.pde.internal.core.text.toc.TocAnchor;
 import org.eclipse.pde.internal.ui.PDEUIMessages;
 import org.eclipse.pde.internal.ui.editor.FormEntryAdapter;
 import org.eclipse.pde.internal.ui.editor.toc.TocInputContext;

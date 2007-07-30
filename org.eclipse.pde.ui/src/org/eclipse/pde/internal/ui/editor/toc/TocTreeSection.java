@@ -33,11 +33,11 @@ import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.ViewerDropAdapter;
 import org.eclipse.pde.core.IModelChangedEvent;
 import org.eclipse.pde.internal.core.itoc.ITocConstants;
-import org.eclipse.pde.internal.core.toc.Toc;
-import org.eclipse.pde.internal.core.toc.TocLink;
-import org.eclipse.pde.internal.core.toc.TocModel;
-import org.eclipse.pde.internal.core.toc.TocObject;
-import org.eclipse.pde.internal.core.toc.TocTopic;
+import org.eclipse.pde.internal.core.text.toc.Toc;
+import org.eclipse.pde.internal.core.text.toc.TocLink;
+import org.eclipse.pde.internal.core.text.toc.TocModel;
+import org.eclipse.pde.internal.core.text.toc.TocObject;
+import org.eclipse.pde.internal.core.text.toc.TocTopic;
 import org.eclipse.pde.internal.ui.PDEPlugin;
 import org.eclipse.pde.internal.ui.PDEUIMessages;
 import org.eclipse.pde.internal.ui.editor.ModelDataTransfer;
@@ -753,7 +753,7 @@ public class TocTreeSection extends TreeSection {
 				}
 
 				//Reconnect this TocObject, since it was deserialized
-				((TocObject)droppings[i]).reconnect(fModel, targetParent);
+				((TocObject)droppings[i]).reconnect(targetParent, fModel);
 				tocObjects.add(droppings[i]);
 			}
 		}
@@ -799,7 +799,7 @@ public class TocTreeSection extends TreeSection {
 	 */
 	private TocTopic makeNewTocTopic(TocObject parent, Path path) {
 		IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
-		return fModel.getFactory().createTocTopic(parent, root.getFileForLocation(path));
+		return fModel.getFactory().createTocTopic(root.getFileForLocation(path));
 	}
 	
 	/**
@@ -812,7 +812,7 @@ public class TocTreeSection extends TreeSection {
 	 */
 	private TocLink makeNewTocLink(TocObject parent, Path path) {
 		IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
-		return fModel.getFactory().createTocLink(parent, root.getFileForLocation(path));
+		return fModel.getFactory().createTocLink(root.getFileForLocation(path));
 	}
 	
 	/* (non-Javadoc)
@@ -1008,9 +1008,10 @@ public class TocTreeSection extends TreeSection {
 	 */
 	private void handleModelEventWorldChanged(IModelChangedEvent event) {
 		Object[] objects = event.getChangedObjects();
-		TocObject object = (TocObject) objects[0];		
-		if (object != null) 
-		{	if (object.getType() == ITocConstants.TYPE_TOC) {
+
+		if (objects[0] != null && objects[0] instanceof TocObject) 
+		{	TocObject object = (TocObject) objects[0];
+			if (object.getType() == ITocConstants.TYPE_TOC) {
 				// Get the form page
 				TocPage page = (TocPage)getPage();			
 				// Remember the currently selected page

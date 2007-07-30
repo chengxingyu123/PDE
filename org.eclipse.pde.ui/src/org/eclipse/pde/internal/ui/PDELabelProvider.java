@@ -72,7 +72,7 @@ import org.eclipse.pde.internal.core.itoc.ITocConstants;
 import org.eclipse.pde.internal.core.plugin.ImportObject;
 import org.eclipse.pde.internal.core.text.bundle.ExecutionEnvironment;
 import org.eclipse.pde.internal.core.text.bundle.PackageObject;
-import org.eclipse.pde.internal.core.toc.TocObject;
+import org.eclipse.pde.internal.core.text.toc.TocObject;
 import org.eclipse.pde.internal.core.util.PDETextHelper;
 import org.eclipse.pde.internal.ui.elements.NamedElement;
 import org.eclipse.pde.internal.ui.util.SharedLabelProvider;

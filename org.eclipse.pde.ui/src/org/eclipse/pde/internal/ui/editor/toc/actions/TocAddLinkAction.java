@@ -11,7 +11,7 @@
 
 package org.eclipse.pde.internal.ui.editor.toc.actions;
 
-import org.eclipse.pde.internal.core.toc.TocLink;
+import org.eclipse.pde.internal.core.text.toc.TocLink;
 import org.eclipse.pde.internal.ui.PDEUIMessages;
 import org.eclipse.pde.internal.ui.util.PDELabelUtility;
 
@@ -27,7 +27,7 @@ public class TocAddLinkAction extends TocAddObjectAction {
 		if (fParentObject != null)
 		{	//Create a new link
 			TocLink link = 
-				fParentObject.getModel().getFactory().createTocLink(fParentObject); 
+				fParentObject.getModel().getFactory().createTocLink(); 
 
 			//Generate the name of the link
 			String name = PDELabelUtility.generateName(getChildNames(), PDEUIMessages.TocPage_TocLink);

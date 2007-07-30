@@ -14,11 +14,10 @@ package org.eclipse.pde.internal.ui.editor.toc;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.pde.core.IModelChangedEvent;
 import org.eclipse.pde.core.IModelChangedListener;
-import org.eclipse.pde.internal.core.AbstractModel;
 import org.eclipse.pde.internal.core.itoc.ITocConstants;
-import org.eclipse.pde.internal.core.toc.Toc;
-import org.eclipse.pde.internal.core.toc.TocModel;
-import org.eclipse.pde.internal.core.toc.TocObject;
+import org.eclipse.pde.internal.core.text.toc.Toc;
+import org.eclipse.pde.internal.core.text.toc.TocModel;
+import org.eclipse.pde.internal.core.text.toc.TocObject;
 import org.eclipse.pde.internal.core.util.PDETextHelper;
 import org.eclipse.pde.internal.ui.PDEPlugin;
 import org.eclipse.pde.internal.ui.PDEPluginImages;
@@ -84,7 +83,7 @@ public class TocPage extends PDEFormPage implements IModelChangedListener {
 
 	private void createErrorContent(IManagedForm managedForm, TocModel model) {
 		Exception e = null;
-		e = ((AbstractModel)model).getException();
+		//e = ((AbstractModel)model).getException();
 
 		// Create a formatted error page
 		createFormErrorContent(managedForm, 
@@ -158,15 +157,16 @@ public class TocPage extends PDEFormPage implements IModelChangedListener {
 	private void handleModelEventWorldChanged(IModelChangedEvent event) {
 		
 		Object[] objects = event.getChangedObjects();
-		TocObject object = (TocObject) objects[0];		
-		if (object == null) {
-			// Ignore
-			return;
-		} else if (object.getType() == ITocConstants.TYPE_TOC) {
-			String newValue = ((Toc)object).getFieldLabel();
-			// Update page title
-			getManagedForm().getForm().setText(
-					PDETextHelper.translateReadText(newValue));
+
+		if (objects[0] != null && objects[0] instanceof TocObject)
+		{	TocObject object = (TocObject)objects[0];
+			if (object.getType() == ITocConstants.TYPE_TOC)
+			{	String newValue = ((Toc)object).getFieldLabel();
+
+				// Update page title
+				getManagedForm().getForm().setText(
+						PDETextHelper.translateReadText(newValue));
+			}
 		}
 	}
 

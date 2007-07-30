@@ -12,8 +12,8 @@
 package org.eclipse.pde.internal.ui.editor.toc.actions;
 
 import org.eclipse.jface.action.Action;
-import org.eclipse.pde.internal.core.toc.TocObject;
-import org.eclipse.pde.internal.core.toc.TocTopic;
+import org.eclipse.pde.internal.core.text.toc.TocObject;
+import org.eclipse.pde.internal.core.text.toc.TocTopic;
 
 /**
  * TocAddObjectAction - the abstract implementation for

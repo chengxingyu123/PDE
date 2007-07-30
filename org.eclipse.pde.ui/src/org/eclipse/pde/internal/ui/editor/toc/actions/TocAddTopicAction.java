@@ -11,7 +11,7 @@
 
 package org.eclipse.pde.internal.ui.editor.toc.actions;
 
-import org.eclipse.pde.internal.core.toc.TocTopic;
+import org.eclipse.pde.internal.core.text.toc.TocTopic;
 import org.eclipse.pde.internal.ui.PDEUIMessages;
 import org.eclipse.pde.internal.ui.util.PDELabelUtility;
 
@@ -28,7 +28,7 @@ public class TocAddTopicAction extends TocAddObjectAction {
 		if (fParentObject != null)
 		{	//Create a new topic object
 			TocTopic topic = 
-				fParentObject.getModel().getFactory().createTocTopic(fParentObject); 
+				fParentObject.getModel().getFactory().createTocTopic(); 
 			
 			//Generate the name for the topic
 			String name = PDELabelUtility.generateName(getChildNames(), PDEUIMessages.TocPage_TocTopic);

@@ -15,7 +15,7 @@ import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.window.Window;
-import org.eclipse.pde.internal.core.toc.Toc;
+import org.eclipse.pde.internal.core.text.toc.Toc;
 import org.eclipse.pde.internal.ui.PDEPlugin;
 import org.eclipse.pde.internal.ui.PDEUIMessages;
 import org.eclipse.pde.internal.ui.editor.FormEntryAdapter;

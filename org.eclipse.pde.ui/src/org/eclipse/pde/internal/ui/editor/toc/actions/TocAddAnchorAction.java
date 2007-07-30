@@ -11,7 +11,7 @@
 
 package org.eclipse.pde.internal.ui.editor.toc.actions;
 
-import org.eclipse.pde.internal.core.toc.TocAnchor;
+import org.eclipse.pde.internal.core.text.toc.TocAnchor;
 import org.eclipse.pde.internal.ui.PDEUIMessages;
 import org.eclipse.pde.internal.ui.util.PDELabelUtility;
 
@@ -32,7 +32,7 @@ public class TocAddAnchorAction extends TocAddObjectAction {
 		if (fParentObject != null)
 		{	//Create a new anchor
 			TocAnchor anchor = 
-				fParentObject.getModel().getFactory().createTocAnchor(fParentObject); 
+				fParentObject.getModel().getFactory().createTocAnchor(); 
 			//Generate the name of the anchor
 			String name = PDELabelUtility.generateName(getChildNames(), PDEUIMessages.TocPage_TocAnchor);
 			anchor.setFieldAnchorId(name);

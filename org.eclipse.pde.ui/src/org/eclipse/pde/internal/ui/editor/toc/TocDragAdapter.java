@@ -17,7 +17,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 
 import org.eclipse.jface.viewers.IStructuredSelection;
-import org.eclipse.pde.internal.core.toc.TocObject;
+import org.eclipse.pde.internal.core.text.toc.TocObject;
 import org.eclipse.pde.internal.ui.editor.ModelDataTransfer;
 import org.eclipse.swt.dnd.DND;
 import org.eclipse.swt.dnd.DragSourceEvent;

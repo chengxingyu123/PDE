@@ -14,8 +14,8 @@ package org.eclipse.pde.internal.ui.editor.toc;
 import java.util.List;
 
 import org.eclipse.jface.viewers.ITreeContentProvider;
-import org.eclipse.pde.internal.core.toc.TocModel;
-import org.eclipse.pde.internal.core.toc.TocObject;
+import org.eclipse.pde.internal.core.text.toc.TocModel;
+import org.eclipse.pde.internal.core.text.toc.TocObject;
 import org.eclipse.pde.internal.ui.elements.DefaultContentProvider;
 
 /**
