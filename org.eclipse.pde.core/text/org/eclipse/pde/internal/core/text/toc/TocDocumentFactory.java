@@ -11,10 +11,8 @@
 
 package org.eclipse.pde.internal.core.text.toc;
 
-import org.eclipse.core.runtime.CoreException;
 import org.eclipse.pde.internal.core.itoc.ITocConstants;
-import org.eclipse.pde.internal.core.text.DocumentAttributeNode;
-import org.eclipse.pde.internal.core.text.IDocumentAttribute;
+import org.eclipse.pde.internal.core.text.DocumentNodeFactory;
 import org.eclipse.pde.internal.core.text.IDocumentNode;
 import org.eclipse.pde.internal.core.text.IDocumentNodeFactory;
 
@@ -22,34 +20,15 @@ import org.eclipse.pde.internal.core.text.IDocumentNodeFactory;
  * TocDocumentFactory
  *
  */
-public class TocDocumentFactory implements IDocumentNodeFactory
+public class TocDocumentFactory extends DocumentNodeFactory implements IDocumentNodeFactory
 {	private TocModel fModel;
 	
 	/**
 	 * @param model
 	 */
 	public TocDocumentFactory(TocModel model) {
+		super();
 		fModel = model;
-	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.pde.internal.core.text.IDocumentNodeFactory#createAttribute(java.lang.String, java.lang.String, org.eclipse.pde.internal.core.text.IDocumentNode)
-	 */
-	public IDocumentAttribute createAttribute(String name, String value,
-			IDocumentNode enclosingElement) {
-
-		IDocumentAttribute attribute = new DocumentAttributeNode();
-		try {
-			attribute.setAttributeName(name);
-			attribute.setAttributeValue(value);
-		} catch (CoreException e) {
-			// Ignore
-		}
-		attribute.setEnclosingElement(enclosingElement);
-		// TODO: MP: TEO: Remove if not needed
-		//attribute.setModel(fModel);
-		//attribute.setInTheModel(true);
-		return attribute;
 	}
 
 	/* (non-Javadoc)
@@ -91,7 +70,7 @@ public class TocDocumentFactory implements IDocumentNodeFactory
 			return (IDocumentNode)createTocEnablement();
 		}
 
-		return null;
+		return super.createDocumentNode(name, parent);
 	}
 
 	/**
