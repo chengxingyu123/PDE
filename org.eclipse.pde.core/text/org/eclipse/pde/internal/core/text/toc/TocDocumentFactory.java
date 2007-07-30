@@ -11,6 +11,7 @@
 
 package org.eclipse.pde.internal.core.text.toc;
 
+import org.eclipse.core.resources.IFile;
 import org.eclipse.pde.internal.core.itoc.ITocConstants;
 import org.eclipse.pde.internal.core.text.DocumentNodeFactory;
 import org.eclipse.pde.internal.core.text.IDocumentNode;
@@ -27,7 +28,6 @@ public class TocDocumentFactory extends DocumentNodeFactory implements IDocument
 	 * @param model
 	 */
 	public TocDocumentFactory(TocModel model) {
-		super();
 		fModel = model;
 	}
 
@@ -63,11 +63,6 @@ public class TocDocumentFactory extends DocumentNodeFactory implements IDocument
 		if (isAnchor(name))
 		{	// Anchor
 			return (IDocumentNode)createTocAnchor();
-		}
-
-		if(isEnablement(name))
-		{	// Enablement
-			return (IDocumentNode)createTocEnablement();
 		}
 
 		return super.createDocumentNode(name, parent);
@@ -118,14 +113,6 @@ public class TocDocumentFactory extends DocumentNodeFactory implements IDocument
 	}	
 	
 	/**
-	 * @param name
-	 * @return
-	 */
-	private boolean isEnablement(String name) {
-		return isTocElement(name, ITocConstants.ELEMENT_ENABLEMENT);
-	}		
-	
-	/**
 	 * @return
 	 */
 	public Toc createToc() {
@@ -146,6 +133,22 @@ public class TocDocumentFactory extends DocumentNodeFactory implements IDocument
 	 */
 	public TocLink createTocLink() {
 		return new TocLink(fModel);
+	}
+
+	/**
+	 * @param parent
+	 * @return
+	 */
+	public TocTopic createTocTopic(IFile file) {
+		return new TocTopic(fModel, file);
+	}
+
+	/**
+	 * @param parent
+	 * @return
+	 */
+	public TocLink createTocLink(IFile file) {
+		return new TocLink(fModel, file);
 	}
 
 	/**

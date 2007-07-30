@@ -13,6 +13,7 @@ package org.eclipse.pde.internal.core.text.toc;
 
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.pde.core.IModel;
+import org.eclipse.pde.core.IWritable;
 import org.eclipse.pde.internal.core.NLResourceHelper;
 import org.eclipse.pde.internal.core.text.XMLEditingModel;
 import org.xml.sax.helpers.DefaultHandler;
@@ -76,6 +77,10 @@ public class TocModel extends XMLEditingModel {
 			fToc = getFactory().createToc();
 		}
 		return fToc;
+	}
+
+	protected IWritable getRoot() {
+		return getToc();
 	}
 
 }

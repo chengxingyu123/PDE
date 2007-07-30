@@ -32,7 +32,6 @@ public class Toc extends TocTopic {
 	 */
 	public Toc(TocModel model)
 	{	super(model);
-		setInTheModel(true);
 	}
 
 	/* (non-Javadoc)

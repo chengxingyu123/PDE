@@ -13,6 +13,7 @@ package org.eclipse.pde.internal.core.text.toc;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import org.eclipse.pde.core.IModel;
@@ -34,6 +35,20 @@ public abstract class TocObject extends DocumentObject implements ITocConstants,
 	 */
 	public TocObject(TocModel model, String tagName)
 	{	super(model, tagName);
+	}
+
+	public void setInTheModel(boolean inModel, boolean recurse)
+	{	setInTheModel(inModel);
+
+		if(recurse)
+		{	List children = getChildren();
+			for(Iterator i = children.iterator(); i.hasNext();)
+			{	Object obj = i.next();
+				if(obj != null && obj instanceof TocObject)
+				{	((TocObject)obj).setInTheModel(inModel, true);
+				}
+			}
+		}
 	}
 
 	/**
@@ -66,10 +81,23 @@ public abstract class TocObject extends DocumentObject implements ITocConstants,
 	/**
 	 * @return the root TOC element that is an ancestor to this TocObject.
 	 */
-	public Toc getToc() {
+	public TocModel getModel() {
 		final IModel sharedModel = getSharedModel();
 		if(sharedModel instanceof TocModel)
-		{	return ((TocModel)sharedModel).getToc();
+		{	return (TocModel)sharedModel;
+		}
+
+		return null;
+	}
+
+	/**
+	 * @return the root TOC element that is an ancestor to this TocObject.
+	 */
+	public Toc getToc() {
+		final TocModel model = getModel();
+
+		if(model != null)
+		{	return model.getToc();
 		}
 
 		return null;

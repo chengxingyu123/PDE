@@ -40,6 +40,7 @@ Export-Package:
  org.eclipse.pde.internal.core.text.build;x-friends:="org.eclipse.pde.ui",
  org.eclipse.pde.internal.core.text.bundle;x-friends:="org.eclipse.pde.ui",
  org.eclipse.pde.internal.core.text.plugin;x-friends:="org.eclipse.pde.ui",
+ org.eclipse.pde.internal.core.text.toc;x-friends:="org.eclipse.pde.ui",
  org.eclipse.pde.internal.core.toc;x-friends:="org.eclipse.pde.ui",
  org.eclipse.pde.internal.core.util;x-friends:="org.eclipse.pde.ui",
  org.eclipse.pde.internal.core.variables;x-internal:=true

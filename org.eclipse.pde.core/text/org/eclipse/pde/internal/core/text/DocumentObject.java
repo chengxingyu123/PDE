@@ -235,7 +235,7 @@ public abstract class DocumentObject extends PluginDocumentNode implements
 		IDocumentNode node = super.removeChildNode(child);
 		// Fire event
 		if (shouldFireEvent()) {
-			fireStructureChanged(node, IModelChangedEvent.REMOVE);
+			fireStructureChanged(child, IModelChangedEvent.REMOVE);
 		}	
 		return node;
 	}
