@@ -11,7 +11,6 @@
 package org.eclipse.pde.internal.ui.wizards.toc;
 
 import org.eclipse.jface.viewers.IStructuredSelection;
-//import org.eclipse.pde.internal.ui.IHelpContextIds;
 import org.eclipse.pde.internal.ui.PDEUIMessages;
 import org.eclipse.pde.internal.ui.wizards.PDEWizardNewFileCreationPage;
 import org.eclipse.swt.SWT;
@@ -22,7 +21,6 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
-//import org.eclipse.ui.PlatformUI;
 
 public class TocWizardPage extends PDEWizardNewFileCreationPage {
 	
@@ -76,7 +74,12 @@ public class TocWizardPage extends PDEWizardNewFileCreationPage {
 	}
     
 	protected boolean validatePage() {
-		String tocName = getTocName().trim();
+		String tocName = getTocName();
+		if(tocName == null)
+		{	return false;
+		}
+
+		tocName = tocName.trim();
 		// Verify the TOC name is non-empty
 		if (tocName.length() == 0) {
 			// Set the appropriate error message
@@ -88,6 +91,10 @@ public class TocWizardPage extends PDEWizardNewFileCreationPage {
 	}
 	
 	public String getTocName()
-	{	return fTocNameText.getText();
+	{	if(fTocNameText != null)
+		{	return fTocNameText.getText();
+		}
+
+		return null;
 	}
 }
