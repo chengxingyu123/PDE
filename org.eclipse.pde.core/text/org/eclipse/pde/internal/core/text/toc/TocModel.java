@@ -9,40 +9,37 @@
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
 
-package org.eclipse.pde.internal.core.text.cheatsheet.simple;
+package org.eclipse.pde.internal.core.text.toc;
 
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.pde.core.IModel;
 import org.eclipse.pde.core.IWritable;
 import org.eclipse.pde.internal.core.NLResourceHelper;
-import org.eclipse.pde.internal.core.icheatsheet.simple.ISimpleCS;
-import org.eclipse.pde.internal.core.icheatsheet.simple.ISimpleCSModel;
-import org.eclipse.pde.internal.core.icheatsheet.simple.ISimpleCSModelFactory;
 import org.eclipse.pde.internal.core.text.XMLEditingModel;
 import org.xml.sax.helpers.DefaultHandler;
 
 /**
- * SimpleCSModel
+ * TocModel
  *
  */
-public class SimpleCSModel extends XMLEditingModel implements ISimpleCSModel {
+public class TocModel extends XMLEditingModel {
 
-	private SimpleCSDocumentHandler fHandler;
+	private TocDocumentHandler fHandler;
 	
-	private SimpleCSDocumentFactory fFactory;
+	private TocDocumentFactory fFactory;
 	
-	private ISimpleCS fSimpleCS;	
+	private Toc fToc;	
 	
 	/**
 	 * @param document
 	 * @param isReconciling
 	 */
-	public SimpleCSModel(IDocument document, boolean isReconciling) {
+	public TocModel(IDocument document, boolean isReconciling) {
 		super(document, isReconciling);
 		
 		fHandler = null;
-		fFactory = new SimpleCSDocumentFactory(this);
-		fSimpleCS = null;
+		fFactory = new TocDocumentFactory(this);
+		fToc = null;
 	}
 
 	/* (non-Javadoc)
@@ -52,7 +49,7 @@ public class SimpleCSModel extends XMLEditingModel implements ISimpleCSModel {
 			boolean reconciling) {
 		
 		if (fHandler == null) {
-			fHandler = new SimpleCSDocumentHandler(this, reconciling);
+			fHandler = new TocDocumentHandler(this, reconciling);
 		}
 		return fHandler;
 	}
@@ -66,29 +63,24 @@ public class SimpleCSModel extends XMLEditingModel implements ISimpleCSModel {
 	}
 
 	/* (non-Javadoc)
-	 * @see org.eclipse.pde.internal.core.icheatsheet.simple.ISimpleCSModel#getFactory()
+	 * @see org.eclipse.pde.internal.core.icheatsheet.simple.ITocModel#getFactory()
 	 */
-	public ISimpleCSModelFactory getFactory() {
+	public TocDocumentFactory getFactory() {
 		return fFactory;
 	}
 
 	/* (non-Javadoc)
-	 * @see org.eclipse.pde.internal.core.icheatsheet.simple.ISimpleCSModel#getSimpleCS()
+	 * @see org.eclipse.pde.internal.core.icheatsheet.simple.ITocModel#getToc()
 	 */
-	public ISimpleCS getSimpleCS() {
-		if (fSimpleCS == null) {
-			fSimpleCS = getFactory().createSimpleCS();
+	public Toc getToc() {
+		if (fToc == null) {
+			fToc = getFactory().createToc();
 		}
-		// TODO: MP: TEO: Remove cast once interface method created
-		((SimpleCSObject)fSimpleCS).setInTheModel(true);
-		return fSimpleCS;
+		return fToc;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.pde.internal.core.text.XMLEditingModel#getRoot()
-	 */
 	protected IWritable getRoot() {
-		return getSimpleCS();
+		return getToc();
 	}
 
 }
