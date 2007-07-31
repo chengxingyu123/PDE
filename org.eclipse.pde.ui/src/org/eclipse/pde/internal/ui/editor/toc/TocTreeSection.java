@@ -50,8 +50,6 @@ import org.eclipse.pde.internal.ui.editor.toc.actions.TocAddLinkAction;
 import org.eclipse.pde.internal.ui.editor.toc.actions.TocAddObjectAction;
 import org.eclipse.pde.internal.ui.editor.toc.actions.TocAddTopicAction;
 import org.eclipse.pde.internal.ui.editor.toc.actions.TocRemoveObjectAction;
-import org.eclipse.pde.internal.ui.editor.toc.details.TocAbstractDetails;
-import org.eclipse.pde.internal.ui.editor.toc.details.TocDetails;
 import org.eclipse.pde.internal.ui.parts.TreePart;
 import org.eclipse.pde.internal.ui.util.PDELabelUtility;
 import org.eclipse.swt.SWT;
@@ -70,7 +68,6 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.actions.ActionFactory;
 import org.eclipse.ui.actions.ContributionItemFactory;
 import org.eclipse.ui.dialogs.PatternFilter;
-import org.eclipse.ui.forms.IDetailsPage;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.Section;
 import org.eclipse.ui.ide.IDE;
@@ -1007,38 +1004,7 @@ public class TocTreeSection extends TreeSection {
 	 * @param event The world-change event
 	 */
 	private void handleModelEventWorldChanged(IModelChangedEvent event) {
-		Object[] objects = event.getChangedObjects();
-
-		if (objects[0] != null && objects[0] instanceof TocObject) 
-		{	TocObject object = (TocObject) objects[0];
-			if (object.getType() == ITocConstants.TYPE_TOC) {
-				// Get the form page
-				TocPage page = (TocPage)getPage();			
-				// Remember the currently selected page
-				IDetailsPage previousDetailsPage = 
-					page.getBlock().getDetailsPart().getCurrentPage();
-				// Replace the current dirty model with the model reloaded from
-				// file
-				fModel = object.getModel();
-				
-				// Re-initialize the tree viewer.  Makes a details page selection
-				initializeTreeViewer();
-				
-				// Get the current details page selection
-				IDetailsPage currentDetailsPage = 
-					page.getBlock().getDetailsPart().getCurrentPage();
-				
-				// If the selected page before the revert is the same as the 
-				// selected page after the revert, then its fields will need to
-				// be updated
-				
-				// TODO: Revisit to see if updating details page is necessary - especially after making static
-				if (currentDetailsPage.equals(previousDetailsPage) && 
-						currentDetailsPage instanceof TocDetails) {
-					((TocAbstractDetails)currentDetailsPage).updateFields();
-				}
-			}		
-		}
+		markStale();
 	}	
 	
 	/**
@@ -1114,6 +1080,16 @@ public class TocTreeSection extends TreeSection {
 			fTocTree.update(object, null);
 		}
 	}	
+
+	public void refresh() {
+		TocModel model = (TocModel)getPage().getModel();
+		fTocTree.setInput(model);
+		fTocTree.expandToLevel(2);
+		fTocTree.setSelection(new StructuredSelection(model.getToc()), true);
+		getManagedForm().fireSelectionChanged(this,
+				fTocTree.getSelection());
+		super.refresh();
+	}
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.pde.internal.ui.editor.TreeSection#createTreeViewer(org.eclipse.swt.widgets.Composite, int)

@@ -13,10 +13,10 @@ package org.eclipse.pde.internal.ui.editor.toc;
 
 import org.eclipse.jface.viewers.ILabelProvider;
 import org.eclipse.jface.viewers.ITreeContentProvider;
-import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.ViewerComparator;
+import org.eclipse.pde.internal.core.text.IDocumentNode;
+import org.eclipse.pde.internal.ui.PDEPlugin;
 import org.eclipse.pde.internal.ui.PDEUIMessages;
-import org.eclipse.pde.internal.ui.editor.ISortableContentOutlinePage;
 import org.eclipse.pde.internal.ui.editor.PDEFormEditor;
 import org.eclipse.pde.internal.ui.editor.XMLSourcePage;
 
@@ -52,43 +52,40 @@ public class TocSourcePage extends XMLSourcePage {
 	 * @see org.eclipse.pde.internal.ui.editor.PDESourcePage#createOutlineContentProvider()
 	 */
 	public ITreeContentProvider createOutlineContentProvider() {
-		return null;
+		return new TocContentProvider();
 	}
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.pde.internal.ui.editor.PDESourcePage#createOutlineLabelProvider()
 	 */
 	public ILabelProvider createOutlineLabelProvider() {
-		return null;
+		return PDEPlugin.getDefault().getLabelProvider();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.pde.internal.ui.editor.PDESourcePage#updateSelection(java.lang.Object)
-	 */
-	public void updateSelection(Object object) {
-		// NO-OP
-	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.pde.internal.ui.editor.PDESourcePage#updateSelection(org.eclipse.jface.viewers.SelectionChangedEvent)
-	 */
-	public void updateSelection(SelectionChangedEvent event) {
-		// NO-OP
-	}
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.pde.internal.ui.editor.PDESourcePage#createOutlinePage()
-	 */
-	protected ISortableContentOutlinePage createOutlinePage() {
-		//TODO: Create a TOC source page outline
-		return new TocFormOutlinePage((PDEFormEditor)getEditor());
-	}	
-	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.EditorPart#setPartName(java.lang.String)
 	 */
 	protected void setPartName(String partName) {
 		super.setPartName(PDEUIMessages.EditorSourcePage_pageNameSource);
+	}
+
+	
+	protected boolean isSelectionListener() {
+		return true;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.pde.internal.ui.editor.PDESourcePage#updateSelection(java.lang.Object)
+	 */
+	public void updateSelection(Object object)
+	{	if ((object instanceof IDocumentNode) && 
+				!((IDocumentNode)object).isErrorNode()) {
+			fSelection = object;
+			setHighlightRange((IDocumentNode)object, true);
+			setSelectedRange((IDocumentNode)object, false);
+		} else {
+			//resetHighlightRange();
+		}
 	}
 	
 }
