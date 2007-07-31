@@ -10,6 +10,7 @@
  *******************************************************************************/
 package org.eclipse.pde.internal.core.text;
 
+import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -51,29 +52,7 @@ public abstract class XMLEditingModel extends AbstractEditingModel {
 		} catch (FactoryConfigurationError e) {
 		}
 	}
-
-	/**
-	 * @param document
-	 */
-	public void reload(IDocument document) {
-		// Get the document's text
-		String text = document.get();
-		InputStream stream = null;
-
-		try {
-			// Turn the document's text into a stream
-			stream = new ByteArrayInputStream(text.getBytes("UTF8")); //$NON-NLS-1$
-			// Reload the model using the stream
-			reload(stream, false);
-			// Remove the dirty (*) indicator from the editor window
-			setDirty(false);
-		} catch (UnsupportedEncodingException e) {
-			PDECore.logException(e);
-		} catch (CoreException e) {
-			// Ignore
-		}
-	}
-
+	
 	protected abstract DefaultHandler createDocumentHandler(IModel model, boolean reconciling);
 	
 	public void adjustOffsets(IDocument document) {
@@ -87,10 +66,22 @@ public abstract class XMLEditingModel extends AbstractEditingModel {
 		}
 	}	
 
+	/**
+	 * @return
+	 */
+	private boolean isResourceFile() {
+		if (getUnderlyingResource() == null) {
+			return false;
+		} else if ((getUnderlyingResource() instanceof IFile) == false) {
+			return false;
+		}
+		return true;
+	}
+	
 	public void save() {
-		if (getUnderlyingResource() == null 
-				|| !(getUnderlyingResource() instanceof IFile))
+		if (isResourceFile() == false) {
 			return;
+		}
 		try {
 			IFile file = (IFile)getUnderlyingResource();
 			String contents = getContents();
@@ -108,9 +99,53 @@ public abstract class XMLEditingModel extends AbstractEditingModel {
 		}
 	}
 
+	/* (non-Javadoc)
+	 * @see org.eclipse.pde.internal.core.IWorkspaceModel#reload()
+	 */
+	public void reload() {
+		if (isResourceFile() == false) {
+			return;
+		}
+		IFile file = (IFile)getUnderlyingResource();		
+		// Underlying file has to exist in order to reload the model
+		if (file.exists()) {
+			InputStream stream = null;
+			try {
+				// Get the file contents
+				stream = new BufferedInputStream(file.getContents(true));
+				// Load the model using the last saved file contents
+				reload(stream, false);
+				// Remove the dirty (*) indicator from the editor window
+				setDirty(false);
+			} catch (CoreException e) {
+				// Ignore
+			} 
+		} 		
+	}	
+	
+	public void reload(IDocument document) {
+		// Get the document's text
+		String text = document.get();
+		InputStream stream = null;
+
+		try {
+			// Turn the document's text into a stream
+			stream = new ByteArrayInputStream(text.getBytes("UTF8")); //$NON-NLS-1$
+			// Reload the model using the stream
+			reload(stream, false);
+			// Remove the dirty (*) indicator from the editor window
+			setDirty(false);
+		} catch (UnsupportedEncodingException e) {
+			PDECore.logException(e);
+		} catch (CoreException e) {
+			// Ignore
+		}
+	}	
+	
 	public String getContents() {
 		StringWriter swriter = new StringWriter();
 		PrintWriter writer = new PrintWriter(swriter);
+		setLoaded(true);
 		save(writer);
 		writer.flush();
 		try {
@@ -120,6 +155,9 @@ public abstract class XMLEditingModel extends AbstractEditingModel {
 		return swriter.toString();
 	}
 
+	/* (non-Javadoc)
+	 * @see org.eclipse.pde.internal.core.text.AbstractEditingModel#save(java.io.PrintWriter)
+	 */
 	public void save(PrintWriter writer) {
 		if (isLoaded()) {
 			getRoot().write("", writer); //$NON-NLS-1$

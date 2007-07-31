@@ -84,6 +84,9 @@ public class SimpleCSModel extends XMLEditingModel implements ISimpleCSModel {
 		return fSimpleCS;
 	}
 
+	/* (non-Javadoc)
+	 * @see org.eclipse.pde.internal.core.text.XMLEditingModel#getRoot()
+	 */
 	protected IWritable getRoot() {
 		return getSimpleCS();
 	}
