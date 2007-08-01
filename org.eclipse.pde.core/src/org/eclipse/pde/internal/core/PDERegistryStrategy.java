@@ -11,9 +11,9 @@ import java.util.zip.ZipFile;
 
 import javax.xml.parsers.SAXParserFactory;
 
-import org.eclipse.core.internal.registry.ExtensionRegistry;
 import org.eclipse.core.runtime.IContributor;
 import org.eclipse.core.runtime.IExtensionRegistry;
+import org.eclipse.core.runtime.spi.IDynamicExtensionRegistry;
 import org.eclipse.core.runtime.spi.RegistryContributor;
 import org.eclipse.core.runtime.spi.RegistryStrategy;
 import org.eclipse.osgi.service.resolver.BundleDescription;
@@ -137,32 +137,21 @@ public class PDERegistryStrategy extends RegistryStrategy{
 	}
 	
 	private void addBundle(IExtensionRegistry registry, IPluginModelBase base) {
-		// make sure model has BundleDescription
-		BundleDescription desc =  base.getBundleDescription();
-		if (desc == null)
+		IContributor contributor = createContributor(base);
+		if (contributor == null)
 			return;
-		
-		// make sure model is a singleton.  If it is a fragment, make sure host is singleton
-		HostSpecification hostDesc = desc.getHost();
-		if (hostDesc != null && hostDesc.getBundle() != null && !hostDesc.getBundle().isSingleton() ||
-				hostDesc == null && !desc.isSingleton())
-			return;
-		
-		String id = Long.toString(desc.getBundleId());
-		if (((ExtensionRegistry)registry).hasContribution(id)) 
+		if (((IDynamicExtensionRegistry)registry).hasContributor(contributor)) 
 			return;
 		
 		File input = getFile(base);
 		if (input == null)
 			return;
-		long timeStamp = input.lastModified();
-		timeStamp += desc.getBundleId();
 		InputStream is = getInputStream(input, base);
 		if (is == null)
 			return;
 		registry.addContribution(
 				new BufferedInputStream(is),
-				createContributor(base), 
+				contributor, 
 				true, 
 				input.getPath(), 
 				null,
@@ -170,12 +159,12 @@ public class PDERegistryStrategy extends RegistryStrategy{
 	}
 	
 	private void removeBundle(IExtensionRegistry registry, IPluginModelBase base) {
-		BundleDescription desc =  base.getBundleDescription();
-		if (desc == null)
-			return;
-		String id = Long.toString(desc.getBundleId());
-		if (((ExtensionRegistry)registry).hasContribution(id))
-			((ExtensionRegistry)registry).remove(id);
+		if (registry instanceof IDynamicExtensionRegistry) {
+			IContributor contributor = createContributor(base);
+			if (contributor != null && ((IDynamicExtensionRegistry)registry).hasContributor(contributor)) {
+				((IDynamicExtensionRegistry)registry).removeContributor(createContributor(base), fKey);
+			}
+		}
 	}
 	
 	private void resetModel(IPluginModelBase model) {
@@ -223,12 +212,19 @@ public class PDERegistryStrategy extends RegistryStrategy{
 	
 	public IContributor createContributor(IPluginModelBase base) {
 		BundleDescription desc = base.getBundleDescription();
+		// return null if the IPluginModelBase does not have a BundleDescription (since then we won't have a valid 'id')
+		if (desc == null)
+			return null;
 		String name = desc.getSymbolicName();
 		String id = Long.toString(desc.getBundleId());
 		String hostName = null;
 		String hostId = null;
 		
 		HostSpecification host = desc.getHost();
+		// make sure model is a singleton.  If it is a fragment, make sure host is singleton
+		if (host != null && host.getBundle() != null && !host.getBundle().isSingleton() ||
+				host == null && !desc.isSingleton())
+			return null;
 		if (host != null) {
 			BundleDescription hostDesc = host.getBundle();
 			hostName = hostDesc.getSymbolicName();
