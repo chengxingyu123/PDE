@@ -10,7 +10,6 @@ import org.eclipse.core.runtime.IExtensionPoint;
 import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.IRegistryChangeListener;
 import org.eclipse.core.runtime.RegistryFactory;
-import org.eclipse.osgi.service.resolver.BundleDescription;
 import org.eclipse.pde.core.plugin.IPluginExtension;
 import org.eclipse.pde.core.plugin.IPluginExtensionPoint;
 import org.eclipse.pde.core.plugin.IPluginModelBase;
@@ -121,8 +120,8 @@ public class PDEExtensionRegistry {
 	
 	public IPluginExtension[] findExtensionsForPlugin(String pluginId) {
 		IPluginModelBase base = PluginRegistry.findModel(pluginId);
-		BundleDescription desc = (base != null) ? base.getBundleDescription() : null;
-		if (desc == null)
+		IContributor contributor = fStrategy.createContributor(base);
+		if (contributor == null)
 			return new IPluginExtension[0];
 		IExtension[] extensions = getRegistry().getExtensions(fStrategy.createContributor(base));
 		ArrayList list = new ArrayList();
@@ -137,8 +136,8 @@ public class PDEExtensionRegistry {
 	
 	public IPluginExtensionPoint[] findExtensionPointsForPlugin(String pluginId) {
 		IPluginModelBase base = PluginRegistry.findModel(pluginId);
-		BundleDescription desc = (base != null) ? base.getBundleDescription() : null;
-		if (desc == null)
+		IContributor contributor = fStrategy.createContributor(base);
+		if (contributor == null) 
 			return new IPluginExtensionPoint[0];
 		IExtensionPoint[] extensions = getRegistry().getExtensionPoints(fStrategy.createContributor(base));
 		ArrayList list = new ArrayList();

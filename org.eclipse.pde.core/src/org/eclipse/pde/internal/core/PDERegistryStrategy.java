@@ -211,7 +211,7 @@ public class PDERegistryStrategy extends RegistryStrategy{
 	}
 	
 	public IContributor createContributor(IPluginModelBase base) {
-		BundleDescription desc = base.getBundleDescription();
+		BundleDescription desc = base == null ? null : base.getBundleDescription();
 		// return null if the IPluginModelBase does not have a BundleDescription (since then we won't have a valid 'id')
 		if (desc == null)
 			return null;
