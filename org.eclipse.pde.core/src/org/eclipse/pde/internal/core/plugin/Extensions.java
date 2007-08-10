@@ -21,8 +21,9 @@ public class Extensions extends AbstractExtensions {
 	
 	private Boolean fValid;
 	private boolean fIsFragment;
-
-	public Extensions() {
+	
+	public Extensions(boolean readOnly) {
+		super(readOnly);
 	}
 
 	void load(Extensions srcPluginBase) {

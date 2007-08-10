@@ -44,7 +44,7 @@ public abstract class AbstractExtensionsModel
 	}
 	
 	protected Extensions createExtensions() {
-		Extensions extensions = new Extensions();
+		Extensions extensions = new Extensions(!isEditable());
 		extensions.setModel(this);
 		return extensions;
 	}

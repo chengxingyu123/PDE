@@ -89,6 +89,7 @@ public class WorkspacePluginModelManager extends WorkspaceModelManager {
 							? ICoreConstants.FRAGMENT_PATH : ICoreConstants.PLUGIN_PATH); 
 			if (efile.exists()) {
 				WorkspaceExtensionsModel extModel = new WorkspaceExtensionsModel(efile);
+				extModel.setEditable(false);
 				loadModel(extModel, false);
 				((IBundlePluginModelBase)model).setExtensionsModel(extModel);
 				extModel.setBundleModel((IBundlePluginModelBase)model);
@@ -258,6 +259,7 @@ public class WorkspacePluginModelManager extends WorkspaceModelManager {
 		} else if (kind == IResourceDelta.ADDED) {
 			if (model instanceof IBundlePluginModelBase){
 				WorkspaceExtensionsModel extensions = new WorkspaceExtensionsModel(file);
+				extensions.setEditable(false);
 				((IBundlePluginModelBase)model).setExtensionsModel(extensions);
 				extensions.setBundleModel((IBundlePluginModelBase)model);
 				loadModel(extensions, false);				
@@ -272,6 +274,7 @@ public class WorkspacePluginModelManager extends WorkspaceModelManager {
 				boolean reload = extensions != null;
 				if (extensions == null) {
 					extensions = new WorkspaceExtensionsModel(file);
+					((WorkspaceExtensionsModel)extensions).setEditable(false);
 					((IBundlePluginModelBase)model).setExtensionsModel(extensions);
 					((WorkspaceExtensionsModel)extensions).setBundleModel((IBundlePluginModelBase)model);
 				}

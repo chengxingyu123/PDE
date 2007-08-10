@@ -44,6 +44,10 @@ public abstract class PluginBase extends AbstractExtensions implements IPluginBa
 	private String fId;
 	private String fVersion;
 	private boolean fHasBundleStructure;
+	
+	public PluginBase(boolean readOnly) {
+		super(readOnly);
+	}
 
 	public void add(IPluginLibrary library) throws CoreException {
 		ensureModelEditable();

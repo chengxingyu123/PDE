@@ -248,11 +248,13 @@ public class PDEState extends MinimalState {
  			bundle.load(desc, this);
   			model.setBundleDescription(desc);
  			model.setBundleModel(bundle);
+ 			bundle.setEditable(false);
  			
  			String filename = (desc.getHost() == null) ? "plugin.xml" : "fragment.xml"; //$NON-NLS-1$ //$NON-NLS-2$
  			IFile file = project.getFile(filename);
  			if (file.exists()) {
  				WorkspaceExtensionsModel extensions = new WorkspaceExtensionsModel(file);
+ 				extensions.setEditable(false);
  				extensions.setBundleModel(model);
  				extensions.load(desc, this);
  				model.setExtensionsModel(extensions);

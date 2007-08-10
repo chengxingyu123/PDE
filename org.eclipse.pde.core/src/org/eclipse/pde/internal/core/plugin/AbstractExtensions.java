@@ -16,6 +16,7 @@ import java.io.InputStream;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -38,8 +39,13 @@ public abstract class AbstractExtensions extends PluginObject implements IExtens
 	
 	protected String fSchemaVersion;
 	
-	private ArrayList fExtensions = null;
-	private ArrayList fExtensionPoints = null;
+	protected List fExtensions = null;
+	protected List fExtensionPoints = null;
+	boolean fCache = false;
+	
+	public AbstractExtensions(boolean readOnly) {
+		fCache = !readOnly;
+	}
 
 	public void add(IPluginExtension extension) throws CoreException {
 		ensureModelEditable();
@@ -201,9 +207,13 @@ public abstract class AbstractExtensions extends PluginObject implements IExtens
 		if (fExtensions == null) {
 			IPluginBase base = getPluginBase();
 			if (base != null) {
-				return Arrays.asList(PDECore.getDefault().getExtensionsRegistry().findExtensionsForPlugin(base.getId()));
+				if (fCache)
+					fExtensions = new ArrayList(Arrays.asList(PDECore.getDefault().getExtensionsRegistry().findExtensionsForPlugin(base.getId())));
+				else
+					return Arrays.asList(PDECore.getDefault().getExtensionsRegistry().findExtensionsForPlugin(base.getId()));
+			} else {
+				return Collections.EMPTY_LIST;
 			}
-			fExtensions = new ArrayList();
 		}
 		return fExtensions;
 	}
@@ -212,9 +222,13 @@ public abstract class AbstractExtensions extends PluginObject implements IExtens
 		if (fExtensionPoints == null) {
 			IPluginBase base = getPluginBase();
 			if (base != null) {
-				return Arrays.asList(PDECore.getDefault().getExtensionsRegistry().findExtensionPointsForPlugin(base.getId()));
+				if (fCache)
+					fExtensionPoints = new ArrayList(Arrays.asList(PDECore.getDefault().getExtensionsRegistry().findExtensionPointsForPlugin(base.getId())));
+				else
+					return Arrays.asList(PDECore.getDefault().getExtensionsRegistry().findExtensionPointsForPlugin(base.getId()));
+			} else {
+				return Collections.EMPTY_LIST;
 			}
-			fExtensionPoints = new ArrayList();
 		}
 		return fExtensionPoints;
 	}
