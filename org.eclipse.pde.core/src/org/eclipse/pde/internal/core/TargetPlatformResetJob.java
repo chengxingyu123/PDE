@@ -33,9 +33,10 @@ public class TargetPlatformResetJob extends Job {
 		removeDisabledBundles(models);
 		PluginModelManager manager = PDECore.getDefault().getModelManager();
 		manager.getExternalModelManager().setModels(models);
+		// trigger Extension Registry reloaded before resetState call so listeners can update their extensions points accurately when target is reloaded
+		PDECore.getDefault().getExtensionsRegistry().targetReloaded();
 		manager.resetState(fState);
 		PDECore.getDefault().getFeatureModelManager().targetReloaded();
-		PDECore.getDefault().getExtensionsRegistry().targetReloaded();
 		monitor.done();
 		return Status.OK_STATUS;
 	}

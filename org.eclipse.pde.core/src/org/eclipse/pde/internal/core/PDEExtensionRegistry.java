@@ -160,7 +160,19 @@ public class PDEExtensionRegistry {
 		IExtensionPoint point = getExtensionPoint(extensionPointId);
 		if (point != null) 
 			return point.getExtensions();
-		return new IExtension[0];
+		ArrayList list = new ArrayList();
+		IPluginModelBase[] bases = PluginRegistry.getActiveModels();
+		for (int i = 0; i < bases.length; i++) {
+			IContributor contributor = fStrategy.createContributor(bases[i]);
+			if (contributor == null)
+				continue;
+			IExtension[] extensions = getRegistry().getExtensions(contributor);
+			for (int j = 0; j < extensions.length; j++) {
+				if (extensions[j].getExtensionPointUniqueIdentifier().equals(extensionPointId))
+					list.add(extensions[j]);
+			}
+		}
+		return (IExtension[]) list.toArray(new IExtension[list.size()]);
 	}
 	
 	public void addListener(IRegistryChangeListener listener) {
