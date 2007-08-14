@@ -17,8 +17,11 @@ import org.eclipse.core.runtime.IRegistryChangeListener;
 import org.eclipse.jface.action.IStatusLineManager;
 import org.eclipse.jface.window.Window;
 import org.eclipse.jface.wizard.WizardDialog;
+import org.eclipse.osgi.service.resolver.State;
+import org.eclipse.osgi.service.resolver.StateDelta;
 import org.eclipse.pde.core.IModelChangedEvent;
 import org.eclipse.pde.core.plugin.TargetPlatform;
+import org.eclipse.pde.internal.core.IStateDeltaListener;
 import org.eclipse.pde.internal.core.PDECore;
 import org.eclipse.pde.internal.core.iproduct.IProduct;
 import org.eclipse.pde.internal.core.iproduct.IProductModel;
@@ -56,7 +59,7 @@ import org.eclipse.ui.forms.widgets.Section;
 import org.eclipse.ui.forms.widgets.TableWrapData;
 
 
-public class ProductInfoSection extends PDESection implements IRegistryChangeListener {
+public class ProductInfoSection extends PDESection implements IRegistryChangeListener, IStateDeltaListener {
 
 	private FormEntry fNameEntry;
 	private ExtensionIdComboPart fAppCombo;
@@ -144,6 +147,17 @@ public class ProductInfoSection extends PDESection implements IRegistryChangeLis
 			}
 			return i;
 		}
+		
+		public void reload(String newItems[]) {
+			if (fRemovedId == null)
+				fRemovedId = getSelection();
+			setItems(newItems);
+			int index = indexOf(fRemovedId); 
+			if (index > 0) {
+				select(index);
+				fRemovedId = null;
+			}
+		}
 
 	}
 
@@ -178,6 +192,7 @@ public class ProductInfoSection extends PDESection implements IRegistryChangeLis
 		
 		getModel().addModelChangedListener(this);
 		PDECore.getDefault().getExtensionsRegistry().addListener(this);
+		PDECore.getDefault().getModelManager().addStateDeltaListener(this);
 	}
 	
 	public void dispose() {
@@ -185,6 +200,7 @@ public class ProductInfoSection extends PDESection implements IRegistryChangeLis
 		if (model != null)
 			model.removeModelChangedListener(this);
 		PDECore.getDefault().getExtensionsRegistry().removeListener(this);
+		PDECore.getDefault().getModelManager().removeStateDeltaListener(this);
 		super.dispose();
 	}
 	
@@ -454,6 +470,29 @@ public class ProductInfoSection extends PDESection implements IRegistryChangeLis
 				fProductCombo.handleExtensionDelta(productDeltas);
 			}
 		});
+	}
+	
+	public void stateChanged(State newState) {
+		String[] products = TargetPlatform.getProducts();
+		final String[] finalProducts = new String[products.length + 1];
+		System.arraycopy(products, 0, finalProducts, 0, products.length);
+		finalProducts[products.length] = ""; //$NON-NLS-1$od
+		
+		
+		String[] apps = TargetPlatform.getApplications();
+		final String[] finalApps = new String[apps.length + 1];
+		System.arraycopy(apps, 0, finalApps, 0, apps.length);
+		finalApps[apps.length] = ""; //$NON-NLS-1$
+		
+		Display.getDefault().syncExec(new Runnable() {
+			public void run() {
+				fAppCombo.reload(finalApps);
+				fProductCombo.reload(finalProducts);
+			}
+		});
+	}
+
+	public void stateResolved(StateDelta delta) {
 	}
 	
 }
