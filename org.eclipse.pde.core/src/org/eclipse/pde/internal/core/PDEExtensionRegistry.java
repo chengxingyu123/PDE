@@ -1,8 +1,19 @@
+/*******************************************************************************
+ * Copyright (c) 2007 IBM Corporation and others.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *     IBM Corporation - initial API and implementation
+ *******************************************************************************/
 package org.eclipse.pde.internal.core;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.ListIterator;
 
 import org.eclipse.core.runtime.IContributor;
 import org.eclipse.core.runtime.IExtension;
@@ -24,9 +35,11 @@ public class PDEExtensionRegistry {
 	
 	private Object fMasterKey = new Object();
 	private Object fUserKey = new Object();
-	
 	private IExtensionRegistry fRegistry = null;
 	private PDERegistryStrategy fStrategy = null;
+	
+	private IPluginModelBase[] fModels = null;
+	private ArrayList fListeners = new ArrayList();
 	
 	private static final String EXTENSION_DIR = ".extensions"; //$NON-NLS-1$
 	
@@ -39,26 +52,56 @@ public class PDEExtensionRegistry {
 		}
 	}
 	
+	public PDEExtensionRegistry(IPluginModelBase[] models) {
+		fModels = models;
+		if (fStrategy == null) {
+			File extensionsDir = new File(PDECore.getDefault().getStateLocation().toFile(), EXTENSION_DIR);
+			// Use TargetPDERegistryStrategy so we don't connect listeners to PluginModelManager.  This is used only in target so we don't need change events.
+			fStrategy = new TargetPDERegistryStrategy(new File[] {extensionsDir}, new boolean[] {false}, fMasterKey, this);
+		}
+	}
+	
+	// Methods used to control information/status of Extension Registry
+	
+	protected IPluginModelBase[] getModels() {
+		return (fModels == null) ? PluginRegistry.getActiveModels() : fModels;
+	}
+	
 	public void stop() {
 		if (fRegistry != null)
 			fRegistry.stop(fMasterKey);
+		dispose();
 	}
 	
-	private synchronized IExtensionRegistry getRegistry() {
-		if (fRegistry == null)
-			createRegistry();
+	protected synchronized IExtensionRegistry getRegistry() {
+		if (fRegistry == null) {
+			fRegistry = createRegistry();
+			for (ListIterator li = fListeners.listIterator(); li.hasNext();)
+				fRegistry.addRegistryChangeListener((IRegistryChangeListener)li.next());
+		}
 		return fRegistry;
 	}
 	
-	public void targetReloaded() {
-		// disconnect listeners
-		fStrategy.dispose();
+	private IExtensionRegistry createRegistry() {
+		return RegistryFactory.createRegistry(fStrategy, fMasterKey, fUserKey);
+	}
+
+	public void targetReloaded() {		
 		// stop old registry (which will write contents to FS) and delete the cache it creates
-		// might see if we can dispose of a registry without writing to file system
-		stop();
+		// might see if we can dispose of a registry without writing to file system.  NOTE: Don't call stop() because we want to still reuse fStrategy
+		if (fRegistry != null)
+			fRegistry.stop(fMasterKey);
 		CoreUtility.deleteContent(new File(PDECore.getDefault().getStateLocation().toFile(), EXTENSION_DIR));
 		fRegistry = null;
 	}
+	
+	// dispose of registry without writing contents.
+	public void dispose() {
+		fStrategy.dispose();
+		fRegistry = null;
+	}
+	
+	// Methods to access data in Extension Registry
 	
 	public IPluginModelBase[] findExtensionPlugins(String pointId) {
 		IExtensionPoint point = getExtensionPoint(pointId);
@@ -112,10 +155,6 @@ public class PDEExtensionRegistry {
 			}
 		}
 		return null;
-	}
-	
-	void createRegistry() {
-		fRegistry  = RegistryFactory.createRegistry(fStrategy, fMasterKey, fUserKey);
 	}
 	
 	public IPluginExtension[] findExtensionsForPlugin(String pluginId) {
@@ -175,12 +214,17 @@ public class PDEExtensionRegistry {
 		return (IExtension[]) list.toArray(new IExtension[list.size()]);
 	}
 	
+	// Methods to add/remove listeners
+	
 	public void addListener(IRegistryChangeListener listener) {
 		fRegistry.addRegistryChangeListener(listener);
+		if (!fListeners.contains(listener))
+			fListeners.add(listener);
 	}
 	
 	public void removeListener(IRegistryChangeListener listener) {
 		fRegistry.removeRegistryChangeListener(listener);
+		fListeners.remove(listener);
 	}
 
 }

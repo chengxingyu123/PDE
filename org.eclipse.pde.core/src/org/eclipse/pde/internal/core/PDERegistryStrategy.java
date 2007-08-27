@@ -1,3 +1,13 @@
+/*******************************************************************************
+ * Copyright (c) 2007 IBM Corporation and others.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *     IBM Corporation - initial API and implementation
+ *******************************************************************************/
 package org.eclipse.pde.internal.core;
 
 import java.io.BufferedInputStream;
@@ -18,13 +28,8 @@ import org.eclipse.core.runtime.spi.RegistryContributor;
 import org.eclipse.core.runtime.spi.RegistryStrategy;
 import org.eclipse.osgi.service.resolver.BundleDescription;
 import org.eclipse.osgi.service.resolver.HostSpecification;
-import org.eclipse.pde.core.plugin.IExtensions;
-import org.eclipse.pde.core.plugin.IPluginBase;
 import org.eclipse.pde.core.plugin.IPluginModelBase;
 import org.eclipse.pde.core.plugin.ModelEntry;
-import org.eclipse.pde.core.plugin.PluginRegistry;
-import org.eclipse.pde.internal.core.bundle.BundlePluginBase;
-import org.eclipse.pde.internal.core.plugin.AbstractExtensions;
 import org.osgi.util.tracker.ServiceTracker;
 
 public class PDERegistryStrategy extends RegistryStrategy{
@@ -46,7 +51,7 @@ public class PDERegistryStrategy extends RegistryStrategy{
 		
 		protected final void removeModels(IPluginModelBase[] bases, boolean onlyInactive) {
 			for (int i = 0; i < bases.length; i++) {
-				resetModel(bases[i]);
+//				resetModel(bases[i]);
 				if (onlyInactive && bases[i].isEnabled())
 					continue;
 				removeBundle(fRegistry, bases[i]);
@@ -93,27 +98,39 @@ public class PDERegistryStrategy extends RegistryStrategy{
 		
 	public PDERegistryStrategy(File[] storageDirs, boolean[] cacheReadOnly, Object key, PDEExtensionRegistry registry) {
 		super(storageDirs, cacheReadOnly);
+		init();
 		fKey = key;
-		
+		fPDERegistry = registry;
+	}
+	
+	protected void init() {
+		connectListeners();
+	}
+	
+	protected void connectListeners() {
 		// Listen for model changes to register new bundles and unregister removed bundles
 		PluginModelManager manager = PDECore.getDefault().getModelManager();
 		manager.addPluginModelListener(fModelListener = new ModelListener());
 		manager.addExtensionDeltaListener(fExtensionListener = new ExtensionListener());
-		
-		fPDERegistry = registry;
+	}
+	
+	protected void setListenerRegistry(IExtensionRegistry registry) {
+		if (fModelListener != null)
+			fModelListener.setRegistry(registry);
+		if (fExtensionListener != null)
+			fExtensionListener.setRegistry(registry);
 	}
 	
 	public void onStart(IExtensionRegistry registry, boolean loadedFromCache) {
 		super.onStart(registry, loadedFromCache);
-		fModelListener.setRegistry(registry);
-		fExtensionListener.setRegistry(registry);
+		setListenerRegistry(registry);
 		if (!loadedFromCache)
 			processBundles(registry);
 	}
 	
 	public void onStop(IExtensionRegistry registry) {
 		super.onStop(registry);
-		dispose();
+		setListenerRegistry(null);
 	}
 
 	/* (non-Javadoc)
@@ -128,7 +145,7 @@ public class PDERegistryStrategy extends RegistryStrategy{
 	}
 	
 	private void processBundles(IExtensionRegistry registry) {
-		addBundles(registry, PluginRegistry.getActiveModels());
+		addBundles(registry, fPDERegistry.getModels());
 	}
 	
 	private void addBundles(IExtensionRegistry registry, IPluginModelBase[] bases) {
@@ -167,17 +184,18 @@ public class PDERegistryStrategy extends RegistryStrategy{
 		}
 	}
 	
-	private void resetModel(IPluginModelBase model) {
-		IPluginBase base = model.getPluginBase();
-		if (base instanceof BundlePluginBase) {
-			IExtensions ext = ((BundlePluginBase)base).getExtensionsRoot();
-			if (ext != null && ext instanceof AbstractExtensions) {
-				((AbstractExtensions)ext).reset();
-			}
-		} else if (base instanceof AbstractExtensions){
-			((AbstractExtensions)base).resetExtensions();
-		}
-	}
+//	added for releasing cached information from IPluginModelBase
+//	private void resetModel(IPluginModelBase model) {
+//		IPluginBase base = model.getPluginBase();
+//		if (base instanceof BundlePluginBase) {
+//			IExtensions ext = ((BundlePluginBase)base).getExtensionsRoot();
+//			if (ext != null && ext instanceof AbstractExtensions) {
+//				((AbstractExtensions)ext).reset();
+//			}
+//		} else if (base instanceof AbstractExtensions){
+//			((AbstractExtensions)base).resetExtensions();
+//		}
+//	}
 	
 	private File getFile(IPluginModelBase base) {
 		String loc = base.getInstallLocation();
@@ -237,17 +255,18 @@ public class PDERegistryStrategy extends RegistryStrategy{
 		PluginModelManager manager = PDECore.getDefault().getModelManager();
 		manager.removePluginModelListener(fModelListener);
 		manager.removeExtensionDeltaListener(fExtensionListener);
+		if (xmlTracker != null) {
+			xmlTracker.close();
+			xmlTracker = null;
+		}
 	}
 	
 	private void createRegistry() {
-		fPDERegistry.createRegistry();
+		fPDERegistry.getRegistry();
 	}
 
 	public long getContributionsTimestamp() {
-		// TODO: don't need complicated timestamp algorithm.  Just need to figure out if there was a workspace crash after the last time we loaded.
-		// Can probably do something with a flag set to true upon shutdown and it set to false after the first query.  
-		// That way if a crash happened the flag would be set to false.
-		IPluginModelBase[] bases = PluginRegistry.getActiveModels();
+		IPluginModelBase[] bases = fPDERegistry.getModels();
 		long timeStamp = 0;
 		for (int i = 0; i < bases.length; i++) {
 			File location = getFile(bases[i]);
