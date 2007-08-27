@@ -55,6 +55,7 @@ import org.eclipse.pde.internal.core.FeatureModelManager;
 import org.eclipse.pde.internal.core.ICoreConstants;
 import org.eclipse.pde.internal.core.ModelProviderEvent;
 import org.eclipse.pde.internal.core.PDECore;
+import org.eclipse.pde.internal.core.PDEExtensionRegistry;
 import org.eclipse.pde.internal.core.PDEState;
 import org.eclipse.pde.internal.core.PluginPathFinder;
 import org.eclipse.pde.internal.core.TargetPlatformHelper;
@@ -104,6 +105,7 @@ public class TargetPluginsTab extends SharedPartWithButtons{
 	private CheckboxTreeViewer fPluginTreeViewer;
 	private HashSet fChangedModels = new HashSet();
 	private PDEState fCurrentState;
+	private PDEExtensionRegistry fCurrentRegistry;
 	private PageBook fBook;
 	private Button fGroupPlugins;
 	private HashMap fTreeViewerContents;
@@ -152,6 +154,9 @@ public class TargetPluginsTab extends SharedPartWithButtons{
 			monitor.done();
 			fTreeViewerContents.clear();
 			initializeTreeContents(getCurrentModels());
+			if (fCurrentRegistry != null)
+				fCurrentRegistry.dispose();
+			fCurrentRegistry = null;
 		}
 		
 		private void loadFeatures(IProgressMonitor monitor) {
@@ -933,6 +938,9 @@ public class TargetPluginsTab extends SharedPartWithButtons{
 		}
 		BundleDescription[] descriptions = fCurrentState.addAdditionalBundles(pluginLocs);
 		addNewBundles(descriptions, checkedPlugins);
+		if (fCurrentRegistry != null)
+			fCurrentRegistry.dispose();
+		fCurrentRegistry = null;
 	}
 	
 	private void createCopyState() {
@@ -977,6 +985,16 @@ public class TargetPluginsTab extends SharedPartWithButtons{
 			fPage.getSourceBlock().resetExtensionLocations(getCurrentModels());
 			fReloaded = true;
 		}
+	}
+	
+	// store Extension Registry info in TargetPluginsTab because we need to know when fCurrentState == null.  Could store it in TargetSourceTab
+	// and call .getCurrentState, but would have to compare States.  Simply by putting it here will save time otherwise spent comparing States.
+	protected PDEExtensionRegistry getCurrentExtensionRegistry() {
+		if (fCurrentState == null) 
+			return PDECore.getDefault().getExtensionsRegistry();
+		if (fCurrentRegistry == null)
+			fCurrentRegistry = new PDEExtensionRegistry(getCurrentModels());
+		return fCurrentRegistry;
 	}
 
 }
