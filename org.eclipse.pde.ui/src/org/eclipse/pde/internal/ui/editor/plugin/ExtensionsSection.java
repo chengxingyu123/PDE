@@ -13,7 +13,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
-import java.util.TreeSet;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
@@ -53,6 +52,8 @@ import org.eclipse.pde.internal.core.ischema.ISchemaComplexType;
 import org.eclipse.pde.internal.core.ischema.ISchemaElement;
 import org.eclipse.pde.internal.core.schema.SchemaRegistry;
 import org.eclipse.pde.internal.core.text.IDocumentNode;
+import org.eclipse.pde.internal.core.text.plugin.IDocumentElement;
+import org.eclipse.pde.internal.core.text.plugin.IDocumentExtension;
 import org.eclipse.pde.internal.ui.PDELabelProvider;
 import org.eclipse.pde.internal.ui.PDEPlugin;
 import org.eclipse.pde.internal.ui.PDEPluginImages;
@@ -163,9 +164,8 @@ public class ExtensionsSection extends TreeSection implements IModelChangedListe
 			// We have a schema complex type.  Either the element has attributes
 			// or the element has children.
 			// Generate the list of element proposals
-			TreeSet elementSet = XMLElementProposalComputer
+			HashSet elementSet = XMLElementProposalComputer
 					.computeElementProposal(elementInfo, (IDocumentNode)parent);
-			
 			// Create a corresponding menu entry for each element proposal
 			Iterator iterator = elementSet.iterator();
 			while (iterator.hasNext()) {
@@ -227,7 +227,7 @@ public class ExtensionsSection extends TreeSection implements IModelChangedListe
 		initializeImages();
 		Composite container = createClientContainer(section, 2, toolkit);
 		TreePart treePart = getTreePart();
-		createViewerPartControl(container, SWT.SINGLE, 2, toolkit);
+		createViewerPartControl(container, SWT.MULTI, 2, toolkit);
 		fExtensionTree = treePart.getTreeViewer();
 		fExtensionTree.setContentProvider(new ExtensionContentProvider());
 		fExtensionTree.setLabelProvider(new ExtensionLabelProvider());
@@ -800,8 +800,12 @@ public class ExtensionsSection extends TreeSection implements IModelChangedListe
 			fullName = element.getResourceString(fullName);
 			if (fullNames)
 				return fullName != null ? fullName : baseName;
+			// Bug 183417 - Bidi3.3: Elements' labels in the extensions page in the fragment manifest characters order is incorrect
+			// add RTL zero length character just before the ( and the LTR character just after to ensure:
+			// 1. The leading parenthesis takes proper orientation when running in bidi configuration
+			// Assumption: baseName (taken from the schema definition), is only latin characters and is therefore always displayed LTR
 			return fullName != null
-			? (fullName + " (" + baseName + ")") //$NON-NLS-1$ //$NON-NLS-2$
+			? (fullName + " \u200f(\u200e" + baseName + ")") //$NON-NLS-1$ //$NON-NLS-2$
 					: baseName;
 		}
 		return obj.toString();
@@ -890,7 +894,7 @@ public class ExtensionsSection extends TreeSection implements IModelChangedListe
 		// We have a schema complex type.  Either the target object has 
 		// attributes or the element has children.
 		// Generate the list of element proposals
-		TreeSet elementSet = 
+		HashSet elementSet = 
 			XMLElementProposalComputer.computeElementProposal(
 					schemaElement, (IDocumentNode)targetObject);
 		// Determine whether we can paste the source elements as children of
@@ -907,7 +911,7 @@ public class ExtensionsSection extends TreeSection implements IModelChangedListe
 	 * @return
 	 */
 	private boolean canPasteSourceElements(IPluginElement[] sourceElements,
-			TreeSet targetElementSet) {
+			HashSet targetElementSet) {
 		// Performance optimization
 		// HashSet of schema elements is not comparable for the source
 		// objects (schema elements are transient)
@@ -942,7 +946,7 @@ public class ExtensionsSection extends TreeSection implements IModelChangedListe
 	 * @return
 	 */
 	private boolean canPasteSourceElement(IPluginElement sourceElement, 
-			TreeSet targetElementSet) {
+			HashSet targetElementSet) {
 		boolean canPaste = false;
 		// Get the source element tag name
 		String sourceTagName = sourceElement.getName();
@@ -1007,24 +1011,29 @@ public class ExtensionsSection extends TreeSection implements IModelChangedListe
 			for (int i = 0; i < sourceObjects.length; i++) {
 				Object sourceObject = sourceObjects[i];
 				
-				if ((sourceObject instanceof IPluginExtension) &&
+				if ((sourceObject instanceof IDocumentExtension) &&
+						(sourceObject instanceof IPluginExtension) &&
 						(pluginBase instanceof IDocumentNode)) {
 					// Extension object
-					IDocumentNode extension = (IDocumentNode)sourceObject;
+					IDocumentExtension extension = (IDocumentExtension)sourceObject;
+					// Retrieve the associated schema if there is one
+					ISchema schema = getSchema((IPluginExtension)extension);
 					// Adjust all the source object transient field values to
 					// acceptable values
-					extension.reconnect((IDocumentNode)pluginBase, model);
-					// Add the extension to the plugin parent (plugin)
+					extension.reconnect(model, schema, (IDocumentNode)pluginBase);
 					pluginBase.add((IPluginExtension)extension);
 
-				} else if ((sourceObject instanceof IPluginElement) &&
+				} else if ((sourceObject instanceof IDocumentElement) &&
+						(sourceObject instanceof IPluginElement) &&
 						(targetObject instanceof IPluginParent) &&
 						(targetObject instanceof IDocumentNode)) {
 					// Element object
-					IDocumentNode element = (IDocumentNode)sourceObject;
+					IDocumentElement element = (IDocumentElement)sourceObject;
+					// Retrieve the associated schema if there is one
+					ISchema schema = getSchema((IPluginElement)element);
 					// Adjust all the source object transient field values to
 					// acceptable values
-					element.reconnect((IDocumentNode)targetObject, model);
+					element.reconnect(model, schema, (IDocumentNode)targetObject);
 					// Add the element to the plugin parent (extension or
 					// element)
 					((IPluginParent)targetObject).add((IPluginElement)element);
