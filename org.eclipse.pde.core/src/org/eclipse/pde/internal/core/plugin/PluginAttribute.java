@@ -11,12 +11,9 @@
 package org.eclipse.pde.internal.core.plugin;
 
 import java.io.PrintWriter;
-
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.pde.core.plugin.IPluginAttribute;
-import org.eclipse.pde.internal.core.ischema.ISchema;
-import org.eclipse.pde.internal.core.ischema.ISchemaAttribute;
-import org.eclipse.pde.internal.core.ischema.ISchemaElement;
+import org.eclipse.pde.internal.core.ischema.*;
 import org.w3c.dom.Node;
 
 public class PluginAttribute extends PluginObject implements IPluginAttribute {
@@ -48,7 +45,7 @@ public class PluginAttribute extends PluginObject implements IPluginAttribute {
 			return false;
 		if (obj instanceof IPluginAttribute) {
 			IPluginAttribute target = (IPluginAttribute) obj;
-			if (target.getModel().equals(getModel()))
+			if (!target.getModel().equals(getModel()))
 				return false;
 			if (stringEqualWithNull(getName(), target.getName()) && stringEqualWithNull(getValue(), target.getValue()))
 				return true;

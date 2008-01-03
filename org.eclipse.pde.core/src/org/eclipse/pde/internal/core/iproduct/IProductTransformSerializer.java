@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2005, 2007 IBM Corporation and others.
+ * Copyright (c) 2007 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -10,30 +10,18 @@
  *******************************************************************************/
 package org.eclipse.pde.internal.core.iproduct;
 
-public interface IProductModelFactory {
+import org.eclipse.core.runtime.IProgressMonitor;
 
-	IProduct createProduct();
+/**
+ * Instances of this interface are capable of serializing the transformation
+ * files associated with a given product.
+ */
+public interface IProductTransformSerializer {
 
-	IAboutInfo createAboutInfo();
-
-	IProductPlugin createPlugin();
-
-	IProductFeature createFeature();
-
-	IConfigurationFileInfo createConfigFileInfo();
-
-	IWindowImages createWindowImages();
-
-	ISplashInfo createSplashInfo();
-
-	ILauncherInfo createLauncherInfo();
-
-	IArgumentsInfo createLauncherArguments();
-
-	IIntroInfo createIntroInfo();
-
-	IJREInfo createJVMInfo();
-
-	ICustomizationInfo createCustomizationInfo();
+	/**
+	 * @param monitor
+	 * 
+	 */
+	void serialize(IProgressMonitor monitor);
 
 }

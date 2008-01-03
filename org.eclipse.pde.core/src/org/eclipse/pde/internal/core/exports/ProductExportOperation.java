@@ -286,6 +286,20 @@ public class ProductExportOperation extends FeatureExportOperation {
 			if (location != null)
 				writer.println("osgi.splashPath=" + location); //$NON-NLS-1$
 			writer.println("eclipse.product=" + fProduct.getId()); //$NON-NLS-1$
+			if (fProduct.getCustomizationInfo().getUseCustomizations()) {
+				String[] frameworkExtensions = fProduct.getCustomizationInfo().getFrameworkExtensions();
+				if (frameworkExtensions != null && frameworkExtensions.length > 0) {
+					writer.print("osgi.framework.extensions=");
+					for (int i = 0; i < frameworkExtensions.length; i++) {
+						String extension = frameworkExtensions[i];
+						writer.print(extension);
+						if (i < frameworkExtensions.length - 1)
+							writer.print(',');
+					}
+					writer.println();
+				}
+			}
+
 			writer.println("osgi.bundles=" + getPluginList(config, TargetPlatform.getBundleList())); //$NON-NLS-1$
 			writer.println("osgi.bundles.defaultStartLevel=4"); //$NON-NLS-1$ 		
 		} catch (IOException e) {

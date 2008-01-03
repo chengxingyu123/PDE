@@ -11,28 +11,10 @@
 package org.eclipse.pde.internal.core.product;
 
 import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.TreeMap;
-
+import java.util.*;
 import org.eclipse.pde.core.IModelChangedEvent;
-import org.eclipse.pde.internal.core.iproduct.IAboutInfo;
-import org.eclipse.pde.internal.core.iproduct.IArgumentsInfo;
-import org.eclipse.pde.internal.core.iproduct.IConfigurationFileInfo;
-import org.eclipse.pde.internal.core.iproduct.IIntroInfo;
-import org.eclipse.pde.internal.core.iproduct.IJREInfo;
-import org.eclipse.pde.internal.core.iproduct.ILauncherInfo;
-import org.eclipse.pde.internal.core.iproduct.IProduct;
-import org.eclipse.pde.internal.core.iproduct.IProductFeature;
-import org.eclipse.pde.internal.core.iproduct.IProductModel;
-import org.eclipse.pde.internal.core.iproduct.IProductModelFactory;
-import org.eclipse.pde.internal.core.iproduct.IProductPlugin;
-import org.eclipse.pde.internal.core.iproduct.ISplashInfo;
-import org.eclipse.pde.internal.core.iproduct.IWindowImages;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
+import org.eclipse.pde.internal.core.iproduct.*;
+import org.w3c.dom.*;
 
 public class Product extends ProductObject implements IProduct {
 
@@ -52,6 +34,7 @@ public class Product extends ProductObject implements IProduct {
 	private ILauncherInfo fLauncherInfo;
 	private IArgumentsInfo fLauncherArgs;
 	private IIntroInfo fIntroInfo;
+	private ICustomizationInfo fCustomizationInfo;
 
 	public Product(IProductModel model) {
 		super(model);
@@ -179,6 +162,11 @@ public class Product extends ProductObject implements IProduct {
 			fJVMInfo.write(indent + "   ", writer); //$NON-NLS-1$
 		}
 
+		if (fCustomizationInfo != null) {
+			writer.println();
+			fCustomizationInfo.write(indent + "    ", writer); //$NON-NLS-1$
+		}
+
 		writer.println();
 		writer.println(indent + "   <plugins>"); //$NON-NLS-1$  
 		Iterator iter = fPlugins.values().iterator();
@@ -274,6 +262,9 @@ public class Product extends ProductObject implements IProduct {
 					} else if (name.equals("vm")) { //$NON-NLS-1$
 						fJVMInfo = factory.createJVMInfo();
 						fJVMInfo.parse(child);
+					} else if (name.equals("customizationInfo")) { //$NON-NLS-1$
+						fCustomizationInfo = factory.createCustomizationInfo();
+						fCustomizationInfo.parse(child);
 					}
 				}
 			}
@@ -482,4 +473,17 @@ public class Product extends ProductObject implements IProduct {
 		fireStructureChanged(feature1, IModelChangedEvent.CHANGE);
 	}
 
+	/* (non-Javadoc)
+	 * @see org.eclipse.pde.internal.core.iproduct.IProduct#getCustomizationInfo()
+	 */
+	public ICustomizationInfo getCustomizationInfo() {
+		return fCustomizationInfo;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.pde.internal.core.iproduct.IProduct#setCustomizationInfo(org.eclipse.pde.internal.core.iproduct.ICustomizationInfo)
+	 */
+	public void setCustomizationInfo(ICustomizationInfo info) {
+		fCustomizationInfo = info;
+	}
 }

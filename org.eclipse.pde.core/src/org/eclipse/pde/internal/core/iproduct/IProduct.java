@@ -33,6 +33,8 @@ public interface IProduct extends IProductObject {
 
 	IConfigurationFileInfo getConfigurationFileInfo();
 
+	ICustomizationInfo getCustomizationInfo();
+
 	IArgumentsInfo getLauncherArguments();
 
 	IJREInfo getJREInfo();
@@ -67,6 +69,8 @@ public interface IProduct extends IProductObject {
 
 	void setConfigurationFileInfo(IConfigurationFileInfo info);
 
+	void setCustomizationInfo(ICustomizationInfo info);
+
 	void setLauncherArguments(IArgumentsInfo info);
 
 	void setJREInfo(IJREInfo info);
@@ -88,5 +92,4 @@ public interface IProduct extends IProductObject {
 	boolean containsPlugin(String id);
 
 	boolean containsFeature(String id);
-
 }

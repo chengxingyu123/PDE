@@ -13,22 +13,11 @@ package org.eclipse.pde.internal.core;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
-
 import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.resources.ResourcesPlugin;
-import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.FileLocator;
-import org.eclipse.core.runtime.IPath;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.NullProgressMonitor;
-import org.eclipse.core.runtime.Path;
-import org.eclipse.core.runtime.Plugin;
-import org.eclipse.core.runtime.QualifiedName;
-import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.*;
 import org.eclipse.pde.core.plugin.IPluginModelBase;
-import org.eclipse.pde.internal.core.builders.CompilerFlags;
-import org.eclipse.pde.internal.core.builders.FeatureRebuilder;
-import org.eclipse.pde.internal.core.builders.PluginRebuilder;
+import org.eclipse.pde.internal.core.builders.*;
 import org.eclipse.pde.internal.core.schema.SchemaRegistry;
 import org.eclipse.update.configurator.ConfiguratorUtils;
 import org.osgi.framework.BundleContext;
@@ -105,6 +94,7 @@ public class PDECore extends Plugin {
 
 	private PluginModelManager fModelManager;
 	private FeatureModelManager fFeatureModelManager;
+	private ProductModelManager fProductModelManager;
 
 	private TargetDefinitionManager fTargetProfileManager;
 
@@ -153,7 +143,8 @@ public class PDECore extends Plugin {
 	public PluginModelManager getModelManager() {
 		if (fModelManager == null) {
 			fModelManager = new PluginModelManager();
-			// when initializing plug-in models, create the extension registry so it can track relevant (ModelChange) events.
+			// when initializing plug-in models, create the extension registry
+			// so it can track relevant (ModelChange) events.
 			if (fExtensionRegistry == null)
 				getExtensionsRegistry();
 		}
@@ -164,6 +155,12 @@ public class PDECore extends Plugin {
 		if (fTargetProfileManager == null)
 			fTargetProfileManager = new TargetDefinitionManager();
 		return fTargetProfileManager;
+	}
+
+	public ProductModelManager getProductModelManager() {
+		if (fProductModelManager == null)
+			fProductModelManager = new ProductModelManager();
+		return fProductModelManager;
 	}
 
 	public FeatureModelManager getFeatureModelManager() {
@@ -263,7 +260,8 @@ public class PDECore extends Plugin {
 			fFeatureModelManager.shutdown();
 			fFeatureModelManager = null;
 		}
-		// always shut down extension registry before model manager (since it needs data from model manager)
+		// always shut down extension registry before model manager (since it
+		// needs data from model manager)
 		if (fExtensionRegistry != null) {
 			fExtensionRegistry.stop();
 			fExtensionRegistry = null;
