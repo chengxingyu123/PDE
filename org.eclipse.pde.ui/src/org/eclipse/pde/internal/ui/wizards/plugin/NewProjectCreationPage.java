@@ -56,6 +56,7 @@ public class NewProjectCreationPage extends WizardNewProjectCreationPage {
 	private Combo fOSGiCombo;
 	private Button fOSGIButton;
 	private IStructuredSelection fSelection;
+	private boolean fForTransformBundle;
 	
 	private static final String S_OSGI_PROJECT = "osgiProject"; //$NON-NLS-1$
 	private static final String S_TARGET_NAME = "targetName"; //$NON-NLS-1$
@@ -65,6 +66,15 @@ public class NewProjectCreationPage extends WizardNewProjectCreationPage {
 		fFragment = fragment;
 		fData = data;
 		fSelection = selection;
+	}
+	
+	/**
+	 * Used by the transform wizard - fixes certain options as being unchangeable.
+	 */
+	public NewProjectCreationPage(String pageName, AbstractFieldData data, IStructuredSelection selection) {
+		this(pageName, data, false, selection);
+		fForTransformBundle = true;
+		
 	}
 	
 	public void createControl(Composite parent) {
@@ -102,6 +112,7 @@ public class NewProjectCreationPage extends WizardNewProjectCreationPage {
 		fJavaButton = createButton(group, SWT.CHECK, 2, 0);
 		fJavaButton.setText(PDEUIMessages.ProjectStructurePage_java); 
 		fJavaButton.setSelection(true);
+		fJavaButton.setEnabled(!fForTransformBundle);
 		fJavaButton.addSelectionListener(new SelectionAdapter(){
 			public void widgetSelected(SelectionEvent e) {
 				boolean enabled = fJavaButton.getSelection();
@@ -139,7 +150,9 @@ public class NewProjectCreationPage extends WizardNewProjectCreationPage {
 		label.setLayoutData(gd);
 		
 		IDialogSettings settings = getDialogSettings();
-		boolean osgiProject = (settings == null) ? false : settings.getBoolean(S_OSGI_PROJECT);
+		boolean osgiProject = fForTransformBundle ? true
+				: ((settings == null) ? false : settings
+						.getBoolean(S_OSGI_PROJECT));
 		    
 		fEclipseButton = createButton(group, SWT.RADIO, 1, 30);
     	fEclipseButton.setText(PDEUIMessages.NewProjectCreationPage_pDependsOnRuntime);	    
@@ -273,10 +286,16 @@ public class NewProjectCreationPage extends WizardNewProjectCreationPage {
     }
     
     protected void saveSettings(IDialogSettings settings) {
+    	if (fForTransformBundle)
+    		return; // we're working with a minimal page here - the settings aren't generally applicable.
     	boolean eclipseSelected = fEclipseButton.getSelection();
     	String targetName = eclipseSelected ? fTargetCombo.getText() : fOSGiCombo.getText();
 		settings.put(S_TARGET_NAME, (eclipseSelected && TargetPlatformHelper.getTargetVersionString().equals(targetName)) ? null : targetName);
     	settings.put(S_OSGI_PROJECT, !eclipseSelected); 	
     }
+
+	public boolean isForTransformBundle() {
+		return fForTransformBundle;
+	}
 	
 }

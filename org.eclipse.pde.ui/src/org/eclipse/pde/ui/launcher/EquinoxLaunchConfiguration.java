@@ -80,6 +80,10 @@ public class EquinoxLaunchConfiguration extends AbstractPDELaunchConfiguration {
 		properties.put("osgi.framework", LaunchConfigurationHelper.getBundleURL("org.eclipse.osgi", fAllBundles)); //$NON-NLS-1$ //$NON-NLS-2$
 		int start = configuration.getAttribute(IPDELauncherConstants.DEFAULT_START_LEVEL, 4);
 		properties.put("osgi.bundles.defaultStartLevel", Integer.toString(start)); //$NON-NLS-1$
+		String frameworkExtensions = null;
+		if ((frameworkExtensions = configuration.getAttribute(IPDELauncherConstants.OSGI_FRAMEWORK_EXTENSIONS, (String)null))  != null) {
+			properties.setProperty("osgi.framework.extensions", frameworkExtensions);
+		}
 		boolean autostart = configuration.getAttribute(IPDELauncherConstants.DEFAULT_AUTO_START, true);
 		String bundles = getBundles(autostart);
 		if (bundles.length() > 0)

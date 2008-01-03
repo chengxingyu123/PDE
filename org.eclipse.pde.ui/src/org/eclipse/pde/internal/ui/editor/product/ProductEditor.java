@@ -128,6 +128,7 @@ public class ProductEditor extends PDELauncherFormEditor {
 			addPage(new LaunchingPage(this));
 			addPage(new SplashPage(this));
 			addPage(new BrandingPage(this));
+			addPage(new CustomizationPage(this));
 		} catch (PartInitException e) {
 			PDEPlugin.logException(e);
 		}

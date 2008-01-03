@@ -15,6 +15,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
@@ -103,7 +104,7 @@ public class LaunchConfigurationHelper {
 			// if target's config.ini has the osgi.bundles header, then parse and compute the proper osgi.bundles value
 			String bundleList = properties.getProperty("osgi.bundles"); //$NON-NLS-1$
 			if (bundleList != null)
-				properties.setProperty("osgi.bundles", computeOSGiBundles(TargetPlatformHelper.stripPathInformation(bundleList), map)); //$NON-NLS-1$
+				properties.setProperty("osgi.bundles", computeOSGiBundles(TargetPlatformHelper.stripPathInformation(bundleList), map, null)); //$NON-NLS-1$
 		} else {
 			String templateLoc = configuration.getAttribute(IPDELauncherConstants.CONFIG_TEMPLATE_LOCATION, (String)null);
 			if (templateLoc != null) {
@@ -116,9 +117,15 @@ public class LaunchConfigurationHelper {
 		}
 		// whether we create a new config.ini or read from one as a template, we should add the required properties - bug 161265
 		if (properties != null)
-			addRequiredProperties(properties, productID, map);
+			addRequiredProperties(properties, productID, map, configuration.getAttribute("bundle.overrides", (String)null));
 		else
 			properties = new Properties();
+		
+		String frameworkExtensions = configuration.getAttribute(IPDELauncherConstants.OSGI_FRAMEWORK_EXTENSIONS, (String)null);
+		if (frameworkExtensions != null) {
+			properties.setProperty("osgi.framework.extensions", frameworkExtensions);
+		}
+				
 		setBundleLocations(map, properties);
 		if (!directory.exists())
 			directory.mkdirs();
@@ -126,7 +133,7 @@ public class LaunchConfigurationHelper {
 		return properties;
 	}
 	
-	private static void addRequiredProperties(Properties properties, String productID, Map map) {
+	private static void addRequiredProperties(Properties properties, String productID, Map map, String bundleOverrides) {
 		if (!properties.containsKey("osgi.install.area")) //$NON-NLS-1$
 			properties.setProperty("osgi.install.area", "file:" + TargetPlatform.getLocation()); //$NON-NLS-1$ //$NON-NLS-2$
 		if (!properties.containsKey("osgi.configuration.cascaded")) //$NON-NLS-1$
@@ -139,12 +146,12 @@ public class LaunchConfigurationHelper {
 		if (properties.containsKey("osgi.splashPath")) //$NON-NLS-1$
 			resolveLocationPath(properties.getProperty("osgi.splashPath"), properties, map); //$NON-NLS-1$
 		if (!properties.containsKey("osgi.bundles")) //$NON-NLS-1$
-			properties.setProperty("osgi.bundles", computeOSGiBundles(TargetPlatform.getBundleList(), map)); //$NON-NLS-1$
+			properties.setProperty("osgi.bundles", computeOSGiBundles(TargetPlatform.getBundleList(), map, bundleOverrides)); //$NON-NLS-1$
 		if (!properties.containsKey("osgi.bundles.defaultStartLevel")) //$NON-NLS-1$
 			properties.setProperty("osgi.bundles.defaultStartLevel", "4"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 	
-	private static String computeOSGiBundles(String bundleList, Map map) {
+	private static String computeOSGiBundles(String bundleList, Map map, String bundleOverrides) {
 		// if using p2's simple configurator, revert to default osgi.bundles
 		if (bundleList.indexOf("org.eclipse.equinox.simpleconfigurator") != -1) { //$NON-NLS-1$
 			bundleList = P2Utils.getDefaultOSGiBundles();
@@ -165,6 +172,19 @@ public class LaunchConfigurationHelper {
 				initialBundleSet.add(id);
 			}
 		}
+		
+		Map overrideMap = null;
+		if (bundleOverrides != null) {
+			overrideMap = new HashMap();
+			tokenizer = new StringTokenizer(bundleOverrides, ","); //$NON-NLS-1$
+			while (tokenizer.hasMoreTokens()) {
+				String token = tokenizer.nextToken();
+				int index = token.indexOf('@');
+				String id = index != -1 ? token.substring(0, index) : token;
+				overrideMap.put(id, token);
+			}
+		}
+		
 		// if org.eclipse.update.configurator is not included (LIKE IN BASIC RCP APPLICATION), then write out all bundles in osgi.bundles - bug 170772
 		if (!initialBundleSet.contains("org.eclipse.update.configurator")) { //$NON-NLS-1$
 			initialBundleSet.add("org.eclipse.osgi"); //$NON-NLS-1$
@@ -173,11 +193,26 @@ public class LaunchConfigurationHelper {
 				String id = iter.next().toString();
 				if (!initialBundleSet.contains(id)) {
 					if (buffer.length() > 0)
-						buffer.append(',');
-					buffer.append(id);
+						buffer.append(','); 
+					// convert any bundles with overrides to their new form.
+					String override =  overrideMap == null ? null : (String) overrideMap.get(id);
+					buffer.append(override == null ? id : override);
 				}
 			}
 		}
+		else { 
+			// tack the overrides onto the end of the buffer
+			if (buffer.length() > 0) 
+				buffer.append(',');
+			for (Iterator i = overrideMap.values().iterator(); i
+					.hasNext();) {
+				String override = (String) i.next();
+				buffer.append(override);
+				if (i.hasNext())
+					buffer.append(',');
+			}
+		}
+		
 		return buffer.toString();
 	}
 	

@@ -19,7 +19,6 @@ import java.util.TreeSet;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
-import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IAction;
@@ -31,8 +30,6 @@ import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
-import org.eclipse.jface.viewers.ITreeContentProvider;
-import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.StructuredViewer;
 import org.eclipse.jface.viewers.TreeViewer;
@@ -41,7 +38,6 @@ import org.eclipse.jface.wizard.WizardDialog;
 import org.eclipse.pde.core.IModelChangedEvent;
 import org.eclipse.pde.core.IModelChangedListener;
 import org.eclipse.pde.core.plugin.IExtensions;
-import org.eclipse.pde.core.plugin.IPluginAttribute;
 import org.eclipse.pde.core.plugin.IPluginBase;
 import org.eclipse.pde.core.plugin.IPluginElement;
 import org.eclipse.pde.core.plugin.IPluginExtension;
@@ -58,9 +54,7 @@ import org.eclipse.pde.internal.core.ischema.ISchemaElement;
 import org.eclipse.pde.internal.core.schema.SchemaRegistry;
 import org.eclipse.pde.internal.core.text.IDocumentElementNode;
 import org.eclipse.pde.internal.core.text.plugin.PluginBaseNode;
-import org.eclipse.pde.internal.ui.PDELabelProvider;
 import org.eclipse.pde.internal.ui.PDEPlugin;
-import org.eclipse.pde.internal.ui.PDEPluginImages;
 import org.eclipse.pde.internal.ui.PDEUIMessages;
 import org.eclipse.pde.internal.ui.editor.PDEFormEditor;
 import org.eclipse.pde.internal.ui.editor.PDEFormPage;
@@ -68,11 +62,9 @@ import org.eclipse.pde.internal.ui.editor.TreeSection;
 import org.eclipse.pde.internal.ui.editor.actions.CollapseAction;
 import org.eclipse.pde.internal.ui.editor.actions.SortAction;
 import org.eclipse.pde.internal.ui.editor.contentassist.XMLElementProposalComputer;
-import org.eclipse.pde.internal.ui.elements.DefaultContentProvider;
 import org.eclipse.pde.internal.ui.parts.TreePart;
 import org.eclipse.pde.internal.ui.search.PluginSearchActionGroup;
 import org.eclipse.pde.internal.ui.util.SWTUtil;
-import org.eclipse.pde.internal.ui.util.SharedLabelProvider;
 import org.eclipse.pde.internal.ui.wizards.extension.ExtensionEditorWizard;
 import org.eclipse.pde.internal.ui.wizards.extension.NewExtensionWizard;
 import org.eclipse.pde.ui.IExtensionEditorWizard;
@@ -83,8 +75,6 @@ import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.graphics.Cursor;
-import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.internal.BidiUtil;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.ToolBar;
@@ -102,64 +92,15 @@ public class ExtensionsSection extends TreeSection implements IModelChangedListe
 	private static final int BUTTON_EDIT = 2;
 	private static final int BUTTON_REMOVE = 1;
 	private TreeViewer fExtensionTree;
-	private Image fExtensionImage;
-	private Image fGenericElementImage;
 	private FormFilteredTree fFilteredTree;
-	private SchemaRegistry fSchemaRegistry;
 	private Hashtable fEditorWizards;
 	private SortAction fSortAction;
 	private CollapseAction fCollapseAction;
 
 	private static final int BUTTON_ADD = 0;
 	
-	private static final String[] COMMON_LABEL_PROPERTIES = {
-		"label", //$NON-NLS-1$
-		"name", //$NON-NLS-1$
-		"id"}; //$NON-NLS-1$
-	
-	private static final String[] VALID_IMAGE_TYPES = {
-		"png", "bmp", "ico", "gif", "jpg", "tiff" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
 	
 
-	class ExtensionContentProvider extends DefaultContentProvider
-	implements
-	ITreeContentProvider {
-		public Object[] getChildren(Object parent) {
-			Object[] children = null;
-			if (parent instanceof IPluginBase)
-				children = ((IPluginBase) parent).getExtensions();
-			else if (parent instanceof IPluginExtension) {
-				children = ((IPluginExtension) parent).getChildren();
-			} else if (parent instanceof IPluginElement) {
-				children = ((IPluginElement) parent).getChildren();
-			}
-			if (children == null)
-				children = new Object[0];
-			return children;
-		}
-		public boolean hasChildren(Object parent) {
-			return getChildren(parent).length > 0;
-		}
-		public Object getParent(Object child) {
-			if (child instanceof IPluginExtension) {
-				return ((IPluginModelBase)getPage().getModel()).getPluginBase();
-			}
-			if (child instanceof IPluginObject)
-				return ((IPluginObject) child).getParent();
-			return null;
-		}
-		public Object[] getElements(Object parent) {
-			return getChildren(parent);
-		}
-	}
-	class ExtensionLabelProvider extends LabelProvider {
-		public String getText(Object obj) {
-			return resolveObjectName(obj);
-		}
-		public Image getImage(Object obj) {
-			return resolveObjectImage(obj);
-		}
-	}
 	public ExtensionsSection(PDEFormPage page, Composite parent) {
 		super(page, parent, Section.DESCRIPTION, new String[]{
 				PDEUIMessages.ManifestEditor_DetailExtension_new,
@@ -242,7 +183,6 @@ public class ExtensionsSection extends TreeSection implements IModelChangedListe
 	}
 	
 	public void createClient(Section section, FormToolkit toolkit) {
-		initializeImages();
 		Composite container = createClientContainer(section, 2, toolkit);
 		TreePart treePart = getTreePart();
 		createViewerPartControl(container, SWT.MULTI, 2, toolkit);
@@ -670,12 +610,7 @@ public class ExtensionsSection extends TreeSection implements IModelChangedListe
 	void fireSelection() {
 		fExtensionTree.setSelection(fExtensionTree.getSelection());
 	}
-	public void initializeImages() {
-		PDELabelProvider provider = PDEPlugin.getDefault().getLabelProvider();
-		fExtensionImage = provider.get(PDEPluginImages.DESC_EXTENSION_OBJ);
-		fGenericElementImage = provider
-		.get(PDEPluginImages.DESC_GENERIC_XML_OBJ);
-	}
+	
 	public void refresh() {
 		IPluginModelBase model = (IPluginModelBase)getPage().getModel();
 		fExtensionTree.setInput(model.getPluginBase());
@@ -730,143 +665,7 @@ public class ExtensionsSection extends TreeSection implements IModelChangedListe
 			}
 		}
 	}
-
-	private Image resolveObjectImage(Object obj) {
-		if (obj instanceof IPluginExtension) {
-			return fExtensionImage;
-		}
-		Image elementImage = fGenericElementImage;
-		if (obj instanceof IPluginElement) {
-			IPluginElement element = (IPluginElement) obj;
-			Image customImage = getCustomImage(element);
-			if (customImage != null)
-				elementImage = customImage;
-			String bodyText = element.getText();
-			boolean hasBodyText = bodyText != null && bodyText.length() > 0;
-			if (hasBodyText) {
-				elementImage = PDEPlugin.getDefault().getLabelProvider().get(
-						elementImage, SharedLabelProvider.F_EDIT);
-			}
-		}
-		return elementImage;
-	}
-
-	private static boolean isStorageModel(IPluginObject object) {
-		IPluginModelBase modelBase = object.getPluginModel();
-		return modelBase.getInstallLocation()==null;
-	}
-
-	static Image getCustomImage(IPluginElement element) {
-		if (isStorageModel(element))return null;
-		ISchemaElement elementInfo = getSchemaElement(element);
-		if (elementInfo != null && elementInfo.getIconProperty() != null) {
-			String iconProperty = elementInfo.getIconProperty();
-			IPluginAttribute att = element.getAttribute(iconProperty);
-			String iconPath = null;
-			if (att != null && att.getValue() != null) {
-				iconPath = att.getValue();
-			}
-			// we have a value from a resource attribute
-			if (iconPath != null) {
-				String ext = new Path(iconPath).getFileExtension();
-				// if the resource targets a folder, the file extension will be null
-				if (ext == null)
-					return null;
-				boolean valid = false;
-				// ensure the resource is an image
-				for (int i = 0; i < VALID_IMAGE_TYPES.length; i++) {
-					if (ext.equalsIgnoreCase(VALID_IMAGE_TYPES[i])) {
-						valid = true;
-						break;
-					}
-				}
-				// if the resource is an image, get the image, otherwise return null
-				return valid ? getImageFromPlugin(element, iconPath) : null;
-			}
-		}
-		return null;
-	}
-
-	private static Image getImageFromPlugin(IPluginElement element,
-			String iconPathName) {
-		// 39283 - ignore icon paths that
-		// point at plugin.properties
-		if (iconPathName.startsWith("%")) //$NON-NLS-1$
-			return null;
-
-		IPluginModelBase model = element.getPluginModel();
-		if (model == null)
-			return null;
-
-		return PDEPlugin.getDefault().getLabelProvider().getImageFromPlugin(model, iconPathName);
-	}
-	private String resolveObjectName(Object obj) {
-		return resolveObjectName(getSchemaRegistry(), obj);
-	}
-
-	private SchemaRegistry getSchemaRegistry() {
-		if (fSchemaRegistry == null)
-			fSchemaRegistry = PDECore.getDefault().getSchemaRegistry();
-		return fSchemaRegistry;
-	}
-
-	public static String resolveObjectName(SchemaRegistry schemaRegistry, Object obj) {
-		boolean fullNames = PDEPlugin.isFullNameModeEnabled();
-		if (obj instanceof IPluginExtension) {
-			IPluginExtension extension = (IPluginExtension) obj;
-			if (!fullNames) {
-				return extension.getPoint();
-			}
-			if (extension.getName() != null)
-				return extension.getTranslatedName();
-			ISchema schema = schemaRegistry.getSchema(extension.getPoint());
-			// try extension point schema definition
-			if (schema != null) {
-				// exists
-				return schema.getName();
-			}
-			return extension.getPoint();		
-		} else if (obj instanceof IPluginElement) {
-			IPluginElement element = (IPluginElement) obj;
-			String baseName = element.getName();			
-			String fullName = null;
-			ISchemaElement elementInfo = getSchemaElement(element);
-			IPluginAttribute labelAtt = null;
-			if (elementInfo != null && elementInfo.getLabelProperty() != null) {
-				labelAtt = element.getAttribute(elementInfo.getLabelProperty());
-			}
-			if (labelAtt == null) {
-				// try some hard-coded attributes that
-				// are used frequently
-				for (int i = 0; i < COMMON_LABEL_PROPERTIES.length; i++) {
-					labelAtt = element.getAttribute(COMMON_LABEL_PROPERTIES[i]);
-					if (labelAtt != null)
-						break;
-				}
-				if (labelAtt == null) {
-					// Last try - if there is only one attribute,
-					// use that
-					if (element.getAttributeCount() == 1)
-						labelAtt = element.getAttributes()[0];
-				}
-			}
-			if (labelAtt != null && labelAtt.getValue() != null)
-				fullName = stripShortcuts(labelAtt.getValue());
-			fullName = element.getResourceString(fullName);
-			if (fullNames)
-				return fullName != null ? fullName : baseName;
-			if (fullName == null)
-				return baseName;
-			// Bug 183417 - Bidi3.3: Elements' labels in the extensions page in the fragment manifest characters order is incorrect
-			// add RTL zero length character just before the ( and the LTR character just after to ensure:
-			// 1. The leading parenthesis takes proper orientation when running in bidi configuration
-			// Assumption: baseName (taken from the schema definition), is only latin characters and is therefore always displayed LTR
-			if (BidiUtil.isBidiPlatform())
-				return fullName + " \u200f(\u200e" + baseName + ")"; //$NON-NLS-1$ //$NON-NLS-2$
-			return fullName + " (" + baseName + ')'; //$NON-NLS-1$
-		}
-		return obj.toString();
-	}
+	
 	public void setFocus() {
 		if (fExtensionTree != null)
 			fExtensionTree.getTree().setFocus();

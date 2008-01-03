@@ -14,11 +14,13 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.Locale;
 
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.osgi.util.NLS;
@@ -30,9 +32,14 @@ import org.eclipse.pde.core.plugin.IPluginExtension;
 import org.eclipse.pde.core.plugin.IPluginModelBase;
 import org.eclipse.pde.core.plugin.IPluginObject;
 import org.eclipse.pde.core.plugin.PluginRegistry;
+import org.eclipse.pde.internal.core.PDECore;
 import org.eclipse.pde.internal.core.TargetPlatformHelper;
+import org.eclipse.pde.internal.core.ibundle.IBundlePluginModel;
 import org.eclipse.pde.internal.core.iproduct.IAboutInfo;
+import org.eclipse.pde.internal.core.iproduct.ICustomizationInfo;
 import org.eclipse.pde.internal.core.iproduct.IProduct;
+import org.eclipse.pde.internal.core.iproduct.IProductCustomizationConfigurer;
+import org.eclipse.pde.internal.core.iproduct.IProductTransformSerializer;
 import org.eclipse.pde.internal.core.iproduct.ISplashInfo;
 import org.eclipse.pde.internal.core.iproduct.IWindowImages;
 import org.eclipse.pde.internal.core.plugin.WorkspacePluginModelBase;
@@ -369,9 +376,88 @@ public class ProductDefinitionOperation extends BaseManifestOperation {
 		// Update splash progress.  Update plug-in model and copy files
 		updateSplashProgress(model, monitor);
 		
+		updateCustomization(model, monitor);
+		
 		model.save();
 	}
 	
+	/**
+	 * @param model
+	 * @param monitor
+	 * @throws CoreException 
+	 */
+	private void updateCustomization(IPluginModelBase model,
+			IProgressMonitor monitor) throws CoreException {
+		final ICustomizationInfo customizationInfo = fProduct.getCustomizationInfo();
+		if (customizationInfo == null)
+			return;
+		String pluginId = customizationInfo.getTargetPlugin();
+		if (pluginId == null)
+			return;
+		
+		IPluginModelBase baseModel = PDECore.getDefault().getModelManager().findModel(pluginId);
+		if (baseModel == null)
+			return;
+		if (!(baseModel instanceof IBundlePluginModel))
+			return;
+		
+//		IBundlePluginModel bundleModel = (IBundlePluginModel) baseModel;
+//		IProject customizationProject = 
+		final IProject project = baseModel.getUnderlyingResource().getProject();
+		
+		updateCustomizationTransforms(project, customizationInfo, monitor);
+		ModelModification modification = new ModelModification(project) {
+
+			protected void modifyModel(IBaseModel model,
+					IProgressMonitor monitor) throws CoreException {
+				updateCustomizationActivatorAndManifest(
+						(IBundlePluginModel) model, project, customizationInfo,
+						monitor);
+			}
+		};
+		PDEModelUtility.modifyModel(modification, monitor);
+	}
+
+	/**
+	 * @param project 
+	 * @param customizationInfo 
+	 * @param monitor 
+	 * @param baseModel
+	 * @throws CoreException 
+	 */
+	private void updateCustomizationActivatorAndManifest(
+			IBundlePluginModel bundleModel, IProject project, ICustomizationInfo customizationInfo, IProgressMonitor monitor) throws CoreException {
+		
+		IProductCustomizationConfigurer serializer = customizationInfo
+				.createConfigurer(bundleModel);
+		serializer.configureBundle(monitor);
+	}
+
+	/**
+	 * @param project
+	 * @param customizationInfo
+	 * @param monitor 
+	 */
+	private IFolder updateCustomizationTransforms(IProject project,
+			ICustomizationInfo customizationInfo, IProgressMonitor monitor) {
+		IFolder resource = project.getFolder("transforms");
+		if (resource == null || !resource.exists()) {
+			try {
+				resource.create(true, true, new NullProgressMonitor());
+			} catch (CoreException e) {
+				e.printStackTrace();
+			}
+			if (!resource.exists())
+				return null;
+		}
+
+		IProductTransformSerializer serializer = customizationInfo
+				.createTransformSerializer(resource);
+		serializer.serialize(monitor);
+
+		return resource;
+	}
+
 	private IPluginExtension createExtension(IPluginModelBase model) throws CoreException{
 		IPluginExtension extension = model.getFactory().createExtension();
 		extension.setPoint("org.eclipse.core.runtime.products"); //$NON-NLS-1$
@@ -508,6 +594,8 @@ public class ProductDefinitionOperation extends BaseManifestOperation {
 				updateSplashHandler((IPluginModelBase)model, monitor);
 				// Update splash progress.  Update plug-in model and copy files
 				updateSplashProgress((IPluginModelBase)model, monitor);
+				
+				updateCustomization((IPluginModelBase)model, monitor);
 			}
 		};
 		PDEModelUtility.modifyModel(mod, monitor);
@@ -588,5 +676,4 @@ public class ProductDefinitionOperation extends BaseManifestOperation {
 		IPluginElement element = createExtensionContent(extension);
 		extension.add(element);
 	}
-	
 }

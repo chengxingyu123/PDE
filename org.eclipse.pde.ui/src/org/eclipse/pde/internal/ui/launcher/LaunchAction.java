@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2005, 2008 IBM Corporation and others.
+ * Copyright (c) 2005, 2007 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -121,6 +121,24 @@ public class LaunchAction extends Action {
 		wc.setAttribute(IPDELauncherConstants.CONFIG_GENERATE_DEFAULT, configIni == null);
 		if (configIni != null)
 			wc.setAttribute(IPDELauncherConstants.CONFIG_TEMPLATE_LOCATION, configIni);
+		
+		if (fProduct.getCustomizationInfo() != null && fProduct.getCustomizationInfo().getUseCustomizations()) {
+			String [] frameworkExtensions = fProduct.getCustomizationInfo().getFrameworkExtensions();
+			if (frameworkExtensions != null && frameworkExtensions.length != 0) {
+				StringBuffer buffer = new StringBuffer();
+				for (int i = 0; i < frameworkExtensions.length; i++) {
+					if (i != 0)
+						buffer.append(',');
+					buffer.append(frameworkExtensions[i]);
+				}
+				wc.setAttribute(IPDELauncherConstants.OSGI_FRAMEWORK_EXTENSIONS, buffer.toString());
+			}
+			String transformBundle = fProduct.getCustomizationInfo().getTargetPlugin();
+			if (transformBundle != null) {
+				wc.setAttribute("bundle.overrides", transformBundle + "@1:start");
+			}
+			wc.setAttribute(IPDELauncherConstants.CONFIG_CLEAR_AREA, true);
+		}
 		return wc.doSave();
 	}
 	

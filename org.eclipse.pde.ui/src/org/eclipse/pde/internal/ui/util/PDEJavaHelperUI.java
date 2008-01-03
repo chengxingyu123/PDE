@@ -103,6 +103,18 @@ public class PDEJavaHelperUI {
 		return null;
 	}
 		
+	public static IFile findClassResource(String className, IProject project) {
+		IJavaProject javaProject = JavaCore.create(project);
+		IJavaElement result = null;
+		if (className.length() > 0)
+			try {
+				result = javaProject.findType(className);
+			} catch (JavaModelException e) {
+
+			}
+		return (IFile) (result == null ? null : result.getResource());
+	}
+	
 	/**
 	 * Open/Create a java class
 	 * 

@@ -254,6 +254,14 @@ public interface IPDELauncherConstants {
 	 * @since 3.3
 	 */
 	String OSGI_FRAMEWORK_ID = "osgi_framework_id"; //$NON-NLS-1$
+	
+	/**
+	 * Launch configuration attribute key. The value is a comma separated list
+	 * of bundles that should be used as framework extensions.
+	 * 
+	 * @since 3.4
+	 */
+	String OSGI_FRAMEWORK_EXTENSIONS = "osgi_framework_extensions";
 
 	/**
 	 * Launch configuration attribute key.  The value is a boolean specifying
