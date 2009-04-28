@@ -8,7 +8,7 @@
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
-package org.eclipse.pde.internal.core.target.impl;
+package org.eclipse.pde.internal.core.target;
 
 /**
  * Installable unit descriptor - ID and version.

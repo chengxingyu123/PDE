@@ -8,7 +8,7 @@
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
-package org.eclipse.pde.internal.core.target.impl;
+package org.eclipse.pde.internal.core.target;
 
 import org.eclipse.osgi.util.NLS;
 
@@ -16,7 +16,7 @@ import org.eclipse.osgi.util.NLS;
  *
  */
 public class Messages extends NLS {
-	private static final String BUNDLE_NAME = "org.eclipse.pde.internal.core.target.impl.Messages"; //$NON-NLS-1$
+	private static final String BUNDLE_NAME = "org.eclipse.pde.internal.core.target.Messages"; //$NON-NLS-1$
 	public static String AbstractBundleContainer_0;
 	public static String AbstractBundleContainer_1;
 	public static String AbstractBundleContainer_2;
