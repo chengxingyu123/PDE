@@ -199,6 +199,17 @@
             %wizard.description.splash.handler
          </description>
       </wizard>
+      <wizard
+            availableAsShortcut="true"
+            category="templates"
+            icon="$nl$/icons/etool16/newex_wiz.gif"
+            id="org.eclipse.pde.ui.newExtension.perspective"
+            name="%template.customAttributes.name"
+            template="org.eclipse.pde.ui.templates.customAttributes">
+		<description>
+		%template.customAttributes.desc
+		</description>    
+      </wizard>
    </extension>
    <extension
          point="org.eclipse.pde.ui.templates">
@@ -298,6 +309,12 @@
             contributingId="org.eclipse.ui.splashHandlers"
             id="org.eclipse.pde.ui.templates.splashHandlers"
             name="%template.name.splash.handler">
+      </template>
+      <template
+            class="org.eclipse.pde.internal.ui.templates.ide.CustomExtensionPointAttributeTemplate"
+            contributingId="org.eclipse.pde.ui.customExtensionPointAttributes"
+            id="org.eclipse.pde.ui.templates.customAttributes"
+            name="%template.customAttributes.name">
       </template>
    </extension>
    <extension

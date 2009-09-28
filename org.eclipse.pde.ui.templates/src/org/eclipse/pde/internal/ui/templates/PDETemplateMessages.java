@@ -314,10 +314,22 @@ public class PDETemplateMessages extends NLS {
 	public static String HelloServiceComponentTemplate_commandTitle;
 
 	// Declarative Services Template
-	public static String OSGiEventAdminTemplate_message;
 	public static String OSGiEventAdminTemplate_eventTopicTitle;
 	public static String OSGiEventAdminTemplateWizard_title;
 	public static String OSGiEventAdminTemplate_pageTitle;
 	public static String OSGiEventAdminTemplate_pageDescription;
+
+	// Custom Extension Point Attribute Template
+	public static String CustomExtensionPointAttributeTemplate_title;
+	public static String CustomExtensionPointAttributeTemplate_desc;
+	public static String CustomExtensionPointAttributeTemplate_attribute;
+	public static String CustomExtensionPointAttributeTemplate_attributeName;
+	public static String CustomExtensionPointAttributeTemplate_completionProviderClass;
+	public static String CustomExtensionPointAttributeTemplate_completionProviderClassName;
+	public static String CustomExtensionPointAttributeTemplate_packageName;
+	public static String CustomExtensionPointAttributeTemplate_rowFactoryClass;
+	public static String CustomExtensionPointAttributeTemplate_editorClassName;
+	public static String CustomExtensionPointAttributeTemplate_validatorClass;
+	public static String CustomExtensionPointAttributeTemplate_validatorClassName;
 
 }
