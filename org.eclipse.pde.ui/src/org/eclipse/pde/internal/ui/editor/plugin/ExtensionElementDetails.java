@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2003, 2008 IBM Corporation and others.
+ * Copyright (c) 2003, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -19,8 +19,10 @@ import org.eclipse.pde.core.IModelChangedEvent;
 import org.eclipse.pde.core.plugin.*;
 import org.eclipse.pde.internal.core.ischema.*;
 import org.eclipse.pde.internal.ui.PDEUIMessages;
+import org.eclipse.pde.internal.ui.customattributes.CustomAttributesUIManager;
 import org.eclipse.pde.internal.ui.editor.*;
 import org.eclipse.pde.internal.ui.editor.plugin.rows.*;
+import org.eclipse.pde.ui.customattributes.ICustomAttributeEditor;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -130,7 +132,13 @@ public class ExtensionElementDetails extends AbstractPluginElementDetails {
 			row = new ResourceAttributeRow(this, att);
 		else if (att.getKind() == IMetaAttribute.IDENTIFIER)
 			row = new IdAttributeRow(this, att);
-		else if (att.isTranslatable())
+		else if (att.getKind() == IMetaAttribute.CUSTOM) {
+			ICustomAttributeEditor editor = CustomAttributesUIManager.getInstance().getCustomAttributeEditor(att.getBasedOn());
+			if (editor != null)
+				row = new CustomAttributeRow(this, att, editor);
+			else
+				row = new TextAttributeRow(this, att);
+		} else if (att.isTranslatable())
 			row = new TranslatableAttributeRow(this, att);
 		else {
 			ISchemaSimpleType type = att.getType();
@@ -178,11 +186,7 @@ public class ExtensionElementDetails extends AbstractPluginElementDetails {
 				if (property != null) {
 					for (int i = 0; i < rows.size(); i++) {
 						ExtensionAttributeRow row = (ExtensionAttributeRow) rows.get(i);
-						ISchemaAttribute attribute = row.getAttribute();
-						if (attribute == null) {
-							continue;
-						}
-						String name = attribute.getName();
+						String name = row.getName();
 						if (name == null) {
 							continue;
 						}

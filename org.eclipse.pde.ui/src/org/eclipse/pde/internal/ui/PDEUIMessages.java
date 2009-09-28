@@ -1579,6 +1579,7 @@ public class PDEUIMessages extends NLS {
 	public static String compilers_s_doc_folder;
 	public static String compilers_s_open_tags;
 	public static String compilers_p_exported_pkgs;
+	public static String compilers_p_invalid_custom_attributes;
 
 	public static String compilers_f_unresolved_plugins;
 	public static String compilers_f_unresolved_features;
@@ -2362,6 +2363,7 @@ public class PDEUIMessages extends NLS {
 
 	public static String SchemaStringAttributeDetails_reference;
 	public static String SchemaIdentifierAttributeDetails_additionalRestrictions;
+	public static String SchemaCustomAttributeDetails_customAttributeID;
 
 	public static String SchemaDetails_name;
 

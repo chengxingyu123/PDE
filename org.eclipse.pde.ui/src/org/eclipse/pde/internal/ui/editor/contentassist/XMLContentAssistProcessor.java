@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2006, 2008 IBM Corporation and others.
+ * Copyright (c) 2006, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -30,13 +30,16 @@ import org.eclipse.pde.internal.core.util.IdUtil;
 import org.eclipse.pde.internal.core.util.PDESchemaHelper;
 import org.eclipse.pde.internal.ui.PDEPluginImages;
 import org.eclipse.pde.internal.ui.PDEUIMessages;
+import org.eclipse.pde.internal.ui.customattributes.CustomAttributesUIManager;
 import org.eclipse.pde.internal.ui.editor.PDEFormEditor;
 import org.eclipse.pde.internal.ui.editor.PDESourcePage;
 import org.eclipse.pde.internal.ui.editor.text.XMLUtil;
+import org.eclipse.pde.ui.customattributes.ICustomAttributeCompletionProvider;
+import org.eclipse.pde.ui.editor.IPDECompletionProposalFactory;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.forms.editor.FormEditor;
 
-public class XMLContentAssistProcessor extends TypePackageCompletionProcessor implements IContentAssistProcessor, ICompletionListener {
+public class XMLContentAssistProcessor extends TypePackageCompletionProcessor implements IPDECompletionProposalFactory, ICompletionListener {
 
 	protected boolean fAssistSessionStarted;
 
@@ -249,6 +252,11 @@ public class XMLContentAssistProcessor extends TypePackageCompletionProcessor im
 				for (int i = 0; i < validAttributes.length; i++)
 					objs.add(new VirtualSchemaObject(validAttributes[i], null, F_ATTRIBUTE_ID_VALUE));
 				return computeAttributeProposal(attr, offset, attrValue, objs);
+			} else if (sAttr.getKind() == IMetaAttribute.CUSTOM) {
+				// delegate completion computing to the contributing extension (if the is any)
+				ICustomAttributeCompletionProvider provider = CustomAttributesUIManager.getInstance().getCustomAttributeCompletionProvider(sAttr.getBasedOn());
+				if (provider != null)
+					return provider.computeAttributeProposal(attr.getValueOffset(), offset, attrValue, this);
 			} else { // we have an IMetaAttribute.STRING kind
 				if (sAttr.getType() == null)
 					return null;
@@ -836,11 +844,15 @@ public class XMLContentAssistProcessor extends TypePackageCompletionProcessor im
 				fImages[i].dispose();
 	}
 
-	/**
-	 * @return
-	 */
 	public PDESourcePage getSourcePage() {
 		return fSourcePage;
 	}
 
+	public ICompletionProposal createCompletionProposal(final int valueOffset, String name, String description, int offset, Image img) {
+		DocumentAttributeNode node = new DocumentAttributeNode();
+		node.setValueOffset(valueOffset);
+		XMLCompletionProposal completion = new XMLCompletionProposal(node, new VirtualSchemaObject(name, description, XMLContentAssistProcessor.F_ATTRIBUTE_VALUE), offset, this);
+		completion.setImage(img);
+		return completion;
+	}
 }

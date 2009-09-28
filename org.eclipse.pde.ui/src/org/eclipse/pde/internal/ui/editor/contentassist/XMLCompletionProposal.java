@@ -1,5 +1,4 @@
 /*******************************************************************************
- * Copyright (c) 2006, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -48,6 +47,7 @@ public class XMLCompletionProposal implements ICompletionProposal, ICompletionPr
 	private XMLContentAssistProcessor fProcessor;
 	private String fAddInfo;
 	private IInformationControlCreator fCreator;
+	private Image fImage;
 
 	private IPluginParent fPluginParent;
 	private ISchemaElement fSchemaElement;
@@ -498,6 +498,9 @@ public class XMLCompletionProposal implements ICompletionProposal, ICompletionPr
 	}
 
 	public Image getImage() {
+		if (fImage != null)
+			return fImage;
+
 		if (fSchemaObject instanceof VirtualSchemaObject)
 			return fProcessor.getImage(((VirtualSchemaObject) fSchemaObject).getVType());
 		if (fSchemaObject instanceof ISchemaAttribute)
@@ -505,6 +508,10 @@ public class XMLCompletionProposal implements ICompletionProposal, ICompletionPr
 		if (fSchemaObject instanceof ISchemaElement || fSchemaObject == null)
 			return fProcessor.getImage(XMLContentAssistProcessor.F_ELEMENT);
 		return null;
+	}
+
+	public void setImage(Image image) {
+		fImage = image;
 	}
 
 	public Point getSelection(IDocument document) {

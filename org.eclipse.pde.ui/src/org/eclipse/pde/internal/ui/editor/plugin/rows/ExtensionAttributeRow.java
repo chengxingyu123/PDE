@@ -13,6 +13,8 @@ package org.eclipse.pde.internal.ui.editor.plugin.rows;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.jface.text.IInformationControl;
+import org.eclipse.jface.util.IPropertyChangeListener;
+import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.pde.core.plugin.IPluginAttribute;
 import org.eclipse.pde.core.plugin.IPluginElement;
 import org.eclipse.pde.internal.core.ischema.ISchemaAttribute;
@@ -25,7 +27,7 @@ import org.eclipse.ui.forms.IFormColors;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.Hyperlink;
 
-public abstract class ExtensionAttributeRow implements IControlHoverContentProvider {
+public abstract class ExtensionAttributeRow implements IPropertyChangeListener, IControlHoverContentProvider {
 	protected IContextPart part;
 	protected Object att;
 	protected IPluginElement input;
@@ -150,5 +152,9 @@ public abstract class ExtensionAttributeRow implements IControlHoverContentProvi
 
 	protected IProject getProject() {
 		return part.getPage().getPDEEditor().getCommonProject();
+	}
+
+	public void propertyChange(PropertyChangeEvent event) {
+		markDirty();
 	}
 }
