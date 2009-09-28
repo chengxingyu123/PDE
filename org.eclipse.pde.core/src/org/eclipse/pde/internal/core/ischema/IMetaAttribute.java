@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -41,6 +41,14 @@ public interface IMetaAttribute {
 	public static final int IDENTIFIER = 3;
 
 	/**
+	 * Indicates that the value of the associated attribute has a custom type (validators, completion proposal, ...
+	 * can be registered against the "based on" value of such an attribute) 
+	 * 
+	 * @since 3.4
+	 */
+	public static final int CUSTOM = 4;
+
+	/**
 	 * Property that indicates if an attribute is translatable
 	 */
 	public static final String P_TRANSLATABLE = "translatable"; //$NON-NLS-1$
@@ -52,7 +60,8 @@ public interface IMetaAttribute {
 
 	/**
 	 * Returns optional name of the Java type this type must be based on (only
-	 * for JAVA kind), or the path expression for IDENTIFIER kind.
+	 * for <code>JAVA</code> kind), the path expression for <code>IDENTIFIER</code> kind, the id of a custom attribute
+	 * for <code>CUSTOM</code> kind.
 	 */
 	public String getBasedOn();
 
@@ -67,7 +76,7 @@ public interface IMetaAttribute {
 	public boolean isDeprecated();
 
 	/**
-	 * Returns the kind of this attribute's value (STRING, JAVA, RESOURCE or IDENTIFIER).
+	 * Returns the kind of this attribute's value (<code>STRING</code>, <code>JAVA</code>, <code>RESOURCE</code> or <code>IDENTIFIER</code>).
 	 */
 	public int getKind();
 }

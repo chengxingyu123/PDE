@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -41,11 +41,13 @@ public interface ISchemaAttribute extends ISchemaObject, IMetaAttribute {
 	public static final int JAVA_IND = 2;
 	public static final int RES_IND = 3;
 	public static final int ID_IND = 4;
+	public static final int CUSTOM_IND = 5;
 	public static final String[] TYPES = {"boolean", //$NON-NLS-1$
 			"string", //$NON-NLS-1$
 			"java", //$NON-NLS-1$
 			"resource", //$NON-NLS-1$
-			"identifier" //$NON-NLS-1$
+			"identifier", //$NON-NLS-1$
+			"custom" //$NON-NLS-1$
 	};
 
 	/**

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2005, 2008 IBM Corporation and others.
+ * Copyright (c) 2005, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -18,9 +18,11 @@ import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.osgi.service.resolver.BundleDescription;
 import org.eclipse.osgi.util.NLS;
+import org.eclipse.pde.core.ICustomAttributeValidator;
 import org.eclipse.pde.core.build.IBuild;
 import org.eclipse.pde.core.plugin.*;
 import org.eclipse.pde.internal.core.*;
+import org.eclipse.pde.internal.core.customattributes.CustomAttributesManager;
 import org.eclipse.pde.internal.core.ischema.*;
 import org.eclipse.pde.internal.core.schema.SchemaRegistry;
 import org.eclipse.pde.internal.core.util.*;
@@ -343,6 +345,8 @@ public class ExtensionsErrorReporter extends ManifestErrorReporter {
 			validateResourceAttribute(element, attr);
 		} else if (kind == IMetaAttribute.IDENTIFIER) {
 			validateIdentifierAttribute(element, attr, attInfo);
+		} else if (kind == IMetaAttribute.CUSTOM) {
+			validateCustomAttribute(element, attr, attInfo);
 		} else if (kind == IMetaAttribute.STRING) {
 			ISchemaRestriction restriction = type.getRestriction();
 			if (restriction != null) {
@@ -583,6 +587,21 @@ public class ExtensionsErrorReporter extends ManifestErrorReporter {
 				if (!attributes.containsKey(value)) { // report error if we are missing something
 					report(NLS.bind(PDECoreMessages.ExtensionsErrorReporter_unknownIdentifier, (new String[] {attr.getValue(), attr.getName()})), getLine(element, attr.getName()), severity, PDEMarkerFactory.CAT_OTHER);
 				}
+			}
+		}
+	}
+
+	private void validateCustomAttribute(Element element, Attr attr, ISchemaAttribute attInfo) {
+		int severity = CompilerFlags.getFlag(fProject, CompilerFlags.P_INVALID_CUSTOM_ATTRIBUTE);
+		if (severity != CompilerFlags.IGNORE) {
+			ICustomAttributeValidator validator = CustomAttributesManager.getInstance().getCustomAttributeValidator(attInfo.getBasedOn());
+			if (validator != null) {
+				String[] messages = validator.validateAttribute(attr.getValue());
+				if (messages != null)
+					for (int i = 0; i < messages.length; i++) {
+						String message = messages[i];
+						report(message, getLine(element, attr.getName()), severity, PDEMarkerFactory.CAT_OTHER);
+					}
 			}
 		}
 	}

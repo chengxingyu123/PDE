@@ -700,6 +700,8 @@ public class Schema extends PlatformObject implements ISchema {
 				return IMetaAttribute.RESOURCE;
 			if (name.equals("identifier")) //$NON-NLS-1$
 				return IMetaAttribute.IDENTIFIER;
+			if (name.equals("custom")) //$NON-NLS-1$
+				return IMetaAttribute.CUSTOM;
 		}
 		return IMetaAttribute.STRING;
 	}

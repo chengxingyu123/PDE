@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -62,7 +62,7 @@ public class SchemaAttribute extends SchemaObject implements ISchemaAttribute {
 	}
 
 	public String getBasedOn() {
-		if (getKind() == JAVA || getKind() == IDENTIFIER)
+		if (getKind() == JAVA || getKind() == IDENTIFIER || getKind() == CUSTOM)
 			return basedOn;
 		return null;
 	}
@@ -196,6 +196,9 @@ public class SchemaAttribute extends SchemaObject implements ISchemaAttribute {
 						break;
 					case IDENTIFIER :
 						kindValue = "identifier"; //$NON-NLS-1$
+						break;
+					case CUSTOM :
+						kindValue = "custom"; //$NON-NLS-1$
 				}
 				if (kindValue != null)
 					writer.print(" kind=\"" + kindValue + "\""); //$NON-NLS-1$ //$NON-NLS-2$
