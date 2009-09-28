@@ -30,14 +30,14 @@ public interface ICustomAttributeEditor {
 	 * For implementors this is a multi-step process:
 	 * <ol>
 	 *   <li>Create one or more controls within the parent.</li>
-	 *   <li>Register listeners on the created controls which call {@link IExtensionAttributeCallback#markDirty()} on the <code>callback</code> parameter if needed.</li>
+	 *   <li>Register listeners on the created controls which call {@link IPropertyChangeListener#propertyChange()} on the <code>listener</code> parameter if needed.</li>
 	 *   <li>Set the parent layout as needed.</li>
 	 * </ol>
 	 * </p>
 	 *
 	 * @param parent the parent control
 	 * @param toolkit the form toolkit that can be used as a widget factory
-	 * @param listener the listener to notify when the editor value is updated. In 3.5 it is fine to perform a
+	 * @param listener the listener to notify when the editor value is updated. In 3.6 it is fine to perform a
 	 * <code>listener.propertyChange(null)</code> since we don't support property other than the "value" itself
 	 * @noreference This method is not intended to be referenced by clients.
 	 * @since 3.6
