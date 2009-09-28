@@ -19,7 +19,7 @@ public interface ICustomAttributeValidator {
 	 * This method is called by the PDE error reporter to validate a custom attribute value
 	 * @param value the custom attribute value to validate
 	 * @return computed error messages, or <code>null</code>
-	 * @since 3.5
+	 * @since 3.6
 	 */
 	public String[] validateAttribute(String value);
 }
