@@ -40,34 +40,35 @@ public interface ICustomAttributeEditor {
 	 * @param listener the listener to notify when the editor value is updated. In 3.5 it is fine to perform a
 	 * <code>listener.propertyChange(null)</code> since we don't support property other than the "value" itself
 	 * @noreference This method is not intended to be referenced by clients.
+	 * @since 3.6
 	 */
 	void createContents(Composite parent, FormToolkit toolkit, IPropertyChangeListener listener);
 
 	/**
 	 * Returns the main SWT control of the custom attribute editor (this control automatically gains focus when the editor becomes active)
 	 * @return the SWT control 
-	 * @since 3.5
+	 * @since 3.6
 	 */
 	Control getMainControl();
 
 	/**
 	 * Sets the "editable" state of the editor
 	 * @param editable The editor will be enabled if <code>true</code>, and disabled otherwise 
-	 * @since 3.5
+	 * @since 3.6
 	 */
 	void setEditable(boolean editable);
 
 	/**
 	 * Sets the editor's value
 	 * @param value the new value of the editor
-	 * @since 3.5
+	 * @since 3.6
 	 */
 	void setValue(String value);
 
 	/**
 	 * Returns the editor's current value
 	 * @return the editor's value
-	 * @since 3.5
+	 * @since 3.6
 	 */
 	String getValue();
 }

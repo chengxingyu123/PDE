@@ -26,7 +26,7 @@ public interface IPDECompletionProposalFactory {
 	 * @param offset the offset after the completion proposal has been applied
 	 * @param image the image of the completion proposal (can be <code>null</code>) 
 	 * @return the created completion proposal
-	 * @since 3.5
+	 * @since 3.6
 	 */
 	ICompletionProposal createCompletionProposal(int valueOffset, String name, String description, int offset, Image image);
 }

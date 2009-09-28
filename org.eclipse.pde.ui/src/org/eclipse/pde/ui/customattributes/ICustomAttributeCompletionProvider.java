@@ -26,6 +26,7 @@ public interface ICustomAttributeCompletionProvider {
 	 * @param currValue the current value of the attribute
 	 * @param factory a factory that can be used as an helper to create completion proposals
 	 * @return array of the completion proposals
+	 * @since 3.6
 	 */
 	public ICompletionProposal[] computeAttributeProposal(int valueOffset, int offset, String currValue, IPDECompletionProposalFactory factory);
 }
