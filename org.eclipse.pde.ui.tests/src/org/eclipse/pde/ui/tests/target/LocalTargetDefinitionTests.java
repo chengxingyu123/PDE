@@ -10,21 +10,20 @@
  *******************************************************************************/
 package org.eclipse.pde.ui.tests.target;
 
-import org.eclipse.pde.internal.core.target.provisional.IResolvedBundle;
-
-import org.eclipse.pde.internal.core.target.*;
-
 import java.io.*;
 import java.net.URL;
 import java.util.*;
-import junit.framework.*;
+import junit.framework.Test;
+import junit.framework.TestSuite;
 import org.eclipse.core.runtime.*;
 import org.eclipse.equinox.internal.provisional.frameworkadmin.BundleInfo;
 import org.eclipse.pde.core.plugin.IPluginModelBase;
 import org.eclipse.pde.core.plugin.TargetPlatform;
 import org.eclipse.pde.internal.core.*;
+import org.eclipse.pde.internal.core.target.TargetDefinition;
+import org.eclipse.pde.internal.core.target.TargetDefinitionPersistenceHelper;
 import org.eclipse.pde.internal.core.target.provisional.*;
-import org.eclipse.pde.internal.ui.launcher.LaunchArgumentsHelper;
+import org.eclipse.pde.internal.launching.launcher.LaunchArgumentsHelper;
 import org.eclipse.pde.internal.ui.tests.macro.MacroPlugin;
 import org.osgi.framework.ServiceReference;
 
@@ -540,8 +539,9 @@ public class LocalTargetDefinitionTests extends AbstractTargetTest {
 		container.resolve(definition, null);
 		IResolvedBundle[] bundles = container.getBundles();
 		
-		List expected = new ArrayList();
+		Set expected = new HashSet();
 		expected.add("org.eclipse.jdt");
+		expected.add("org.eclipse.ant.launching");
 		expected.add("org.eclipse.ant.ui");
 		expected.add("org.eclipse.jdt.apt.core");
 		expected.add("org.eclipse.jdt.apt.ui");
@@ -558,8 +558,6 @@ public class LocalTargetDefinitionTests extends AbstractTargetTest {
 		expected.add("org.eclipse.jdt.junit4.runtime");
 		expected.add("org.eclipse.jdt.launching");
 		expected.add("org.eclipse.jdt.ui");
-		// 2 versions of JUnit
-		expected.add("org.junit");
 		expected.add("org.junit");
 		expected.add("org.junit4");
 		expected.add("org.eclipse.jdt.doc.user");
@@ -599,8 +597,9 @@ public class LocalTargetDefinitionTests extends AbstractTargetTest {
 		container.resolve(definition, null);
 		IResolvedBundle[] bundles = container.getBundles();
 		
-		List expected = new ArrayList();
+		Set expected = new HashSet();
 		expected.add("org.eclipse.jdt");
+		expected.add("org.eclipse.ant.launching");
 		expected.add("org.eclipse.ant.ui");
 		expected.add("org.eclipse.jdt.apt.core");
 		expected.add("org.eclipse.jdt.apt.ui");
@@ -617,8 +616,6 @@ public class LocalTargetDefinitionTests extends AbstractTargetTest {
 		expected.add("org.eclipse.jdt.junit4.runtime");
 		expected.add("org.eclipse.jdt.launching");
 		expected.add("org.eclipse.jdt.ui");
-		// 2 versions of JUnit
-		expected.add("org.junit");
 		expected.add("org.junit");
 		expected.add("org.junit4");
 		expected.add("org.eclipse.jdt.doc.user");
@@ -692,8 +689,9 @@ public class LocalTargetDefinitionTests extends AbstractTargetTest {
 		container.resolve(definition, null);
 		IResolvedBundle[] bundles = container.getBundles();
 		
-		List expected = new ArrayList();
+		Set expected = new HashSet();
 		expected.add("org.eclipse.jdt.source");
+		expected.add("org.eclipse.ant.launching.source");
 		expected.add("org.eclipse.ant.ui.source");
 		expected.add("org.eclipse.jdt.apt.core.source");
 		expected.add("org.eclipse.jdt.apt.ui.source");
@@ -710,8 +708,6 @@ public class LocalTargetDefinitionTests extends AbstractTargetTest {
 		expected.add("org.eclipse.jdt.junit4.runtime.source");
 		expected.add("org.eclipse.jdt.launching.source");
 		expected.add("org.eclipse.jdt.ui.source");
-		// 2 versions of JUnit
-		expected.add("org.junit.source");
 		expected.add("org.junit.source");
 		expected.add("org.junit4.source");
 		expected.add("org.hamcrest.core.source");
@@ -751,8 +747,9 @@ public class LocalTargetDefinitionTests extends AbstractTargetTest {
 			
 			setTargetPlatform(target);
 			
-			List expected = new ArrayList();
+			Set expected = new HashSet();
 			expected.add("org.eclipse.jdt");
+			expected.add("org.eclipse.ant.launching");
 			expected.add("org.eclipse.ant.ui");
 			expected.add("org.eclipse.jdt.apt.core");
 			expected.add("org.eclipse.jdt.apt.ui");
@@ -769,8 +766,6 @@ public class LocalTargetDefinitionTests extends AbstractTargetTest {
 			expected.add("org.eclipse.jdt.junit4.runtime");
 			expected.add("org.eclipse.jdt.launching");
 			expected.add("org.eclipse.jdt.ui");
-			// 2 versions of JUnit
-			expected.add("org.junit");
 			expected.add("org.junit");
 			expected.add("org.junit4");
 			expected.add("org.eclipse.jdt.doc.user");
