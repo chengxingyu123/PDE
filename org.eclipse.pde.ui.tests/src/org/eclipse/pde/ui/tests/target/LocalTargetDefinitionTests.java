@@ -559,6 +559,7 @@ public class LocalTargetDefinitionTests extends AbstractTargetTest {
 		expected.add("org.eclipse.jdt.launching");
 		expected.add("org.eclipse.jdt.ui");
 		expected.add("org.junit");
+		expected.add("org.junit");
 		expected.add("org.junit4");
 		expected.add("org.eclipse.jdt.doc.user");
 		expected.add("org.hamcrest.core");
