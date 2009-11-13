@@ -539,7 +539,7 @@ public class LocalTargetDefinitionTests extends AbstractTargetTest {
 		container.resolve(definition, null);
 		IResolvedBundle[] bundles = container.getBundles();
 		
-		Set expected = new HashSet();
+		List expected = new ArrayList();
 		expected.add("org.eclipse.jdt");
 		expected.add("org.eclipse.ant.launching");
 		expected.add("org.eclipse.ant.ui");
@@ -558,6 +558,7 @@ public class LocalTargetDefinitionTests extends AbstractTargetTest {
 		expected.add("org.eclipse.jdt.junit4.runtime");
 		expected.add("org.eclipse.jdt.launching");
 		expected.add("org.eclipse.jdt.ui");
+		// 2 versions of JUnit
 		expected.add("org.junit");
 		expected.add("org.junit");
 		expected.add("org.junit4");
@@ -598,7 +599,7 @@ public class LocalTargetDefinitionTests extends AbstractTargetTest {
 		container.resolve(definition, null);
 		IResolvedBundle[] bundles = container.getBundles();
 		
-		Set expected = new HashSet();
+		List expected = new ArrayList();
 		expected.add("org.eclipse.jdt");
 		expected.add("org.eclipse.ant.launching");
 		expected.add("org.eclipse.ant.ui");
@@ -617,6 +618,8 @@ public class LocalTargetDefinitionTests extends AbstractTargetTest {
 		expected.add("org.eclipse.jdt.junit4.runtime");
 		expected.add("org.eclipse.jdt.launching");
 		expected.add("org.eclipse.jdt.ui");
+		// 2 versions of JUnit
+		expected.add("org.junit");
 		expected.add("org.junit");
 		expected.add("org.junit4");
 		expected.add("org.eclipse.jdt.doc.user");
@@ -690,7 +693,7 @@ public class LocalTargetDefinitionTests extends AbstractTargetTest {
 		container.resolve(definition, null);
 		IResolvedBundle[] bundles = container.getBundles();
 		
-		Set expected = new HashSet();
+		List expected = new ArrayList();
 		expected.add("org.eclipse.jdt.source");
 		expected.add("org.eclipse.ant.launching.source");
 		expected.add("org.eclipse.ant.ui.source");
@@ -709,6 +712,8 @@ public class LocalTargetDefinitionTests extends AbstractTargetTest {
 		expected.add("org.eclipse.jdt.junit4.runtime.source");
 		expected.add("org.eclipse.jdt.launching.source");
 		expected.add("org.eclipse.jdt.ui.source");
+		// 2 versions of JUnit
+		expected.add("org.junit.source");
 		expected.add("org.junit.source");
 		expected.add("org.junit4.source");
 		expected.add("org.hamcrest.core.source");
@@ -748,7 +753,7 @@ public class LocalTargetDefinitionTests extends AbstractTargetTest {
 			
 			setTargetPlatform(target);
 			
-			Set expected = new HashSet();
+			List expected = new ArrayList();
 			expected.add("org.eclipse.jdt");
 			expected.add("org.eclipse.ant.launching");
 			expected.add("org.eclipse.ant.ui");
@@ -767,6 +772,8 @@ public class LocalTargetDefinitionTests extends AbstractTargetTest {
 			expected.add("org.eclipse.jdt.junit4.runtime");
 			expected.add("org.eclipse.jdt.launching");
 			expected.add("org.eclipse.jdt.ui");
+			// 2 versions of JUnit
+			expected.add("org.junit");
 			expected.add("org.junit");
 			expected.add("org.junit4");
 			expected.add("org.eclipse.jdt.doc.user");
